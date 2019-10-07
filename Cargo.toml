@@ -1,0 +1,10 @@
+[package]
+name = "radicle_registry"
+version = "0.1.0"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+edition = "2018"
+
+[dependencies]
+
+[workspace]
+members = [ "runtime", "node" ]
