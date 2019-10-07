@@ -1,7 +1,8 @@
+version: "2.0"
 jobs:
   build:
     docker:
-      - image: circleci/rust:1.36-buster
+      - image: circleci/rust:1.38-buster
 
     steps:
       - checkout
@@ -12,20 +13,34 @@ jobs:
             # homes are located under /usr/local/.
             echo 'export RUSTUP_HOME=$HOME/.rustup' >> $BASH_ENV
             echo 'export CARGO_HOME=$HOME/.cargo' >> $BASH_ENV
+            echo 'export PATH=$CARGO_HOME/bin:$PATH' >> $BASH_ENV
+
+            # Configure sccache for rust
+            echo 'export RUSTC_WRAPPER=sccache' >> $BASH_ENV
+            echo 'export SCCACHE_DIR=/tmp/sccache' >> $BASH_ENV
 
             # Alias `cargo` to `cargo --locked` to avoid inadvertant
             # updates to `Cargo.lock`.
             echo 'function cargo () { /usr/local/cargo/bin/cargo --locked "$@"; }' >> $BASH_ENV
       - restore_cache:
           keys:
-          - rustup-v1-{{ checksum "rust-toolchain" }}-{{ checksum "scripts/rustup-setup" }}
+          - build-env-v2-{{ checksum "rust-toolchain" }}-{{ checksum "scripts/rustup-setup" }}
       - run:
           name: Setup toolchain
-          command: ./tools/rustup-setup
+          command: ./scripts/rustup-setup
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get -y update
+            sudo apt-get install -y cmake pkg-config libssl-dev libclang-dev llvm-dev clang g++
+            curl -sSL https://github.com/mozilla/sccache/releases/download/0.2.12/sccache-0.2.12-x86_64-unknown-linux-musl.tar.gz | tar -zx
+            sudo mv sccache-0.2.12-x86_64-unknown-linux-musl/sccache /usr/local/bin/sccache
+            command -v wasm-gc || cargo install --git https://github.com/alexcrichton/wasm-gc
       - save_cache:
-          key: rustup-v1-{{ checksum "rust-toolchain" }}-{{ checksum "scripts/rustup-setup" }}
+          key: build-env-v2-{{ checksum "rust-toolchain" }}-{{ checksum "scripts/rustup-setup" }}
           paths:
             - "~/.rustup"
+            - "~/.cargo/bin"
 
       - restore_cache:
           keys:
@@ -33,22 +48,23 @@ jobs:
       - run:
           name: Check formatting
           command: |
-            cargo fmt --all -- --check
-      - run:
-          name: Clippy
-          command: |
-            cargo clippy --all --all-targets -- -D warnings
+            cargo fmt --all -v -- --check
       - run:
           name: Build
           command: |
-            RUSTFLAGS="-D warnings" cargo build --all
+            BUILD_DUMMY_WASM_BINARY=1 RUSTFLAGS="-D warnings" cargo build --jobs=1 --all
       - run:
           name: Test
           command: |
-            cargo test --all --color=always
+            # cargo test --all --color=always
+      - run:
+          name: Clean up large artifacts
+          # Remove large build artifacts that are faster to build than
+          # cache.
+          command: |
+            rm target/debug/radicle_registry_node
 
       - save_cache:
-          # "epoch" is here to ensure that we upload a new cache on each build
           key: cargo-target-v1-{{ checksum "Cargo.lock" }}
           paths:
             - "~/.cargo"

@@ -18,9 +18,9 @@ use transaction_pool::{self, txpool::Pool as TransactionPool};
 
 // Our native executor instance.
 native_executor_instance!(
-	pub Executor,
-	radicle_registry_runtime::api::dispatch,
-	radicle_registry_runtime::native_version,
+        pub Executor,
+        radicle_registry_runtime::api::dispatch,
+        radicle_registry_runtime::native_version,
 );
 
 construct_simple_protocol! {

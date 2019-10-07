@@ -1,5 +1,7 @@
 //! The Substrate Node Template runtime. This can be compiled with `#[no_std]`, ready for Wasm.
 
+// The `impl_runtime_apis` macro produces code that clippy complains about.
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
@@ -96,8 +98,8 @@ pub mod opaque {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("node-template"),
-    impl_name: create_runtime_str!("node-template"),
+    spec_name: create_runtime_str!("radicle-registry"),
+    impl_name: create_runtime_str!("radicle-registry"),
     authoring_version: 3,
     spec_version: 4,
     impl_version: 4,
@@ -118,7 +120,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 /// `SLOT_DURATION` instead (like the timestamp module for calculating the
 /// minimum period).
 /// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const MILLISECS_PER_BLOCK: u64 = 1000;
 
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 
