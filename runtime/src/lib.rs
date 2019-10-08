@@ -66,7 +66,7 @@ pub type Hash = primitives::H256;
 pub type DigestItem = generic::DigestItem<Hash>;
 
 /// Used for the module template in `./template.rs`
-mod template;
+pub mod counter;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -120,7 +120,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 /// `SLOT_DURATION` instead (like the timestamp module for calculating the
 /// minimum period).
 /// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-pub const MILLISECS_PER_BLOCK: u64 = 1000;
+pub const MILLISECS_PER_BLOCK: u64 = 3000;
 
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 
@@ -257,26 +257,26 @@ impl sudo::Trait for Runtime {
 }
 
 /// Used for the module template in `./template.rs`
-impl template::Trait for Runtime {
+impl counter::Trait for Runtime {
     type Event = Event;
 }
 
 construct_runtime!(
-	pub enum Runtime where
-		Block = Block,
-		NodeBlock = opaque::Block,
-		UncheckedExtrinsic = UncheckedExtrinsic
-	{
-		System: system::{Module, Call, Storage, Config, Event},
-		Timestamp: timestamp::{Module, Call, Storage, Inherent},
-		Babe: babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
-		Grandpa: grandpa::{Module, Call, Storage, Config, Event},
-		Indices: indices::{default, Config<T>},
-		Balances: balances::{default, Error},
-		Sudo: sudo,
-		// Used for the module template in `./template.rs`
-		TemplateModule: template::{Module, Call, Storage, Event<T>},
-	}
+        pub enum Runtime where
+                Block = Block,
+                NodeBlock = opaque::Block,
+                UncheckedExtrinsic = UncheckedExtrinsic
+        {
+                System: system::{Module, Call, Storage, Config, Event},
+                Timestamp: timestamp::{Module, Call, Storage, Inherent},
+                Babe: babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
+                Grandpa: grandpa::{Module, Call, Storage, Config, Event},
+                Indices: indices::{default, Config<T>},
+                Balances: balances::{default, Error},
+                Sudo: sudo,
+                // Used for the module template in `./template.rs`
+                Counter: counter::{Module, Call, Storage, Event<T>},
+        }
 );
 
 /// The address format for describing accounts.
