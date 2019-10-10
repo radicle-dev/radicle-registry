@@ -10,34 +10,25 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use primitives::{crypto::key_types, OpaqueMetadata};
+use rstd::prelude::*;
+use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor, StaticLookup};
+use sr_primitives::weights::Weight;
+use sr_primitives::{
+    create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
+    AnySignature, ApplyResult, Perbill,
+};
+use support::{construct_runtime, parameter_types};
+
 use babe::AuthorityId as BabeId;
 use client::{
     block_builder::api::{self as block_builder_api, CheckInherentsResult, InherentData},
     impl_runtime_apis, runtime_api as client_api,
 };
-use grandpa::fg_primitives;
-use grandpa::{AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
-use primitives::{crypto::key_types, OpaqueMetadata};
-use rstd::prelude::*;
-use sr_primitives::traits::{
-    BlakeTwo256, Block as BlockT, ConvertInto, NumberFor, StaticLookup, Verify,
-};
-use sr_primitives::weights::Weight;
-use sr_primitives::{
-    create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
-    AnySignature, ApplyResult,
-};
+use grandpa::{fg_primitives, AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
 #[cfg(feature = "std")]
 use version::NativeVersion;
 use version::RuntimeVersion;
-
-// A few exports that help ease life for downstream crates.
-pub use balances::Call as BalancesCall;
-#[cfg(any(feature = "std", test))]
-pub use sr_primitives::BuildStorage;
-pub use sr_primitives::{Perbill, Permill};
-pub use support::{construct_runtime, parameter_types, StorageValue};
-pub use timestamp::Call as TimestampCall;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -47,7 +38,7 @@ pub type Signature = AnySignature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
-pub type AccountId = <Signature as Verify>::Signer;
+pub type AccountId = primitives::sr25519::Public;
 
 /// The type for looking up accounts. We don't expect more than 4 billion of them, but you
 /// never know...
