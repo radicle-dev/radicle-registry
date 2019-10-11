@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#
+# Run dev node with pristine state. Note that we purge the database
+# before running the node.
+
+set -euo pipefail
+
+((yes | head -n 1) || true) | ./target/release/radicle_registry_node purge-chain --dev
+./target/release/radicle_registry_node --dev

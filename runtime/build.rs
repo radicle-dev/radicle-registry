@@ -1,7 +1,16 @@
 use wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
 
+const DUMMY_WASM_BINARY_ENV: &str = "BUILD_DUMMY_WASM_BINARY";
+
 fn main() {
-    std::env::set_var("BUILD_DUMMY_WASM_BINARY", "1");
+    match std::env::var(DUMMY_WASM_BINARY_ENV) {
+        Ok(ref val) if val == "0" || val == "false" => {
+            std::env::remove_var(DUMMY_WASM_BINARY_ENV);
+        }
+        _ => {
+            std::env::set_var(DUMMY_WASM_BINARY_ENV, "1");
+        }
+    }
     build_current_project_with_rustflags(
         "wasm_binary.rs",
         WasmBuilderSource::Crates("1.0.7"),
