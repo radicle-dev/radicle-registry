@@ -1,0 +1,15 @@
+steps:
+  - label: "Install components; check formatting; build; build the ledger, run the linter, start a Parity Ethereum node and run tests."
+    commands:
+      - 'cargo fmt --all -v -- --check'
+      - 'BUILD_DUMMY_WASM_BINARY=1 RUSTFLAGS="-D warnings" cargo build --jobs=1 --all'
+      - 'cargo clippy --all --all-targets -- -D warnings'
+      - 'cargo test --all --color=always'
+      # Remove large build artifacts that are faster to build than cache.
+      - 'rm target/debug/radicle_registry_node'
+    env:
+      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry:latest
+      DOCKER_FILE: ci/base-image/Dockerfile
+    agents:
+      platform: "linux"
+      production: "true"
