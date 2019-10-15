@@ -21,9 +21,9 @@ RUN curl -sSLO https://github.com/mozilla/sccache/releases/download/0.2.12/sccac
     && mv sccache-0.2.12-x86_64-unknown-linux-musl/sccache /usr/local/bin/sccache \
     && rm -rf sccache-0.2.12-x86_64-unknown-linux-musl
 
-# Use correct toolchain, install WASM components required by the
-# ledger, and Rust utilities necessary in some CI pipeline steps i.e.
-# formatting check, linting.
+# Use correct toolchain, install WASM components required by the ledger, and
+# Rust utilities necessary in some CI pipeline steps i.e. formatting check,
+# linting.
 RUN rustup default nightly-2019-09-05 \
     && rustup update \
     && rustup component add rustfmt \
