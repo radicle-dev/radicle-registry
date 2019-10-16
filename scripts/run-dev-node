@@ -5,5 +5,7 @@
 
 set -euo pipefail
 
-((yes | head -n 1) || true) | ./target/release/radicle_registry_node purge-chain --dev
-./target/release/radicle_registry_node --dev
+radicle_registry_node=./target/release/radicle_registry_node
+
+((yes | head -n 1) || true) | $radicle_registry_node purge-chain --dev
+$radicle_registry_node --dev
