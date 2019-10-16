@@ -5,7 +5,7 @@ steps:
       - 'BUILD_DUMMY_WASM_BINARY=1 RUSTFLAGS="-D warnings" cargo build --jobs=1 --all'
       - 'cargo clippy --all --all-targets -- -D warnings'
       - 'cargo test --all --color=always'
-      # Remove large build artifacts that are faster to build than cache.
+# Remove large build artifacts that are faster to build than cache.
       - 'rm target/debug/radicle_registry_node'
     env:
       DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry:latest
