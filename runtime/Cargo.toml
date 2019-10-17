@@ -104,6 +104,10 @@ default_features = false
 path = "../substrate/core/sr-primitives"
 default_features = false
 
+[dependencies.srml-randomness-collective-flip]
+path = "../substrate/srml/randomness-collective-flip"
+default_features = false
+
 [dependencies.substrate-session]
 path = "../substrate/core/session"
 default-features = false
