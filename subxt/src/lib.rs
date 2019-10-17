@@ -31,6 +31,7 @@ use metadata::Metadata;
 use parity_scale_codec::{
     Codec,
     Decode,
+    Encode,
 };
 use runtime_primitives::generic::UncheckedExtrinsic;
 use sr_version::RuntimeVersion;
@@ -314,6 +315,30 @@ where
             .and_then(|module| f(ModuleCalls::new(module)))
             .map_err(Into::into);
 
+        XtBuilder {
+            client: self.client.clone(),
+            nonce: self.nonce.clone(),
+            runtime_version: self.runtime_version.clone(),
+            genesis_hash: self.genesis_hash.clone(),
+            signer: self.signer.clone(),
+            call: Some(call),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<T: srml_system::Trait + 'static + System, P, V> XtBuilder<T, P, V>
+where
+    P: Pair,
+    <T as srml_system::Trait>::Call: Encode,
+{
+    /// Sets the module call to a new value of the [srml_system::Trait::Call] type associated with
+    /// the runtime.
+    pub fn set_system_call(
+        &self,
+        call: impl Into<<T as srml_system::Trait>::Call>,
+    ) -> XtBuilder<T, P, Valid> {
+        let call = Ok(Encoded(call.into().encode()));
         XtBuilder {
             client: self.client.clone(),
             nonce: self.nonce.clone(),
