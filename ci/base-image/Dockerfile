@@ -29,7 +29,7 @@ RUN rustup default nightly-2019-09-05 \
     && rustup component add rustfmt \
     && rustup component add clippy \
     && rustup target add wasm32-unknown-unknown \
-    && command -v wasm-gc || cargo install --git https://github.com/alexcrichton/wasm-gc
+    && cargo install --git https://github.com/alexcrichton/wasm-gc
 
 # Setup defaults for caching
 VOLUME /cache

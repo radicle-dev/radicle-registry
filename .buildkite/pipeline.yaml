@@ -8,7 +8,7 @@ steps:
 # Remove large build artifacts that are faster to build than cache.
       - 'rm target/debug/radicle_registry_node'
     env:
-      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:41347023e88ff45254a95bcf09cb3085e0d6bc677eda45e8de2a4611191eb2fe
+      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b
       DOCKER_FILE: ci/base-image/Dockerfile
     agents:
       platform: "linux"
