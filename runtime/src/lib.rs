@@ -18,7 +18,7 @@ use sr_primitives::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
     AnySignature, ApplyResult, Perbill,
 };
-use support::{construct_runtime, parameter_types};
+use support::{construct_runtime, parameter_types, traits::Randomness};
 
 use babe::AuthorityId as BabeId;
 use client::{
@@ -260,6 +260,7 @@ construct_runtime!(
         {
                 System: system::{Module, Call, Storage, Config, Event},
                 Timestamp: timestamp::{Module, Call, Storage, Inherent},
+                RandomnessCollectiveFlip: srml_randomness_collective_flip::{Module, Storage},
                 Babe: babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
                 Grandpa: grandpa::{Module, Call, Storage, Config, Event},
                 Indices: indices::{default, Config<T>},
@@ -336,7 +337,7 @@ impl_runtime_apis! {
         }
 
         fn random_seed() -> <Block as BlockT>::Hash {
-            System::random_seed()
+            RandomnessCollectiveFlip::random_seed()
         }
     }
 
