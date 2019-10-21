@@ -10,13 +10,13 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use primitives::{crypto::key_types, OpaqueMetadata};
+use primitives::{crypto::key_types, ed25519, OpaqueMetadata};
 use rstd::prelude::*;
 use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
 use sr_primitives::weights::Weight;
 use sr_primitives::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
-    AnySignature, ApplyResult, Perbill,
+    ApplyResult, Perbill,
 };
 use support::{construct_runtime, parameter_types, traits::Randomness};
 
@@ -34,11 +34,11 @@ use version::RuntimeVersion;
 pub type BlockNumber = u32;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = AnySignature;
+pub type Signature = ed25519::Signature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
-pub type AccountId = primitives::sr25519::Public;
+pub type AccountId = ed25519::Public;
 
 /// The type for looking up accounts. We don't expect more than 4 billion of them, but you
 /// never know...
