@@ -7,4 +7,4 @@ set -euo pipefail
 
 BUILD_DUMMY_WASM_BINARY=0 cargo build -p radicle_registry_node --release
 (set +o pipefail;  yes | ./target/release/radicle_registry_node purge-chain --dev)
-echo "Node binary ./target/release/radicle_registry_node was successfully build"
+echo "Node binary ./target/release/radicle_registry_node was successfully built"
