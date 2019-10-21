@@ -80,5 +80,5 @@ gcr.io/opensourcecoin/radicle-registry       <none>                             
 ```
 
 The new image digest in this case will be
-sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b, as it
+`sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b`, as it
 is the most recently built.
