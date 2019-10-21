@@ -16,10 +16,6 @@
 
 use crate::{
     error::Error,
-    events::{
-        EventsDecoder,
-        RuntimeEvent,
-    },
     metadata::Metadata,
     srml::{
         balances::Balances,
@@ -33,11 +29,7 @@ use futures::future::{
 use jsonrpc_core_client::RpcChannel;
 use log;
 use num_traits::bounds::Bounded;
-use parity_scale_codec::{
-    Decode,
-    Encode,
-    Error as CodecError,
-};
+use parity_scale_codec::{Decode, Encode};
 
 use runtime_metadata::RuntimeMetadataPrefixed;
 use runtime_primitives::{
@@ -153,12 +145,6 @@ use substrate_primitives::{
 };
 use txpool::watcher::Status;
 
-use crate::{
-    events::RawEvent,
-    srml::system::SystemEvent,
-};
-use srml_system::Phase;
-
 type MapClosure<T> = Box<dyn Fn(T) -> T + Send>;
 pub type MapStream<T> = stream::Map<TypedSubscriptionStream<T>, MapClosure<T>>;
 
@@ -227,8 +213,7 @@ impl<T: System + Balances + 'static> Rpc<T> {
     /// Create and submit an extrinsic and return corresponding Event if successful
     pub fn submit_and_watch_extrinsic<E: 'static>(
         self,
-        extrinsic: E,
-        decoder: EventsDecoder<T>,
+        extrinsic: E
     ) -> impl Future<Item = ExtrinsicSuccess<T>, Error = Error>
     where
         E: Encode,
@@ -289,7 +274,7 @@ impl<T: System + Balances + 'static> Rpc<T> {
                         sb.block.extrinsics.len()
                     );
 
-                    wait_for_block_events(decoder, ext_hash, sb, bh, events)
+                    wait_for_block_events(ext_hash, sb, bh, events)
                 })
         })
     }
@@ -303,54 +288,11 @@ pub struct ExtrinsicSuccess<T: System> {
     /// Extrinsic hash.
     pub extrinsic: T::Hash,
     /// Raw runtime events, can be decoded by the caller.
-    pub events: Vec<RuntimeEvent>,
-}
-
-impl<T: System> ExtrinsicSuccess<T> {
-    /// Find the Event for the given module/variant, with raw encoded event data.
-    /// Returns `None` if the Event is not found.
-    pub fn find_event_raw(&self, module: &str, variant: &str) -> Option<&RawEvent> {
-        self.events.iter().find_map(|evt| {
-            match evt {
-                RuntimeEvent::Raw(ref raw)
-                    if raw.module == module && raw.variant == variant =>
-                {
-                    Some(raw)
-                }
-                _ => None,
-            }
-        })
-    }
-
-    /// Returns all System Events
-    pub fn system_events(&self) -> Vec<&SystemEvent> {
-        self.events
-            .iter()
-            .filter_map(|evt| {
-                match evt {
-                    RuntimeEvent::System(evt) => Some(evt),
-                    _ => None,
-                }
-            })
-            .collect()
-    }
-
-    /// Find the Event for the given module/variant, attempting to decode the event data.
-    /// Returns `None` if the Event is not found.
-    /// Returns `Err` if the data fails to decode into the supplied type
-    pub fn find_event<E: Decode>(
-        &self,
-        module: &str,
-        variant: &str,
-    ) -> Option<Result<E, CodecError>> {
-        self.find_event_raw(module, variant)
-            .map(|evt| E::decode(&mut &evt.data[..]))
-    }
+    pub events: Vec<srml_system::EventRecord<T::Event, T::Hash>>,
 }
 
 /// Waits for events for the block triggered by the extrinsic
 pub fn wait_for_block_events<T: System + Balances + 'static>(
-    decoder: EventsDecoder<T>,
     ext_hash: T::Hash,
     signed_block: ChainBlock<T>,
     block_hash: T::Hash,
@@ -373,34 +315,15 @@ pub fn wait_for_block_events<T: System + Balances + 'static>(
         .into_future()
         .map_err(|(e, _)| e.into())
         .join(ext_index)
-        .and_then(move |((change_set, _), ext_index)| {
-            let events = match change_set {
-                None => Vec::new(),
-                Some(change_set) => {
-                    let mut events = Vec::new();
-                    for (_key, data) in change_set.changes {
-                        if let Some(data) = data {
-                            match decoder.decode_events(&mut &data.0[..]) {
-                                Ok(raw_events) => {
-                                    for (phase, event) in raw_events {
-                                        if let Phase::ApplyExtrinsic(i) = phase {
-                                            if i as usize == ext_index {
-                                                events.push(event)
-                                            }
-                                        }
-                                    }
-                                }
-                                Err(err) => return future::err(err.into()),
-                            }
-                        }
-                    }
-                    events
-                }
-            };
-            future::ok(ExtrinsicSuccess {
+        .and_then(move |((maybe_change_set, _), _ext_index)|{
+            let change_set = maybe_change_set.ok_or(Error::Other("Event storage was not updated".to_string()))?;
+            let (_key, maybe_data) = change_set.changes.first().expect("There is at least one change");
+            let data = &maybe_data.as_ref().expect("There were events written").0;
+            let events = Decode::decode(&mut &data[..]).map_err(Error::Codec)?;
+            return Ok(ExtrinsicSuccess {
                 block: block_hash,
                 extrinsic: ext_hash,
                 events,
-            })
+            });
         })
 }

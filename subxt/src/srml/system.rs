@@ -84,6 +84,9 @@ pub trait System: 'static + Eq + Clone + std::fmt::Debug {
     type Header: Parameter
         + Header<Number = Self::BlockNumber, Hash = Self::Hash>
         + DeserializeOwned;
+
+    /// Top-level event type of the runtime
+    type Event: Parameter + Member;
 }
 
 /// Blanket impl for using existing runtime types
@@ -98,6 +101,7 @@ where
     type AccountId = T::AccountId;
     type Address = <T::Lookup as StaticLookup>::Source;
     type Header = T::Header;
+    type Event = T::Event;
 }
 
 /// The System extension trait for the Client.

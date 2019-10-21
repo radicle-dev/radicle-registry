@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with substrate-subxt.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::{
-    events::EventsError,
-    metadata::MetadataError,
-};
+use crate::metadata::MetadataError;
 use jsonrpc_core_client::RpcError;
 use parity_scale_codec::Error as CodecError;
 use runtime_primitives::transaction_validity::TransactionValidityError;
@@ -29,8 +26,6 @@ use substrate_primitives::crypto::SecretStringError;
 pub enum Error {
     /// Codec error.
     Codec(CodecError),
-    /// Events error.
-    Events(EventsError),
     /// Io error.
     Io(IoError),
     /// Rpc error.

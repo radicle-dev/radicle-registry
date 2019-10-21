@@ -45,6 +45,7 @@ impl System for DefaultNodeRuntime {
     type AccountId = <AnySignature as Verify>::Signer;
     type Address = srml_indices::address::Address<Self::AccountId, u32>;
     type Header = Header<Self::BlockNumber, BlakeTwo256>;
+    type Event = ();
 }
 
 impl Balances for DefaultNodeRuntime {

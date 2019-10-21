@@ -18,7 +18,6 @@
 //! [substrate](https://github.com/paritytech/substrate) node via RPC.
 
 #![deny(missing_docs)]
-#![deny(warnings)]
 
 use futures::future::{
     self,
@@ -35,10 +34,7 @@ use parity_scale_codec::{
 };
 use runtime_primitives::generic::UncheckedExtrinsic;
 use sr_version::RuntimeVersion;
-use std::{
-    convert::TryFrom,
-    marker::PhantomData,
-};
+use std::marker::PhantomData;
 use substrate_primitives::{
     storage::{
         StorageChangeSet,
@@ -50,7 +46,6 @@ use url::Url;
 
 use crate::{
     codec::Encoded,
-    events::EventsDecoder,
     extrinsic::{
         DefaultExtra,
         SignedExtra,
@@ -66,7 +61,6 @@ use crate::{
         balances::Balances,
         system::{
             System,
-            SystemEvent,
             SystemStore,
         },
         ModuleCalls,
@@ -75,7 +69,6 @@ use crate::{
 
 mod codec;
 mod error;
-mod events;
 mod extrinsic;
 mod metadata;
 mod rpc;
@@ -83,7 +76,6 @@ mod runtimes;
 mod srml;
 
 pub use error::Error;
-pub use events::RawEvent;
 pub use rpc::ExtrinsicSuccess;
 pub use runtimes::*;
 pub use srml::*;
@@ -410,19 +402,12 @@ where
         &self,
     ) -> impl Future<Item = ExtrinsicSuccess<T>, Error = Error> {
         let cli = self.client.connect();
-        let metadata = self.client.metadata().clone();
-        let decoder = EventsDecoder::try_from(metadata)
-            .into_future()
-            .map_err(Into::into);
-
         self.create_and_sign()
             .into_future()
             .map_err(Into::into)
-            .join(decoder)
-            .and_then(move |(extrinsic, decoder)| {
-                cli.and_then(move |rpc| {
-                    rpc.submit_and_watch_extrinsic(extrinsic, decoder)
-                })
+            .join(cli)
+            .and_then(move |(extrinsic, rpc)| {
+                rpc.submit_and_watch_extrinsic(extrinsic)
             })
     }
 }
@@ -436,7 +421,6 @@ mod tests {
             BalancesStore,
             BalancesXt,
         },
-        contracts::ContractsXt,
     };
     use futures::stream::Stream;
     use node_runtime::Runtime;
@@ -481,43 +465,6 @@ mod tests {
             .balances(|calls| calls.transfer(dest.clone().into(), 10_000))
             .submit();
         rt.block_on(transfer).unwrap();
-    }
-
-    #[test]
-    #[ignore] // requires locally running substrate node
-    fn test_tx_contract_put_code() {
-        let (mut rt, client) = test_setup();
-
-        let signer = AccountKeyring::Alice.pair();
-        let xt = rt.block_on(client.xt(signer, None)).unwrap();
-
-        const CONTRACT: &str = r#"
-(module
-    (func (export "call"))
-    (func (export "deploy"))
-)
-"#;
-        let wasm = wabt::wat2wasm(CONTRACT).expect("invalid wabt");
-
-        let put_code = xt
-            .contracts(|call| call.put_code(500_000, wasm))
-            .submit_and_watch();
-
-        let success = rt
-            .block_on(put_code)
-            .expect("Extrinsic should be included in a block");
-
-        let code_hash =
-            success.find_event::<<Runtime as System>::Hash>("Contracts", "CodeStored");
-
-        assert!(
-            code_hash.is_some(),
-            "Contracts CodeStored event should be present"
-        );
-        assert!(
-            code_hash.unwrap().is_ok(),
-            "CodeStored Hash should decode successfully"
-        );
     }
 
     #[test]
