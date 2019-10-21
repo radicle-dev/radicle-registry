@@ -5,6 +5,16 @@ Experimental Radicle Registry implementation with Substrate.
 
 See [`DEVELOPING.md`][dev-manual] for developer information.
 
+Using the Client
+----------------
+
+The client to the registry is provided by the `radicle_registry_client` package
+in the `./client` directory.
+
+You’ll need to build the client with Rust Nightly.
+
+To build and view the client documentation run `./scripts/build-client-docs
+--open`.
 
 Building and running the node
 -----------------------------
@@ -23,13 +33,13 @@ You can run the node with
 ./scripts/run-dev-node
 ~~~
 
-To reset the chain data run
+To reset the chain state run
 
 ~~~
 ./scripts/run-dev-node purge-chain
 ~~~
 
-Note that `build-dev-node` will purge all chain data.
+Note that `build-dev-node` will also reset the chain state.
 
 [dev-manual]: ./DEVELOPING.md
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation

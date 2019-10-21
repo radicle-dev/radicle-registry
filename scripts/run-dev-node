@@ -3,4 +3,4 @@
 set -euo pipefail
 
 radicle_registry_node=./target/release/radicle_registry_node
-$radicle_registry_node "$@" --dev
+exec $radicle_registry_node "$@" --dev

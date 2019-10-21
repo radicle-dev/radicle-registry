@@ -44,7 +44,7 @@ jobs:
 
       - restore_cache:
           keys:
-          - cargo-target-v1-{{ checksum "Cargo.lock" }}
+          - cargo-target-v2-{{ checksum "Cargo.lock" }}
       - run:
           name: Check formatting
           command: |
@@ -52,20 +52,29 @@ jobs:
       - run:
           name: Build
           command: |
-            BUILD_DUMMY_WASM_BINARY=1 RUSTFLAGS="-D warnings" cargo build --jobs=1 --all
+            BUILD_DUMMY_WASM_BINARY=0 RUSTFLAGS="-D warnings" cargo build --jobs=1 --all --release --all-targets
+      - run:
+          name: Node
+          background: true
+          command:
+            ./target/release/radicle_registry_node --dev
       - run:
           name: Test
           command: |
-            # cargo test --all --color=always
+            BUILD_DUMMY_WASM_BINARY=0 RUSTFLAGS="-D warnings" cargo test --jobs=1 --all --release --color=always
       - run:
           name: Clean up large artifacts
           # Remove large build artifacts that are faster to build than
           # cache.
           command: |
-            rm target/debug/radicle_registry_node
+            rm -rf \
+              target/*/radicle_registry_node* \
+              target/*/incremental \
+              target/*/wbuild/target/*/incremental \
+              target/*/wbuild-runner/target/*/incremental
 
       - save_cache:
-          key: cargo-target-v1-{{ checksum "Cargo.lock" }}
+          key: cargo-target-v2-{{ checksum "Cargo.lock" }}
           paths:
             - "~/.cargo"
             - "./target"

@@ -1,48 +1,34 @@
-/// A runtime module template with necessary imports
-
-/// Feel free to remove or edit this file as needed.
-/// If you change the name of this file, make sure to update its references in runtime/src/lib.rs
-/// If you remove this file, you can remove those references
-
-/// For more guidance on Substrate modules, see the example module
-/// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
+use codec::{Decode, Encode};
+use sr_primitives::weights::SimpleDispatchInfo;
 use srml_support::{decl_event, decl_module, decl_storage, dispatch::Result};
-use srml_system as system;
 use srml_system::ensure_signed;
 
-/// The module's configuration trait.
-pub trait Trait: srml_system::Trait {
-    // TODO: Add other types and constants required configure this module.
+#[derive(Decode, Encode, Copy, Clone, Debug, Eq, PartialEq)]
+pub struct CounterValue(pub u32);
 
-    /// The overarching event type.
+pub trait Trait: srml_system::Trait {
     type Event: From<Event<Self>> + Into<<Self as srml_system::Trait>::Event>;
 }
 
-// This module's storage items.
 decl_storage! {
-    trait Store for Module<T: Trait> as Counter {
-        Value: u32;
+    pub trait Store for Module<T: Trait> as Counter {
+        pub Value: CounterValue = CounterValue(0);
     }
 }
 
-// The module's dispatchable functions.
+use srml_system as system;
 decl_module! {
-    /// The module declaration.
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-        // Initializing events
-        // this is needed only if you are using events in your module
         fn deposit_event() = default;
 
-        // Just a dummy entry point.
-        // function that can be called by the external world as an extrinsics call
-        // takes a parameter of the type `AccountId`, stores it and emits an event
+        #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn inc(origin) -> Result {
             let author = ensure_signed(origin)?;
 
-            let next = Value::get() + 1;
-            Value::put(next);
+            let CounterValue(value) = Value::get();
+            let next = value + 1;
+            Value::put(CounterValue(next));
 
-            // here we are raising the Something event
             Self::deposit_event(RawEvent::Incremented(next, author));
             Ok(())
         }

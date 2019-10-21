@@ -55,10 +55,12 @@ pub type Hash = substrate_primitives::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
+pub type EventRecord = system::EventRecord<Event, Hash>;
+
 /// Used for the module template in `./template.rs`
 pub mod counter;
 
-pub use srml_balances;
+pub use srml_balances as balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -209,7 +211,6 @@ impl srml_sudo::Trait for Runtime {
     type Proposal = Call;
 }
 
-/// Used for the module template in `./template.rs`
 impl counter::Trait for Runtime {
     type Event = Event;
 }
@@ -229,7 +230,6 @@ construct_runtime!(
                 Indices: srml_indices::{default, Config<T>},
                 Balances: srml_balances::{default, Error},
                 Sudo: srml_sudo,
-                // Used for the module template in `./template.rs`
                 Counter: counter::{Module, Call, Storage, Event<T>},
         }
 );
