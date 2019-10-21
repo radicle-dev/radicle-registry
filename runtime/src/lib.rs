@@ -10,25 +10,26 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use primitives::{crypto::key_types, ed25519, OpaqueMetadata};
-use rstd::prelude::*;
 use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
 use sr_primitives::weights::Weight;
 use sr_primitives::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
     ApplyResult, Perbill,
 };
-use support::{construct_runtime, parameter_types, traits::Randomness};
+use sr_std::prelude::*;
+use srml_support::{construct_runtime, parameter_types, traits::Randomness};
+use substrate_consensus_babe_primitives::BabeConfiguration;
+use substrate_primitives::{crypto::key_types, ed25519, OpaqueMetadata};
 
-use babe::AuthorityId as BabeId;
-use client::{
+#[cfg(feature = "std")]
+use sr_version::NativeVersion;
+use sr_version::RuntimeVersion;
+use srml_babe::AuthorityId as BabeId;
+use srml_grandpa::{fg_primitives, AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
+use substrate_client::{
     block_builder::api::{self as block_builder_api, CheckInherentsResult, InherentData},
     impl_runtime_apis, runtime_api as client_api,
 };
-use grandpa::{fg_primitives, AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
-#[cfg(feature = "std")]
-use version::NativeVersion;
-use version::RuntimeVersion;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -51,7 +52,7 @@ pub type Balance = u128;
 pub type Index = u32;
 
 /// A hash of some data used by the chain.
-pub type Hash = primitives::H256;
+pub type Hash = substrate_primitives::H256;
 
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
@@ -59,7 +60,7 @@ pub type DigestItem = generic::DigestItem<Hash>;
 /// Used for the module template in `./template.rs`
 pub mod counter;
 
-pub use balances;
+pub use srml_balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -144,7 +145,7 @@ parameter_types! {
     pub const Version: RuntimeVersion = VERSION;
 }
 
-impl system::Trait for Runtime {
+impl srml_system::Trait for Runtime {
     /// The identifier used to distinguish between accounts.
     type AccountId = AccountId;
     /// The aggregated dispatch type that is available for extrinsics.
@@ -183,22 +184,22 @@ parameter_types! {
     pub const ExpectedBlockTime: u64 = MILLISECS_PER_BLOCK;
 }
 
-impl babe::Trait for Runtime {
+impl srml_babe::Trait for Runtime {
     type EpochDuration = EpochDuration;
     type ExpectedBlockTime = ExpectedBlockTime;
-    type EpochChangeTrigger = babe::SameAuthoritiesForever;
+    type EpochChangeTrigger = srml_babe::SameAuthoritiesForever;
 }
 
-impl grandpa::Trait for Runtime {
+impl srml_grandpa::Trait for Runtime {
     type Event = Event;
 }
 
-impl indices::Trait for Runtime {
+impl srml_indices::Trait for Runtime {
     /// The type for recording indexing into the account enumeration. If this ever overflows, there
     /// will be problems!
     type AccountIndex = u32;
     /// Use the standard means of resolving an index hint from an id.
-    type ResolveHint = indices::SimpleResolveHint<Self::AccountId, Self::AccountIndex>;
+    type ResolveHint = srml_indices::SimpleResolveHint<Self::AccountId, Self::AccountIndex>;
     /// Determine whether an account is dead.
     type IsDeadAccount = Balances;
     /// The ubiquitous event type.
@@ -209,7 +210,7 @@ parameter_types! {
     pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
-impl timestamp::Trait for Runtime {
+impl srml_timestamp::Trait for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
     type OnTimestampSet = Babe;
@@ -224,7 +225,7 @@ parameter_types! {
     pub const TransactionByteFee: u128 = 0;
 }
 
-impl balances::Trait for Runtime {
+impl srml_balances::Trait for Runtime {
     /// The type for recording an account's balance.
     type Balance = Balance;
     /// What to do if an account's free balance gets zeroed.
@@ -244,7 +245,7 @@ impl balances::Trait for Runtime {
     type WeightToFee = ConvertInto;
 }
 
-impl sudo::Trait for Runtime {
+impl srml_sudo::Trait for Runtime {
     type Event = Event;
     type Proposal = Call;
 }
@@ -254,6 +255,8 @@ impl counter::Trait for Runtime {
     type Event = Event;
 }
 
+use srml_system as system;
+
 construct_runtime!(
         pub enum Runtime where
                 Block = Block,
@@ -261,20 +264,20 @@ construct_runtime!(
                 UncheckedExtrinsic = UncheckedExtrinsic
         {
                 System: system::{Module, Call, Storage, Config, Event},
-                Timestamp: timestamp::{Module, Call, Storage, Inherent},
+                Timestamp: srml_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: srml_randomness_collective_flip::{Module, Storage},
-                Babe: babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
-                Grandpa: grandpa::{Module, Call, Storage, Config, Event},
-                Indices: indices::{default, Config<T>},
-                Balances: balances::{default, Error},
-                Sudo: sudo,
+                Babe: srml_babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
+                Grandpa: srml_grandpa::{Module, Call, Storage, Config, Event},
+                Indices: srml_indices::{default, Config<T>},
+                Balances: srml_balances::{default, Error},
+                Sudo: srml_sudo,
                 // Used for the module template in `./template.rs`
                 Counter: counter::{Module, Call, Storage, Event<T>},
         }
 );
 
 /// The address format for describing accounts.
-pub type Address = indices::Address<Runtime>;
+pub type Address = srml_indices::Address<Runtime>;
 /// Block header type as expected by this runtime.
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 /// Block type as expected by this runtime.
@@ -285,20 +288,25 @@ pub type SignedBlock = generic::SignedBlock<Block>;
 pub type BlockId = generic::BlockId<Block>;
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
-    system::CheckVersion<Runtime>,
-    system::CheckGenesis<Runtime>,
-    system::CheckEra<Runtime>,
-    system::CheckNonce<Runtime>,
-    system::CheckWeight<Runtime>,
-    balances::TakeFees<Runtime>,
+    srml_system::CheckVersion<Runtime>,
+    srml_system::CheckGenesis<Runtime>,
+    srml_system::CheckEra<Runtime>,
+    srml_system::CheckNonce<Runtime>,
+    srml_system::CheckWeight<Runtime>,
+    srml_balances::TakeFees<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
-pub type Executive =
-    executive::Executive<Runtime, Block, system::ChainContext<Runtime>, Runtime, AllModules>;
+pub type Executive = srml_executive::Executive<
+    Runtime,
+    Block,
+    srml_system::ChainContext<Runtime>,
+    Runtime,
+    AllModules,
+>;
 
 impl_runtime_apis! {
     impl client_api::Core<Block> for Runtime {
@@ -349,7 +357,7 @@ impl_runtime_apis! {
         }
     }
 
-    impl offchain_primitives::OffchainWorkerApi<Block> for Runtime {
+    impl substrate_offchain_primitives::OffchainWorkerApi<Block> for Runtime {
         fn offchain_worker(number: NumberFor<Block>) {
             Executive::offchain_worker(number)
         }
@@ -361,14 +369,14 @@ impl_runtime_apis! {
         }
     }
 
-    impl babe_primitives::BabeApi<Block> for Runtime {
-        fn configuration() -> babe_primitives::BabeConfiguration {
+    impl substrate_consensus_babe_primitives::BabeApi<Block> for Runtime {
+        fn configuration() -> BabeConfiguration {
             // The choice of `c` parameter (where `1 - c` represents the
             // probability of a slot being empty), is done in accordance to the
             // slot duration and expected target block time, for safely
             // resisting network delays of maximum two seconds.
             // <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-            babe_primitives::BabeConfiguration {
+            BabeConfiguration {
                 slot_duration: Babe::slot_duration(),
                 epoch_length: EpochDuration::get(),
                 c: PRIMARY_PROBABILITY,
@@ -381,7 +389,7 @@ impl_runtime_apis! {
 
     impl substrate_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
-            let seed = seed.as_ref().map(|s| rstd::str::from_utf8(&s).expect("Seed is an utf8 string"));
+            let seed = seed.as_ref().map(|s| sr_std::str::from_utf8(&s).expect("Seed is an utf8 string"));
             opaque::SessionKeys::generate(seed)
         }
     }
