@@ -12,7 +12,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use primitives::{crypto::key_types, OpaqueMetadata};
 use rstd::prelude::*;
-use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor, StaticLookup};
+use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
 use sr_primitives::weights::Weight;
 use sr_primitives::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
@@ -58,6 +58,8 @@ pub type DigestItem = generic::DigestItem<Hash>;
 
 /// Used for the module template in `./template.rs`
 pub mod counter;
+
+pub use balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -219,7 +221,7 @@ parameter_types! {
     pub const TransferFee: u128 = 0;
     pub const CreationFee: u128 = 0;
     pub const TransactionBaseFee: u128 = 0;
-    pub const TransactionByteFee: u128 = 1;
+    pub const TransactionByteFee: u128 = 0;
 }
 
 impl balances::Trait for Runtime {
@@ -272,7 +274,7 @@ construct_runtime!(
 );
 
 /// The address format for describing accounts.
-pub type Address = <Indices as StaticLookup>::Source;
+pub type Address = indices::Address<Runtime>;
 /// Block header type as expected by this runtime.
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 /// Block type as expected by this runtime.
