@@ -1,8 +1,9 @@
 steps:
   - label: "Check formatting, lint, build and test "
     commands:
+      - 'export CARGO_TARGET_DIR=/cache/cargo_target'
       - 'cargo fmt --all -v -- --check'
-      - 'cargo clippy --all --all-targets -- -D warnings -D clippy::all'
+#      - 'cargo clippy --all --all-targets -- -D warnings -D clippy::all'
       - 'BUILD_DUMMY_WASM_BINARY=1 cargo build --all'
       - 'cargo test --all --color=always'
 # Remove large build artifacts that are faster to build than cache.
