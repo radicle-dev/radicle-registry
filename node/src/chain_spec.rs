@@ -4,23 +4,21 @@ use radicle_registry_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, IndicesConfig, SudoConfig, SystemConfig,
     WASM_BINARY,
 };
-use substrate_service;
-
-// Note this is the URL for the telemetry server
-//const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
 
-/// The chain specification option. This is expected to come in from the CLI and
-/// is little more than one of a number of alternatives which can easily be converted
-/// from a string (`--chain=...`) into a `ChainSpec`.
-#[derive(Clone, Debug)]
-pub enum Alternative {
-    /// Whatever the current runtime is, with just Alice as an auth.
-    Development,
-    /// Whatever the current runtime is, with simple Alice/Bob auths.
-    LocalTestnet,
+pub fn dev() -> ChainSpec {
+    ChainSpec::from_genesis(
+        "Development",
+        "dev",
+        dev_genesis_config,
+        vec![],
+        None, // boot nodes
+        None, // telemetry endpoints
+        None, // protocol_id
+        None, // no extensions
+    )
 }
 
 /// Helper function to generate a crypto pair from seed
@@ -30,92 +28,15 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
         .public()
 }
 
-/// Helper function to generate stash, controller and session key from seed
-pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, AuraId) {
-    (
-        get_from_seed::<AccountId>(&format!("{}//stash", seed)),
-        get_from_seed::<AccountId>(seed),
-        get_from_seed::<AuraId>(seed),
-    )
-}
-
-impl Alternative {
-    /// Get an actual chain config from one of the alternatives.
-    pub(crate) fn load(self) -> Result<ChainSpec, String> {
-        Ok(match self {
-            Alternative::Development => ChainSpec::from_genesis(
-                "Development",
-                "dev",
-                || {
-                    testnet_genesis(
-                        vec![get_authority_keys_from_seed("Alice")],
-                        get_from_seed::<AccountId>("Alice"),
-                        vec![
-                            get_from_seed::<AccountId>("Alice"),
-                            get_from_seed::<AccountId>("Bob"),
-                            get_from_seed::<AccountId>("Alice//stash"),
-                            get_from_seed::<AccountId>("Bob//stash"),
-                        ],
-                        true,
-                    )
-                },
-                vec![],
-                None,
-                None,
-                None,
-                None,
-            ),
-            Alternative::LocalTestnet => ChainSpec::from_genesis(
-                "Local Testnet",
-                "local_testnet",
-                || {
-                    testnet_genesis(
-                        vec![
-                            get_authority_keys_from_seed("Alice"),
-                            get_authority_keys_from_seed("Bob"),
-                        ],
-                        get_from_seed::<AccountId>("Alice"),
-                        vec![
-                            get_from_seed::<AccountId>("Alice"),
-                            get_from_seed::<AccountId>("Bob"),
-                            get_from_seed::<AccountId>("Charlie"),
-                            get_from_seed::<AccountId>("Dave"),
-                            get_from_seed::<AccountId>("Eve"),
-                            get_from_seed::<AccountId>("Ferdie"),
-                            get_from_seed::<AccountId>("Alice//stash"),
-                            get_from_seed::<AccountId>("Bob//stash"),
-                            get_from_seed::<AccountId>("Charlie//stash"),
-                            get_from_seed::<AccountId>("Dave//stash"),
-                            get_from_seed::<AccountId>("Eve//stash"),
-                            get_from_seed::<AccountId>("Ferdie//stash"),
-                        ],
-                        true,
-                    )
-                },
-                vec![],
-                None,
-                None,
-                None,
-                None,
-            ),
-        })
-    }
-
-    pub(crate) fn from(s: &str) -> Option<Self> {
-        match s {
-            "dev" => Some(Alternative::Development),
-            "" | "local" => Some(Alternative::LocalTestnet),
-            _ => None,
-        }
-    }
-}
-
-fn testnet_genesis(
-    initial_authorities: Vec<(AccountId, AccountId, AuraId)>,
-    root_key: AccountId,
-    endowed_accounts: Vec<AccountId>,
-    _enable_println: bool,
-) -> GenesisConfig {
+fn dev_genesis_config() -> GenesisConfig {
+    let endowed_accounts = vec![
+        get_from_seed::<AccountId>("Alice"),
+        get_from_seed::<AccountId>("Bob"),
+        get_from_seed::<AccountId>("Alice//stash"),
+        get_from_seed::<AccountId>("Bob//stash"),
+    ];
+    let authorities = vec![get_from_seed::<AuraId>("Alice")];
+    let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
             code: WASM_BINARY.to_vec(),
@@ -133,8 +54,6 @@ fn testnet_genesis(
             vesting: vec![],
         }),
         srml_sudo: Some(SudoConfig { key: root_key }),
-        srml_aura: Some(AuraConfig {
-            authorities: initial_authorities.iter().map(|x| (x.2.clone())).collect(),
-        }),
+        srml_aura: Some(AuraConfig { authorities }),
     }
 }
