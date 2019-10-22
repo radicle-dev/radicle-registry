@@ -14,7 +14,7 @@ std = [
     "sr-io/std",
     "sr-std/std",
     "sr-version/std",
-    "srml-babe/std",
+    "srml-aura/std",
     "srml-balances/std",
     "srml-executive/std",
     "srml-grandpa/std",
@@ -24,7 +24,7 @@ std = [
     "srml-system/std",
     "srml-timestamp/std",
     "substrate-client/std",
-    "substrate-consensus-babe-primitives/std",
+    "substrate-consensus-aura-primitives/std",
     "substrate-offchain-primitives/std",
     "substrate-primitives/std",
     "substrate-session/std",
@@ -45,12 +45,12 @@ version = "1.0.101"
 default-features = false
 version = "1.0.0"
 
-[dependencies.srml-babe]
-path = "../substrate/srml/babe"
+[dependencies.srml-aura]
+path = "../substrate/srml/aura"
 default-features = false
 
-[dependencies.substrate-consensus-babe-primitives]
-path = "../substrate/core/consensus/babe/primitives"
+[dependencies.substrate-consensus-aura-primitives]
+path = "../substrate/core/consensus/aura/primitives"
 default-features = false
 
 [dependencies.srml-balances]

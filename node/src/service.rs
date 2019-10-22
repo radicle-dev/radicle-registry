@@ -1,6 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use babe;
+use aura_primitives::sr25519::AuthorityPair as AuraPair;
 use futures::prelude::*;
 use grandpa::{self, FinalityProofProvider as GrandpaFinalityProofProvider};
 use inherents::InherentDataProviders;
@@ -51,36 +51,29 @@ macro_rules! new_full_start {
                 transaction_pool::FullChainApi::new(client),
             ))
         })?
-        .with_import_queue(|_config, client, mut select_chain, _transaction_pool| {
+        .with_import_queue(|_config, client, mut select_chain, transaction_pool| {
             let select_chain = select_chain
                 .take()
                 .ok_or_else(|| substrate_service::Error::SelectChainRequired)?;
+
             let (grandpa_block_import, grandpa_link) =
                 grandpa::block_import::<_, _, _, radicle_registry_runtime::RuntimeApi, _, _>(
                     client.clone(),
                     &*client,
                     select_chain,
                 )?;
-            let justification_import = grandpa_block_import.clone();
 
-            let (babe_block_import, babe_link) = babe::block_import(
-                babe::Config::get_or_compute(&*client)?,
-                grandpa_block_import,
-                client.clone(),
-                client.clone(),
-            )?;
-
-            let import_queue = babe::import_queue(
-                babe_link.clone(),
-                babe_block_import.clone(),
-                Some(Box::new(justification_import)),
+            let import_queue = aura::import_queue::<_, _, AuraPair, _>(
+                aura::SlotDuration::get_or_compute(&*client)?,
+                Box::new(grandpa_block_import.clone()),
+                Some(Box::new(grandpa_block_import.clone())),
                 None,
-                client.clone(),
                 client,
                 inherent_data_providers.clone(),
+                Some(transaction_pool),
             )?;
 
-            import_setup = Some((babe_block_import, grandpa_link, babe_link));
+            import_setup = Some((grandpa_block_import, grandpa_link));
 
             Ok(import_queue)
         })?;
@@ -107,7 +100,7 @@ pub fn new_full<C: Send + Default + 'static>(
         })?
         .build()?;
 
-    let (block_import, grandpa_link, babe_link) = import_setup.take().expect(
+    let (block_import, grandpa_link) = import_setup.take().expect(
         "Link Half and Block Import are present for Full Services or setup failed before. qed",
     );
 
@@ -122,22 +115,21 @@ pub fn new_full<C: Send + Default + 'static>(
             .select_chain()
             .ok_or(ServiceError::SelectChainRequired)?;
 
-        let babe_config = babe::BabeParams {
-            keystore: service.keystore(),
+        let aura = aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _>(
+            aura::SlotDuration::get_or_compute(&*client)?,
             client,
             select_chain,
-            env: proposer,
             block_import,
-            sync_oracle: service.network(),
-            inherent_data_providers: inherent_data_providers.clone(),
+            proposer,
+            service.network(),
+            inherent_data_providers.clone(),
             force_authoring,
-            babe_link,
-        };
+            service.keystore(),
+        )?;
 
-        let babe = babe::start_babe(babe_config)?;
-        let select = babe.select(service.on_exit()).then(|_| Ok(()));
+        let select = aura.select(service.on_exit()).then(|_| Ok(()));
 
-        // the BABE authoring task is considered infallible, i.e. if it
+        // the AURA authoring task is considered essential, i.e. if it
         // fails we take down the service with it.
         service.spawn_essential_task(select);
     }
@@ -169,6 +161,7 @@ pub fn new_full<C: Send + Default + 'static>(
                 inherent_data_providers: inherent_data_providers.clone(),
                 on_exit: service.on_exit(),
                 telemetry_on_connect: Some(service.telemetry_on_connect_stream()),
+                // voting_rule: grandpa::VotingRulesBuilder::default().build(),
             };
 
             // the GRANDPA voter task is considered infallible, i.e.
@@ -214,26 +207,18 @@ pub fn new_light<C: Send + Default + 'static>(
                     Arc::new(fetch_checker),
                     client.clone(),
                 )?;
-
                 let finality_proof_import = grandpa_block_import.clone();
                 let finality_proof_request_builder =
                     finality_proof_import.create_finality_proof_request_builder();
 
-                let (babe_block_import, babe_link) = babe::block_import(
-                    babe::Config::get_or_compute(&*client)?,
-                    grandpa_block_import,
-                    client.clone(),
-                    client.clone(),
-                )?;
-
-                let import_queue = babe::import_queue(
-                    babe_link.clone(),
-                    babe_block_import,
+                let import_queue = aura::import_queue::<_, _, AuraPair, ()>(
+                    aura::SlotDuration::get_or_compute(&*client)?,
+                    Box::new(grandpa_block_import),
                     None,
                     Some(Box::new(finality_proof_import)),
-                    client.clone(),
                     client,
                     inherent_data_providers.clone(),
+                    None,
                 )?;
 
                 Ok((import_queue, finality_proof_request_builder))

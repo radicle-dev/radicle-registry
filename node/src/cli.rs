@@ -1,5 +1,6 @@
 use crate::chain_spec;
 use crate::service;
+use aura_primitives::sr25519::AuthorityPair as AuraPair;
 use futures::{future, sync::oneshot, Future};
 use log::info;
 use std::cell::RefCell;

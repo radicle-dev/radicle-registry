@@ -18,18 +18,17 @@ use sr_primitives::{
 };
 use sr_std::prelude::*;
 use srml_support::{construct_runtime, parameter_types, traits::Randomness};
-use substrate_consensus_babe_primitives::BabeConfiguration;
 use substrate_primitives::{crypto::key_types, ed25519, OpaqueMetadata};
 
 #[cfg(feature = "std")]
 use sr_version::NativeVersion;
 use sr_version::RuntimeVersion;
-use srml_babe::AuthorityId as BabeId;
 use srml_grandpa::{fg_primitives, AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
 use substrate_client::{
     block_builder::api::{self as block_builder_api, CheckInherentsResult, InherentData},
     impl_runtime_apis, runtime_api as client_api,
 };
+use substrate_consensus_aura_primitives::sr25519::AuthorityId as AuraId;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -78,14 +77,12 @@ pub mod opaque {
     /// Opaque block identifier type.
     pub type BlockId = generic::BlockId<Block>;
 
-    pub type SessionHandlers = (Grandpa, Babe);
-
     impl_opaque_keys! {
         pub struct SessionKeys {
+            #[id(key_types::AURA)]
+            pub aura: AuraId,
             #[id(key_types::GRANDPA)]
             pub grandpa: GrandpaId,
-            #[id(key_types::BABE)]
-            pub babe: BabeId,
         }
     }
 }
@@ -184,10 +181,8 @@ parameter_types! {
     pub const ExpectedBlockTime: u64 = MILLISECS_PER_BLOCK;
 }
 
-impl srml_babe::Trait for Runtime {
-    type EpochDuration = EpochDuration;
-    type ExpectedBlockTime = ExpectedBlockTime;
-    type EpochChangeTrigger = srml_babe::SameAuthoritiesForever;
+impl srml_aura::Trait for Runtime {
+    type AuthorityId = AuraId;
 }
 
 impl srml_grandpa::Trait for Runtime {
@@ -213,7 +208,7 @@ parameter_types! {
 impl srml_timestamp::Trait for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
-    type OnTimestampSet = Babe;
+    type OnTimestampSet = Aura;
     type MinimumPeriod = MinimumPeriod;
 }
 
@@ -266,7 +261,7 @@ construct_runtime!(
                 System: system::{Module, Call, Storage, Config, Event},
                 Timestamp: srml_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: srml_randomness_collective_flip::{Module, Storage},
-                Babe: srml_babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
+                Aura: srml_aura::{Module, Config<T>, Inherent(Timestamp)},
                 Grandpa: srml_grandpa::{Module, Call, Storage, Config, Event},
                 Indices: srml_indices::{default, Config<T>},
                 Balances: srml_balances::{default, Error},
@@ -369,21 +364,13 @@ impl_runtime_apis! {
         }
     }
 
-    impl substrate_consensus_babe_primitives::BabeApi<Block> for Runtime {
-        fn configuration() -> BabeConfiguration {
-            // The choice of `c` parameter (where `1 - c` represents the
-            // probability of a slot being empty), is done in accordance to the
-            // slot duration and expected target block time, for safely
-            // resisting network delays of maximum two seconds.
-            // <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-            BabeConfiguration {
-                slot_duration: Babe::slot_duration(),
-                epoch_length: EpochDuration::get(),
-                c: PRIMARY_PROBABILITY,
-                genesis_authorities: Babe::authorities(),
-                randomness: Babe::randomness(),
-                secondary_slots: true,
-            }
+    impl substrate_consensus_aura_primitives::AuraApi<Block, AuraId> for Runtime {
+        fn slot_duration() -> u64 {
+            Aura::slot_duration()
+        }
+
+        fn authorities() -> Vec<AuraId> {
+            Aura::authorities()
         }
     }
 
