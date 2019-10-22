@@ -23,7 +23,6 @@ use substrate_primitives::{crypto::key_types, ed25519, OpaqueMetadata};
 #[cfg(feature = "std")]
 use sr_version::NativeVersion;
 use sr_version::RuntimeVersion;
-use srml_grandpa::{fg_primitives, AuthorityId as GrandpaId, AuthorityWeight as GrandpaWeight};
 use substrate_client::{
     block_builder::api::{self as block_builder_api, CheckInherentsResult, InherentData},
     impl_runtime_apis, runtime_api as client_api,
@@ -81,8 +80,6 @@ pub mod opaque {
         pub struct SessionKeys {
             #[id(key_types::AURA)]
             pub aura: AuraId,
-            #[id(key_types::GRANDPA)]
-            pub grandpa: GrandpaId,
         }
     }
 }
@@ -96,34 +93,6 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     impl_version: 4,
     apis: RUNTIME_API_VERSIONS,
 };
-
-/// Constants for Babe.
-
-/// Since BABE is probabilistic this is the average expected block time that
-/// we are targetting. Blocks will be produced at a minimum duration defined
-/// by `SLOT_DURATION`, but some slots will not be allocated to any
-/// authority and hence no block will be produced. We expect to have this
-/// block time on average following the defined slot duration and the value
-/// of `c` configured for BABE (where `1 - c` represents the probability of
-/// a slot being empty).
-/// This value is only used indirectly to define the unit constants below
-/// that are expressed in blocks. The rest of the code should use
-/// `SLOT_DURATION` instead (like the timestamp module for calculating the
-/// minimum period).
-/// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-pub const MILLISECS_PER_BLOCK: u64 = 3000;
-
-pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-
-pub const EPOCH_DURATION_IN_BLOCKS: u32 = 14 * DAYS;
-
-// These time units are defined in number of blocks.
-pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
-pub const HOURS: BlockNumber = MINUTES * 60;
-pub const DAYS: BlockNumber = HOURS * 24;
-
-// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
-pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
 
 /// The version infromation used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -176,17 +145,8 @@ impl srml_system::Trait for Runtime {
     type Version = Version;
 }
 
-parameter_types! {
-    pub const EpochDuration: u64 = u64::from(EPOCH_DURATION_IN_BLOCKS);
-    pub const ExpectedBlockTime: u64 = MILLISECS_PER_BLOCK;
-}
-
 impl srml_aura::Trait for Runtime {
     type AuthorityId = AuraId;
-}
-
-impl srml_grandpa::Trait for Runtime {
-    type Event = Event;
 }
 
 impl srml_indices::Trait for Runtime {
@@ -202,7 +162,8 @@ impl srml_indices::Trait for Runtime {
 }
 
 parameter_types! {
-    pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
+    /// Minimum time between blocks in milliseconds
+    pub const MinimumPeriod: u64 = 300;
 }
 
 impl srml_timestamp::Trait for Runtime {
@@ -262,7 +223,6 @@ construct_runtime!(
                 Timestamp: srml_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: srml_randomness_collective_flip::{Module, Storage},
                 Aura: srml_aura::{Module, Config<T>, Inherent(Timestamp)},
-                Grandpa: srml_grandpa::{Module, Call, Storage, Config, Event},
                 Indices: srml_indices::{default, Config<T>},
                 Balances: srml_balances::{default, Error},
                 Sudo: srml_sudo,
@@ -355,12 +315,6 @@ impl_runtime_apis! {
     impl substrate_offchain_primitives::OffchainWorkerApi<Block> for Runtime {
         fn offchain_worker(number: NumberFor<Block>) {
             Executive::offchain_worker(number)
-        }
-    }
-
-    impl fg_primitives::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> Vec<(GrandpaId, GrandpaWeight)> {
-            Grandpa::grandpa_authorities()
         }
     }
 

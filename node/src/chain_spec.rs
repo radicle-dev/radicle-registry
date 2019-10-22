@@ -1,9 +1,8 @@
 use aura_primitives::sr25519::AuthorityId as AuraId;
-use grandpa_primitives::AuthorityId as GrandpaId;
 use primitives::{Pair, Public};
 use radicle_registry_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, IndicesConfig, SudoConfig,
-    SystemConfig, WASM_BINARY,
+    AccountId, AuraConfig, BalancesConfig, GenesisConfig, IndicesConfig, SudoConfig, SystemConfig,
+    WASM_BINARY,
 };
 use substrate_service;
 
@@ -32,11 +31,10 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
 }
 
 /// Helper function to generate stash, controller and session key from seed
-pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, GrandpaId, AuraId) {
+pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, AuraId) {
     (
         get_from_seed::<AccountId>(&format!("{}//stash", seed)),
         get_from_seed::<AccountId>(seed),
-        get_from_seed::<GrandpaId>(seed),
         get_from_seed::<AuraId>(seed),
     )
 }
@@ -113,7 +111,7 @@ impl Alternative {
 }
 
 fn testnet_genesis(
-    initial_authorities: Vec<(AccountId, AccountId, GrandpaId, AuraId)>,
+    initial_authorities: Vec<(AccountId, AccountId, AuraId)>,
     root_key: AccountId,
     endowed_accounts: Vec<AccountId>,
     _enable_println: bool,
@@ -136,13 +134,7 @@ fn testnet_genesis(
         }),
         srml_sudo: Some(SudoConfig { key: root_key }),
         srml_aura: Some(AuraConfig {
-            authorities: initial_authorities.iter().map(|x| (x.3.clone())).collect(),
-        }),
-        srml_grandpa: Some(GrandpaConfig {
-            authorities: initial_authorities
-                .iter()
-                .map(|x| (x.2.clone(), 1))
-                .collect(),
+            authorities: initial_authorities.iter().map(|x| (x.2.clone())).collect(),
         }),
     }
 }
