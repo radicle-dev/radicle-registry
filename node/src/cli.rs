@@ -66,10 +66,11 @@ where
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
-    Ok(match chain_spec::Alternative::from(id) {
-        Some(spec) => Some(spec.load()?),
-        None => None,
-    })
+    if id == "dev" {
+        Ok(Some(chain_spec::dev()))
+    } else {
+        Ok(None)
+    }
 }
 
 fn run_until_exit<T, E>(mut runtime: Runtime, service: T, e: E) -> error::Result<()>

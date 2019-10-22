@@ -8,7 +8,6 @@ version = "0.1.0"
 default = ["std"]
 std = [
     "codec/std",
-    "safe-mix/std",
     "serde",
     "sr-primitives/std",
     "sr-io/std",
@@ -31,7 +30,7 @@ std = [
 
 [dependencies.codec]
 default-features = false
-features = ["derive"]
+features = ["derive", "full"]
 package = "parity-scale-codec"
 version = "1.0.0"
 
@@ -39,10 +38,6 @@ version = "1.0.0"
 features = ["derive"]
 optional = true
 version = "1.0.101"
-
-[dependencies.safe-mix]
-default-features = false
-version = "1.0.0"
 
 [dependencies.srml-aura]
 path = "../substrate/srml/aura"
