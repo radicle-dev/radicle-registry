@@ -17,7 +17,6 @@ std = [
     "srml-aura/std",
     "srml-balances/std",
     "srml-executive/std",
-    "srml-grandpa/std",
     "srml-indices/std",
     "srml-sudo/std",
     "srml-support/std",
@@ -65,10 +64,6 @@ default_features = false
 path = "../substrate/srml/executive"
 package = "srml-executive"
 default_features = false
-
-[dependencies.srml-grandpa]
-path = "../substrate/srml/grandpa"
-default-features = false
 
 [dependencies.srml-indices]
 path = "../substrate/srml/indices"

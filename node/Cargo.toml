@@ -36,14 +36,6 @@ package = "substrate-consensus-aura-primitives"
 path = "../substrate/core/basic-authorship"
 package = "substrate-basic-authorship"
 
-[dependencies.grandpa]
-path = "../substrate/core/finality-grandpa"
-package = "substrate-finality-grandpa"
-
-[dependencies.grandpa-primitives]
-path = "../substrate/core/finality-grandpa/primitives"
-package = "substrate-finality-grandpa-primitives"
-
 [dependencies.inherents]
 path = "../substrate/core/inherents"
 package = "substrate-inherents"
