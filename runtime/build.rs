@@ -1,4 +1,4 @@
-use wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
+use substrate_wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
 
 const DUMMY_WASM_BINARY_ENV: &str = "BUILD_DUMMY_WASM_BINARY";
 

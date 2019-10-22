@@ -6,15 +6,16 @@
 
 /// For more guidance on Substrate modules, see the example module
 /// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
-use support::{decl_event, decl_module, decl_storage, dispatch::Result};
-use system::ensure_signed;
+use srml_support::{decl_event, decl_module, decl_storage, dispatch::Result};
+use srml_system as system;
+use srml_system::ensure_signed;
 
 /// The module's configuration trait.
-pub trait Trait: system::Trait {
+pub trait Trait: srml_system::Trait {
     // TODO: Add other types and constants required configure this module.
 
     /// The overarching event type.
-    type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+    type Event: From<Event<Self>> + Into<<Self as srml_system::Trait>::Event>;
 }
 
 // This module's storage items.
@@ -51,7 +52,7 @@ decl_module! {
 decl_event!(
     pub enum Event<T>
     where
-        AccountId = <T as system::Trait>::AccountId,
+        AccountId = <T as srml_system::Trait>::AccountId,
     {
         Incremented(u32, AccountId),
     }

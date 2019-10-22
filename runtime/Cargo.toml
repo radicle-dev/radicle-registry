@@ -8,25 +8,25 @@ version = "0.1.0"
 default = ["std"]
 std = [
     "codec/std",
-    "client/std",
-    "rstd/std",
-    "runtime-io/std",
-    "support/std",
-    "balances/std",
-    "babe/std",
-    "babe-primitives/std",
-    "executive/std",
-    "indices/std",
-    "grandpa/std",
-    "primitives/std",
-    "sr-primitives/std",
-    "system/std",
-    "timestamp/std",
-    "sudo/std",
-    "version/std",
-    "serde",
     "safe-mix/std",
-    "offchain-primitives/std",
+    "serde",
+    "sr-primitives/std",
+    "sr-io/std",
+    "sr-std/std",
+    "sr-version/std",
+    "srml-babe/std",
+    "srml-balances/std",
+    "srml-executive/std",
+    "srml-grandpa/std",
+    "srml-indices/std",
+    "srml-sudo/std",
+    "srml-support/std",
+    "srml-system/std",
+    "srml-timestamp/std",
+    "substrate-client/std",
+    "substrate-consensus-babe-primitives/std",
+    "substrate-offchain-primitives/std",
+    "substrate-primitives/std",
     "substrate-session/std",
 ]
 
@@ -45,59 +45,49 @@ version = "1.0.101"
 default-features = false
 version = "1.0.0"
 
-[dependencies.babe]
+[dependencies.srml-babe]
 path = "../substrate/srml/babe"
-package = "srml-babe"
 default-features = false
 
-[dependencies.babe-primitives]
+[dependencies.substrate-consensus-babe-primitives]
 path = "../substrate/core/consensus/babe/primitives"
-package = "substrate-consensus-babe-primitives"
 default-features = false
 
-[dependencies.balances]
+[dependencies.srml-balances]
 path = "../substrate/srml/balances"
-package = "srml-balances"
 default_features = false
 
-[dependencies.client]
+[dependencies.substrate-client]
 path = "../substrate/core/client"
-package = "substrate-client"
 default_features = false
 
-[dependencies.executive]
+[dependencies.srml-executive]
 path = "../substrate/srml/executive"
 package = "srml-executive"
 default_features = false
 
-[dependencies.grandpa]
+[dependencies.srml-grandpa]
 path = "../substrate/srml/grandpa"
-package = "srml-grandpa"
 default-features = false
 
-[dependencies.indices]
+[dependencies.srml-indices]
 path = "../substrate/srml/indices"
 default_features = false
-package = "srml-indices"
 
-[dependencies.offchain-primitives]
+[dependencies.substrate-offchain-primitives]
 path = "../substrate/core/offchain/primitives"
-package = "substrate-offchain-primitives"
 default-features = false
 
-[dependencies.primitives]
+[dependencies.substrate-primitives]
 path = "../substrate/core/primitives"
 default_features = false
-package = "substrate-primitives"
 
-[dependencies.rstd]
+[dependencies.sr-std]
 path = "../substrate/core/sr-std"
-package = "sr-std"
 default_features = false
 
-[dependencies.runtime-io]
+[dependencies.sr-io]
 path = "../substrate/core/sr-io"
-package = "sr-io"
 default_features = false
 
 [dependencies.sr-primitives]
@@ -112,31 +102,26 @@ default_features = false
 path = "../substrate/core/session"
 default-features = false
 
-[dependencies.sudo]
+[dependencies.srml-sudo]
 path = "../substrate/srml/sudo"
 package = "srml-sudo"
 default_features = false
 
-[dependencies.support]
+[dependencies.srml-support]
 path = "../substrate/srml/support"
-package = "srml-support"
 default_features = false
 
-[dependencies.system]
+[dependencies.srml-system]
 path = "../substrate/srml/system"
-package = "srml-system"
 default_features = false
 
-[dependencies.timestamp]
+[dependencies.srml-timestamp]
 path = "../substrate/srml/timestamp"
-package = "srml-timestamp"
 default_features = false
 
-[dependencies.version]
+[dependencies.sr-version]
 path = "../substrate/core/sr-version"
-package = "sr-version"
 default_features = false
 
-[build-dependencies.wasm-builder-runner]
-package = "substrate-wasm-builder-runner"
+[build-dependencies.substrate-wasm-builder-runner]
 version = "1.0.2"
