@@ -130,8 +130,6 @@ impl srml_system::Trait for Runtime {
     type Header = generic::Header<BlockNumber, BlakeTwo256>;
     /// The ubiquitous event type.
     type Event = Event;
-    /// Update weight (to fee) multiplier per-block.
-    type WeightMultiplierUpdate = ();
     /// The ubiquitous origin type.
     type Origin = Origin;
     /// Maximum number of block number to block hash mappings to keep (oldest pruned first).
@@ -181,6 +179,15 @@ parameter_types! {
     pub const TransactionByteFee: u128 = 0;
 }
 
+impl srml_transaction_payment::Trait for Runtime {
+    type Currency = srml_balances::Module<Runtime>;
+    type OnTransactionPayment = ();
+    type TransactionBaseFee = TransactionBaseFee;
+    type TransactionByteFee = TransactionByteFee;
+    type WeightToFee = ConvertInto;
+    type FeeMultiplierUpdate = ();
+}
+
 impl srml_balances::Trait for Runtime {
     /// The type for recording an account's balance.
     type Balance = Balance;
@@ -190,15 +197,11 @@ impl srml_balances::Trait for Runtime {
     type OnNewAccount = Indices;
     /// The ubiquitous event type.
     type Event = Event;
-    type TransactionPayment = ();
     type DustRemoval = ();
     type TransferPayment = ();
     type ExistentialDeposit = ExistentialDeposit;
     type TransferFee = TransferFee;
     type CreationFee = CreationFee;
-    type TransactionBaseFee = TransactionBaseFee;
-    type TransactionByteFee = TransactionByteFee;
-    type WeightToFee = ConvertInto;
 }
 
 impl srml_sudo::Trait for Runtime {
@@ -248,7 +251,7 @@ pub type SignedExtra = (
     srml_system::CheckEra<Runtime>,
     srml_system::CheckNonce<Runtime>,
     srml_system::CheckWeight<Runtime>,
-    srml_balances::TakeFees<Runtime>,
+    srml_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
