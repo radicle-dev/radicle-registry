@@ -1,6 +1,6 @@
 use futures01::future::Future;
-use parity_scale_codec::{Decode, FullCodec};
-use srml_support::storage::generator::StorageValue;
+use parity_scale_codec::FullCodec;
+use srml_support::storage::generator::{StorageMap, StorageValue};
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
@@ -23,12 +23,17 @@ impl Client {
 
     pub fn fetch_value<S: StorageValue<T>, T: FullCodec>(
         &self,
-    ) -> impl Future<Item = Option<S::Query>, Error = Error>
-    where
-        S::Query: Decode,
-    {
-        self.subxt_client
-            .fetch::<S::Query>(StorageKey(S::storage_value_final_key()[..].into()))
+    ) -> impl Future<Item = Option<T>, Error = Error> {
+        let key = StorageKey(Vec::from(&S::storage_value_final_key()[..]));
+        self.subxt_client.fetch::<T>(key)
+    }
+
+    pub fn fetch_map_value<S: StorageMap<Key, Value>, Key: FullCodec, Value: FullCodec>(
+        &self,
+        key: Key,
+    ) -> impl Future<Item = Option<Value>, Error = Error> {
+        let key = StorageKey(Vec::from(S::storage_map_final_key(key).as_ref()));
+        self.subxt_client.fetch::<Value>(key)
     }
 
     pub fn submit_and_watch_call(
