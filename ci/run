@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Script run by buildkite that builds and tests the project.
+#
+# See
+# * https://buildkite.com/docs/pipelines/managing-log-output
+# * https://buildkite.com/docs/pipelines/writing-build-scripts
+
+set -euo pipefail
+
+if [[ ${CI_VERBOSE:-} =~ ^1|true$ ]]; then
+  set -x
+fi
+
+TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
+
+echo "--- Load cache"
+declare -i cache_version=5
+target_cache=/cache/target-v${cache_version}
+
+if [[ $BUILDKITE_BRANCH = "master" ]]; then
+  declare -i old_cache_version="$cache_version - 1"
+  old_target_cache=/cache/target-v${old_cache_version}
+  if [[ -d "$old_target_cache" ]]; then
+    rm -rf "$old_target_cache"
+    echo "Deleted old cache $old_target_cache"
+  fi
+fi
+
+if [[ -d "$target_cache" ]]; then
+  time cp -aT "$target_cache" target
+  echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
+else
+  echo "Cache $target_cache not available"
+fi
+
+echo "--- cargo fmt"
+time cargo fmt --all -- --check
+
+echo "--- cargo build"
+export BUILD_DUMMY_WASM_BINARY=0
+export RUSTFLAGS="-D warnings"
+cargo build --all --all-targets --release
+
+echo "--- cargo test"
+# We build tests in release mode so that we can reuse the artifacts
+# from 'cargo build'
+cargo test --all --release --color=always
+
+echo "--- Save cache"
+# Remove large build artifacts that are faster to build than cache
+rm -rf \
+  target/*/radicle_registry_node* \
+  target/*/incremental \
+  target/*/wbuild/target/*/incremental \
+  target/*/wbuild-runner/target/*/incremental
+
+if [[ ! -d "$target_cache" ]]; then
+  time cp -aTu target "$target_cache"
+  echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
+else
+  echo "Cache $target_cache does already exist"
+fi
