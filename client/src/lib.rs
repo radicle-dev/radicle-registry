@@ -1,9 +1,16 @@
+//! Client for the radicle registry
+//!
+//! The client comes in two flavours: The [Client] with methods that return [Future]s and the
+//! [SyncClient] with the same methods, but returning a corresponding [Result] instead of a
+//! [Future]. The latter is usefull for writing synchronous code and spawns work in a separate
+//! runtime.
 use futures01::prelude::*;
 
 use radicle_registry_runtime::{balances, counter, Address};
 use substrate_subxt::balances::BalancesStore;
 
 mod base;
+mod sync;
 
 #[doc(inline)]
 pub use radicle_registry_runtime::{counter::CounterValue, Balance};
@@ -13,6 +20,7 @@ pub use substrate_primitives::ed25519;
 
 #[doc(inline)]
 pub use base::Error;
+pub use sync::SyncClient;
 
 /// Client to interact with the radicle registry ledger through a local node.
 pub struct Client {
