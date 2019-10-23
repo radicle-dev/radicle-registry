@@ -25,44 +25,56 @@ version = "3.1.3"
 path = "../runtime"
 
 [dependencies.aura]
-path = "../substrate/core/consensus/aura"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-consensus-aura"
 
 [dependencies.aura-primitives]
-path = "../substrate/core/consensus/aura/primitives"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-consensus-aura-primitives"
 
 [dependencies.basic-authorship]
-path = "../substrate/core/basic-authorship"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-basic-authorship"
 
 [dependencies.inherents]
-path = "../substrate/core/inherents"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-inherents"
 
 [dependencies.network]
-path = "../substrate/core/network"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-network"
 
 [dependencies.primitives]
-path = "../substrate/core/primitives"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-primitives"
 
 [dependencies.sr-io]
-path = "../substrate/core/sr-io"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 
 [dependencies.substrate-cli]
-path = "../substrate/core/cli"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 
 [dependencies.substrate-client]
-path = "../substrate/core/client"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 
 [dependencies.substrate-executor]
-path = "../substrate/core/executor"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 
 [dependencies.substrate-service]
-path = "../substrate/core/service"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 
 [dependencies.transaction-pool]
-path = "../substrate/core/transaction-pool"
+git = "https://github.com/paritytech/substrate"
+rev = "9b8bfd72126be453cda302caff28a6c99adee14c"
 package = "substrate-transaction-pool"
