@@ -20,7 +20,6 @@ use futures::future::{
 };
 use parity_scale_codec::Codec;
 use runtime_primitives::traits::{
-    MaybeSerializeDebug,
     Member,
     SimpleArithmetic,
 };
@@ -36,7 +35,6 @@ pub trait Balances: System {
         + Codec
         + Default
         + Copy
-        + MaybeSerializeDebug
         + From<<Self as System>::BlockNumber>;
 }
 
