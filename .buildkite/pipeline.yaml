@@ -1,12 +1,6 @@
 steps:
   - label: "Check formatting, lint, build and test "
-    commands:
-      - 'cargo fmt --all -v -- --check'
-      - 'cargo clippy --all --all-targets -- -D warnings -D clippy::all'
-      - 'BUILD_DUMMY_WASM_BINARY=1 cargo build --all'
-      - 'cargo test --all --color=always'
-# Remove large build artifacts that are faster to build than cache.
-      - 'rm target/debug/radicle_registry_node'
+    command: 'ci/run'
     env:
       DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b
       DOCKER_FILE: ci/base-image/Dockerfile
