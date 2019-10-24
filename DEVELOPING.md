@@ -23,6 +23,17 @@ Packages
   lives on chain.
 * `node` contains the node code which includes the runtime code.
 
+
+Updating substrate
+------------------
+
+To update the revision of substrate run
+~~~
+./scripts/update-substrate REV
+~~~
+where `REV` is the new Git revision SHA.
+
+
 Updating Continuous Integration's base Docker image
 ---------------------------------------------------
 

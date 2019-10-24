@@ -6,7 +6,6 @@ jobs:
 
     steps:
       - checkout
-      - run: git submodule update --init
       - run:
           name: "Setup shell environment"
           command: |
