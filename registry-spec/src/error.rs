@@ -1,14 +1,32 @@
 /// Description of errors that a transfer of Oscoin may raise.
 pub enum TransferError {
+    /// Amount to be transferred is not greater than or equal to 1 (one)
+    /// unit of currency.
+    InvalidTransferAmountError,
+
     /// This type of error is only here tentatively since the validation of a
     /// transfer's data may not necessarily occur in the Registry layer, meaning
-    /// it may not have to deal with this
+    /// it may not have to deal with this.
     InsufficientBalanceError,
 
     /// As mentioned in the whitepaper, the contracts associated with the
     /// sending and receiving addresses must authorize the transfer for it
     /// to be valid, otherwise it will result in this error.
     ContractDeniedError,
+}
+
+pub enum ProjectValidationError {
+    /// The origin of the `accept/reject_project` transaction is not
+    /// in the set of root accounts.
+    OriginNotRootError,
+
+    /// The hash of the transaction is invalid e.g. it does not correspond to
+    /// a `register_project` transaction, or has improper structure.
+    InvalidTransactionHashError,
+
+    /// The project in question has already been validated i.e. it has already
+    /// been previously accepted/rejected.
+    ProjectAlreadyValidatedError,
 }
 
 /// Description of errors that may occur when registering a project in the

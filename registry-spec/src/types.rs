@@ -22,7 +22,7 @@ pub type ProjectId = Address;
 pub struct PublicKey;
 
 /// Type for the hash digest used in the Oscoin Registry. Useful to represent
-/// commit hashes.
+/// commit hashes, hashed transactions or public keys.
 pub struct Hash;
 
 /// Representation of a URL. It can represent e.g. a project's page.
@@ -112,6 +112,9 @@ pub enum DependencyUpdate {
 }
 
 pub struct Account {
+    /// Hash of the account owner's public key.
+    pub id: AccountId,
+
     /// Transaction counter that is increased whenever a transaction is sent from this account.
     ///
     /// A transaction is only valid if its nonce matches the nonce of its sender account when the

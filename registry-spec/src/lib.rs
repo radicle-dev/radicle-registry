@@ -13,7 +13,7 @@ pub mod types;
 /// The methods here return `Result<(), E>` for some error type `E` as they
 /// will be applying a modification on the Registry global state, and won't need
 /// to return any actual data if they succeed.
-pub trait LedgerTransactions {
+pub trait RegistryTransactions {
     /// Transfer Oscoin from one account to another.
     ///
     /// This transaction's presence in the registry layer is still subject to
@@ -26,6 +26,18 @@ pub trait LedgerTransactions {
         // Amount of Oscoin to be sent.
         amount: types::Oscoin,
     ) -> Result<(), error::TransferError>;
+
+    fn accept_project(
+        // Hash of the `register_project` transaction for the `Project` in
+        // question.
+        t_hash: Hash,
+    ) -> Result<(), error::ProjectValidationError>;
+
+    fn reject_project(
+        // Hash of the `register_project` transaction for the `Project` in
+        // question.
+        t_hash: Hash,
+    ) -> Result<(), error::ProjectValidationError>;
 
     /// Registers a project on the Oscoin Registry and returns the new project’s ID.
     ///
@@ -85,7 +97,7 @@ pub trait LedgerTransactions {
 }
 
 /// Functions to access information from the registry state.
-pub trait LedgerView {
+pub trait RegistryView {
     /// Returns the project registered at the given address.
     ///
     /// Returns `None` if no project was registered or the project was unregistered.
