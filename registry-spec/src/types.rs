@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-/// Type for human-readable ledger addresses. Its specific data structure is
+/// Type for human-readable registry addresses. Its specific data structure is
 /// not important here.
 pub struct Address;
 
 /// Type for account identifier. Uniquely corresponds to an account in the
-/// ledger.
+/// registry.
 ///
 /// At present it is assumed to be the same as `Address`, but will eventually
 /// diverge.
@@ -17,11 +17,11 @@ pub type AccountId = Address;
 /// diverge.
 pub type ProjectId = Address;
 
-/// Type for Ledger public keys. Its specific data structure is not
+/// Type for Registry public keys. Its specific data structure is not
 /// important here, just as it is with `Address`es.
 pub struct PublicKey;
 
-/// Type for the hash digest used in the Oscoin Ledger. Useful to represent
+/// Type for the hash digest used in the Oscoin Registry. Useful to represent
 /// commit hashes.
 pub struct Hash;
 
@@ -36,7 +36,7 @@ pub struct Oscoin;
 /// Representation of a contribution's author.
 pub struct Author;
 
-/// Representation of a project in the Oscoin ledger.
+/// Representation of a project in the Oscoin registry.
 /// It is still unclear whether the project's keyset should be present in this
 /// data structure, or if it will be in a different layer of the protocol.
 pub struct Project {
@@ -50,7 +50,7 @@ pub struct Project {
 /// Datatype representing a hash-linked-list. Used in the whitepaper to
 /// organize contributions when checkpointing.
 ///
-/// The type it abstracts over - in the context of the whitepaper's Ledger
+/// The type it abstracts over - in the context of the whitepaper's Registry
 /// section, contributions, here abbreviated as `C` - should be a tuple,
 /// struct or equivalent with at least two fields e.g. `prev` and `commit`
 /// such that for every two consecutive members of the hash-linked-list
@@ -91,7 +91,7 @@ pub struct Contribution {
 pub struct CheckpointIndex;
 
 /// Datatype representing a dependency update, another segment of data required
-/// in order to checkpoint a project in the Oscoin ledger.
+/// in order to checkpoint a project in the Oscoin registry.
 pub enum DependencyUpdate {
     /// Constructor to add a dependency.
     Depend {

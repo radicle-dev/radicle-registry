@@ -1,4 +1,4 @@
-//! This is a specification document meant to approximate the Ledger described in
+//! This is a specification document meant to approximate the Registry described in
 //! Oscoin whitepaper into concrete Rust code.
 //! However, it is not meant to be an exact implementation.
 //!
@@ -7,16 +7,16 @@
 pub mod error;
 pub mod types;
 
-/// A trait exposing the Oscoin ledger transactions described in the
+/// A trait exposing the Oscoin registry transactions described in the
 /// whitepaper.
 ///
 /// The methods here return `Result<(), E>` for some error type `E` as they
-/// will be applying a modification on the Ledger global state, and won't need
+/// will be applying a modification on the Registry global state, and won't need
 /// to return any actual data if they succeed.
 pub trait LedgerTransactions {
     /// Transfer Oscoin from one account to another.
     ///
-    /// This transaction's presence in the ledger layer is still subject to
+    /// This transaction's presence in the registry layer is still subject to
     /// discussion.
     fn transfer_oscoin(
         // Account from which to send Oscoin.
@@ -27,7 +27,7 @@ pub trait LedgerTransactions {
         amount: types::Oscoin,
     ) -> Result<(), error::TransferError>;
 
-    /// Registers a project on the Oscoin Ledger and returns the new project’s ID.
+    /// Registers a project on the Oscoin Registry and returns the new project’s ID.
     ///
     /// The transaction’s sender account becomes the initial maintainer of the project.
     ///
@@ -56,13 +56,13 @@ pub trait LedgerTransactions {
         maintainer_key: types::AccountId,
     ) -> Result<(), error::KeysetError>;
 
-    /// Unregistering a project from the Oscoin Ledger.
+    /// Unregistering a project from the Oscoin Registry.
     ///
     /// As is the case above, this transaction may also be handled outside the
-    /// ledger.
+    /// registry.
     fn unregister_project(id: types::ProjectId) -> Result<(), error::UnregisterProjectError>;
 
-    /// Checkpointing a project in Oscoin's ledger.
+    /// Checkpointing a project in Oscoin's registry.
     fn checkpoint(
         // Account identifier of the project to which a new checkpoint will be
         // added.
@@ -84,7 +84,7 @@ pub trait LedgerTransactions {
     ) -> Result<(), error::CheckpointError>;
 }
 
-/// Functions to access information from the ledger state.
+/// Functions to access information from the registry state.
 pub trait LedgerView {
     /// Returns the project registered at the given address.
     ///

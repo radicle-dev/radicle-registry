@@ -1,7 +1,7 @@
 /// Description of errors that a transfer of Oscoin may raise.
 pub enum TransferError {
     /// This type of error is only here tentatively since the validation of a
-    /// transfer's data may not necessarily occur in the Ledger layer, meaning
+    /// transfer's data may not necessarily occur in the Registry layer, meaning
     /// it may not have to deal with this
     InsufficientBalanceError,
 
@@ -12,7 +12,7 @@ pub enum TransferError {
 }
 
 /// Description of errors that may occur when registering a project in the
-/// Oscoin ledger (`register` transaction). Not exhaustive, but should cover
+/// Oscoin registry (`register` transaction). Not exhaustive, but should cover
 /// most common cases.
 pub enum RegisterProjectError {
     /// The canonical source URL used to register the project is invalid.
@@ -28,7 +28,7 @@ pub enum RegisterProjectError {
     /// 3. it can be accessed without restrictions (^)
     ///
     /// (^) This part can be harder to define - if the URL permanently returns
-    /// `404`s *after* it has been inducted into the ledger, but not before,
+    /// `404`s *after* it has been inducted into the registry, but not before,
     /// is it still valid?
     InvalidURLError,
 }
@@ -38,7 +38,7 @@ pub enum RegisterProjectError {
 pub enum KeysetError {
     /// Version 1.0 of the whitepaper does not mention what happens when
     /// `addkey`/`removekey` are called with projects that have not yet been
-    /// added to the ledger, so here that is tentatively treated as an error.
+    /// added to the registry, so here that is tentatively treated as an error.
     AccountIfNotInUseError,
 }
 
