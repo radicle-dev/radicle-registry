@@ -42,9 +42,13 @@ After performing the necessary changes to the Dockerfile located in
 repository and run the following:
 
 ```bash
-docker build ci/base-image --tag gcr.io/opensourcecoin/radicle-registry;
+docker build ci/base-image --tag gcr.io/opensourcecoin/radicle-registry
 docker push gcr.io/opensourcecoin/radicle-registry
 ```
+
+The `docker push` command outputs the pushed image’s digest. To use the pushed
+image in Buildkite runs, update the `DOCKER_IMAGE` value in
+`.buildkite/pipeline.yaml` with the new digest.
 
 Note that an account with permission to push to the Google Cloud Registry
 address at `gcr.io/opensourcecoin/radicle-registry` is required in order for
@@ -57,28 +61,3 @@ https://cloud.google.com/container-registry/docs/access-control.
 
 If all this fails, request assistance to someone that can grant these
 permissions.
-
-Updating the Buildkite pipeline
--------------------------------
-
-After this is done, the Buildkite pipeline located at `.buildkite/pipeline.yml`
-will also need to be updated with the correct Docker image digest -
-specifically, the `DOCKER_IMAGE` environment variable.
-
-
-To find the digest for the image build from the above steps, run
-
-```bash
-docker images --digests | grep radicle-registry
-```
-
-which should produce output like
-
-```
-gcr.io/opensourcecoin/radicle-registry       latest                                     sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b   c824ae208aff        50 minutes ago      3.15GB
-gcr.io/opensourcecoin/radicle-registry       <none>                                     sha256:41347023e88ff45254a95bcf09cb3085e0d6bc677eda45e8de2a4611191eb2fe   7f985cd4d719        3 days ago          3.23GB
-```
-
-The new image digest in this case will be
-sha256:264a6e976faeb63adda312cd3ecf2fb9ff71fd6f030128b3f012daf9c4cff05b, as it
-is the most recently built.
