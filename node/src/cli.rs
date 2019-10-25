@@ -69,7 +69,10 @@ fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
     if id == "dev" {
         Ok(Some(chain_spec::dev()))
     } else {
-        Ok(None)
+        Err(format!(
+            "Unknown chain spec \"{}\". You must run the node with --dev",
+            id
+        ))
     }
 }
 
