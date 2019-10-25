@@ -44,3 +44,29 @@ Note that `build-dev-node` will also reset the chain state.
 [dev-manual]: ./DEVELOPING.md
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
 [wasm-gc]: https://github.com/alexcrichton/wasm-gc
+
+Ledger Specification
+--------------------
+
+In the `ledger-spec` folder, there is a Rust crate that details the Oscoin
+ledger specification with traits, types and a sizable amount of documentation.
+
+It is intended to bridge the formal description of the ledger from the
+whitepaper with the ledger's future implementation, providing a "sandbox"
+with which to test and discuss design ideas before implementing them in
+earnest.
+
+The `ledger-spec` crate is meant to evolve with the project, and at each point
+in time its contents will reflect the team's requirements from and
+understanding of the Oscoin ledger.
+
+Note that although there is no actual implementation of any function or
+datatype in the crate, it compiles and is part of the build process.
+
+### Structure
+
+`ledger-spec` is a library with three modules:
+* `lib.rs`, defining the main traits with which to interact with the Oscoin
+  ledger
+* `error.rs` defining errors that may arise when interacting with the ledger.
+* `types.rs`, defining the primitive types that will populate the ledger state.
