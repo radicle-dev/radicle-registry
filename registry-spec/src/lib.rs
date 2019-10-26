@@ -30,13 +30,13 @@ pub trait RegistryTransactions {
     fn accept_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
-        t_hash: Hash,
+        t_hash: types::Hash,
     ) -> Result<(), error::ProjectValidationError>;
 
     fn reject_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
-        t_hash: Hash,
+        t_hash: types::Hash,
     ) -> Result<(), error::ProjectValidationError>;
 
     /// Registers a project on the Oscoin Registry and returns the new project’s ID.
