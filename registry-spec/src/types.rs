@@ -48,9 +48,6 @@ pub type Author = PublicKey;
 /// ID of a project's current checkpoint.
 pub type CheckpointId = TxHash;
 
-/// The `ProjectId` tuple serves to uniquely identify a project.
-pub type ProjectId = (ProjectName, ProjectDomain);
-
 /// The name a `Project` has been registered with.
 ///
 /// It is a UTF-8 `String` between 1 and 32 characters long.
@@ -58,6 +55,19 @@ pub type ProjectName = String;
 
 /// The domain under which the `Project`'s `ProjectName` is registered.
 pub type ProjectDomain = String;
+
+/// The `ProjectId` tuple serves to uniquely identify a project.
+pub type ProjectId = (ProjectName, ProjectDomain);
+
+/// A structure that contains a proof that the entity that submitted the
+/// `register_project` transaction actually has ownership of the submitted
+/// `Project`.
+pub type Proof = Vec<u8>;
+
+/// A structure that contains a dictionary of metadata to associate with a
+/// project. for example the Radicle id that project uses on that service.
+/// It is immutable once defined.
+pub struct Meta;
 
 /// Representation of a project in the Oscoin registry.
 /// It is still unclear whether the project's keyset should be present in this
@@ -68,6 +78,18 @@ pub struct Project {
     pub hash: CheckpointId,
     pub id: ProjectId,
     pub contract: Contract,
+    pub proof: Proof,
+    pub meta: Meta,
+}
+
+pub enum ContractOutput {
+    /// The contract authorized the supplied transaction.
+    Authorized,
+    /// The contract did not authorize the supplied transaction.
+    Unauthorized,
+    /// For transactions that trigger a transfer of funds, this variant
+    /// specifies the amount.
+    Value(Oscoin),
 }
 
 /// A project's "smart" contract.
@@ -75,7 +97,9 @@ pub struct Project {
 /// The actual type might not be representable as a regular data structure, or
 /// if it is, it may not be representable as part of a project's data
 /// structure, but it's kept here for visibility.
-pub struct Contract;
+pub struct Contract {
+    pub ct: Box<dyn Fn(TxHash) -> ContractOutput>,
+}
 
 /// A project's version at a given point in time.
 pub type Version = String;

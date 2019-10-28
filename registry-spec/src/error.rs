@@ -14,7 +14,26 @@ pub enum TransferError {
     ContractDenied,
 }
 
-pub enum ValidationOfProjectRegistrationError {
+/// Description of errors that may occur when registering a project in the
+/// Oscoin registry (`register` transaction). Not exhaustive, but should cover
+/// most common cases.
+pub enum RegisterProjectError {
+    /// The name with which the project was to be registered is invalid e.g.
+    /// it has already been used.
+    NameAlreadyExists,
+
+    /// The project's supplied domain was invalid e.g nonexistent.
+    InvalidDomain,
+
+    /// The project's supplied checkpoint did not exist.
+    InvalidCheckpointId,
+
+    /// Insufficient balance in the transaction's origin account to cover
+    /// the registration fee.
+    InsufficientBalanceForFee,
+}
+
+pub enum ProjectRegistrationVoteError {
     /// The origin of the `accept/reject_project` transaction is not
     /// in the set of root accounts.
     OriginNotRoot,
@@ -28,21 +47,13 @@ pub enum ValidationOfProjectRegistrationError {
     ProjectVoteClosed,
 }
 
-/// Description of errors that may occur when registering a project in the
-/// Oscoin registry (`register` transaction). Not exhaustive, but should cover
-/// most common cases.
-pub enum RegisterProjectError {
-    /// The name with which the project was to be registered is invalid e.g.
-    /// it is not valid UTF-8, it is longer than the protocol allows, or
-    /// it has already been used.
-    NameAlreadyExists,
-
-    /// The project's supplied domain was invalid e.g nonexistent or just
-    /// invalid UTF-8.
-    InvalidDomain,
-
-    /// The project's supplied checkpoint did not exist.
-    InvalidCheckpointId,
+/// Errors that may occur when withdrawing a project's candidacy to the Oscoin
+/// Registry.
+pub enum WithdrawProjectError {
+    /// The project being removed from the pending registrations set is
+    /// not a part of that set - it either does not exist, or has already been
+    /// accepted/rejected.
+    ProjectIsNotInWaitlist,
 }
 
 /// Errors that may happen when unregistering a project.

@@ -1,3 +1,5 @@
+#![feature(associated_type_defaults)]
+
 //! This is a specification document meant to approximate the Registry described in
 //! Oscoin whitepaper into concrete Rust code.
 //! However, it is not meant to be an exact implementation.
@@ -28,33 +30,60 @@ pub trait RegistryTransactions {
         amount: types::Oscoin,
     ) -> Result<types::TxHash, error::TransferError>;
 
+    /// Registers a project on the Oscoin Registry and returns the new project’s ID.
+    ///
+    /// The transaction’s sender account becomes the initial maintainer of the
+    /// project, once it has been accepted into the registry.
+    ///
+    /// After submitting this transaction, the project will enter the
+    /// `PendingRegistrations` set, after which it can either be accepted or
+    /// rejected by an account in the `ROOT_ACCOUNT`s set with the appropriate
+    /// `accept_project/reject_project` transaction.
+    ///
+    /// Further, after submitting this transaction, regardless of whether the
+    /// project is later accepted or rejected, the registration fee is deducted
+    /// from the transaction sender's account - if no such available balance is
+    /// found, it will result in an error.
+    ///
+    /// Preconditions:
+    /// * The ownership proof can only be up to 4096 bytes long.
+    fn register_project(
+        // Requested name of the project to be registered.
+        project_id: types::ProjectId,
+        project_checkpoint: types::CheckpointId,
+        project_contract: types::Contract,
+        project_ownership_proof: types::Proof,
+        project_meta: types::Meta,
+    ) -> Result<types::TxHash, error::RegisterProjectError>;
+
     /// Accept a project that has been submitted for registration.
+    ///
+    /// It is then removed from the pending registrations set, and can then be
+    /// retrieved using the `get_project()` method from `RegistryView`.
     fn accept_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
         t_hash: types::TxHash,
-    ) -> Result<types::TxHash, error::ValidationOfProjectRegistrationError>;
+    ) -> Result<types::ProjectId, error::ProjectRegistrationVoteError>;
 
     /// Reject a project that has been submitted for registration.
+    /// It is then removed from the pending registrations set.
     fn reject_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
         t_hash: types::TxHash,
-    ) -> Result<types::TxHash, error::ValidationOfProjectRegistrationError>;
+    ) -> Result<types::TxHash, error::ProjectRegistrationVoteError>;
 
-    /// Registers a project on the Oscoin Registry and returns the new project’s ID.
+    /// Transaction used to annul a previous `register_project` transaction,
+    /// if it has not been approved/rejected yet.
     ///
-    /// The transaction’s sender account becomes the initial maintainer of the project.
-    ///
-    /// The project ID is computed by hashing the sender’s nonce and the arguments. In the current
-    /// implementation we use ethereum’s contract creation logic which generates the project ID.
-    fn register_project(
-        // Requested name of the project to be registered.
-        project_name: types::ProjectName,
-        // Domain under which the project is registered.
-        project_domain: types::ProjectDomain,
-        project_checkpoint: types::CheckpointId,
-    ) -> Result<types::TxHash, error::RegisterProjectError>;
+    /// If successful, the project referred to will be removed from the
+    /// pending registrations set
+    /// (see RegistryView::get_pending_project_registrations).
+    fn withdraw_project(
+        // Hash of the `register_project` whose candidacy is being withdrawn.
+        t_hash: types::TxHash,
+    ) -> Result<types::TxHash, error::WithdrawProjectError>;
 
     /// Unregistering a project from the Oscoin Registry.
     ///
@@ -95,4 +124,16 @@ pub trait RegistryView {
     /// An account exists for every address. If it has not receveived any money the empty account
     /// with zero nonce and balance is returned.
     fn get_account(address: types::AccountId) -> types::Account;
+
+    /// The set of all registered projects in the Oscoin registry.
+    fn get_registered_projects() -> std::collections::HashSet<types::ProjectId>;
+
+    /// The set of projects that are pending acceptance into the registry,
+    /// having been submitted with the `register_project` transaction.
+    fn get_pending_project_registrations() -> std::collections::HashSet<types::ProjectId>;
+
+    /// The set of root accounts, specified at genesis.
+    /// Per the spec, these accounts are the only ones authorized to perform
+    /// certain sets of actions e.g. accept or reject projects.
+    fn get_root_accounts() -> std::collections::HashSet<types::AccountId>;
 }
