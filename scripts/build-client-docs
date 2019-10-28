@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# Build documentation for client library
+
+set -euo pipefail
+
+cargo doc \
+  --no-deps \
+  -p radicle_registry_client \
+  -p substrate-primitives \
+  -p sr-primitives \
+  "$@"

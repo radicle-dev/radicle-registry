@@ -7,5 +7,9 @@ edition = "2018"
 [dependencies]
 
 [workspace]
-members = [ "runtime", "node" ]
-exclude = [ "substrate" ]
+members = [
+  "client",
+  "node",
+  "runtime",
+  "subxt",
+  ]

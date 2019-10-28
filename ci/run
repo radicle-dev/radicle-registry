@@ -43,9 +43,16 @@ export RUSTFLAGS="-D warnings"
 cargo build --all --all-targets --release
 
 echo "--- cargo test"
+echo "Starting radicle_registry_node"
+RUST_LOG=error ./target/release/radicle_registry_node \
+  --dev \
+  --base-path /tmp/radicle-registry \
+  &
+registry_node_pid=$!
 # We build tests in release mode so that we can reuse the artifacts
 # from 'cargo build'
 cargo test --all --release --color=always
+kill "$registry_node_pid"
 
 echo "--- Save cache"
 # Remove large build artifacts that are faster to build than cache

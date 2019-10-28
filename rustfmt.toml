@@ -1,4 +1,5 @@
 edition = "2018"
 ignore = [
   "substrate",
+  "subxt",
 ]

@@ -1,0 +1,3 @@
+[submodule "subxt/vendor"]
+	path = subxt/vendor
+	url = https://github.com/paritytech/substrate-subxt.git

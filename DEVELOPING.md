@@ -22,6 +22,33 @@ Packages
 * `runtime` contains the Substrate runtime code that defines the ledger and
   lives on chain.
 * `node` contains the node code which includes the runtime code.
+* `client` contains the high-level client library for interacting with the
+  registry through a node.
+* `subxt` contains a copy of [`subxt`][subxt], the Rust client library for
+  substrate. This package serves as the base for `client`.
+
+Upstream `subxt`
+----------------
+
+This repository contains a modified copy of [`subxt`][subxt] in the `./subxt`
+directory. The repository also contains a Git submodule as reference to the
+`subxt` upstream.
+
+To include upstream patches of `subxt` in our copy use the following recipe
+
+~~~bash
+# Extract latest patches
+git --git-dir=subxt/vendor/.git fetch origin
+git --git-dir=subxt/vendor/.git format-patch HEAD..origin/master
+
+# Apply patches
+git am --directory=subxt *.patch
+
+# Update submodule revision
+git --git-dir=subxt/vendor/.git checkout origin/master
+~~~
+
+[subxt]: https://github.com/paritytech/substrate-subxt
 
 
 Updating substrate
