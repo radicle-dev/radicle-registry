@@ -46,8 +46,11 @@ pub trait RegistryTransactions {
     /// The project ID is computed by hashing the sender’s nonce and the arguments. In the current
     /// implementation we use ethereum’s contract creation logic which generates the project ID.
     fn register_project(
-        // Canonical source URL of the project to be registered.
-        project_source_url: types::URL,
+        // Requested name of the project to be registered.
+        project_name: types::ProjectName,
+        // Domain under which the project is registered.
+        project_domain: types::ProjectDomain,
+        project_checkpoint: types::CheckpointID,
     ) -> Result<types::ProjectId, error::RegisterProjectError>;
 
     /// Given a certain project, `addkey` adds a key to its set of keys (c.f.
@@ -72,19 +75,21 @@ pub trait RegistryTransactions {
     ///
     /// As is the case above, this transaction may also be handled outside the
     /// registry.
-    fn unregister_project(id: types::ProjectId) -> Result<(), error::UnregisterProjectError>;
+    fn unregister_project(
+        id: types::ProjectIdentifier,
+    ) -> Result<(), error::UnregisterProjectError>;
 
     /// Checkpointing a project in Oscoin's registry.
     fn checkpoint(
         // Account identifier of the project to which a new checkpoint will be
         // added.
-        project_account: types::AccountId,
+        project_account: types::ProjectId,
+        // Hash of the previous `checkpoint` associated with this project.
+        parent: types::CheckpointID,
         // New project hash - if the checkpoint succeeds, this will become its
         // current hash.
         new_project_hash: types::Hash,
-        // Canonical source project URL of the project to which a new
-        // checkpoint will be added.
-        project_url: types::URL,
+        new_project_version: types::Version,
         // Hash-linked list of the checkpoint's contributions. To see more
         // about this type, go to types::Contribution.
         contribution_list: types::HashLinkedList<types::Contribution>,

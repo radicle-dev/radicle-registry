@@ -33,22 +33,17 @@ pub enum ProjectValidationError {
 /// Oscoin registry (`register` transaction). Not exhaustive, but should cover
 /// most common cases.
 pub enum RegisterProjectError {
-    /// The canonical source URL used to register the project is invalid.
-    ///
-    /// The 1.0 version of the whitepaper establishes only one condition for
-    /// the validity of the URL - the source code retrieved from it must
-    /// always hash to the `hash` field of the `Project` structure -
-    /// but this definition of validity can be tentatively extended to include:
-    ///
-    /// 1. it is a proper URL as defined in [RFC 3986](https:///tools.ietf.org/html/rfc3986#section-1.1.3), and
-    /// 2. it hosts the repository's page in a distributed version control
-    ///    system's website e.g. GitLab, BitBucket, SourceForge, GitHub, and
-    /// 3. it can be accessed without restrictions (^)
-    ///
-    /// (^) This part can be harder to define - if the URL permanently returns
-    /// `404`s *after* it has been inducted into the registry, but not before,
-    /// is it still valid?
-    InvalidURLError,
+    /// The name with which the project was to be registered is invalid e.g.
+    /// it is not valid UTF-8, it is longer than the protocol allows, or
+    /// it has already been used.
+    InvalidNameError,
+
+    /// The project's supplied domain was invalid e.g non-existant or just
+    /// invalid UTF-8.
+    InvalidDomainError,
+
+    /// The project's supplied checkpoint did not exist.
+    InvalidCheckpointIdError,
 }
 
 /// Representation of errors that may occur in `addkey` or `removekey`
@@ -71,6 +66,47 @@ pub enum UnregisterProjectError {}
 /// * Does an invalid dependency update list in a checkpoint invalidate it
 /// entirely?
 pub enum CheckpointError {
+    /// The supplied parent contribution hash was not valid
+    /// e.g. it was not empty in case of a project's first contribution, or was
+    /// empty when it was not the first contribution.
+    InvalidParentCheckpointError,
+
+    /// The project state hash supplied with the checkpoint was not valid
+    /// e.g. it does not have t
+    InvalidCheckpointHashError,
+
+    /// The new project version supplied with this checkpoint was not valid
+    /// e.g. it has already been used before, or it does not have acceptable
+    /// length.
+    InvalidNewVersionError,
+
+    /// The contribution list supplied with the checkpoint was not well-formed.
+    /// See `ContributionListError`.
+    InvalidContributionListError(ContributionListError),
+    
+    /// Problem with the dependency list. See `DependencyListError`.
+    InvalidDependencyListError(DependencyListError),
+
+}
+
+/// Errors that may occur when processing a checkpoint's contribution list.
+pub enum ContributionListError {
+    InvalidParentHashError,
+
+    InvalidCommitHashError,
+
+    /// The suplied public signing key of the commit the contribution refers to
+    /// did not match the author's actual key.
+    InvalidContributionAuthor,
+
+    /// The supplied GPG signature of the contribution's commit (which is
+    /// referenced by its hash) was not valid.
+    InvalidContributionSignature,
+}
+
+/// Errors that may happen when processing the dependency update list of a
+/// checkpoint.
+pub enum DependencyListError {
     /// A dependency update is invalid if it adds a dependency the project
     /// already uses.
     UsedDependencyAddedError,
@@ -82,4 +118,18 @@ pub enum CheckpointError {
     /// As the whitepaper says, a checkpoint is invalid if the dependency
     /// update list containts duplicate dependencies.
     DuplicateDependenciesError,
+
+    /// The dependency update's project id was invalid e.g. it does not have
+    /// the right structure.
+    ///
+    /// Note that per the specification, it does not have to refer to an
+    /// existing project.
+    InvalidProjectIdError,
+
+    /// The dependency update's project version was invalid e.g. improper
+    /// structure.
+    ///
+    /// Note that per the specification, it does not have to refer to a
+    /// project's existing version.
+    InvalidProjectVersionError,
 }
