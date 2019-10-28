@@ -10,14 +10,15 @@ pub mod types;
 /// A trait exposing the Oscoin registry transactions described in the
 /// whitepaper.
 ///
-/// The methods here return `Result<(), E>` for some error type `E` as they
-/// will be applying a modification on the Registry global state, and won't need
-/// to return any actual data if they succeed.
+/// The methods here return `Result<types::TxHash, E>` for some error type `E` as they
+/// will be applying a modification on the Registry global state, and return
+/// the hash of the applied transaction if they succeed.
 pub trait RegistryTransactions {
     /// Transfer Oscoin from one account to another.
     ///
-    /// This transaction's presence in the registry layer is still subject to
-    /// discussion.
+    /// Method preconditions:
+    /// * Amount to be transferred is greater than or equal to 1 (one) unit of
+    /// currency.
     fn transfer_oscoin(
         // Account from which to send Oscoin.
         from_acc: types::AccountId,
@@ -25,19 +26,21 @@ pub trait RegistryTransactions {
         to_acc: types::AccountId,
         // Amount of Oscoin to be sent.
         amount: types::Oscoin,
-    ) -> Result<(), error::TransferError>;
+    ) -> Result<types::TxHash, error::TransferError>;
 
+    /// Accept a project that has been submitted for registration.
     fn accept_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
-        t_hash: types::Hash,
-    ) -> Result<(), error::ProjectValidationError>;
+        t_hash: types::TxHash,
+    ) -> Result<types::TxHash, error::ValidationOfProjectRegistrationError>;
 
+    /// Reject a project that has been submitted for registration.
     fn reject_project(
         // Hash of the `register_project` transaction for the `Project` in
         // question.
-        t_hash: types::Hash,
-    ) -> Result<(), error::ProjectValidationError>;
+        t_hash: types::TxHash,
+    ) -> Result<types::TxHash, error::ValidationOfProjectRegistrationError>;
 
     /// Registers a project on the Oscoin Registry and returns the new project’s ID.
     ///
@@ -50,44 +53,23 @@ pub trait RegistryTransactions {
         project_name: types::ProjectName,
         // Domain under which the project is registered.
         project_domain: types::ProjectDomain,
-        project_checkpoint: types::CheckpointID,
-    ) -> Result<types::ProjectId, error::RegisterProjectError>;
-
-    /// Given a certain project, `addkey` adds a key to its set of keys (c.f.
-    /// section 4.4.1 of the whitepaper).
-    fn addkey(
-        id: types::ProjectId,
-        // Account identifier of the maintainer to be added to the project's
-        // key set.
-        maintainer_key: types::AccountId,
-    ) -> Result<(), error::KeysetError>;
-
-    /// Given a certain project, `removekey` removes a key from its set of
-    /// keys (c.f. section 4.4.1 of the whitepaper).
-    fn removekey(
-        id: types::ProjectId,
-        // Account identifier of the maintainer to be removed from the
-        // project's key set.
-        maintainer_key: types::AccountId,
-    ) -> Result<(), error::KeysetError>;
+        project_checkpoint: types::CheckpointId,
+    ) -> Result<types::TxHash, error::RegisterProjectError>;
 
     /// Unregistering a project from the Oscoin Registry.
     ///
     /// As is the case above, this transaction may also be handled outside the
     /// registry.
     fn unregister_project(
-        id: types::ProjectIdentifier,
-    ) -> Result<(), error::UnregisterProjectError>;
+        id: types::ProjectId,
+    ) -> Result<types::TxHash, error::UnregisterProjectError>;
 
     /// Checkpointing a project in Oscoin's registry.
     fn checkpoint(
-        // Account identifier of the project to which a new checkpoint will be
-        // added.
-        project_account: types::ProjectId,
         // Hash of the previous `checkpoint` associated with this project.
-        parent: types::CheckpointID,
-        // New project hash - if the checkpoint succeeds, this will become its
-        // current hash.
+        parent: Option<types::CheckpointId>,
+        // New project hash - if `set-checkpoint` if used with this checkpoint,
+        // this will become the project's current state hash.
         new_project_hash: types::Hash,
         new_project_version: types::Version,
         // Hash-linked list of the checkpoint's contributions. To see more
@@ -98,7 +80,7 @@ pub trait RegistryTransactions {
         //
         // It is to be treated as a list i.e. processed from left to right.
         dependency_updates: Vec<types::DependencyUpdate>,
-    ) -> Result<(), error::CheckpointError>;
+    ) -> Result<types::TxHash, error::CheckpointError>;
 }
 
 /// Functions to access information from the registry state.

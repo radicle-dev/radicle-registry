@@ -23,12 +23,6 @@ pub struct Address;
 /// diverge.
 pub type AccountId = Address;
 
-/// Identifier for a project.
-///
-/// At present it is assumed to be the same as `Address`, but will eventually
-/// diverge.
-pub type ProjectId = Address;
-
 /// Type for Registry public keys. Its specific data structure is not
 /// important here, just as it is with `Address`es.
 pub struct PublicKey;
@@ -37,8 +31,11 @@ pub struct PublicKey;
 pub struct Signature;
 
 /// Type for the hash digest used in the Oscoin Registry. Useful to represent
-/// commit hashes, hashed transactions or public keys.
+/// commit hashes or public keys.
 pub struct Hash;
+
+/// Type representing a hashed transaction.
+pub struct TxHash;
 
 /// Numerical type representing Oscoin amounts. It is still to be decided, but
 /// it may be `u64`, `u128` or even a rational type so fractional amounts can
@@ -49,12 +46,14 @@ pub struct Oscoin;
 pub type Author = PublicKey;
 
 /// ID of a project's current checkpoint.
-pub type CheckpointID = Hash;
+pub type CheckpointId = TxHash;
 
-/// The `ProjectIdentifier` tuple serves to uniquely identify a project.
-pub type ProjectIdentifier = (ProjectName, ProjectDomain);
+/// The `ProjectId` tuple serves to uniquely identify a project.
+pub type ProjectId = (ProjectName, ProjectDomain);
 
 /// The name a `Project` has been registered with.
+///
+/// It is a UTF-8 `String` between 1 and 32 characters long.
 pub type ProjectName = String;
 
 /// The domain under which the `Project`'s `ProjectName` is registered.
@@ -66,8 +65,8 @@ pub type ProjectDomain = String;
 pub struct Project {
     pub addr: ProjectId,
     /// The project's latest checkpoint's ID.
-    pub hash: CheckpointID,
-    pub id: ProjectIdentifier,
+    pub hash: CheckpointId,
+    pub id: ProjectId,
     pub contract: Contract,
 }
 
@@ -79,7 +78,7 @@ pub struct Project {
 pub struct Contract;
 
 /// A project's version at a given point in time.
-pub type Version = Vec<u8>;
+pub type Version = String;
 
 /// Datatype representing a hash-linked-list. Used to organize contributions
 /// when checkpointing.

@@ -4,9 +4,8 @@ pub enum TransferError {
     /// unit of currency.
     InvalidTransferAmount,
 
-    /// This type of error is only here tentatively since the validation of a
-    /// transfer's data may not necessarily occur in the Registry layer, meaning
-    /// it may not have to deal with this.
+    /// The transaction origin account's balance minus any transaction fee
+    /// was not greater than or equal to the amount being sent.
     InsufficientBalance,
 
     /// As mentioned in the whitepaper, the contracts associated with the
@@ -15,7 +14,7 @@ pub enum TransferError {
     ContractDenied,
 }
 
-pub enum ProjectValidationError {
+pub enum ValidationOfProjectRegistrationError {
     /// The origin of the `accept/reject_project` transaction is not
     /// in the set of root accounts.
     OriginNotRoot,
@@ -26,7 +25,7 @@ pub enum ProjectValidationError {
 
     /// The project in question has already been validated i.e. it has already
     /// been previously accepted/rejected.
-    ProjectAlreadyValidated,
+    ProjectVoteClosed,
 }
 
 /// Description of errors that may occur when registering a project in the
@@ -36,23 +35,14 @@ pub enum RegisterProjectError {
     /// The name with which the project was to be registered is invalid e.g.
     /// it is not valid UTF-8, it is longer than the protocol allows, or
     /// it has already been used.
-    InvalidName,
+    NameAlreadyExists,
 
-    /// The project's supplied domain was invalid e.g non-existant or just
+    /// The project's supplied domain was invalid e.g nonexistent or just
     /// invalid UTF-8.
     InvalidDomain,
 
     /// The project's supplied checkpoint did not exist.
     InvalidCheckpointId,
-}
-
-/// Representation of errors that may occur in `addkey` or `removekey`
-/// transactions.
-pub enum KeysetError {
-    /// Version 1.0 of the whitepaper does not mention what happens when
-    /// `addkey`/`removekey` are called with projects that have not yet been
-    /// added to the registry, so here that is tentatively treated as an error.
-    AccountNotInUse,
 }
 
 /// Errors that may happen when unregistering a project.
@@ -69,10 +59,10 @@ pub enum CheckpointError {
     /// The supplied parent contribution hash was not valid
     /// e.g. it was not empty in case of a project's first contribution, or was
     /// empty when it was not the first contribution.
-    InvalidParentCheckpoint,
+    ParentCheckpointDoesNotExist,
 
     /// The project state hash supplied with the checkpoint was not valid
-    /// e.g. it does not have t
+    /// e.g. it is improperly formed.
     InvalidCheckpointHash,
 
     /// The new project version supplied with this checkpoint was not valid
