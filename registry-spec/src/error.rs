@@ -2,31 +2,31 @@
 pub enum TransferError {
     /// Amount to be transferred is not greater than or equal to 1 (one)
     /// unit of currency.
-    InvalidTransferAmountError,
+    InvalidTransferAmount,
 
     /// This type of error is only here tentatively since the validation of a
     /// transfer's data may not necessarily occur in the Registry layer, meaning
     /// it may not have to deal with this.
-    InsufficientBalanceError,
+    InsufficientBalance,
 
     /// As mentioned in the whitepaper, the contracts associated with the
     /// sending and receiving addresses must authorize the transfer for it
     /// to be valid, otherwise it will result in this error.
-    ContractDeniedError,
+    ContractDenied,
 }
 
 pub enum ProjectValidationError {
     /// The origin of the `accept/reject_project` transaction is not
     /// in the set of root accounts.
-    OriginNotRootError,
+    OriginNotRoot,
 
     /// The hash of the transaction is invalid e.g. it does not correspond to
     /// a `register_project` transaction, or has improper structure.
-    InvalidTransactionHashError,
+    InvalidTransactionHash,
 
     /// The project in question has already been validated i.e. it has already
     /// been previously accepted/rejected.
-    ProjectAlreadyValidatedError,
+    ProjectAlreadyValidated,
 }
 
 /// Description of errors that may occur when registering a project in the
@@ -36,14 +36,14 @@ pub enum RegisterProjectError {
     /// The name with which the project was to be registered is invalid e.g.
     /// it is not valid UTF-8, it is longer than the protocol allows, or
     /// it has already been used.
-    InvalidNameError,
+    InvalidName,
 
     /// The project's supplied domain was invalid e.g non-existant or just
     /// invalid UTF-8.
-    InvalidDomainError,
+    InvalidDomain,
 
     /// The project's supplied checkpoint did not exist.
-    InvalidCheckpointIdError,
+    InvalidCheckpointId,
 }
 
 /// Representation of errors that may occur in `addkey` or `removekey`
@@ -52,7 +52,7 @@ pub enum KeysetError {
     /// Version 1.0 of the whitepaper does not mention what happens when
     /// `addkey`/`removekey` are called with projects that have not yet been
     /// added to the registry, so here that is tentatively treated as an error.
-    AccountIfNotInUseError,
+    AccountNotInUse,
 }
 
 /// Errors that may happen when unregistering a project.
@@ -69,31 +69,30 @@ pub enum CheckpointError {
     /// The supplied parent contribution hash was not valid
     /// e.g. it was not empty in case of a project's first contribution, or was
     /// empty when it was not the first contribution.
-    InvalidParentCheckpointError,
+    InvalidParentCheckpoint,
 
     /// The project state hash supplied with the checkpoint was not valid
     /// e.g. it does not have t
-    InvalidCheckpointHashError,
+    InvalidCheckpointHash,
 
     /// The new project version supplied with this checkpoint was not valid
     /// e.g. it has already been used before, or it does not have acceptable
     /// length.
-    InvalidNewVersionError,
+    InvalidNewVersion,
 
     /// The contribution list supplied with the checkpoint was not well-formed.
     /// See `ContributionListError`.
-    InvalidContributionListError(ContributionListError),
-    
-    /// Problem with the dependency list. See `DependencyListError`.
-    InvalidDependencyListError(DependencyListError),
+    InvalidContributionList(ContributionListError),
 
+    /// Problem with the dependency list. See `DependencyListError`.
+    InvalidDependencyList(DependencyListError),
 }
 
 /// Errors that may occur when processing a checkpoint's contribution list.
 pub enum ContributionListError {
-    InvalidParentHashError,
+    InvalidParentHash,
 
-    InvalidCommitHashError,
+    InvalidCommitHash,
 
     /// The suplied public signing key of the commit the contribution refers to
     /// did not match the author's actual key.
@@ -109,27 +108,27 @@ pub enum ContributionListError {
 pub enum DependencyListError {
     /// A dependency update is invalid if it adds a dependency the project
     /// already uses.
-    UsedDependencyAddedError,
+    UsedDependencyAdded,
 
     /// A dependency update is invalid if it removes a dependency the project
     /// does not use.
-    UnusedDependencyRemovedError,
+    UnusedDependencyRemoved,
 
     /// As the whitepaper says, a checkpoint is invalid if the dependency
     /// update list containts duplicate dependencies.
-    DuplicateDependenciesError,
+    DuplicateDependencies,
 
     /// The dependency update's project id was invalid e.g. it does not have
     /// the right structure.
     ///
     /// Note that per the specification, it does not have to refer to an
     /// existing project.
-    InvalidProjectIdError,
+    InvalidProjectId,
 
     /// The dependency update's project version was invalid e.g. improper
     /// structure.
     ///
     /// Note that per the specification, it does not have to refer to a
     /// project's existing version.
-    InvalidProjectVersionError,
+    InvalidProjectVersion,
 }
