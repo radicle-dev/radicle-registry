@@ -124,7 +124,7 @@ impl srml_system::Trait for Runtime {
     /// The aggregated dispatch type that is available for extrinsics.
     type Call = Call;
     /// The lookup mechanism to get account ID from whatever is passed in dispatchers.
-    type Lookup = Indices;
+    type Lookup = sr_primitives::traits::IdentityLookup<AccountId>;
     /// The index type for storing how many extrinsics an account has signed.
     type Index = Index;
     /// The index type for blocks.
@@ -152,18 +152,6 @@ impl srml_system::Trait for Runtime {
 
 impl srml_aura::Trait for Runtime {
     type AuthorityId = AuraId;
-}
-
-impl srml_indices::Trait for Runtime {
-    /// The type for recording indexing into the account enumeration. If this ever overflows, there
-    /// will be problems!
-    type AccountIndex = AccountIndex;
-    /// Use the standard means of resolving an index hint from an id.
-    type ResolveHint = srml_indices::SimpleResolveHint<Self::AccountId, Self::AccountIndex>;
-    /// Determine whether an account is dead.
-    type IsDeadAccount = Balances;
-    /// The ubiquitous event type.
-    type Event = Event;
 }
 
 parameter_types! {
@@ -201,7 +189,7 @@ impl srml_balances::Trait for Runtime {
     /// What to do if an account's free balance gets zeroed.
     type OnFreeBalanceZero = ();
     /// What to do if a new account is created.
-    type OnNewAccount = Indices;
+    type OnNewAccount = ();
     /// The ubiquitous event type.
     type Event = Event;
     type DustRemoval = ();
@@ -236,7 +224,6 @@ construct_runtime!(
                 Timestamp: srml_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: srml_randomness_collective_flip::{Module, Storage},
                 Aura: srml_aura::{Module, Config<T>, Inherent(Timestamp)},
-                Indices: srml_indices::{default, Config<T>},
                 Balances: srml_balances::{default, Error},
                 Sudo: srml_sudo,
                 Counter: counter::{Module, Call, Storage, Event<T>},
@@ -244,8 +231,6 @@ construct_runtime!(
         }
 );
 
-/// The address format for describing accounts.
-pub type Address = srml_indices::Address<Runtime>;
 /// Block header type as expected by this runtime.
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 /// Block type as expected by this runtime.
@@ -264,7 +249,7 @@ pub type SignedExtra = (
     srml_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.

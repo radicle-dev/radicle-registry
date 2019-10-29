@@ -6,7 +6,7 @@
 //! runtime.
 use futures01::prelude::*;
 
-use radicle_registry_runtime::{balances, counter, registry, Address};
+use radicle_registry_runtime::{balances, counter, registry};
 use substrate_subxt::balances::BalancesStore;
 
 mod base;
@@ -58,7 +58,7 @@ impl Client {
         self.base_client
             .submit_and_watch_call(
                 key_pair,
-                balances::Call::transfer(Address::Id(receiver.clone()), balance),
+                balances::Call::transfer(receiver.clone(), balance),
             )
             .map(|_| ())
     }

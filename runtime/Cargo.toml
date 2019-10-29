@@ -16,7 +16,6 @@ std = [
     "srml-aura/std",
     "srml-balances/std",
     "srml-executive/std",
-    "srml-indices/std",
     "srml-sudo/std",
     "srml-support/std",
     "srml-system/std",
@@ -64,11 +63,6 @@ default_features = false
 git = "https://github.com/paritytech/substrate"
 rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 package = "srml-executive"
-default_features = false
-
-[dependencies.srml-indices]
-git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 default_features = false
 
 [dependencies.substrate-offchain-primitives]
