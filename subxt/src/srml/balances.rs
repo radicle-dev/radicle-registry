@@ -20,11 +20,13 @@ use futures::future::{
 };
 use parity_scale_codec::Codec;
 use runtime_primitives::traits::{
+    MaybeSerialize,
     Member,
     SimpleArithmetic,
 };
 use runtime_support::Parameter;
 use substrate_primitives::Pair;
+use std::fmt::Debug;
 
 /// The subset of the `srml_balances::Trait` that a client must implement.
 pub trait Balances: System {
@@ -35,11 +37,13 @@ pub trait Balances: System {
         + Codec
         + Default
         + Copy
+        + MaybeSerialize
+        + Debug
         + From<<Self as System>::BlockNumber>;
 }
 
 /// Blanket impl for using existing runtime types
-impl<T: srml_system::Trait + srml_balances::Trait + std::fmt::Debug> Balances for T
+impl<T: srml_system::Trait + srml_balances::Trait + Debug> Balances for T
 where
     <T as srml_system::Trait>::Header: serde::de::DeserializeOwned,
 {
