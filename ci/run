@@ -57,7 +57,6 @@ kill "$registry_node_pid"
 echo "--- Save cache"
 # Remove large build artifacts that are faster to build than cache
 rm -rf \
-  target/*/radicle_registry_node* \
   target/*/incremental \
   target/*/wbuild/target/*/incremental \
   target/*/wbuild-runner/target/*/incremental

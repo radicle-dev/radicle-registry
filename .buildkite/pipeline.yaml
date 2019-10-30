@@ -7,3 +7,10 @@ steps:
     agents:
       platform: "linux"
       production: "true"
+    # See https://buildkite.com/docs/pipelines/artifacts for how to download
+    # the produced artifacts with Buildkite's agent CLI.
+    # To download artifacts without the `buildkite-agent` tool (which only
+    # works during running builds), see
+    # https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact.
+    artifact_paths:
+      - "target/release/radicle_registry_node"
