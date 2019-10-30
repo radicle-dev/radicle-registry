@@ -1,11 +1,10 @@
-#![feature(associated_type_defaults)]
-
 //! This is a specification document meant to approximate the Registry described in
 //! Oscoin whitepaper into concrete Rust code.
 //! However, it is not meant to be an exact implementation.
 //!
 //! It is to serve as a form of documentation that will change over
-//! time with the project.
+//! time with the project, as well as the in-depth specification present in
+//! https://github.com/oscoin/registry-spec.
 pub mod error;
 pub mod types;
 
@@ -132,8 +131,10 @@ pub trait RegistryView {
     /// having been submitted with the `register_project` transaction.
     fn get_pending_project_registrations() -> std::collections::HashSet<types::ProjectId>;
 
-    /// The set of root accounts, specified at genesis.
-    /// Per the spec, these accounts are the only ones authorized to perform
-    /// certain sets of actions e.g. accept or reject projects.
+    /// Returns the set of accounts that are authorized to accept or reject
+    /// projects.
+    ///
+    /// This set of root accounts is specified at genesis and cannot be
+    /// changed.
     fn get_root_accounts() -> std::collections::HashSet<types::AccountId>;
 }

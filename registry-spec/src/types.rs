@@ -34,7 +34,7 @@ pub struct Signature;
 /// commit hashes or public keys.
 pub struct Hash;
 
-/// Type representing a hashed transaction.
+/// The hash of a transaction. Uniquely identifies a transaction.
 pub struct TxHash;
 
 /// Numerical type representing Oscoin amounts. It is still to be decided, but
@@ -46,7 +46,7 @@ pub struct Oscoin;
 pub type Author = PublicKey;
 
 /// ID of a project's current checkpoint.
-pub type CheckpointId = TxHash;
+pub struct CheckpointId;
 
 /// The name a `Project` has been registered with.
 ///
@@ -70,8 +70,6 @@ pub type Proof = Vec<u8>;
 pub struct Meta;
 
 /// Representation of a project in the Oscoin registry.
-/// It is still unclear whether the project's keyset should be present in this
-/// data structure, or if it will be in a different layer of the protocol.
 pub struct Project {
     pub addr: ProjectId,
     /// The project's latest checkpoint's ID.
@@ -82,24 +80,8 @@ pub struct Project {
     pub meta: Meta,
 }
 
-pub enum ContractOutput {
-    /// The contract authorized the supplied transaction.
-    Authorized,
-    /// The contract did not authorize the supplied transaction.
-    Unauthorized,
-    /// For transactions that trigger a transfer of funds, this variant
-    /// specifies the amount.
-    Value(Oscoin),
-}
-
 /// A project's "smart" contract.
-///
-/// The actual type might not be representable as a regular data structure, or
-/// if it is, it may not be representable as part of a project's data
-/// structure, but it's kept here for visibility.
-pub struct Contract {
-    pub ct: Box<dyn Fn(TxHash) -> ContractOutput>,
-}
+pub struct Contract;
 
 /// A project's version at a given point in time.
 pub type Version = String;

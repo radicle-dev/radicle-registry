@@ -122,14 +122,12 @@ pub enum DependencyListError {
     /// The dependency update's project id was invalid e.g. it does not have
     /// the right structure.
     ///
-    /// Note that per the specification, it does not have to refer to an
-    /// existing project.
+    /// Note that it does not have to refer to an existing project.
     InvalidProjectId,
 
     /// The dependency update's project version was invalid e.g. improper
     /// structure.
     ///
-    /// Note that per the specification, it does not have to refer to a
-    /// project's existing version.
+    /// Note that it does not have to refer to a project's existing version.
     InvalidProjectVersion,
 }
