@@ -20,14 +20,30 @@ impl SyncClient {
     pub fn transfer(
         &self,
         key_pair: &ed25519::Pair,
-        receiver: &ed25519::Public,
+        receiver: &AccountId,
         balance: Balance,
     ) -> Result<(), Error> {
         self.run_sync(move |client| client.transfer(key_pair, receiver, balance))
     }
 
-    pub fn free_balance(&self, account_id: &ed25519::Public) -> Result<Balance, Error> {
+    pub fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error> {
         self.run_sync(move |client| client.free_balance(account_id))
+    }
+
+    pub fn register_project(
+        &self,
+        author: &ed25519::Pair,
+        project_params: RegisterProjectParams,
+    ) -> Result<ProjectId, Error> {
+        self.run_sync(move |client| client.register_project(author, project_params))
+    }
+
+    pub fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
+        self.run_sync(move |client| client.get_project(id))
+    }
+
+    pub fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
+        self.run_sync(move |client| client.list_projects())
     }
 
     fn run_sync<T, F>(&self, f: impl FnOnce(&Client) -> F) -> Result<T, Error>

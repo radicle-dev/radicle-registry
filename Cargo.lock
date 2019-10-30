@@ -3067,6 +3067,7 @@ dependencies = [
  "env_logger 0.7.1",
  "futures",
  "futures-preview",
+ "log 0.4.8",
  "parity-scale-codec",
  "radicle_registry_runtime",
  "srml-support",

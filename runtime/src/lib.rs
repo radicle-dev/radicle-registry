@@ -5,10 +5,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
+#![feature(alloc_prelude)]
 
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+
+extern crate alloc;
 
 use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
 use sr_primitives::weights::Weight;
@@ -55,10 +58,12 @@ pub type Hash = substrate_primitives::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
-pub type EventRecord = system::EventRecord<Event, Hash>;
+pub type EventRecord = srml_system::EventRecord<Event, Hash>;
 
 /// Used for the module template in `./template.rs`
 pub mod counter;
+
+pub mod registry;
 
 pub use srml_balances as balances;
 
@@ -152,7 +157,7 @@ impl srml_aura::Trait for Runtime {
 impl srml_indices::Trait for Runtime {
     /// The type for recording indexing into the account enumeration. If this ever overflows, there
     /// will be problems!
-    type AccountIndex = u32;
+    type AccountIndex = AccountIndex;
     /// Use the standard means of resolving an index hint from an id.
     type ResolveHint = srml_indices::SimpleResolveHint<Self::AccountId, Self::AccountIndex>;
     /// Determine whether an account is dead.
@@ -215,6 +220,10 @@ impl counter::Trait for Runtime {
     type Event = Event;
 }
 
+impl registry::Trait for Runtime {
+    type Event = Event;
+}
+
 use srml_system as system;
 
 construct_runtime!(
@@ -231,6 +240,7 @@ construct_runtime!(
                 Balances: srml_balances::{default, Error},
                 Sudo: srml_sudo,
                 Counter: counter::{Module, Call, Storage, Event<T>},
+                Registry: registry::{Module, Call, Storage, Event},
         }
 );
 

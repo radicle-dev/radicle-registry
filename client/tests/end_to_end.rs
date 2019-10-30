@@ -2,34 +2,35 @@
 //!
 //! Note that chain state is shared between the test runs.
 
-#![feature(async_closure)]
-use futures::compat::{Compat, Future01CompatExt};
-use futures::prelude::*;
-use futures01::future::Future as _Future;
-
-use radicle_registry_client::{ed25519, Client, Pair};
+use radicle_registry_client::{ed25519, Pair, RegisterProjectParams, SyncClient};
 
 #[test]
-fn counter() {
-    run(async {
-        let client = Client::create().compat().await.unwrap();
-        let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
-
-        client.counter_inc(&alice).compat().await.unwrap();
-        client.counter_inc(&alice).compat().await.unwrap();
-
-        let counter = client.get_counter().compat().await.unwrap().unwrap().0;
-        assert_eq!(counter, 2);
-    })
-}
-
-fn run(f: impl Future<Output = ()> + Send + 'static) {
+fn register_project() {
     env_logger::init();
-    let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    runtime
-        .block_on(Compat::new(
-            f.map(|()| -> Result<(), ()> { Ok(()) }).boxed(),
-        ))
+    let client = SyncClient::create().unwrap();
+    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+
+    let project_id = client
+        .register_project(
+            &alice,
+            RegisterProjectParams {
+                name: "NAME".to_string(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
+            },
+        )
         .unwrap();
-    runtime.shutdown_now().wait().unwrap();
+
+    let project = client.get_project(project_id).unwrap().unwrap();
+    assert_eq!(project.name, "NAME");
+    assert_eq!(project.description, "DESCRIPTION");
+    assert_eq!(project.img_url, "IMG_URL");
+
+    let has_project = client
+        .list_projects()
+        .unwrap()
+        .iter()
+        .find(|id| **id == project_id)
+        .is_some();
+    assert!(has_project, "Registered project not found in project list")
 }
