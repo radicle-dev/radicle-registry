@@ -1,0 +1,10 @@
+[package]
+name = "oscoin-ledger-spec"
+version = "0.1.0"
+authors = [
+  "Thomas Scholtes <thomas@monadic.xyz>",
+  "Alexandre Baldé <alexandre@monadic.xyz>"
+]
+edition = "2018"
+
+[dependencies]

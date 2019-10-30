@@ -12,4 +12,5 @@ members = [
   "node",
   "runtime",
   "subxt",
+  "registry-spec",
   ]
