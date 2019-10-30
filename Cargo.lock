@@ -2895,6 +2895,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3cbf9f658cdb5000fcf6f362b8ea2ba154b9f146a61c7a20d647034c6b6561b"
 
 [[package]]
+name = "pretty_env_logger"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "717ee476b1690853d222af4634056d830b5197ffd747726a9a1eee6da9f49074"
+dependencies = [
+ "chrono",
+ "env_logger 0.6.2",
+ "log 0.4.8",
+]
+
+[[package]]
 name = "primitive-types"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3063,6 +3074,15 @@ dependencies = [
 [[package]]
 name = "radicle_registry"
 version = "0.1.0"
+
+[[package]]
+name = "radicle_registry_cli"
+version = "0.1.0"
+dependencies = [
+ "pretty_env_logger",
+ "radicle_registry_client",
+ "structopt",
+]
 
 [[package]]
 name = "radicle_registry_client"
