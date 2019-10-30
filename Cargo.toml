@@ -8,6 +8,7 @@ edition = "2018"
 
 [workspace]
 members = [
+  "cli",
   "client",
   "node",
   "runtime",

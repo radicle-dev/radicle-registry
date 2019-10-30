@@ -41,6 +41,13 @@ To reset the chain state run
 
 Note that `build-dev-node` will also reset the chain state.
 
+Using the CLI
+-------------
+
+We provide a CLI to talk read and update the ledger in the `cli` directory. To
+learn more run `cargo run -p radicle_registry_cli -- --help`.
+
+
 [dev-manual]: ./DEVELOPING.md
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
 [wasm-gc]: https://github.com/alexcrichton/wasm-gc

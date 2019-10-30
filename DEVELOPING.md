@@ -24,6 +24,8 @@ Packages
 * `node` contains the node code which includes the runtime code.
 * `client` contains the high-level client library for interacting with the
   registry through a node.
+* `cli` contains a binary for interacting with the registry node to submit
+  transactions and read state.
 * `subxt` contains a copy of [`subxt`][subxt], the Rust client library for
   substrate. This package serves as the base for `client`.
 
