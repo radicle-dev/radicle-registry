@@ -15,7 +15,7 @@ fi
 TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 echo "--- Load cache"
-declare -i cache_version=5
+declare -i cache_version=6
 target_cache=/cache/target-v${cache_version}
 
 if [[ $BUILDKITE_BRANCH = "master" ]]; then

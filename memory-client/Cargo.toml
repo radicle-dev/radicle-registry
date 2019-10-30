@@ -14,16 +14,16 @@ futures01 = "0.1"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.srml-support]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
