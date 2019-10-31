@@ -88,7 +88,7 @@ pub struct ContributionList(Vec<Contribution>);
 /// A contribution is valid if [sig] is a valid signature of [hash] for the public key [author].
 pub struct Contribution {
     pub hash: Hash,
-    /// Hash of the previous contribution’s [hash] or `None` if thi is the firt contribution.
+    /// Hash of the previous contribution’s [hash] or `None` if this is the first contribution.
     pub parent: Option<Hash>,
     pub author: GpgPublicKey,
     pub sig: GpgSignature,
