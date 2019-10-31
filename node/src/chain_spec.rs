@@ -1,8 +1,7 @@
 use aura_primitives::sr25519::AuthorityId as AuraId;
 use primitives::{Pair, Public};
 use radicle_registry_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, IndicesConfig, SudoConfig, SystemConfig,
-    WASM_BINARY,
+    AccountId, AuraConfig, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -41,9 +40,6 @@ fn dev_genesis_config() -> GenesisConfig {
         system: Some(SystemConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
-        }),
-        srml_indices: Some(IndicesConfig {
-            ids: endowed_accounts.clone(),
         }),
         srml_balances: Some(BalancesConfig {
             balances: endowed_accounts
