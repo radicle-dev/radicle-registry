@@ -55,7 +55,12 @@ cargo test --all --release --color=always
 kill "$registry_node_pid"
 
 echo "--- Save cache"
-# Remove large build artifacts that are faster to build than cache
+# Remove large build artifacts that are faster to build than cache.
+# The `target/release/radicle_registry_node` file is kept because they
+# are uploaded to Buildkite (i.e. the node).
+# The folder and its contents are deleted at a later step in the build.
+mkdir artifacts
+mv target/release/radicle_registry_node artifacts
 rm -rf \
   target/*/radicle_registry_node* \
   target/*/incremental \

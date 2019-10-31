@@ -52,6 +52,33 @@ learn more run `cargo run -p radicle_registry_cli -- --help`.
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
 [wasm-gc]: https://github.com/alexcrichton/wasm-gc
 
+Build Artifacts
+---------------
+
+Each commit's successful CI build uploads an artifact - the built Substrate
+node.
+In order to access it, you can either use the Buildkite web UI, accessible
+via the commit's GitHub status , or run
+
+~~~
+curl -H "Authorization: Bearer $TOKEN" https://api.buildkite.com/v2/organizations/monadic/pipelines/radicle-registry/builds/{build.number}/jobs/{job.id}/artifacts/{artifact.id}/download
+~~~
+
+where `$TOKEN` is a valid Buildkite API access token that has at least the
+`read_artifacts` scope, and replace the items between curly brackets
+(e.g. `{build.number}`) with the appropriate values for the build and artifact
+that is wanted.
+
+The above command will return a JSON response with a URL to a Buildkite AWS
+S3 bucket that contains the desired artifact, which can then be `curl`ed
+again.
+
+For more information on Buildkite API tokens and permissions, as well as
+access to build artifacts, see:
+
+* https://buildkite.com/docs/apis/rest-api#authentication
+* https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact
+
 Registry Specification
 --------------------
 
