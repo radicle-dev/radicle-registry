@@ -19,9 +19,9 @@ fn register_project() {
             origin,
             RegisterProjectParams {
                 id: project_id,
-                name: format!("NAME"),
-                description: format!("DESCRIPTION"),
-                img_url: format!("IMG_URL"),
+                name: "NAME".to_string(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
             },
         )
         .unwrap();
@@ -31,9 +31,9 @@ fn register_project() {
             project,
             Project {
                 id: project_id,
-                name: format!("NAME"),
-                description: format!("DESCRIPTION"),
-                img_url: format!("IMG_URL"),
+                name: "NAME".to_string(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
                 members: vec![signer.public()],
             }
         );
