@@ -25,8 +25,7 @@ pub trait RegistryTransactions {
         from_acc: types::AccountId,
         // Account to which Oscoin will be sent.
         to_acc: types::AccountId,
-        // Amount of Oscoin to be sent.
-        amount: types::Oscoin,
+        amount: types::Balance,
     ) -> Result<types::TxHash, error::TransferError>;
 
     /// Registers a project on the Oscoin Registry and returns the new project’s ID.
@@ -43,15 +42,12 @@ pub trait RegistryTransactions {
     /// project is later accepted or rejected, the registration fee is deducted
     /// from the transaction sender's account - if no such available balance is
     /// found, it will result in an error.
-    ///
-    /// Preconditions:
-    /// * The ownership proof can only be up to 4096 bytes long.
     fn register_project(
         // Requested name of the project to be registered.
         project_id: types::ProjectId,
         project_checkpoint: types::CheckpointId,
         project_contract: types::Contract,
-        project_ownership_proof: types::Proof,
+        project_ownership_proof: types::ProjectOwnershipProof,
         project_meta: types::Meta,
     ) -> Result<types::TxHash, error::RegisterProjectError>;
 
@@ -102,7 +98,7 @@ pub trait RegistryTransactions {
         new_project_version: types::Version,
         // Hash-linked list of the checkpoint's contributions. To see more
         // about this type, go to types::Contribution.
-        contribution_list: types::HashLinkedList<types::Contribution>,
+        contribution_list: types::ContributionList,
         // A vector of dependency updates. See types::DependencyUpdate
         // for more information.
         //
@@ -116,7 +112,7 @@ pub trait RegistryView {
     /// Returns the project registered at the given address.
     ///
     /// Returns `None` if no project was registered or the project was unregistered.
-    fn get_project(project_address: types::AccountId) -> Option<types::Project>;
+    fn get_project(project_address: types::ProjectId) -> Option<types::Project>;
 
     /// Returns the [Account] at the given address.
     ///
