@@ -66,17 +66,17 @@ impl Metadata {
         for (name, module) in &self.modules {
             string.push_str(name.as_str());
             string.push('\n');
-            for (storage, _) in &module.storage {
+            for storage in module.storage.keys() {
                 string.push_str(" s  ");
                 string.push_str(storage.as_str());
                 string.push('\n');
             }
-            for (call, _) in &module.calls {
+            for call in module.calls.keys() {
                 string.push_str(" c  ");
                 string.push_str(call.as_str());
                 string.push('\n');
             }
-            for (_, event) in &module.events {
+            for event in module.events.values() {
                 string.push_str(" e  ");
                 string.push_str(event.name.as_str());
                 string.push('\n');
@@ -231,8 +231,8 @@ impl FromStr for EventArg {
                     "Expected closing `>` for `Vec`",
                 ))
             }
-        } else if s.starts_with("(") {
-            if s.ends_with(")") {
+        } else if s.starts_with('(') {
+            if s.ends_with(')') {
                 let mut args = Vec::new();
                 for arg in s[1..s.len() - 1].split(',') {
                     let arg = arg.trim().parse()?;
@@ -281,11 +281,11 @@ impl TryFrom<RuntimeMetadataPrefixed> for Metadata {
 
     fn try_from(metadata: RuntimeMetadataPrefixed) -> Result<Self, Self::Error> {
         if metadata.0 != META_RESERVED {
-            Err(Error::InvalidPrefix)?;
+            return Err(Error::InvalidPrefix);
         }
         let meta = match metadata.1 {
             RuntimeMetadata::V8(meta) => meta,
-            _ => Err(Error::InvalidVersion)?,
+            _ => return Err(Error::InvalidVersion),
         };
         let mut modules = HashMap::new();
         let mut modules_by_event_index = HashMap::new();
@@ -296,7 +296,7 @@ impl TryFrom<RuntimeMetadataPrefixed> for Metadata {
             // modules with no events have no corresponding definition in the top level enum
             if !module_metadata.events.is_empty() {
                 modules_by_event_index.insert(event_index, module_name.clone());
-                event_index = event_index + 1;
+                event_index += 1;
             }
             modules.insert(module_name, module_metadata);
         }
