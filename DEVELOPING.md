@@ -50,6 +50,10 @@ git am --directory=subxt *.patch
 git --git-dir=subxt/vendor/.git checkout origin/master
 ~~~
 
+Finlly squash all the upstream patches. Use the commit title `subxt: Apply
+upstream patches` and include a list of all the upstream commits that were
+applied.
+
 [subxt]: https://github.com/paritytech/substrate-subxt
 
 
