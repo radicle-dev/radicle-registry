@@ -109,6 +109,6 @@ impl Client {
     pub fn list_projects(&self) -> impl Future<Item = Vec<ProjectId>, Error = Error> {
         self.base_client
             .fetch_value::<registry::store::ProjectIds, _>()
-            .map(|maybe_ids| maybe_ids.unwrap_or(Vec::new()))
+            .map(|maybe_ids| maybe_ids.unwrap_or_default())
     }
 }
