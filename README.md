@@ -8,8 +8,8 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 Using the Client
 ----------------
 
-The client to the registry is provided by the `radicle_registry_client` package
-in the `./client` directory.
+The client for the registry node is provided by the `radicle_registry_client`
+package in the `./client` directory.
 
 You’ll need to build the client with Rust Nightly.
 
@@ -45,6 +45,14 @@ re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
 [api-crypto]: https://crates.parity.io/substrate_primitives/crypto/index.html
 [api-pair-generate]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.generate
 [api-pair-from-string]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.from_string
+
+
+Developing with the Client
+--------------------------
+
+For development we provide the `radicle_registry_memory_client` package. This
+package allows you to run the registry ledger logic in memory with the same
+interface that the node client provides. See the API docs for more information.
 
 
 Building and running the node
