@@ -106,7 +106,7 @@ impl ClientT for Client {
         Box::new(
             self.base_client
                 .fetch_value::<registry::store::ProjectIds, _>()
-                .map(|maybe_ids| maybe_ids.unwrap_or(Vec::new())),
+                .map(|maybe_ids| maybe_ids.unwrap_or_default()),
         )
     }
 }

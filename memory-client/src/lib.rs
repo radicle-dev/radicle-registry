@@ -51,8 +51,8 @@ pub struct MemoryClient {
     test_ext: RefCell<sr_io::TestExternalities>,
 }
 
-impl MemoryClient {
-    pub fn new() -> Self {
+impl Default for MemoryClient {
+    fn default() -> Self {
         let genesis_config = GenesisConfig {
             srml_aura: None,
             srml_balances: None,
@@ -63,6 +63,12 @@ impl MemoryClient {
         MemoryClient {
             test_ext: RefCell::new(test_ext),
         }
+    }
+}
+
+impl MemoryClient {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Run substrate runtime code in the test environment associated with this client.

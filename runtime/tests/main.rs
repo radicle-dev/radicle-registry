@@ -34,8 +34,7 @@ fn register_project() {
         .wait()
         .unwrap()
         .iter()
-        .find(|id| **id == project_id)
-        .is_some();
+        .any(|id| *id == project_id);
     assert!(has_project, "Registered project not found in project list")
 }
 
