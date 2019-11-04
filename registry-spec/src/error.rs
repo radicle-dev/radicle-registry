@@ -134,13 +134,13 @@ pub enum DependencyListError {
 
 /// Errors that may occur when setting a project's checkpoint.
 pub enum SetCheckpointError {
-    /// The supplied project id is invalid e.g. it is not present in the
+    /// The supplied project id does not exist e.g. it is not present in the
     /// the Oscoin registry because it is pending acceptance, or has already
     /// been rejected.
-    InvalidProjectId,
+    ProjectDoesNotExist,
 
     /// The supplied checkpoint id points to a checkpoint whose ancestry does
-    /// not contain the project's original checkpoint e.g. the checkpoint
+    /// not contain the project's original checkpoint i.e. the checkpoint
     /// supplied to register the project.
     InvalidCheckpointAncestry,
 
