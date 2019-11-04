@@ -148,3 +148,16 @@ pub enum SetCheckpointError {
     /// contract.
     DeniedByProjectContract,
 }
+
+/// Errors that may occure when setting a project's contract.
+pub enum SetContractError {
+    /// The supplied project id is invalid e.g. it is not present in the
+    /// the Oscoin registry because it is pending acceptance, or has already
+    /// been rejected.
+    InvalidProjectId,
+
+    /// The `set_contract` transaction was not authorized by the project's
+    /// contract i.e. the current contract did not authorize its replacement
+    /// by the contract supplied in the transaction.
+    DeniedByProjectContract,
+}

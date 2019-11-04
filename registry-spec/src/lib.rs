@@ -116,6 +116,16 @@ pub trait RegistryTransactions {
         // Id of the checkpoint to be associated to the above project.
         checkpoint_id: types::CheckpointId,
     ) -> Result<types::CheckpointId, error::SetCheckpointError>;
+
+    ///
+    ///
+    fn set_contract(
+        // Id of the project whose contract is to be updated.
+        id: types::ProjectId,
+        //
+        // New contract to be associated to the project.
+        contract: types::Contract,
+    ) -> Result<types::TxHash, error::SetContractError>;
 }
 
 /// Functions to access information from the registry state.
