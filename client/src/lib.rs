@@ -12,7 +12,7 @@ use substrate_subxt::balances::BalancesStore;
 mod base;
 mod sync;
 
-pub use substrate_primitives::crypto::Pair;
+pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::ed25519;
 
 #[doc(inline)]
