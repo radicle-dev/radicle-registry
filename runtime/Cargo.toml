@@ -131,5 +131,9 @@ git = "https://github.com/paritytech/substrate"
 rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 default_features = false
 
-[build-dependencies.substrate-wasm-builder-runner]
-version = "1.0.2"
+[build-dependencies]
+substrate-wasm-builder-runner = "1.0.2"
+
+[dev-dependencies]
+futures = "0.1"
+radicle_registry_memory_client = { path = "../memory-client" }

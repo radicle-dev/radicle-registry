@@ -1,60 +1,44 @@
-use sr_primitives::BuildStorage as _;
-use srml_support::storage::{StorageMap as _, StorageValue as _};
-use substrate_primitives::{crypto::Pair as _, ed25519};
+/// Runtime tests implemented with [MemoryClient].
+///
+/// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
+use futures::prelude::*;
 
-use radicle_registry_runtime::{
-    registry::{self, Project, ProjectId, RegisterProjectParams},
-    GenesisConfig, Origin, Runtime,
+use radicle_registry_memory_client::{
+    ed25519, Client, CryptoPair, MemoryClient, RegisterProjectParams,
 };
-
-type Registry = registry::Module<Runtime>;
 
 #[test]
 fn register_project() {
-    run(|| {
-        let signer = key_pair_from_string("Alice");
-        let origin = Origin::signed(signer.public());
-        let project_id = ProjectId::random();
-        Registry::register_project(
-            origin,
+    let client = MemoryClient::new();
+    let alice = key_pair_from_string("Alice");
+
+    let project_id = client
+        .register_project(
+            &alice,
             RegisterProjectParams {
-                id: project_id,
-                name: format!("NAME"),
-                description: format!("DESCRIPTION"),
-                img_url: format!("IMG_URL"),
+                name: "NAME".to_string(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
             },
         )
+        .wait()
         .unwrap();
 
-        let project = registry::store::Projects::get(project_id).unwrap();
-        assert_eq!(
-            project,
-            Project {
-                id: project_id,
-                name: format!("NAME"),
-                description: format!("DESCRIPTION"),
-                img_url: format!("IMG_URL"),
-                members: vec![signer.public()],
-            }
-        );
+    let project = client.get_project(project_id).wait().unwrap().unwrap();
+    assert_eq!(project.name, "NAME");
+    assert_eq!(project.description, "DESCRIPTION");
+    assert_eq!(project.img_url, "IMG_URL");
 
-        let project_ids = registry::store::ProjectIds::get();
-        assert_eq!(project_ids, vec![project_id]);
-    });
+    let has_project = client
+        .list_projects()
+        .wait()
+        .unwrap()
+        .iter()
+        .find(|id| **id == project_id)
+        .is_some();
+    assert!(has_project, "Registered project not found in project list")
 }
 
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
-}
-
-/// Run runtime code with test externalities
-fn run(f: impl FnOnce() -> ()) {
-    let genesis_config = GenesisConfig {
-        srml_aura: None,
-        srml_balances: None,
-        srml_sudo: None,
-        system: None,
-    };
-    let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
-    test_ext.execute_with(f)
 }
