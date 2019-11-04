@@ -2,8 +2,7 @@ use futures::compat::{Compat, Future01CompatExt};
 use futures::future::FutureExt;
 use futures01::future::Future;
 
-use radicle_registry_client::{ed25519, Client, Error, RegisterProjectParams};
-use substrate_primitives::crypto::Pair;
+use radicle_registry_client::{ed25519, Client, CryptoPair, Error, RegisterProjectParams};
 
 fn main() {
     env_logger::init();

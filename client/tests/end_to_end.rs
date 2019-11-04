@@ -2,7 +2,7 @@
 //!
 //! Note that chain state is shared between the test runs.
 
-use radicle_registry_client::{ed25519, Pair, RegisterProjectParams, SyncClient};
+use radicle_registry_client::{ed25519, CryptoPair, RegisterProjectParams, SyncClient};
 
 #[test]
 fn register_project() {

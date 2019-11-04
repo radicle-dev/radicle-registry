@@ -1,4 +1,4 @@
-use radicle_registry_client::{ed25519, Pair as _, RegisterProjectParams, SyncClient};
+use radicle_registry_client::{ed25519, CryptoPair as _, RegisterProjectParams, SyncClient};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, Clone)]
