@@ -105,6 +105,17 @@ pub trait RegistryTransactions {
         // It is to be treated as a list i.e. processed from left to right.
         dependency_updates: Vec<types::DependencyUpdate>,
     ) -> Result<types::TxHash, error::CheckpointError>;
+
+    /// Set a project's checkpoint in the Oscoin registry.
+    ///
+    /// If succesful, the transaction returns the id of the project's new
+    /// checkpoint.
+    fn set_checkpoint(
+        // Id of the project to be updated.
+        project_id: types::ProjectId,
+        // Id of the checkpoint to be associated to the above project.
+        checkpoint_id: types::CheckpointId,
+    ) -> Result<types::CheckpointId, error::SetCheckpointError>;
 }
 
 /// Functions to access information from the registry state.
