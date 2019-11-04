@@ -8,13 +8,52 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 Using the Client
 ----------------
 
-The client to the registry is provided by the `radicle_registry_client` package
-in the `./client` directory.
+The client for the registry node is provided by the `radicle_registry_client`
+package in the `./client` directory.
 
 You’ll need to build the client with Rust Nightly.
 
 To build and view the client documentation run `./scripts/build-client-docs
 --open`.
+
+
+Account Keys
+------------
+
+We use Ed25519 keys for accounts. Key creation and handling functionality is
+provided by the `radicle_registry_client::ed25519` module. To use this module
+you will likely need to import the `radicle_registry_client::CryptoPair` and
+`radicle_registry_client::CryptoPublic` traits.
+
+You can create key pairs using [`CryptoPair::generate()`][api-pair-generate]
+```rust
+use radicle_registry_client::{ed25519, CryptoPair};
+let (key, seed) = ed25519::Pair::generate();
+```
+
+To create keys from human readable strings, use [`CryptoPair::from_string`][api-pair-from-string].
+```rust
+use radicle_registry_client::{ed25519, CryptoPair};
+let alice = ed25519::Pair::from_string("//Alice", None);
+```
+
+The `radicle_registry_client::ed25519` module and the crypto traits are
+re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
+[`substrate_primitives::crypto`][api-crypto], respectively
+
+[api-ed25519]: https://crates.parity.io/substrate_primitives/ed25519/index.html
+[api-crypto]: https://crates.parity.io/substrate_primitives/crypto/index.html
+[api-pair-generate]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.generate
+[api-pair-from-string]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.from_string
+
+
+Developing with the Client
+--------------------------
+
+For development we provide the `radicle_registry_memory_client` package. This
+package allows you to run the registry ledger logic in memory with the same
+interface that the node client provides. See the API docs for more information.
+
 
 Building and running the node
 -----------------------------

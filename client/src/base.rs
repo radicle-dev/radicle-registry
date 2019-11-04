@@ -6,6 +6,7 @@ use substrate_primitives::storage::StorageKey;
 
 use radicle_registry_runtime::{Call, Runtime};
 
+/// Common client errors related to transport, encoding, and validity
 pub type Error = substrate_subxt::Error;
 
 pub struct Client {

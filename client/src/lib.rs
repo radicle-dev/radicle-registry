@@ -1,4 +1,4 @@
-//! Client for the radicle registry
+//! Node client for the radicle registry
 //!
 //! The client comes in two flavours: The [Client] with methods that return [Future]s and the
 //! [SyncClient] with the same methods, but returning a corresponding [Result] instead of a
@@ -12,31 +12,19 @@ use substrate_subxt::balances::BalancesStore;
 mod base;
 mod sync;
 
-pub use substrate_primitives::crypto::Pair;
-pub use substrate_primitives::ed25519;
+pub use radicle_registry_runtime::counter::CounterValue;
 
-#[doc(inline)]
-pub use radicle_registry_runtime::{
-    counter::CounterValue,
-    registry::{Project, ProjectId},
-    Balance,
+pub use radicle_registry_client_interface::{
+    ed25519, AccountId, Balance, Client as ClientT, CryptoPair, CryptoPublic, Project, ProjectId,
+    RegisterProjectParams, Response,
 };
 
-#[doc(inline)]
 pub use base::Error;
 pub use sync::SyncClient;
 
-/// Account IDs are Ed25519 public keys
-pub type AccountId = ed25519::Public;
-
-#[derive(Clone, Debug)]
-pub struct RegisterProjectParams {
-    pub description: String,
-    pub name: String,
-    pub img_url: String,
-}
-
 /// Client to interact with the radicle registry ledger through a local node.
+///
+/// Implements [ClientT] for interacting with the ledger.
 pub struct Client {
     base_client: base::Client,
 }
@@ -49,29 +37,6 @@ impl Client {
         base::Client::create().map(|base_client| Client { base_client })
     }
 
-    pub fn transfer(
-        &self,
-        key_pair: &ed25519::Pair,
-        receiver: &AccountId,
-        balance: Balance,
-    ) -> impl Future<Item = (), Error = Error> {
-        self.base_client
-            .submit_and_watch_call(
-                key_pair,
-                balances::Call::transfer(receiver.clone(), balance),
-            )
-            .map(|_| ())
-    }
-
-    pub fn free_balance(
-        &self,
-        account_id: &AccountId,
-    ) -> impl Future<Item = Balance, Error = Error> {
-        self.base_client
-            .subxt_client
-            .free_balance(account_id.clone())
-    }
-
     pub fn counter_inc(&self, key_pair: &ed25519::Pair) -> impl Future<Item = (), Error = Error> {
         self.base_client
             .submit_and_watch_call(key_pair, counter::Call::inc())
@@ -81,34 +46,67 @@ impl Client {
     pub fn get_counter(&self) -> impl Future<Item = Option<CounterValue>, Error = Error> {
         self.base_client.fetch_value::<counter::Value, _>()
     }
+}
 
-    pub fn register_project(
+impl ClientT for Client {
+    type Error = Error;
+
+    fn transfer(
+        &self,
+        key_pair: &ed25519::Pair,
+        receiver: &AccountId,
+        balance: Balance,
+    ) -> Response<(), Error> {
+        Box::new(
+            self.base_client
+                .submit_and_watch_call(
+                    key_pair,
+                    balances::Call::transfer(receiver.clone(), balance),
+                )
+                .map(|_| ()),
+        )
+    }
+
+    fn register_project(
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> impl Future<Item = ProjectId, Error = Error> {
+    ) -> Response<ProjectId, Error> {
         let id = ProjectId::random();
-        self.base_client
-            .submit_and_watch_call(
-                author,
-                registry::Call::register_project(registry::RegisterProjectParams {
-                    id,
-                    name: project_params.name,
-                    description: project_params.description,
-                    img_url: project_params.img_url,
-                }),
-            )
-            .map(move |_| id)
+        Box::new(
+            self.base_client
+                .submit_and_watch_call(
+                    author,
+                    registry::Call::register_project(registry::RegisterProjectParams {
+                        id,
+                        name: project_params.name,
+                        description: project_params.description,
+                        img_url: project_params.img_url,
+                    }),
+                )
+                .map(move |_| id),
+        )
     }
 
-    pub fn get_project(&self, id: ProjectId) -> impl Future<Item = Option<Project>, Error = Error> {
-        self.base_client
-            .fetch_map_value::<registry::store::Projects, _, _>(id)
+    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
+        Box::new(
+            self.base_client
+                .subxt_client
+                .free_balance(account_id.clone()),
+        )
+    }
+    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
+        Box::new(
+            self.base_client
+                .fetch_map_value::<registry::store::Projects, _, _>(id),
+        )
     }
 
-    pub fn list_projects(&self) -> impl Future<Item = Vec<ProjectId>, Error = Error> {
-        self.base_client
-            .fetch_value::<registry::store::ProjectIds, _>()
-            .map(|maybe_ids| maybe_ids.unwrap_or_default())
+    fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
+        Box::new(
+            self.base_client
+                .fetch_value::<registry::store::ProjectIds, _>()
+                .map(|maybe_ids| maybe_ids.unwrap_or(Vec::new())),
+        )
     }
 }

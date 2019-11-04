@@ -1,22 +1,19 @@
 [package]
-name = "radicle_registry_client"
+name = "radicle_registry_client_interface"
 version = "0.1.0"
 authors = ["Thomas Scholtes <thomas@monadic.xyz>"]
 edition = "2018"
 
 [dependencies]
 radicle_registry_runtime = { path = "../runtime" }
-radicle_registry_client_interface = { path = "../client-interface" }
-substrate-subxt = { path = "../subxt" }
 
-env_logger = "0.7"
-futures-preview = { version = "=0.3.0-alpha.19", features = ["async-await", "compat"] }
-futures01 = { package = "futures", version = "0.1" }
-log = "0.4"
-parity-scale-codec = "1.0"
-tokio = "0.1"
+futures = "0.1"
 
-[dependencies.srml-system]
+[dependencies.substrate-primitives]
+git = "https://github.com/paritytech/substrate"
+rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+
+[dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
 rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 
@@ -24,7 +21,6 @@ rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 git = "https://github.com/paritytech/substrate"
 rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
 
-[dependencies.substrate-primitives]
+[dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
 rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
-
