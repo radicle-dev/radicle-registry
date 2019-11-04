@@ -38,7 +38,7 @@ echo "--- cargo fmt"
 time cargo fmt --all -- --check
 
 echo "--- cargo clippy"
-time cargo clippy --all --tests --bins --examples --benches -- -D warnings -D clippy::all
+time cargo clippy --exclude substrate-subxt --all --tests --bins --examples --benches -- -D warnings -D clippy::all
 
 echo "--- cargo build"
 export BUILD_DUMMY_WASM_BINARY=0
