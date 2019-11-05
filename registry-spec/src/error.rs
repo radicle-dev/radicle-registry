@@ -154,7 +154,7 @@ pub enum SetContractError {
     /// The supplied project id is invalid e.g. it is not present in the
     /// the Oscoin registry because it is pending acceptance, or has already
     /// been rejected.
-    InvalidProjectId,
+    ProjectDoesNotExist,
 
     /// The `set_contract` transaction was not authorized by the project's
     /// contract i.e. the current contract did not authorize its replacement
