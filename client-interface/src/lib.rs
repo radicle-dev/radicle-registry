@@ -9,17 +9,18 @@
 use futures::prelude::*;
 
 pub use radicle_registry_runtime::{
-    registry::{Project, ProjectId},
+    registry::{Checkpoint, CheckpointId, Project, ProjectId},
     AccountId, Balance,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
-pub use substrate_primitives::ed25519;
+pub use substrate_primitives::{ed25519, H256};
 
 #[derive(Clone, Debug)]
 pub struct RegisterProjectParams {
     pub id: ProjectId,
     pub description: String,
     pub img_url: String,
+    pub checkpoint_id: CheckpointId,
 }
 
 #[doc(inline)]
@@ -48,4 +49,13 @@ pub trait Client {
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error>;
+
+    fn create_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        project_id: H256,
+        prev_checkpoint: Option<CheckpointId>,
+    ) -> Response<CheckpointId, Error>;
+
+    fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
 }

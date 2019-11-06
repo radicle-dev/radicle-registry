@@ -38,12 +38,25 @@ impl SyncClient {
         self.run_sync(move |client| client.register_project(author, project_params))
     }
 
+    pub fn create_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        project_hash: H256,
+        prev_cp: Option<CheckpointId>,
+    ) -> Result<CheckpointId, Error> {
+        self.run_sync(move |client| client.create_checkpoint(author, project_hash, prev_cp))
+    }
+
     pub fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
         self.run_sync(move |client| client.get_project(id))
     }
 
     pub fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
         self.run_sync(move |client| client.list_projects())
+    }
+
+    pub fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
+        self.run_sync(move |client| client.get_checkpoint(id))
     }
 
     fn run_sync<T, F>(&self, f: impl FnOnce(&Client) -> F) -> Result<T, Error>

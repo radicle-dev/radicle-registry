@@ -9,10 +9,20 @@
 //! ```rust
 //! # use futures01::prelude::*;
 //! use radicle_registry_memory_client::{
-//!     MemoryClient, Client, CryptoPair, RegisterProjectParams, ed25519
+//!     H256, MemoryClient, Client, CryptoPair, RegisterProjectParams, ed25519
 //! };
 //! let client = MemoryClient::new();
 //! let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+//!
+//! let project_hash = H256::random();
+//! let checkpoint_id = client
+//!     .create_checkpoint(
+//!         &alice,
+//!         project_hash,
+//!         None
+//!     )
+//!     .wait()
+//!     .unwrap();
 //!
 //! let project_id = ("NAME".to_string(), "DOMAIN".to_string());
 //! client
@@ -22,6 +32,7 @@
 //!             id: project_id.clone(),
 //!             description: "DESCRIPTION".to_string(),
 //!             img_url: "IMG_URL".to_string(),
+//!             checkpoint_id,
 //!         },
 //!     )
 //!     .wait()
@@ -102,6 +113,10 @@ impl Client for MemoryClient {
         self.run(registry::store::ProjectIds::get)
     }
 
+    fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
+        self.run(|| registry::store::Checkpoints::get(id))
+    }
+
     fn register_project(
         &self,
         author: &ed25519::Pair,
@@ -115,9 +130,30 @@ impl Client for MemoryClient {
                     id: project_params.id,
                     description: project_params.description,
                     img_url: project_params.img_url,
+                    checkpoint_id: project_params.checkpoint_id,
                 },
             )
             .expect("origin is valid and the only possible error");
+        })
+    }
+
+    fn create_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        project_hash: H256,
+        prev_checkpoint: Option<CheckpointId>,
+    ) -> Response<CheckpointId, Error> {
+        self.run(|| {
+            let checkpoint_id = CheckpointId::random();
+            let origin = Origin::signed(author.public());
+            registry::Module::<Runtime>::create_checkpoint(
+                origin,
+                project_hash,
+                checkpoint_id,
+                prev_checkpoint,
+            )
+            .unwrap();
+            checkpoint_id
         })
     }
 }

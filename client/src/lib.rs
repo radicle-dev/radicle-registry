@@ -15,8 +15,8 @@ mod sync;
 pub use radicle_registry_runtime::counter::CounterValue;
 
 pub use radicle_registry_client_interface::{
-    ed25519, AccountId, Balance, Client as ClientT, CryptoPair, CryptoPublic, Project, ProjectId,
-    RegisterProjectParams, Response,
+    ed25519, AccountId, Balance, Checkpoint, CheckpointId, Client as ClientT, CryptoPair,
+    CryptoPublic, Project, ProjectId, RegisterProjectParams, Response, H256,
 };
 
 pub use base::Error;
@@ -78,9 +78,31 @@ impl ClientT for Client {
                         id: project_params.id,
                         description: project_params.description,
                         img_url: project_params.img_url,
+                        checkpoint_id: project_params.checkpoint_id,
                     }),
                 )
                 .map(move |_| ()),
+        )
+    }
+
+    fn create_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        project_hash: H256,
+        prev_checkpoint_id: Option<CheckpointId>,
+    ) -> Response<CheckpointId, Error> {
+        let checkpoint_id = CheckpointId::random();
+        Box::new(
+            self.base_client
+                .submit_and_watch_call(
+                    author,
+                    registry::Call::create_checkpoint(
+                        project_hash,
+                        checkpoint_id,
+                        prev_checkpoint_id,
+                    ),
+                )
+                .map(move |_| checkpoint_id),
         )
     }
 
@@ -103,6 +125,13 @@ impl ClientT for Client {
             self.base_client
                 .fetch_value::<registry::store::ProjectIds, _>()
                 .map(|maybe_ids| maybe_ids.unwrap_or_default()),
+        )
+    }
+
+    fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
+        Box::new(
+            self.base_client
+                .fetch_map_value::<registry::store::Checkpoints, _, _>(id),
         )
     }
 }
