@@ -22,34 +22,30 @@ pub struct RegisterProjectParams {
     pub img_url: String,
 }
 
+#[doc(inline)]
+pub type Error = substrate_subxt::Error;
+
 /// Return type for all [Client] methods.
 pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
-///
-/// All methods return `Response<T, Client::Error>` where.
 pub trait Client {
-    /// Common errors for all methods.
-    ///
-    /// In implementations these might be connection errors, decoding errors, etc.
-    type Error;
-
     fn transfer(
         &self,
         key_pair: &ed25519::Pair,
         receiver: &AccountId,
         balance: Balance,
-    ) -> Response<(), Self::Error>;
+    ) -> Response<(), Error>;
 
-    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Self::Error>;
+    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error>;
 
     fn register_project(
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<ProjectId, Self::Error>;
+    ) -> Response<ProjectId, Error>;
 
-    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Self::Error>;
+    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 
-    fn list_projects(&self) -> Response<Vec<ProjectId>, Self::Error>;
+    fn list_projects(&self) -> Response<Vec<ProjectId>, Error>;
 }

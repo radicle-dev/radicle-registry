@@ -42,11 +42,10 @@ use radicle_registry_runtime::{balances, registry, GenesisConfig, Origin, Runtim
 
 pub use radicle_registry_client_interface::*;
 
-/// Error type for all [MemoryClient] methods. Just describing the error.
-type Error = &'static str;
-
 /// [Client] implementation using native runtime code and in memory state through
 /// [sr_io::TestExternalities].
+///
+/// The responses returned from the client never result in an [Error].
 pub struct MemoryClient {
     test_ext: RefCell<sr_io::TestExternalities>,
 }
@@ -67,46 +66,46 @@ impl MemoryClient {
 
     /// Run substrate runtime code in the test environment associated with this client.
     ///
-    /// This is safe as long as `f` does not call [Client::run] recursively.
-    fn run<T: Send + 'static>(&self, f: impl FnOnce() -> Result<T, Error>) -> Response<T, Error> {
+    /// This is safe (with respect to [RefCell::borrow_mut]) as long as `f` does not call
+    /// [Client::run] recursively.
+    fn run<T: Send + 'static>(&self, f: impl FnOnce() -> T) -> Response<T, Error> {
         let test_ext = &mut self.test_ext.borrow_mut();
         let result = test_ext.execute_with(f);
-        Box::new(future::result(result))
+        Box::new(future::ok(result))
     }
 }
 
 impl Client for MemoryClient {
-    type Error = Error;
-
     fn transfer(
         &self,
         author: &ed25519::Pair,
         receiver: &AccountId,
         balance: Balance,
-    ) -> Response<(), Self::Error> {
+    ) -> Response<(), Error> {
         self.run(|| {
             let origin = Origin::signed(author.public());
             balances::Module::<Runtime>::transfer(origin, receiver.clone(), balance)
+                .expect("origin is valid and the only possible error")
         })
     }
 
-    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Self::Error> {
-        self.run(|| Ok(balances::Module::<Runtime>::free_balance(account_id)))
+    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
+        self.run(|| balances::Module::<Runtime>::free_balance(account_id))
     }
 
-    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Self::Error> {
-        self.run(|| Ok(registry::store::Projects::get(id)))
+    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
+        self.run(|| registry::store::Projects::get(id))
     }
 
-    fn list_projects(&self) -> Response<Vec<ProjectId>, Self::Error> {
-        self.run(|| Ok(registry::store::ProjectIds::get()))
+    fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
+        self.run(|| registry::store::ProjectIds::get())
     }
 
     fn register_project(
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<ProjectId, Self::Error> {
+    ) -> Response<ProjectId, Error> {
         self.run(|| {
             let id = ProjectId::random();
             let origin = Origin::signed(author.public());
@@ -118,8 +117,9 @@ impl Client for MemoryClient {
                     description: project_params.description,
                     img_url: project_params.img_url,
                 },
-            )?;
-            Ok(id)
+            )
+            .expect("origin is valid and the only possible error");
+            id
         })
     }
 }

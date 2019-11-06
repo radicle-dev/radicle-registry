@@ -49,8 +49,6 @@ impl Client {
 }
 
 impl ClientT for Client {
-    type Error = Error;
-
     fn transfer(
         &self,
         key_pair: &ed25519::Pair,

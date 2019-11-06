@@ -2955,6 +2955,7 @@ dependencies = [
  "sr-primitives",
  "srml-support",
  "substrate-primitives",
+ "substrate-subxt",
 ]
 
 [[package]]
