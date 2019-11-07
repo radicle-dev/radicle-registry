@@ -108,17 +108,20 @@ pub trait RegistryTransactions {
 
     /// Set a project's checkpoint in the Radicle registry.
     ///
-    /// If successful, the project's new checkpoint id will be the one passed
-    /// to the transaction.
+    /// If a `set_checkpoint` transaction is successful, the project's new
+    /// checkpoint in the Radicle Registry will be the one passed to the
+    /// transaction.
     ///
-    /// The supplied checkpoint must include, as an ancestor, the checkpoint
-    /// with which the project was registered.
+    /// Anyone is allowed to execute this transaction.
+    ///
+    /// The project's first checkpoint, `k_0`, must be an ancestor of the
+    /// supplied checkpoint.
     fn set_checkpoint(
         // Id of the project to be updated.
         project_id: types::ProjectId,
         // Id of the checkpoint to be associated to the above project.
         checkpoint_id: types::CheckpointId,
-    ) -> Result<types::CheckpointId, error::SetCheckpointError>;
+    ) -> Result<types::TxHash, error::SetCheckpointError>;
 
     /// Set a project's contract in the Radicle registry.
     ///
