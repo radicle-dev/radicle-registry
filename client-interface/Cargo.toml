@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 radicle_registry_runtime = { path = "../runtime" }
+substrate-subxt = { path = "../subxt" }
 
 futures = "0.1"
 
