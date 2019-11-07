@@ -131,3 +131,33 @@ pub enum DependencyListError {
     /// Note that it does not have to refer to a project's existing version.
     InvalidProjectVersion,
 }
+
+/// Errors that may occur when setting a project's checkpoint.
+pub enum SetCheckpointError {
+    /// The supplied project id does not exist e.g. it is not present in the
+    /// the Oscoin registry because it is pending acceptance, or has already
+    /// been rejected.
+    ProjectDoesNotExist,
+
+    /// The supplied checkpoint id points to a checkpoint whose ancestry does
+    /// not contain the project's original checkpoint i.e. the checkpoint
+    /// supplied to register the project.
+    InvalidCheckpointAncestry,
+
+    /// The `set_checkpoint` transaction was not authorized by the project's
+    /// contract.
+    DeniedByProjectContract,
+}
+
+/// Errors that may occure when setting a project's contract.
+pub enum SetContractError {
+    /// The supplied project id is invalid e.g. it is not present in the
+    /// the Oscoin registry because it is pending acceptance, or has already
+    /// been rejected.
+    ProjectDoesNotExist,
+
+    /// The `set_contract` transaction was not authorized by the project's
+    /// contract i.e. the current contract did not authorize its replacement
+    /// by the contract supplied in the transaction.
+    DeniedByProjectContract,
+}

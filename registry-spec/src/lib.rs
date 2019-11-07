@@ -1,5 +1,5 @@
-//! This is a specification document meant to approximate the Registry described in
-//! Oscoin whitepaper into concrete Rust code.
+//! This is a specification document meant to approximate the Registry described in [1]
+//! into concrete Rust code.
 //! However, it is not meant to be an exact implementation.
 //!
 //! It is to serve as a form of documentation that will change over
@@ -8,27 +8,27 @@
 pub mod error;
 pub mod types;
 
-/// A trait exposing the Oscoin registry transactions described in the
+/// A trait exposing the Radicle registry transactions described in the
 /// whitepaper.
 ///
 /// The methods here return `Result<types::TxHash, E>` for some error type `E` as they
 /// will be applying a modification on the Registry global state, and return
 /// the hash of the applied transaction if they succeed.
 pub trait RegistryTransactions {
-    /// Transfer Oscoin from one account to another.
+    /// Transfer an amount of currency from one account to another.
     ///
     /// Method preconditions:
     /// * Amount to be transferred is greater than or equal to 1 (one) unit of
     /// currency.
     fn transfer_oscoin(
-        // Account from which to send Oscoin.
+        // Account from which to send currency.
         from_acc: types::AccountId,
-        // Account to which Oscoin will be sent.
+        // Account into which currency will be transferred.
         to_acc: types::AccountId,
         amount: types::Balance,
     ) -> Result<types::TxHash, error::TransferError>;
 
-    /// Registers a project on the Oscoin Registry and returns the new project’s ID.
+    /// Registers a project on the Radicle Registry and returns the new project’s ID.
     ///
     /// The transaction’s sender account becomes the initial maintainer of the
     /// project, once it has been accepted into the registry.
@@ -80,7 +80,7 @@ pub trait RegistryTransactions {
         t_hash: types::TxHash,
     ) -> Result<types::TxHash, error::WithdrawProjectError>;
 
-    /// Unregistering a project from the Oscoin Registry.
+    /// Unregistering a project from the Radicle Registry.
     ///
     /// As is the case above, this transaction may also be handled outside the
     /// registry.
@@ -88,7 +88,7 @@ pub trait RegistryTransactions {
         id: types::ProjectId,
     ) -> Result<types::TxHash, error::UnregisterProjectError>;
 
-    /// Checkpointing a project in Oscoin's registry.
+    /// Checkpointing a project in Radicle's registry.
     fn checkpoint(
         // Hash of the previous `checkpoint` associated with this project.
         parent: Option<types::CheckpointId>,
@@ -105,6 +105,35 @@ pub trait RegistryTransactions {
         // It is to be treated as a list i.e. processed from left to right.
         dependency_updates: Vec<types::DependencyUpdate>,
     ) -> Result<types::TxHash, error::CheckpointError>;
+
+    /// Set a project's checkpoint in the Radicle registry.
+    ///
+    /// If a `set_checkpoint` transaction is successful, the project's new
+    /// checkpoint in the Radicle Registry will be the one passed to the
+    /// transaction.
+    ///
+    /// Anyone is allowed to execute this transaction.
+    ///
+    /// The project's first checkpoint, `k_0`, must be an ancestor of the
+    /// supplied checkpoint.
+    fn set_checkpoint(
+        // Id of the project to be updated.
+        project_id: types::ProjectId,
+        // Id of the checkpoint to be associated to the above project.
+        checkpoint_id: types::CheckpointId,
+    ) -> Result<types::TxHash, error::SetCheckpointError>;
+
+    /// Set a project's contract in the Radicle registry.
+    ///
+    /// If successful, it will set the project's contract to the one that was
+    /// supplied in the transaction.
+    fn set_contract(
+        // Id of the project whose contract is to be updated.
+        id: types::ProjectId,
+        //
+        // New contract to be associated to the project.
+        contract: types::Contract,
+    ) -> Result<types::TxHash, error::SetContractError>;
 }
 
 /// Functions to access information from the registry state.
@@ -120,7 +149,7 @@ pub trait RegistryView {
     /// with zero nonce and balance is returned.
     fn get_account(address: types::AccountId) -> types::Account;
 
-    /// The set of all registered projects in the Oscoin registry.
+    /// The set of all registered projects in the Radicle registry.
     fn get_registered_projects() -> std::collections::HashSet<types::ProjectId>;
 
     /// The set of projects that are pending acceptance into the registry,
