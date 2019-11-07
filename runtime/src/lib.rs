@@ -21,7 +21,7 @@ use sr_primitives::{
 };
 use sr_std::prelude::*;
 use srml_support::{construct_runtime, parameter_types, traits::Randomness};
-use substrate_primitives::{crypto::key_types, ed25519, OpaqueMetadata};
+use substrate_primitives::{ed25519, OpaqueMetadata};
 
 #[cfg(feature = "std")]
 use sr_version::NativeVersion;
@@ -85,8 +85,7 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            #[id(key_types::AURA)]
-            pub aura: AuraId,
+            pub aura: Aura,
         }
     }
 }

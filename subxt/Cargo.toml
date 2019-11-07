@@ -15,7 +15,7 @@ include = ["/Cargo.toml", "src/**/*.rs", "/README.md", "/LICENSE"]
 [dependencies]
 derive_more = "0.14.0"
 futures = "0.1.28"
-jsonrpc-core-client = { version = "13.0", features = ["ws"] }
+jsonrpc-core-client = { version = "14.0", features = ["ws"] }
 log = "0.4"
 num-traits = { version = "0.2", default-features = false }
 parity-scale-codec = { version = "1.0", default-features = false, features = ["derive", "full"] }
@@ -25,54 +25,54 @@ url = "1.7"
 [dependencies.runtime_metadata]
 package = "srml-metadata"
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.runtime_primitives]
 package = "sr-primitives"
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.runtime_support]
 package = "srml-support"
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.sr-version]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.srml-balances]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.srml-contracts]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.srml-indices]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.srml-system]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.substrate-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.substrate-rpc-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dependencies.txpool]
 package = "substrate-transaction-graph"
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 
 [dev-dependencies]
@@ -82,8 +82,8 @@ wabt = "0.9.0"
 
 [dev-dependencies.node-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
 [dev-dependencies.substrate-keyring]
 git = "https://github.com/paritytech/substrate"
-rev = "acf86cd4b0ad4c45dbba57c2ae323531d5b71264"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
