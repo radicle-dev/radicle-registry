@@ -85,7 +85,6 @@ fn connect<T: System>(url: &Url) -> impl Future<Item = Rpc<T>, Error = Error> {
 }
 
 /// ClientBuilder for constructing a Client.
-#[derive(Default)]
 pub struct ClientBuilder<T: System> {
     _marker: std::marker::PhantomData<T>,
     url: Option<Url>,
@@ -138,7 +137,7 @@ impl<T: System> Clone for Client<T> {
     fn clone(&self) -> Self {
         Self {
             url: self.url.clone(),
-            genesis_hash: self.genesis_hash,
+            genesis_hash: self.genesis_hash.clone(),
             metadata: self.metadata.clone(),
             runtime_version: self.runtime_version.clone(),
         }
@@ -240,7 +239,7 @@ impl<T: System + Balances + 'static> Client<T> {
             None => Either::B(self.account_nonce(signer.public().into())),
         }
         .map(|nonce| {
-            let genesis_hash = client.genesis_hash;
+            let genesis_hash = client.genesis_hash.clone();
             let runtime_version = client.runtime_version.clone();
             XtBuilder {
                 client,
@@ -282,7 +281,7 @@ where
 
     /// Returns the nonce.
     pub fn nonce(&self) -> T::Index {
-        self.nonce
+        self.nonce.clone()
     }
 
     /// Sets the nonce to a new value.
@@ -310,9 +309,9 @@ where
 
         XtBuilder {
             client: self.client.clone(),
-            nonce: self.nonce,
+            nonce: self.nonce.clone(),
             runtime_version: self.runtime_version.clone(),
-            genesis_hash: self.genesis_hash,
+            genesis_hash: self.genesis_hash.clone(),
             signer: self.signer.clone(),
             call: Some(call),
             marker: PhantomData,
@@ -334,9 +333,9 @@ where
         let call = Ok(Encoded(call.into().encode()));
         XtBuilder {
             client: self.client.clone(),
-            nonce: self.nonce,
+            nonce: self.nonce.clone(),
             runtime_version: self.runtime_version.clone(),
-            genesis_hash: self.genesis_hash,
+            genesis_hash: self.genesis_hash.clone(),
             signer: self.signer.clone(),
             call: Some(call),
             marker: PhantomData,
@@ -351,7 +350,6 @@ where
     P::Signature: Codec,
 {
     /// Creates and signs an Extrinsic for the supplied `Call`
-    #[allow(clippy::type_complexity)]
     pub fn create_and_sign(
         &self,
     ) -> Result<
@@ -369,9 +367,9 @@ where
         P::Signature: Codec,
     {
         let signer = self.signer.clone();
-        let account_nonce = self.nonce;
+        let account_nonce = self.nonce.clone();
         let version = self.runtime_version.spec_version;
-        let genesis_hash = self.genesis_hash;
+        let genesis_hash = self.genesis_hash.clone();
         let call = self
             .call
             .clone()

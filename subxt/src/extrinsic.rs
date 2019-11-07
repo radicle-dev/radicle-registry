@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with substrate-subxt.  If not, see <http://www.gnu.org/licenses/>.
 
-#![allow(clippy::type_complexity)]
-
 use crate::srml::{
     balances::Balances,
     system::System,
@@ -289,7 +287,7 @@ where
     Ok(UncheckedExtrinsic::new_signed(
         call,
         signer.public().into(),
-        signature,
+        signature.into(),
         extra,
     ))
 }

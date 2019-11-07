@@ -97,7 +97,7 @@ impl<T: System> Rpc<T> {
             .block_hash(Some(NumberOrHex::Number(block_zero)))
             .map_err(Into::into)
             .and_then(|genesis_hash| {
-                future::result(genesis_hash.ok_or_else(|| "Genesis hash not found".into()))
+                future::result(genesis_hash.ok_or("Genesis hash not found".into()))
             })
     }
 
@@ -256,7 +256,7 @@ impl<T: System + Balances + 'static> Rpc<T> {
                             log::info!("received result {:?}", result);
 
                             result
-                                .ok_or_else(|| Error::from("Stream terminated"))
+                                .ok_or(Error::from("Stream terminated"))
                                 .and_then(|r| r)
                                 .into_future()
                         })
@@ -269,7 +269,7 @@ impl<T: System + Balances + 'static> Rpc<T> {
                         .map_err(Into::into)
                 })
                 .and_then(|(h, b)| {
-                    b.ok_or_else(|| format!("Failed to find block {:?}", h).into())
+                    b.ok_or(format!("Failed to find block {:?}", h).into())
                         .map(|b| (h, b))
                         .into_future()
                 })
@@ -312,24 +312,24 @@ pub fn wait_for_block_events<T: System + Balances + 'static>(
             let hash = T::Hashing::hash_of(ext);
             hash == ext_hash
         })
-        .ok_or_else(|| format!("Failed to find Extrinsic with hash {:?}", ext_hash).into())
+        .ok_or(format!("Failed to find Extrinsic with hash {:?}", ext_hash).into())
         .into_future();
 
-    let block_hash = block_hash;
+    let block_hash = block_hash.clone();
     events_stream
         .filter(move |event| event.block == block_hash)
         .into_future()
         .map_err(|(e, _)| e.into())
         .join(ext_index)
         .and_then(move |((maybe_change_set, _), _ext_index)|{
-            let change_set = maybe_change_set.ok_or_else(|| Error::Other("Event storage was not updated".to_string()))?;
+            let change_set = maybe_change_set.ok_or(Error::Other("Event storage was not updated".to_string()))?;
             let (_key, maybe_data) = change_set.changes.first().expect("There is at least one change");
             let data = &maybe_data.as_ref().expect("There were events written").0;
             let events = Decode::decode(&mut &data[..]).map_err(Error::Codec)?;
-            Ok(ExtrinsicSuccess {
+            return Ok(ExtrinsicSuccess {
                 block: block_hash,
                 extrinsic: ext_hash,
                 events,
-            })
+            });
         })
 }
