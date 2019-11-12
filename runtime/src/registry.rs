@@ -46,8 +46,8 @@ pub mod store {
 
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
-            pub Projects: map (String, String) => Option<Project>;
-            pub ProjectIds: Vec<(String, String)>;
+            pub Projects: map ProjectId => Option<Project>;
+            pub ProjectIds: Vec<ProjectId>;
         }
     }
 }
