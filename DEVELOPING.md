@@ -24,6 +24,7 @@ Packages
 * `node` contains the node code which includes the runtime code.
 * `client` contains the high-level client library for interacting with the
   registry through a node.
+* `client-common` provides code that is used by the node client and the memory
 * `client-interface` defines the trait for clients and provides the necessary
   data types.
 * `memory-client` contains a implementation of the Client interface that uses an
@@ -38,7 +39,10 @@ Testing
 -------
 
 Black-box tests for the runtime logic are implemented with the `MemoryClient` in
-`runtime/tests/main`.
+`runtime/tests/main.rs`.
+
+End-to-end tests that run against a real node are implemented in
+`client/tests/end_to_end.rs`
 
 
 Upstream `subxt`

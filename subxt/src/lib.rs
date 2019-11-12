@@ -145,7 +145,8 @@ impl<T: System> Clone for Client<T> {
 }
 
 impl<T: System + Balances + 'static> Client<T> {
-    fn connect(&self) -> impl Future<Item = Rpc<T>, Error = Error> {
+    /// Connect a new RPC client and return it.
+    pub fn connect(&self) -> impl Future<Item = Rpc<T>, Error = Error> {
         connect(&self.url)
     }
 
