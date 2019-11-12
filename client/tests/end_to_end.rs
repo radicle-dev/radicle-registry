@@ -10,19 +10,20 @@ fn register_project() {
     let client = SyncClient::create().unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
-    let project_id = client
+    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    client
         .register_project(
             &alice,
             RegisterProjectParams {
-                name: "NAME".to_string(),
+                id: project_id.clone(),
                 description: "DESCRIPTION".to_string(),
                 img_url: "IMG_URL".to_string(),
             },
         )
         .unwrap();
 
-    let project = client.get_project(project_id).unwrap().unwrap();
-    assert_eq!(project.name, "NAME");
+    let project = client.get_project(project_id.clone()).unwrap().unwrap();
+    assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
 
@@ -30,7 +31,7 @@ fn register_project() {
         .list_projects()
         .unwrap()
         .iter()
-        .find(|id| **id == project_id)
+        .find(|id| **id == project_id.clone())
         .is_some();
     assert!(has_project, "Registered project not found in project list")
 }

@@ -14,11 +14,12 @@
 //! let client = MemoryClient::new();
 //! let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 //!
-//! let project_id = client
+//! let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+//! client
 //!     .register_project(
 //!         &alice,
 //!         RegisterProjectParams {
-//!             name: "NAME".to_string(),
+//!             id: project_id.clone(),
 //!             description: "DESCRIPTION".to_string(),
 //!             img_url: "IMG_URL".to_string(),
 //!         },
@@ -27,7 +28,7 @@
 //!     .unwrap();
 //!
 //! let project = client.get_project(project_id).wait().unwrap().unwrap();
-//! assert_eq!(project.name, "NAME");
+//! assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
 //! assert_eq!(project.description, "DESCRIPTION");
 //! assert_eq!(project.img_url, "IMG_URL");
 //! ```
@@ -98,28 +99,25 @@ impl Client for MemoryClient {
     }
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
-        self.run(|| registry::store::ProjectIds::get())
+        self.run(registry::store::ProjectIds::get)
     }
 
     fn register_project(
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<ProjectId, Error> {
+    ) -> Response<(), Error> {
         self.run(|| {
-            let id = ProjectId::random();
             let origin = Origin::signed(author.public());
             registry::Module::<Runtime>::register_project(
                 origin,
                 registry::RegisterProjectParams {
-                    id,
-                    name: project_params.name,
+                    id: project_params.id,
                     description: project_params.description,
                     img_url: project_params.img_url,
                 },
             )
             .expect("origin is valid and the only possible error");
-            id
         })
     }
 }

@@ -12,11 +12,12 @@ fn register_project() {
     let client = MemoryClient::new();
     let alice = key_pair_from_string("Alice");
 
-    let project_id = client
+    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    client
         .register_project(
             &alice,
             RegisterProjectParams {
-                name: "NAME".to_string(),
+                id: project_id.clone(),
                 description: "DESCRIPTION".to_string(),
                 img_url: "IMG_URL".to_string(),
             },
@@ -24,8 +25,12 @@ fn register_project() {
         .wait()
         .unwrap();
 
-    let project = client.get_project(project_id).wait().unwrap().unwrap();
-    assert_eq!(project.name, "NAME");
+    let project = client
+        .get_project(project_id.clone())
+        .wait()
+        .unwrap()
+        .unwrap();
+    assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
 

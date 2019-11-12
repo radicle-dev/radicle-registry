@@ -16,11 +16,12 @@ fn main() {
 async fn go() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
     let client = Client::create().compat().await?;
-    let project_id = client
+    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    client
         .register_project(
             &alice,
             RegisterProjectParams {
-                name: "NAME".to_string(),
+                id: project_id.clone(),
                 description: "DESCRIPTION".to_string(),
                 img_url: "IMG_URL".to_string(),
             },

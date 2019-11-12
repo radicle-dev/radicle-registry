@@ -69,20 +69,18 @@ impl ClientT for Client {
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<ProjectId, Error> {
-        let id = ProjectId::random();
+    ) -> Response<(), Error> {
         Box::new(
             self.base_client
                 .submit_and_watch_call(
                     author,
                     registry::Call::register_project(registry::RegisterProjectParams {
-                        id,
-                        name: project_params.name,
+                        id: project_params.id,
                         description: project_params.description,
                         img_url: project_params.img_url,
                     }),
                 )
-                .map(move |_| id),
+                .map(move |_| ()),
         )
     }
 
@@ -104,7 +102,7 @@ impl ClientT for Client {
         Box::new(
             self.base_client
                 .fetch_value::<registry::store::ProjectIds, _>()
-                .map(|maybe_ids| maybe_ids.unwrap_or(Vec::new())),
+                .map(|maybe_ids| maybe_ids.unwrap_or_default()),
         )
     }
 }
