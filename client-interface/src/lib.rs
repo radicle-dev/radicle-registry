@@ -17,8 +17,8 @@ pub use substrate_primitives::ed25519;
 
 #[derive(Clone, Debug)]
 pub struct RegisterProjectParams {
+    pub id: ProjectId,
     pub description: String,
-    pub name: String,
     pub img_url: String,
 }
 
@@ -43,7 +43,7 @@ pub trait Client {
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<ProjectId, Error>;
+    ) -> Response<(), Error>;
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 

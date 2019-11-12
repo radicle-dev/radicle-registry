@@ -34,7 +34,7 @@ impl SyncClient {
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Result<ProjectId, Error> {
+    ) -> Result<(), Error> {
         self.run_sync(move |client| client.register_project(author, project_params))
     }
 

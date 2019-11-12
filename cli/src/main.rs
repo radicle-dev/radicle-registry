@@ -23,6 +23,8 @@ pub enum Command {
     RegisterProject {
         /// Name of the project to register.
         name: String,
+        /// Domain of the project to register.
+        domain: String,
     },
 }
 
@@ -35,19 +37,20 @@ fn run(args: Args) {
     let author_key_pair = args.author_key_pair();
 
     match args.command {
-        Command::RegisterProject { name } => {
+        Command::RegisterProject { name, domain } => {
             let client = SyncClient::create().unwrap();
-            let project_id = client
+            let project_id = (name, domain);
+            client
                 .register_project(
                     &author_key_pair,
                     RegisterProjectParams {
-                        name,
+                        id: project_id.clone(),
                         description: format!(""),
                         img_url: format!(""),
                     },
                 )
                 .unwrap();
-            println!("Registered project with ID {:#x}", project_id)
+            println!("Registered project with ID {:?}", project_id)
         }
     }
 }
