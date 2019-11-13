@@ -2922,6 +2922,7 @@ version = "0.1.0"
 name = "radicle_registry_cli"
 version = "0.1.0"
 dependencies = [
+ "futures",
  "pretty_env_logger",
  "radicle_registry_client",
  "structopt",
