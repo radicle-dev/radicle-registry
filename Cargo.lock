@@ -2936,6 +2936,7 @@ dependencies = [
  "futures-preview",
  "log 0.4.8",
  "parity-scale-codec",
+ "radicle_registry_client_common",
  "radicle_registry_client_interface",
  "radicle_registry_runtime",
  "srml-support",
@@ -2946,14 +2947,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "radicle_registry_client_common"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "radicle_registry_runtime",
+ "sr-io",
+ "sr-primitives",
+ "srml-system",
+ "srml-transaction-payment",
+ "substrate-primitives",
+]
+
+[[package]]
 name = "radicle_registry_client_interface"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "parity-scale-codec",
  "radicle_registry_runtime",
  "sr-io",
  "sr-primitives",
  "srml-support",
+ "srml-system",
+ "srml-transaction-payment",
  "substrate-primitives",
  "substrate-subxt",
 ]
