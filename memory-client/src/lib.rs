@@ -47,10 +47,12 @@
 use futures01::future;
 use std::sync::Mutex;
 
-use sr_primitives::BuildStorage as _;
+use sr_primitives::{traits::Hash as _, BuildStorage as _};
 use srml_support::storage::{StorageMap as _, StorageValue as _};
 
-use radicle_registry_runtime::{balances, registry, GenesisConfig, Origin, Runtime};
+use radicle_registry_runtime::{
+    balances, registry, Executive, GenesisConfig, Hash, Hashing, Runtime,
+};
 
 pub use radicle_registry_client_interface::*;
 
@@ -60,6 +62,7 @@ pub use radicle_registry_client_interface::*;
 /// The responses returned from the client never result in an [Error].
 pub struct MemoryClient {
     test_ext: Mutex<sr_io::TestExternalities>,
+    genesis_hash: Hash,
 }
 
 impl MemoryClient {
@@ -70,9 +73,19 @@ impl MemoryClient {
             srml_sudo: None,
             system: None,
         };
-        let test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+        let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+        let genesis_hash = test_ext.execute_with(|| {
+            srml_system::Module::<Runtime>::initialize(
+                &1,
+                &[0u8; 32].into(),
+                &[0u8; 32].into(),
+                &Default::default(),
+            );
+            srml_system::Module::<Runtime>::block_hash(0)
+        });
         MemoryClient {
             test_ext: Mutex::new(test_ext),
+            genesis_hash,
         }
     }
 
@@ -89,16 +102,19 @@ impl MemoryClient {
 }
 
 impl Client for MemoryClient {
-    fn transfer(
-        &self,
-        author: &ed25519::Pair,
-        receiver: &AccountId,
-        balance: Balance,
-    ) -> Response<(), Error> {
-        self.run(|| {
-            let origin = Origin::signed(author.public());
-            balances::Module::<Runtime>::transfer(origin, receiver.clone(), balance)
-                .expect("origin is valid and the only possible error")
+    fn submit(&self, key_pair: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
+        self.run(move || {
+            let nonce = srml_system::Module::<Runtime>::account_nonce(key_pair.public());
+            let runtime_call = radicle_registry_client_common::into_runtime_call(call);
+            let extrinsic = radicle_registry_client_common::signed_extrinsic(
+                key_pair,
+                runtime_call,
+                nonce,
+                self.genesis_hash,
+            );
+            let xt_hash = Hashing::hash_of(&extrinsic);
+            Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
+            xt_hash
         })
     }
 
@@ -116,45 +132,5 @@ impl Client for MemoryClient {
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
         self.run(|| registry::store::Checkpoints::get(id))
-    }
-
-    fn register_project(
-        &self,
-        author: &ed25519::Pair,
-        project_params: RegisterProjectParams,
-    ) -> Response<(), Error> {
-        self.run(|| {
-            let origin = Origin::signed(author.public());
-            registry::Module::<Runtime>::register_project(
-                origin,
-                registry::RegisterProjectParams {
-                    id: project_params.id,
-                    description: project_params.description,
-                    img_url: project_params.img_url,
-                    checkpoint_id: project_params.checkpoint_id,
-                },
-            )
-            .expect("origin is valid and the only possible error");
-        })
-    }
-
-    fn create_checkpoint(
-        &self,
-        author: &ed25519::Pair,
-        project_hash: H256,
-        prev_checkpoint: Option<CheckpointId>,
-    ) -> Response<CheckpointId, Error> {
-        self.run(|| {
-            let checkpoint_id = CheckpointId::random();
-            let origin = Origin::signed(author.public());
-            registry::Module::<Runtime>::create_checkpoint(
-                origin,
-                project_hash,
-                checkpoint_id,
-                prev_checkpoint,
-            )
-            .unwrap();
-            checkpoint_id
-        })
     }
 }

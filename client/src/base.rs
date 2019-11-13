@@ -5,8 +5,8 @@ use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
 use radicle_registry_client_interface::CryptoPair as _;
-use radicle_registry_runtime::{Call, Hash, Runtime};
-use substrate_subxt::system::SystemStore;
+use radicle_registry_runtime::{Call as RuntimeCall, Hash, Runtime};
+use substrate_subxt::system::SystemStore as _;
 
 /// Common client errors related to transport, encoding, and validity
 pub type Error = substrate_subxt::Error;
@@ -51,7 +51,7 @@ impl Client {
     pub fn submit_and_watch_call(
         &self,
         key_pair: &ed25519::Pair,
-        call: impl Into<Call>,
+        call: RuntimeCall,
     ) -> impl Future<Item = ExtrinsicSuccess, Error = Error> {
         let genesis_hash = self.genesis_hash;
         let call = call.into();
