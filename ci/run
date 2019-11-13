@@ -15,9 +15,11 @@ fi
 TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 echo "--- Load cache"
-declare -i cache_version=6
+declare -i cache_version=7
 target_cache=/cache/target-v${cache_version}
 
+# Delete previous cache version on master so we don’t consume to much
+# space.
 if [[ $BUILDKITE_BRANCH = "master" ]]; then
   declare -i old_cache_version="$cache_version - 1"
   old_target_cache=/cache/target-v${old_cache_version}
