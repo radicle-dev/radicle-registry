@@ -46,7 +46,6 @@ fn register_project() {
         .list_projects()
         .unwrap()
         .iter()
-        .find(|id| **id == project_id.clone())
-        .is_some();
+        .any(|id| *id == project_id.clone());
     assert!(has_project, "Registered project not found in project list")
 }
