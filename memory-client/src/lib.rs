@@ -45,7 +45,7 @@
 //! ```
 
 use futures01::future;
-use std::cell::RefCell;
+use std::sync::Mutex;
 
 use sr_primitives::BuildStorage as _;
 use srml_support::storage::{StorageMap as _, StorageValue as _};
@@ -59,7 +59,7 @@ pub use radicle_registry_client_interface::*;
 ///
 /// The responses returned from the client never result in an [Error].
 pub struct MemoryClient {
-    test_ext: RefCell<sr_io::TestExternalities>,
+    test_ext: Mutex<sr_io::TestExternalities>,
 }
 
 impl MemoryClient {
@@ -72,7 +72,7 @@ impl MemoryClient {
         };
         let test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         MemoryClient {
-            test_ext: RefCell::new(test_ext),
+            test_ext: Mutex::new(test_ext),
         }
     }
 
@@ -81,7 +81,8 @@ impl MemoryClient {
     /// This is safe (with respect to [RefCell::borrow_mut]) as long as `f` does not call
     /// [Client::run] recursively.
     fn run<T: Send + 'static>(&self, f: impl FnOnce() -> T) -> Response<T, Error> {
-        let test_ext = &mut self.test_ext.borrow_mut();
+        // We panic on poison errors
+        let test_ext = &mut self.test_ext.lock().unwrap();
         let result = test_ext.execute_with(f);
         Box::new(future::ok(result))
     }
