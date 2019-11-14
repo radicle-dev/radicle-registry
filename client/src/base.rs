@@ -1,17 +1,21 @@
 use futures01::future::Future;
 use parity_scale_codec::FullCodec;
+use sr_primitives::traits::Hash as _;
 use srml_support::storage::generator::{StorageMap, StorageValue};
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
 use radicle_registry_client_common::signed_extrinsic;
 use radicle_registry_client_interface::{CryptoPair as _, Response, TransactionExtra};
-use radicle_registry_runtime::{AccountId, Call as RuntimeCall, Hash, Runtime};
+use radicle_registry_runtime::{
+    opaque::Block as OpaqueBlock, AccountId, Call as RuntimeCall, Event, Hash, Hashing, Runtime,
+};
 use substrate_subxt::system::SystemStore as _;
 
 /// Common client errors related to transport, encoding, and validity
 pub type Error = substrate_subxt::Error;
 
+#[derive(Clone)]
 pub struct Client {
     pub(crate) subxt_client: substrate_subxt::Client<Runtime>,
     pub(crate) genesis_hash: Hash,
@@ -86,4 +90,51 @@ impl Client {
                     .and_then(move |rpc| rpc.submit_and_watch_extrinsic(xt))
             })
     }
+
+    /// Returns the list of events dispatched by the extrinsic.
+    ///
+    /// [ExtrinsicSuccess] contains the extrinsic hash and the list of all events in the block.
+    /// From this list we return only those events that were dispatched by the extinsic.
+    ///
+    /// Requires an API call to get the block
+    #[allow(dead_code)]
+    pub fn extract_events(
+        &self,
+        ext_success: ExtrinsicSuccess,
+    ) -> impl Future<Item = Vec<Event>, Error = Error> {
+        self.subxt_client
+            .block(Some(ext_success.block.clone()))
+            .and_then(move |maybe_signed_block| {
+                let block = maybe_signed_block.unwrap().block;
+                // TODO panic and explain
+                extract_events(block, ext_success)
+                    .ok_or(Error::from("Extrinsic not found in block"))
+            })
+    }
+}
+
+/// TODO doc
+fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<Vec<Event>> {
+    let xt_index = block
+        .extrinsics
+        .iter()
+        .enumerate()
+        .find_map(|(index, tx)| {
+            if Hashing::hash_of(tx) == ext_success.extrinsic {
+                Some(index)
+            } else {
+                None
+            }
+        })?;
+    let events = ext_success
+        .events
+        .iter()
+        .filter_map(|event_record| match event_record.phase {
+            srml_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
+                Some(event_record.event.clone())
+            }
+            _ => None,
+        })
+        .collect();
+    Some(events)
 }

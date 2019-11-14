@@ -4,7 +4,8 @@
 use futures::prelude::*;
 
 use radicle_registry_memory_client::{
-    ed25519, Checkpoint, Client, CryptoPair, MemoryClient, RegisterProjectParams, H256,
+    ed25519, Call, Checkpoint, Client, CryptoPair, MemoryClient, RegisterProjectParams,
+    RegistryEvent, H256,
 };
 
 #[test]
@@ -18,18 +19,23 @@ fn register_project() {
         .wait()
         .unwrap();
     let project_id = ("NAME".to_string(), "DOMAIN".to_string());
-    client
-        .register_project(
+    let tx_applied = client
+        .submit(
             &alice,
-            RegisterProjectParams {
+            Call::RegisterProject(RegisterProjectParams {
                 id: project_id.clone(),
                 description: "DESCRIPTION".to_string(),
                 img_url: "IMG_URL".to_string(),
                 checkpoint_id,
-            },
+            }),
         )
         .wait()
         .unwrap();
+
+    assert_eq!(
+        tx_applied.events[1],
+        RegistryEvent::ProjectRegistered(project_id.clone()).into()
+    );
 
     let project = client
         .get_project(project_id.clone())

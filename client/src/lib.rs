@@ -28,14 +28,25 @@ impl Client {
 }
 
 impl ClientT for Client {
-    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
+    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error> {
+        let base_client = self.base_client.clone();
         Box::new(
             self.base_client
                 .submit_runtime_call(
                     author,
                     radicle_registry_client_common::into_runtime_call(call),
                 )
-                .map(|xt| xt.extrinsic),
+                .and_then(move |ext_success| {
+                    let tx_hash = ext_success.extrinsic;
+                    let block = ext_success.block;
+                    base_client
+                        .extract_events(ext_success)
+                        .map(move |events| TransactionApplied {
+                            tx_hash,
+                            block,
+                            events,
+                        })
+                }),
         )
     }
 
