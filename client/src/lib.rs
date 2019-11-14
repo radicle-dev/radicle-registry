@@ -1,16 +1,11 @@
 //! Node client for the radicle registry
-//!
-//! The client comes in two flavours: The [Client] with methods that return [Future]s and the
-//! [SyncClient] with the same methods, but returning a corresponding [Result] instead of a
-//! [Future]. The latter is usefull for writing synchronous code and spawns work in a separate
-//! runtime.
 use futures01::prelude::*;
 
 use radicle_registry_runtime::{balances, counter, registry};
 use substrate_subxt::balances::BalancesStore;
 
 mod base;
-mod sync;
+mod with_executor;
 
 pub use radicle_registry_runtime::counter::CounterValue;
 
@@ -20,7 +15,7 @@ pub use radicle_registry_client_interface::{
 };
 
 pub use base::Error;
-pub use sync::SyncClient;
+pub use with_executor::ClientWithExecutor;
 
 /// Client to interact with the radicle registry ledger through a local node.
 ///

@@ -1,4 +1,7 @@
-use radicle_registry_client::{ed25519, CryptoPair as _, RegisterProjectParams, SyncClient, H256};
+use futures01::prelude::*;
+use radicle_registry_client::{
+    ed25519, ClientT, ClientWithExecutor, CryptoPair as _, RegisterProjectParams, H256,
+};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -43,9 +46,10 @@ fn run(args: Args) {
             domain,
             project_hash,
         } => {
-            let client = SyncClient::create().unwrap();
+            let client = ClientWithExecutor::create().unwrap();
             let checkpoint_id = client
                 .create_checkpoint(&author_key_pair, project_hash, None)
+                .wait()
                 .unwrap();
             let project_id = (name, domain);
             client
@@ -58,6 +62,7 @@ fn run(args: Args) {
                         checkpoint_id,
                     },
                 )
+                .wait()
                 .unwrap();
             println!("Registered project with ID {:?}", project_id)
         }
