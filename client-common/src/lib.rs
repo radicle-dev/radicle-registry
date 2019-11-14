@@ -1,6 +1,7 @@
 //! This create provides code that is common to all client implementations.
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
+use radicle_registry_runtime::{balances, registry};
 use sr_primitives::generic::{Era, SignedPayload};
 use sr_primitives::traits::SignedExtension;
 
@@ -11,7 +12,8 @@ pub use radicle_registry_runtime::{
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::ed25519;
 
-pub use radicle_registry_runtime::{Call, Hash, Index, SignedExtra};
+pub use radicle_registry_client_interface::Call;
+pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
 /// validation checks. See the `Checkable` implementation of [UncheckedExtrinsic] for how
@@ -20,7 +22,7 @@ pub use radicle_registry_runtime::{Call, Hash, Index, SignedExtra};
 /// `genesis_hash` is the genesis hash of the block chain this intrinsic is valid for.
 pub fn signed_extrinsic(
     signer: &ed25519::Pair,
-    call: Call,
+    call: RuntimeCall,
     nonce: Index,
     genesis_hash: Hash,
 ) -> UncheckedExtrinsic {
@@ -34,6 +36,15 @@ pub fn signed_extrinsic(
     let (call, extra, _) = raw_payload.deconstruct();
 
     UncheckedExtrinsic::new_signed(call, signer.public().into(), signature.into(), extra)
+}
+
+/// Transforms a public ledger call into an internal runtime call.
+pub fn into_runtime_call(call: Call) -> RuntimeCall {
+    match call {
+        Call::RegisterProject(params) => registry::Call::register_project(params).into(),
+        Call::Transfer(params) => balances::Call::transfer(params.recipient, params.balance).into(),
+        Call::CreateCheckpoint(params) => registry::Call::create_checkpoint(params).into(),
+    }
 }
 
 #[derive(Clone)]

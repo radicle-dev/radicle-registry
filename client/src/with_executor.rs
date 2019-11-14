@@ -28,25 +28,14 @@ impl ClientWithExecutor {
 }
 
 impl ClientT for ClientWithExecutor {
-    fn transfer(
-        &self,
-        key_pair: &ed25519::Pair,
-        receiver: &AccountId,
-        balance: Balance,
-    ) -> Response<(), Error> {
-        self.run_sync(move |client| client.transfer(key_pair, receiver, balance))
+    /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
+    /// transaction once it has been included in a block.
+    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
+        self.run_sync(move |client| client.submit(author, call))
     }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
         self.run_sync(move |client| client.free_balance(account_id))
-    }
-
-    fn register_project(
-        &self,
-        author: &ed25519::Pair,
-        project_params: RegisterProjectParams,
-    ) -> Response<(), Error> {
-        self.run_sync(move |client| client.register_project(author, project_params))
     }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
@@ -55,15 +44,6 @@ impl ClientT for ClientWithExecutor {
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
         self.run_sync(move |client| client.list_projects())
-    }
-
-    fn create_checkpoint(
-        &self,
-        author: &ed25519::Pair,
-        project_hash: H256,
-        prev_cp: Option<CheckpointId>,
-    ) -> Response<CheckpointId, Error> {
-        self.run_sync(move |client| client.create_checkpoint(author, project_hash, prev_cp))
     }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {

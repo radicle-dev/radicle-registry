@@ -2952,6 +2952,7 @@ name = "radicle_registry_client_common"
 version = "0.1.0"
 dependencies = [
  "parity-scale-codec",
+ "radicle_registry_client_interface",
  "radicle_registry_runtime",
  "sr-io",
  "sr-primitives",
@@ -2981,11 +2982,13 @@ name = "radicle_registry_memory_client"
 version = "0.1.0"
 dependencies = [
  "futures01",
+ "radicle_registry_client_common",
  "radicle_registry_client_interface",
  "radicle_registry_runtime",
  "sr-io",
  "sr-primitives",
  "srml-support",
+ "srml-system",
  "substrate-primitives",
 ]
 

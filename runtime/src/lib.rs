@@ -52,7 +52,12 @@ pub type Balance = u128;
 /// Index of a transaction in the chain.
 pub type Index = u32;
 
+/// The hashing algorightm to use
+pub type Hashing = BlakeTwo256;
+
 /// A hash of some data used by the chain.
+///
+/// Same as [Hashing::Output].
 pub type Hash = substrate_primitives::H256;
 
 /// Digest item type.
@@ -131,7 +136,7 @@ impl srml_system::Trait for Runtime {
     /// The type for hashing blocks and tries.
     type Hash = Hash;
     /// The hashing algorithm used.
-    type Hashing = BlakeTwo256;
+    type Hashing = Hashing;
     /// The header type.
     type Header = generic::Header<BlockNumber, BlakeTwo256>;
     /// The ubiquitous event type.

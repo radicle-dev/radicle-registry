@@ -8,35 +8,66 @@
 //! can be used for testing.
 use futures::prelude::*;
 
+use radicle_registry_runtime::Hash;
+
 pub use radicle_registry_runtime::{
-    registry::{Checkpoint, CheckpointId, Project, ProjectId},
+    registry::{
+        Checkpoint, CheckpointId, CreateCheckpointParams, Project, ProjectId, RegisterProjectParams,
+    },
     AccountId, Balance,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
 
-#[derive(Clone, Debug)]
-pub struct RegisterProjectParams {
-    pub id: ProjectId,
-    pub description: String,
-    pub img_url: String,
-    pub checkpoint_id: CheckpointId,
-}
-
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;
+
+#[doc(inline)]
+/// The hash of a transaction. Uniquely identifies a transaction.
+pub type TxHash = Hash;
+
+#[derive(Clone, Debug)]
+pub struct TransferParams {
+    pub recipient: AccountId,
+    pub balance: Balance,
+}
+
+#[derive(Clone, Debug)]
+/// Message calls that can be sent to the ledger in a transaction.
+pub enum Call {
+    /// Registers a project with the given parameters.
+    RegisterProject(RegisterProjectParams),
+    /// Transfer `balance` from the author account to the recipient account.
+    Transfer(TransferParams),
+    CreateCheckpoint(CreateCheckpointParams),
+}
 
 /// Return type for all [Client] methods.
 pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
 pub trait Client {
+    /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
+    /// transaction once it has been included in a block.
+    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error>;
+
     fn transfer(
         &self,
         key_pair: &ed25519::Pair,
-        receiver: &AccountId,
+        recipient: &AccountId,
         balance: Balance,
-    ) -> Response<(), Error>;
+    ) -> Response<(), Error> {
+        Box::new(
+            self.submit(
+                key_pair,
+                Call::Transfer(TransferParams {
+                    recipient: recipient.clone(),
+                    balance,
+                }),
+            )
+            .map(|_| ()),
+        )
+    }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error>;
 
@@ -44,7 +75,12 @@ pub trait Client {
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<(), Error>;
+    ) -> Response<(), Error> {
+        Box::new(
+            self.submit(author, Call::RegisterProject(project_params))
+                .map(|_| ()),
+        )
+    }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 
@@ -53,9 +89,22 @@ pub trait Client {
     fn create_checkpoint(
         &self,
         author: &ed25519::Pair,
-        project_id: H256,
-        prev_checkpoint: Option<CheckpointId>,
-    ) -> Response<CheckpointId, Error>;
+        project_hash: H256,
+        previous_checkpoint: Option<CheckpointId>,
+    ) -> Response<CheckpointId, Error> {
+        let checkpoint_id = CheckpointId::random();
+        Box::new(
+            self.submit(
+                author,
+                Call::CreateCheckpoint(CreateCheckpointParams {
+                    checkpoint_id,
+                    project_hash,
+                    previous_checkpoint,
+                }),
+            )
+            .map(move |_| checkpoint_id),
+        )
+    }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
 }

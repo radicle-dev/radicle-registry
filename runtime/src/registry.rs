@@ -53,6 +53,13 @@ pub struct Checkpoint {
     pub hash: H256,
 }
 
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct CreateCheckpointParams {
+    pub checkpoint_id: CheckpointId,
+    pub project_hash: H256,
+    pub previous_checkpoint: Option<CheckpointId>,
+}
+
 pub trait Trait: srml_system::Trait<AccountId = AccountId, Origin = crate::Origin> {
     type Event: From<Event> + Into<<Self as srml_system::Trait>::Event>;
 }
@@ -97,18 +104,16 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn create_checkpoint(
             origin,
-            project_hash: H256,
-            checkpoint_id: CheckpointId,
-            prev_checkpoint_id: Option<CheckpointId>,
+            params: CreateCheckpointParams,
         ) -> Result {
             ensure_signed(origin)?;
             let checkpoint = Checkpoint {
-                parent: prev_checkpoint_id,
-                hash: project_hash,
+                parent: params.previous_checkpoint,
+                hash: params.project_hash,
             };
-            store::Checkpoints::insert(checkpoint_id, checkpoint);
+            store::Checkpoints::insert(params.checkpoint_id, checkpoint);
 
-            Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
+            Self::deposit_event(Event::CheckpointCreated(params.checkpoint_id));
             Ok(())
         }
     }
