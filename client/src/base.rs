@@ -4,8 +4,9 @@ use srml_support::storage::generator::{StorageMap, StorageValue};
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
-use radicle_registry_client_interface::CryptoPair as _;
-use radicle_registry_runtime::{Call as RuntimeCall, Hash, Runtime};
+use radicle_registry_client_common::signed_extrinsic;
+use radicle_registry_client_interface::{CryptoPair as _, Response, TransactionExtra};
+use radicle_registry_runtime::{AccountId, Call as RuntimeCall, Hash, Runtime};
 use substrate_subxt::system::SystemStore as _;
 
 /// Common client errors related to transport, encoding, and validity
@@ -13,7 +14,7 @@ pub type Error = substrate_subxt::Error;
 
 pub struct Client {
     pub(crate) subxt_client: substrate_subxt::Client<Runtime>,
-    genesis_hash: Hash,
+    pub(crate) genesis_hash: Hash,
 }
 
 pub type ExtrinsicSuccess = substrate_subxt::ExtrinsicSuccess<Runtime>;
@@ -48,25 +49,34 @@ impl Client {
         self.subxt_client.fetch::<Value>(key)
     }
 
-    pub fn submit_and_watch_call(
+    pub fn get_transaction_extra(
+        &self,
+        account_id: &AccountId,
+    ) -> Response<TransactionExtra, Error> {
+        let genesis_hash = self.genesis_hash;
+        Box::new(
+            self.subxt_client
+                .account_nonce(account_id.clone())
+                .map(move |nonce| TransactionExtra {
+                    nonce,
+                    genesis_hash,
+                }),
+        )
+    }
+
+    /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
+    /// transaction once it has been included in a block.
+    pub fn submit_runtime_call(
         &self,
         key_pair: &ed25519::Pair,
         call: RuntimeCall,
     ) -> impl Future<Item = ExtrinsicSuccess, Error = Error> {
-        let genesis_hash = self.genesis_hash;
-        let call = call.into();
         let key_pair = key_pair.clone();
         let account_id = key_pair.public().clone();
         let subxt_client = self.subxt_client.clone();
-        self.subxt_client
-            .account_nonce(account_id)
-            .and_then(move |nonce| {
-                let xt = radicle_registry_client_common::signed_extrinsic(
-                    &key_pair,
-                    call,
-                    nonce,
-                    genesis_hash,
-                );
+        self.get_transaction_extra(&account_id)
+            .and_then(move |extra: TransactionExtra| {
+                let xt = signed_extrinsic(&key_pair, call, extra.nonce, extra.genesis_hash);
                 subxt_client
                     .connect()
                     .and_then(move |rpc| rpc.submit_and_watch_extrinsic(xt))

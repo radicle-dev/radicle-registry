@@ -34,6 +34,10 @@ impl ClientT for ClientWithExecutor {
         self.run_sync(move |client| client.submit(author, call))
     }
 
+    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
+        self.run_sync(move |client| client.get_transaction_extra(account_id))
+    }
+
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
         self.run_sync(move |client| client.free_balance(account_id))
     }
