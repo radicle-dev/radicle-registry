@@ -35,7 +35,7 @@ pub fn signed_extrinsic(
     let signature = raw_payload.using_encoded(|payload| signer.sign(payload));
     let (call, extra, _) = raw_payload.deconstruct();
 
-    UncheckedExtrinsic::new_signed(call, signer.public().into(), signature.into(), extra)
+    UncheckedExtrinsic::new_signed(call, signer.public(), signature, extra)
 }
 
 /// Transforms a public ledger call into an internal runtime call.

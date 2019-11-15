@@ -5,6 +5,7 @@ use futures01::future::Future;
 use radicle_registry_client::{
     ed25519, Client, ClientT as _, CryptoPair as _, Error, RegisterProjectParams, H256,
 };
+use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
 
 fn main() {
     env_logger::init();
@@ -21,7 +22,10 @@ async fn go() -> Result<(), Error> {
         .create_checkpoint(&alice, project_hash, None)
         .compat()
         .await?;
-    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
     client
         .register_project(
             &alice,

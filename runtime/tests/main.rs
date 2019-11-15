@@ -7,6 +7,7 @@ use radicle_registry_memory_client::{
     ed25519, Call, Checkpoint, CheckpointId, Client, CryptoPair, MemoryClient, ProjectId,
     RegisterProjectParams, RegistryEvent, SetCheckpointParams, H256,
 };
+use radicle_registry_runtime::registry::{ProjectDomain, ProjectName, String32};
 
 use std::panic;
 
@@ -20,7 +21,10 @@ fn create_project_with_checkpoint(
         .create_checkpoint(author, project_hash, None)
         .wait()
         .unwrap();
-    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
     client
         .register_project(
             &author,
@@ -46,7 +50,10 @@ fn register_project() {
         .create_checkpoint(&alice, project_hash, None)
         .wait()
         .unwrap();
-    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
     let tx_applied = client
         .submit(
             &alice,
@@ -70,7 +77,7 @@ fn register_project() {
         .wait()
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
+    assert_eq!(project.id, project_id);
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
     assert_eq!(project.current_cp, checkpoint_id);
@@ -93,6 +100,24 @@ fn register_project() {
         .unwrap()
         .unwrap();
     assert_eq!(checkpoint, checkpoint_);
+}
+
+#[test]
+fn long_string32() {
+    fn long_string(n: usize) -> Result<String32, String> {
+        String32::from_string(std::iter::repeat("X").take(n).collect::<String>())
+    }
+    let wrong = long_string(33);
+    let right = long_string(32);
+
+    assert!(
+        wrong.is_err(),
+        "Error: excessively long string converted to String32"
+    );
+    assert!(
+        right.is_ok(),
+        "Error: string with acceptable length failed conversion to String32."
+    )
 }
 
 #[test]

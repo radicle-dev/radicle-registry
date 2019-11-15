@@ -1,11 +1,14 @@
+use alloc::format;
 use alloc::prelude::v1::*;
 use alloc::vec;
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, Error as CodecError, Input};
 use sr_primitives::weights::SimpleDispatchInfo;
 use srml_support::{
-    decl_event, decl_module, decl_storage, dispatch::Result, storage::StorageMap as _,
-    storage::StorageValue as _,
+    decl_event, decl_module, decl_storage, dispatch::Result as DispatchResult,
+    storage::StorageMap as _, storage::StorageValue as _,
 };
+
+use sr_std::str::FromStr;
 
 use substrate_primitives::H256;
 
@@ -14,14 +17,70 @@ use srml_system::ensure_signed;
 
 use crate::AccountId;
 
+/// Type to represent project names and domains.
+///
+/// Since their lengths are limited to 32 characters, a smart constructor is
+/// provided to check validity.
+#[derive(Encode, Clone, Debug, Eq, PartialEq)]
+pub struct String32(String);
+
+impl String32 {
+    pub fn from_string(s: String) -> Result<Self, String> {
+        if s.len() > 32 {
+            Err(format!(
+                "The provided string's length exceeded 32 characters: {:?}",
+                s
+            ))
+        } else {
+            Ok(String32(s))
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl FromStr for String32 {
+    type Err = String;
+
+    /// This function only raises an error if the `String` it is passed is
+    /// longer than 32 characters.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        String32::from_string(s.to_string())
+    }
+}
+
+impl Decode for String32 {
+    fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
+        let decoded: String = String::decode(input)?;
+        if decoded.len() > 32 {
+            Err(From::from("String32 length was more than 32 characters."))
+        } else {
+            Ok(String32(decoded))
+        }
+    }
+}
+
+#[test]
+fn encode_then_decode() {
+    let string = String32::from_string(String::from("ôítÏйгますいщαφδвы")).unwrap();
+
+    let encoded = string.encode();
+
+    let decoded = <String32>::decode(&mut &encoded[..]).unwrap();
+
+    assert_eq!(string, decoded)
+}
+
 /// The name a project is registered with.
-pub type ProjectName = String;
+pub type ProjectName = String32;
 
 /// The domain under which the project's name is registered.
 ///
 /// At present, the domain must be `rad`, alhtough others may be allowed in
 /// the future.
-pub type ProjectDomain = String;
+pub type ProjectDomain = String32;
 
 pub type ProjectId = (ProjectName, ProjectDomain);
 
@@ -112,7 +171,7 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = SimpleDispatchInfo::FreeNormal]
-        pub fn register_project(origin, params: RegisterProjectParams) -> Result {
+        pub fn register_project(origin, params: RegisterProjectParams) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project_id = params.id.clone();
             let project = Project {
@@ -135,7 +194,7 @@ decl_module! {
         pub fn create_checkpoint(
             origin,
             params: CreateCheckpointParams,
-        ) -> Result {
+        ) -> DispatchResult {
             ensure_signed(origin)?;
             let checkpoint = Checkpoint {
                 parent: params.previous_checkpoint,
@@ -151,7 +210,7 @@ decl_module! {
         pub fn set_checkpoint(
             origin,
             params: SetCheckpointParams,
-        ) -> Result {
+        ) -> DispatchResult {
             ensure_signed(origin)?;
 
             let opt_project = store::Projects::get(params.project_id.clone());

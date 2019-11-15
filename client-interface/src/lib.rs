@@ -13,7 +13,7 @@ use radicle_registry_runtime::Hash;
 pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
-        ProjectId, RegisterProjectParams, SetCheckpointParams,
+        ProjectId, RegisterProjectParams, SetCheckpointParams, String32,
     },
     AccountId, Balance, Event, Index,
 };
