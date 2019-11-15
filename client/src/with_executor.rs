@@ -30,7 +30,11 @@ impl ClientWithExecutor {
 impl ClientT for ClientWithExecutor {
     /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
     /// transaction once it has been included in a block.
-    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error> {
+    fn submit<Call_: Call>(
+        &self,
+        author: &ed25519::Pair,
+        call: Call_,
+    ) -> Response<TransactionApplied<Call_>, Error> {
         self.run_sync(move |client| client.submit(author, call))
     }
 
