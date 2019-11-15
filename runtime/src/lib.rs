@@ -65,9 +65,6 @@ pub type DigestItem = generic::DigestItem<Hash>;
 
 pub type EventRecord = srml_system::EventRecord<Event, Hash>;
 
-/// Used for the module template in `./template.rs`
-pub mod counter;
-
 pub mod registry;
 
 pub use srml_balances as balances;
@@ -208,10 +205,6 @@ impl srml_sudo::Trait for Runtime {
     type Proposal = Call;
 }
 
-impl counter::Trait for Runtime {
-    type Event = Event;
-}
-
 impl registry::Trait for Runtime {
     type Event = Event;
 }
@@ -230,7 +223,6 @@ construct_runtime!(
                 Aura: srml_aura::{Module, Config<T>, Inherent(Timestamp)},
                 Balances: srml_balances::{default, Error},
                 Sudo: srml_sudo,
-                Counter: counter::{Module, Call, Storage, Event<T>},
                 Registry: registry::{Module, Call, Storage, Event},
         }
 );

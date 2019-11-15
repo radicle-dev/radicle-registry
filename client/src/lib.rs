@@ -1,14 +1,13 @@
 //! Node client for the radicle registry
 use futures01::prelude::*;
 
-use radicle_registry_runtime::{counter, registry};
+use radicle_registry_runtime::registry;
 use substrate_subxt::balances::BalancesStore as _;
 
 mod base;
 mod with_executor;
 
 pub use radicle_registry_client_interface::{Client as ClientT, *};
-pub use radicle_registry_runtime::counter::CounterValue;
 
 pub use base::Error;
 pub use with_executor::ClientWithExecutor;
@@ -26,16 +25,6 @@ impl Client {
     /// Fails if it cannot connect to a node.
     pub fn create() -> impl Future<Item = Self, Error = Error> {
         base::Client::create().map(|base_client| Client { base_client })
-    }
-
-    pub fn counter_inc(&self, key_pair: &ed25519::Pair) -> impl Future<Item = (), Error = Error> {
-        self.base_client
-            .submit_runtime_call(key_pair, counter::Call::inc().into())
-            .map(|_| ())
-    }
-
-    pub fn get_counter(&self) -> impl Future<Item = Option<CounterValue>, Error = Error> {
-        self.base_client.fetch_value::<counter::Value, _>()
     }
 }
 
