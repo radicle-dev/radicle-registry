@@ -5,37 +5,6 @@ use futures::prelude::*;
 
 use radicle_registry_memory_client::*;
 
-use std::panic;
-
-/// Helper to register project in tests.
-fn create_project_with_checkpoint(
-    client: &MemoryClient,
-    author: &ed25519::Pair,
-) -> (ProjectId, CheckpointId) {
-    let project_hash = H256::random();
-    let checkpoint_id = client
-        .create_checkpoint(author, project_hash, None)
-        .wait()
-        .unwrap();
-    let project_id = (
-        ProjectName::from_string("NAME".to_string()).unwrap(),
-        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
-    );
-    client
-        .register_project(
-            &author,
-            RegisterProjectParams {
-                id: project_id.clone(),
-                description: "DESCRIPTION".to_string(),
-                img_url: "IMG_URL".to_string(),
-                checkpoint_id,
-            },
-        )
-        .wait()
-        .unwrap();
-    (project_id, checkpoint_id)
-}
-
 #[test]
 fn register_project() {
     let client = MemoryClient::new();
@@ -63,10 +32,6 @@ fn register_project() {
         .wait()
         .unwrap();
 
-    assert!(tx_applied
-        .events
-        .contains(&RegistryEvent::ProjectRegistered(project_id.clone()).into()));
-
     let project = client
         .get_project(project_id.clone())
         .wait()
@@ -76,6 +41,11 @@ fn register_project() {
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
     assert_eq!(project.current_cp, checkpoint_id);
+
+    assert_eq!(
+        tx_applied.events[0],
+        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id.clone()).into()
+    );
 
     let has_project = client
         .list_projects()
@@ -160,11 +130,11 @@ fn set_checkpoint() {
     let client = MemoryClient::new();
     let charles = key_pair_from_string("Charles");
 
-    let (project_id, checkpoint_id) = create_project_with_checkpoint(&client, &charles);
+    let project = create_project_with_checkpoint(&client, &charles);
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = client
-        .create_checkpoint(&charles, project_hash2, Some(checkpoint_id))
+        .create_checkpoint(&charles, project_hash2, Some(project.current_cp))
         .wait()
         .unwrap();
 
@@ -172,13 +142,18 @@ fn set_checkpoint() {
         .set_checkpoint(
             &charles,
             SetCheckpointParams {
-                project_id: project_id.clone(),
+                project_id: project.id.clone(),
                 new_checkpoint_id,
             },
         )
         .wait()
         .unwrap();
-    let new_project = client.get_project(project_id).wait().unwrap().unwrap();
+
+    let new_project = client
+        .get_project(project.id.clone())
+        .wait()
+        .unwrap()
+        .unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp)
 }
 
@@ -187,7 +162,7 @@ fn fail_to_set_checkpoint() {
     let client = MemoryClient::new();
     let david = key_pair_from_string("David");
 
-    let (project_id, checkpoint_id) = create_project_with_checkpoint(&client, &david);
+    let project = create_project_with_checkpoint(&client, &david);
 
     let project_hash2 = H256::random();
     let garbage = CheckpointId::random();
@@ -200,7 +175,7 @@ fn fail_to_set_checkpoint() {
         .submit(
             &david,
             SetCheckpointParams {
-                project_id: project_id.clone(),
+                project_id: project.id.clone(),
                 new_checkpoint_id,
             },
         )
@@ -208,13 +183,12 @@ fn fail_to_set_checkpoint() {
         .unwrap();
 
     assert_eq!(tx_applied.result, Err(None));
-
     let updated_project = client
-        .get_project(project_id.clone())
+        .get_project(project.id.clone())
         .wait()
         .unwrap()
         .unwrap();
-    assert_eq!(updated_project.current_cp, checkpoint_id);
+    assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, new_checkpoint_id);
 }
 
@@ -223,11 +197,11 @@ fn set_checkpoint_without_permission() {
     let client = MemoryClient::new();
     let eve = key_pair_from_string("Eve");
 
-    let (project_id, checkpoint_id) = create_project_with_checkpoint(&client, &eve);
+    let project = create_project_with_checkpoint(&client, &eve);
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = client
-        .create_checkpoint(&eve, project_hash2, Some(checkpoint_id))
+        .create_checkpoint(&eve, project_hash2, Some(project.current_cp))
         .wait()
         .unwrap();
 
@@ -236,7 +210,7 @@ fn set_checkpoint_without_permission() {
         .submit(
             &frank,
             SetCheckpointParams {
-                project_id: project_id.clone(),
+                project_id: project.id.clone(),
                 new_checkpoint_id,
             },
         )
@@ -244,12 +218,12 @@ fn set_checkpoint_without_permission() {
         .unwrap();
 
     let updated_project = client
-        .get_project(project_id.clone())
+        .get_project(project.id.clone())
         .wait()
         .unwrap()
         .unwrap();
     assert_eq!(tx_applied.result, Err(None));
-    assert_eq!(updated_project.current_cp, checkpoint_id);
+    assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, new_checkpoint_id);
 }
 
@@ -270,7 +244,109 @@ fn transfer_fail() {
         )
         .wait()
         .unwrap();
-    assert_eq!(tx_applied.result, Err(None))
+    assert_eq!(tx_applied.result, Err(None));
+}
+
+/// Test that we can transfer money to a project and that the project owner can transfer money from
+/// a project to another account.
+#[test]
+fn project_account_transfer() {
+    let client = MemoryClient::new();
+    let alice = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob").public();
+    let project = create_project_with_checkpoint(&client, &alice);
+
+    assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
+    client
+        .transfer(&alice, &project.account_id, 2000)
+        .wait()
+        .unwrap();
+    assert_eq!(
+        client.free_balance(&project.account_id).wait().unwrap(),
+        2000
+    );
+
+    assert_eq!(client.free_balance(&bob).wait().unwrap(), 0);
+
+    client
+        .submit(
+            &alice,
+            TransferFromProjectParams {
+                project: project.id.clone(),
+                recipient: bob.clone(),
+                value: 1000,
+            },
+        )
+        .wait()
+        .unwrap();
+    assert_eq!(client.free_balance(&bob).wait().unwrap(), 1000);
+    assert_eq!(
+        client.free_balance(&project.account_id).wait().unwrap(),
+        1000
+    );
+}
+
+#[test]
+/// Test that a transfer from a project account fails if the sender is not a project member.
+fn project_account_transfer_non_member() {
+    let client = MemoryClient::new();
+    let alice = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob");
+    let project = create_project_with_checkpoint(&client, &alice);
+
+    client
+        .transfer(&alice, &project.account_id, 2000)
+        .wait()
+        .unwrap();
+    assert_eq!(
+        client.free_balance(&project.account_id).wait().unwrap(),
+        2000
+    );
+
+    client
+        .submit(
+            &bob,
+            TransferFromProjectParams {
+                project: project.id.clone(),
+                recipient: bob.public().clone(),
+                value: 1000,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    assert_eq!(
+        client.free_balance(&project.account_id).wait().unwrap(),
+        2000
+    );
+}
+
+fn create_project_with_checkpoint(client: &MemoryClient, author: &ed25519::Pair) -> Project {
+    let project_id = ("NAME".parse().unwrap(), "DOMAIN".parse().unwrap());
+
+    let checkpoint_id = client
+        .create_checkpoint(&author, H256::random(), None)
+        .wait()
+        .unwrap();
+
+    client
+        .register_project(
+            &author,
+            RegisterProjectParams {
+                id: project_id.clone(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
+                checkpoint_id,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    client
+        .get_project(project_id.clone())
+        .wait()
+        .unwrap()
+        .unwrap()
 }
 
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {

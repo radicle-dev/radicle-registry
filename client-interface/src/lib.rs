@@ -14,7 +14,7 @@ pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
         ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
-        String32,
+        String32, TransferFromProjectParams,
     },
     AccountId, Balance, Event, Index,
 };
