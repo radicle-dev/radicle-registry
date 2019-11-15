@@ -44,8 +44,8 @@
 //! assert_eq!(project.img_url, "IMG_URL");
 //! ```
 
-use futures01::future;
-use std::sync::Mutex;
+use futures01::{future, prelude::*};
+use std::sync::{Arc, Mutex};
 
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
 use srml_support::storage::{StorageMap as _, StorageValue as _};
@@ -60,8 +60,9 @@ pub use radicle_registry_client_interface::*;
 /// [sr_io::TestExternalities].
 ///
 /// The responses returned from the client never result in an [Error].
+#[derive(Clone)]
 pub struct MemoryClient {
-    test_ext: Mutex<sr_io::TestExternalities>,
+    test_ext: Arc<Mutex<sr_io::TestExternalities>>,
     genesis_hash: Hash,
 }
 
@@ -84,7 +85,7 @@ impl MemoryClient {
             srml_system::Module::<Runtime>::block_hash(0)
         });
         MemoryClient {
-            test_ext: Mutex::new(test_ext),
+            test_ext: Arc::new(Mutex::new(test_ext)),
             genesis_hash,
         }
     }
@@ -103,19 +104,36 @@ impl MemoryClient {
 
 impl Client for MemoryClient {
     fn submit(&self, key_pair: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
-        self.run(move || {
-            let nonce = srml_system::Module::<Runtime>::account_nonce(key_pair.public());
-            let runtime_call = radicle_registry_client_common::into_runtime_call(call);
-            let extrinsic = radicle_registry_client_common::signed_extrinsic(
-                key_pair,
-                runtime_call,
-                nonce,
-                self.genesis_hash,
-            );
-            let xt_hash = Hashing::hash_of(&extrinsic);
-            Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
-            xt_hash
-        })
+        let account_id = key_pair.public();
+        let client = self.clone();
+        let key_pair = key_pair.clone();
+        Box::new(
+            self.get_transaction_extra(&account_id)
+                .and_then(move |extra| {
+                    client.run(move || {
+                        let runtime_call = radicle_registry_client_common::into_runtime_call(call);
+                        let extrinsic = radicle_registry_client_common::signed_extrinsic(
+                            &key_pair,
+                            runtime_call,
+                            extra.nonce,
+                            extra.genesis_hash,
+                        );
+                        let xt_hash = Hashing::hash_of(&extrinsic);
+                        Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
+                        xt_hash
+                    })
+                }),
+        )
+    }
+
+    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let nonce =
+            test_ext.execute_with(|| srml_system::Module::<Runtime>::account_nonce(account_id));
+        Box::new(future::ok(TransactionExtra {
+            nonce,
+            genesis_hash: self.genesis_hash,
+        }))
     }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {

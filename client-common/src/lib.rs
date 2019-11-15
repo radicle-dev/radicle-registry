@@ -12,7 +12,7 @@ pub use radicle_registry_runtime::{
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::ed25519;
 
-pub use radicle_registry_client_interface::Call;
+pub use radicle_registry_client_interface::{Call, TransactionExtra};
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
@@ -26,11 +26,11 @@ pub fn signed_extrinsic(
     nonce: Index,
     genesis_hash: Hash,
 ) -> UncheckedExtrinsic {
-    let extra = ExtrinsicExtra {
+    let extra = TransactionExtra {
         nonce,
         genesis_hash,
     };
-    let (runtime_extra, additional_signed) = extra.to_runtime_extra();
+    let (runtime_extra, additional_signed) = transaction_extra_to_runtime_extra(extra);
     let raw_payload = SignedPayload::from_raw(call, runtime_extra, additional_signed);
     let signature = raw_payload.using_encoded(|payload| signer.sign(payload));
     let (call, extra, _) = raw_payload.deconstruct();
@@ -47,60 +47,50 @@ pub fn into_runtime_call(call: Call) -> RuntimeCall {
     }
 }
 
-#[derive(Clone)]
-/// All data that is necessary to build the [SignedPayload] for a extrinsic.
-struct ExtrinsicExtra {
-    pub nonce: Index,
-    pub genesis_hash: Hash,
-}
+/// Return the [SignedExtra] data that is part of [UncheckedExtrinsic] and the associated
+/// `AdditionalSigned` data included in the signature.
+fn transaction_extra_to_runtime_extra(
+    extra: TransactionExtra,
+) -> (
+    SignedExtra,
+    <SignedExtra as SignedExtension>::AdditionalSigned,
+) {
+    let check_version = srml_system::CheckVersion::new();
+    let check_genesis = srml_system::CheckGenesis::new();
+    let check_era = srml_system::CheckEra::from(Era::Immortal);
+    let check_nonce = srml_system::CheckNonce::from(extra.nonce);
+    let check_weight = srml_system::CheckWeight::new();
+    let charge_transaction_payment = srml_transaction_payment::ChargeTransactionPayment::from(0);
 
-impl ExtrinsicExtra {
-    /// Return the [SignedExtra] data that is part of [UncheckedExtrinsic] and the associated
-    /// `AdditionalSigned` data included in the signature.
-    fn to_runtime_extra(
-        &self,
-    ) -> (
-        SignedExtra,
-        <SignedExtra as SignedExtension>::AdditionalSigned,
-    ) {
-        let check_version = srml_system::CheckVersion::new();
-        let check_genesis = srml_system::CheckGenesis::new();
-        let check_era = srml_system::CheckEra::from(Era::Immortal);
-        let check_nonce = srml_system::CheckNonce::from(self.nonce);
-        let check_weight = srml_system::CheckWeight::new();
-        let charge_transaction_payment =
-            srml_transaction_payment::ChargeTransactionPayment::from(0);
+    let additional_signed = (
+        check_version
+            .additional_signed()
+            .expect("statically returns ok"),
+        // Genesis hash
+        extra.genesis_hash,
+        // Era
+        extra.genesis_hash,
+        check_nonce
+            .additional_signed()
+            .expect("statically returns Ok"),
+        check_weight
+            .additional_signed()
+            .expect("statically returns Ok"),
+        charge_transaction_payment
+            .additional_signed()
+            .expect("statically returns Ok"),
+    );
 
-        let additional_signed = (
-            check_version
-                .additional_signed()
-                .expect("statically returns ok"),
-            // Genesis hash
-            self.genesis_hash,
-            // Era
-            self.genesis_hash,
-            check_nonce
-                .additional_signed()
-                .expect("statically returns Ok"),
-            check_weight
-                .additional_signed()
-                .expect("statically returns Ok"),
-            charge_transaction_payment
-                .additional_signed()
-                .expect("statically returns Ok"),
-        );
+    let extra = (
+        check_version,
+        check_genesis,
+        check_era,
+        check_nonce,
+        check_weight,
+        charge_transaction_payment,
+    );
 
-        let extra = (
-            check_version,
-            check_genesis,
-            check_era,
-            check_nonce,
-            check_weight,
-            charge_transaction_payment,
-        );
-
-        (extra, additional_signed)
-    }
+    (extra, additional_signed)
 }
 
 #[cfg(test)]

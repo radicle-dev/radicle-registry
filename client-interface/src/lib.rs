@@ -14,7 +14,7 @@ pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Project, ProjectId, RegisterProjectParams,
     },
-    AccountId, Balance,
+    AccountId, Balance, Index,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
@@ -25,6 +25,13 @@ pub type Error = substrate_subxt::Error;
 #[doc(inline)]
 /// The hash of a transaction. Uniquely identifies a transaction.
 pub type TxHash = Hash;
+
+#[derive(Copy, Clone)]
+/// All data that is necessary to build the [SignedPayload] for a extrinsic.
+pub struct TransactionExtra {
+    pub nonce: Index,
+    pub genesis_hash: Hash,
+}
 
 #[derive(Clone, Debug)]
 pub struct TransferParams {
@@ -50,6 +57,8 @@ pub trait Client {
     /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
     /// transaction once it has been included in a block.
     fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error>;
+
+    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error>;
 
     fn transfer(
         &self,

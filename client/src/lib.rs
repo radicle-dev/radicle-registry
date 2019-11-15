@@ -7,12 +7,8 @@ use substrate_subxt::balances::BalancesStore as _;
 mod base;
 mod with_executor;
 
+pub use radicle_registry_client_interface::{Client as ClientT, *};
 pub use radicle_registry_runtime::counter::CounterValue;
-
-pub use radicle_registry_client_interface::{
-    ed25519, AccountId, Balance, Call, Checkpoint, CheckpointId, Client as ClientT, CryptoPair,
-    CryptoPublic, Project, ProjectId, RegisterProjectParams, Response, TxHash, H256,
-};
 
 pub use base::Error;
 pub use with_executor::ClientWithExecutor;
@@ -34,7 +30,7 @@ impl Client {
 
     pub fn counter_inc(&self, key_pair: &ed25519::Pair) -> impl Future<Item = (), Error = Error> {
         self.base_client
-            .submit_and_watch_call(key_pair, counter::Call::inc().into())
+            .submit_runtime_call(key_pair, counter::Call::inc().into())
             .map(|_| ())
     }
 
@@ -47,12 +43,16 @@ impl ClientT for Client {
     fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
         Box::new(
             self.base_client
-                .submit_and_watch_call(
+                .submit_runtime_call(
                     author,
                     radicle_registry_client_common::into_runtime_call(call),
                 )
                 .map(|xt| xt.extrinsic),
         )
+    }
+
+    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
+        self.base_client.get_transaction_extra(account_id)
     }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
