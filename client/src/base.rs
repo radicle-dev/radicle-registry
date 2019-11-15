@@ -34,19 +34,23 @@ impl Client {
             })
     }
 
-    pub fn fetch_value<S: StorageValue<T>, T: FullCodec>(
+    pub fn fetch_value<S: StorageValue<Value>, Value: FullCodec>(
         &self,
-    ) -> impl Future<Item = Option<T>, Error = Error> {
-        let key = StorageKey(Vec::from(&S::storage_value_final_key()[..]));
-        self.subxt_client.fetch::<T>(key)
+    ) -> impl Future<Item = S::Query, Error = Error> {
+        let key = StorageKey(Vec::from(S::storage_value_final_key().as_ref()));
+        self.subxt_client
+            .fetch::<Value>(key)
+            .map(|maybe_value| S::from_optional_value_to_query(maybe_value))
     }
 
     pub fn fetch_map_value<S: StorageMap<Key, Value>, Key: FullCodec, Value: FullCodec>(
         &self,
         key: Key,
-    ) -> impl Future<Item = Option<Value>, Error = Error> {
+    ) -> impl Future<Item = S::Query, Error = Error> {
         let key = StorageKey(Vec::from(S::storage_map_final_key(key).as_ref()));
-        self.subxt_client.fetch::<Value>(key)
+        self.subxt_client
+            .fetch::<Value>(key)
+            .map(|maybe_value| S::from_optional_value_to_query(maybe_value))
     }
 
     pub fn get_transaction_extra(
