@@ -1,6 +1,6 @@
 use futures01::prelude::*;
 use radicle_registry_client::{
-    ed25519, ClientT, ClientWithExecutor, CryptoPair as _, RegisterProjectParams, H256,
+    ed25519, ClientT, ClientWithExecutor, CryptoPair as _, RegisterProjectParams, String32, H256,
 };
 use structopt::StructOpt;
 
@@ -25,9 +25,9 @@ pub enum Command {
     /// Register a project
     RegisterProject {
         /// Name of the project to register.
-        name: String,
+        name: String32,
         /// Domain of the project to register.
-        domain: String,
+        domain: String32,
         project_hash: H256,
     },
 }

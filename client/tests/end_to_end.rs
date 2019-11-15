@@ -7,6 +7,7 @@ use radicle_registry_client::{
     ed25519, Call, Checkpoint, ClientT as _, ClientWithExecutor, CryptoPair, RegisterProjectParams,
     RegistryEvent, H256,
 };
+use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
 
 #[test]
 fn register_project() {
@@ -19,7 +20,10 @@ fn register_project() {
         .create_checkpoint(&alice, project_hash, None)
         .wait()
         .unwrap();
-    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
     let tx_applied = client
         .submit(
             &alice,
@@ -43,7 +47,7 @@ fn register_project() {
         .wait()
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
+    assert_eq!(project.id, project_id);
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
     assert_eq!(project.current_cp, checkpoint_id);

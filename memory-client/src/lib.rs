@@ -12,6 +12,8 @@
 //! use radicle_registry_memory_client::{
 //!     H256, MemoryClient, Client, CryptoPair, RegisterProjectParams, ed25519
 //! };
+//! use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
+//!
 //! let client = MemoryClient::new();
 //! let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 //!
@@ -25,7 +27,10 @@
 //!     .wait()
 //!     .unwrap();
 //!
-//! let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+//!     let project_id = (
+//!         ProjectName::from_string("NAME".to_string()).unwrap(),
+//!         ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+//!     );
 //! client
 //!     .register_project(
 //!         &alice,
@@ -39,8 +44,8 @@
 //!     .wait()
 //!     .unwrap();
 //!
-//! let project = client.get_project(project_id).wait().unwrap().unwrap();
-//! assert_eq!(project.id, ("NAME".to_string(), "DOMAIN".to_string()));
+//! let project = client.get_project(project_id.clone()).wait().unwrap().unwrap();
+//! assert_eq!(project.id, project_id);
 //! assert_eq!(project.description, "DESCRIPTION");
 //! assert_eq!(project.img_url, "IMG_URL");
 //! ```
