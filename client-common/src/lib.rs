@@ -44,6 +44,7 @@ pub fn into_runtime_call(call: Call) -> RuntimeCall {
         Call::RegisterProject(params) => registry::Call::register_project(params).into(),
         Call::Transfer(params) => balances::Call::transfer(params.recipient, params.balance).into(),
         Call::CreateCheckpoint(params) => registry::Call::create_checkpoint(params).into(),
+        Call::SetCheckpoint(params) => registry::Call::set_checkpoint(params).into(),
     }
 }
 

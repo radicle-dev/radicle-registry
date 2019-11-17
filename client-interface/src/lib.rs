@@ -13,7 +13,7 @@ use radicle_registry_runtime::Hash;
 pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
-        ProjectId, RegisterProjectParams,
+        ProjectId, RegisterProjectParams, SetCheckpointParams,
     },
     AccountId, Balance, Event, Index,
 };
@@ -60,6 +60,7 @@ pub enum Call {
     /// Transfer `balance` from the author account to the recipient account.
     Transfer(TransferParams),
     CreateCheckpoint(CreateCheckpointParams),
+    SetCheckpoint(SetCheckpointParams),
 }
 
 /// Return type for all [Client] methods.
@@ -130,4 +131,15 @@ pub trait Client {
     }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
+
+    fn set_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        set_cp_params: SetCheckpointParams,
+    ) -> Response<(), Error> {
+        Box::new(
+            self.submit(author, Call::SetCheckpoint(set_cp_params))
+                .map(|_| ()),
+        )
+    }
 }

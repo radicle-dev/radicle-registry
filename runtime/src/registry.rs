@@ -60,6 +60,12 @@ pub struct CreateCheckpointParams {
     pub previous_checkpoint: Option<CheckpointId>,
 }
 
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct SetCheckpointParams {
+    pub project_id: ProjectId,
+    pub new_checkpoint_id: CheckpointId,
+}
+
 pub trait Trait: srml_system::Trait<AccountId = AccountId, Origin = crate::Origin> {
     type Event: From<Event> + Into<<Self as srml_system::Trait>::Event>;
 }
@@ -70,6 +76,7 @@ pub mod store {
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
             pub Projects: map ProjectId => Option<Project>;
+            pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
             pub ProjectIds: Vec<ProjectId>;
             pub Checkpoints: map CheckpointId => Option<Checkpoint>;
         }
@@ -77,6 +84,28 @@ pub mod store {
 }
 
 pub use store::Store;
+
+/// Given a checkpoint, return its oldest ancestor.
+fn get_root_checkpoint(checkpoint_id: CheckpointId) -> CheckpointId {
+    // At the end of this loop, the value of `ancestor_id` will be
+    // the ID of the first ancestor of the checkpoint in
+    // `params: SetCheckpointParams`.
+    //
+    // The number of storage requests made in this loop grows linearly
+    // with the size of the checkpoint's ancestry.
+    //
+    // The loop's total runtime will also depend on the performance of
+    // each `store::StorageMap::get` request.
+    let mut ancestor_id = checkpoint_id;
+    while let Some(cp) = store::Checkpoints::get(ancestor_id) {
+        match cp.parent {
+            None => break,
+            Some(cp_id) => ancestor_id = cp_id,
+        }
+    }
+
+    ancestor_id
+}
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
@@ -96,6 +125,7 @@ decl_module! {
 
             store::Projects::insert(project_id.clone(), project);
             store::ProjectIds::append_or_put(vec![project_id.clone()]);
+            store::InitialCheckpoints::insert(project_id.clone(), params.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id.clone()));
             Ok(())
@@ -116,11 +146,41 @@ decl_module! {
             Self::deposit_event(Event::CheckpointCreated(params.checkpoint_id));
             Ok(())
         }
+
+        #[weight = SimpleDispatchInfo::FreeNormal]
+        pub fn set_checkpoint(
+            origin,
+            params: SetCheckpointParams,
+        ) -> Result {
+            ensure_signed(origin)?;
+
+            let opt_project = store::Projects::get(params.project_id.clone());
+            let new_project = match opt_project {
+                None => return Err("The provided project ID is not associated with any project."),
+                Some(prj) => {
+                    Project {
+                        current_cp: params.new_checkpoint_id,
+                        ..prj
+                    }
+                }
+            };
+
+            let ancestor_id = get_root_checkpoint(params.new_checkpoint_id);
+            if Some(ancestor_id) != store::InitialCheckpoints::get(params.project_id.clone()) {
+                return Err("The provided checkpoint ID is not a descendant of the project's first checkpoint.")
+            }
+
+            store::Projects::insert(new_project.id.clone(), new_project.clone());
+
+            Self::deposit_event(Event::CheckpointSet(new_project.id, params.new_checkpoint_id));
+            Ok(())
+        }
     }
 }
 decl_event!(
     pub enum Event {
         ProjectRegistered(ProjectId),
         CheckpointCreated(CheckpointId),
+        CheckpointSet(ProjectId, CheckpointId),
     }
 );
