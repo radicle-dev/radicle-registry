@@ -4,9 +4,37 @@
 use futures::prelude::*;
 
 use radicle_registry_memory_client::{
-    ed25519, Call, Checkpoint, Client, CryptoPair, MemoryClient, RegisterProjectParams,
-    RegistryEvent, H256,
+    ed25519, Call, Checkpoint, CheckpointId, Client, CryptoPair, MemoryClient, ProjectId,
+    RegisterProjectParams, RegistryEvent, SetCheckpointParams, H256,
 };
+
+use std::panic;
+
+/// Helper to register project in tests.
+fn create_project_with_checkpoint(
+    client: &MemoryClient,
+    author: &ed25519::Pair,
+) -> (ProjectId, CheckpointId) {
+    let project_hash = H256::random();
+    let checkpoint_id = client
+        .create_checkpoint(author, project_hash, None)
+        .wait()
+        .unwrap();
+    let project_id = ("NAME".to_string(), "DOMAIN".to_string());
+    client
+        .register_project(
+            &author,
+            RegisterProjectParams {
+                id: project_id.clone(),
+                description: "DESCRIPTION".to_string(),
+                img_url: "IMG_URL".to_string(),
+                checkpoint_id,
+            },
+        )
+        .wait()
+        .unwrap();
+    (project_id, checkpoint_id)
+}
 
 #[test]
 fn register_project() {
@@ -70,7 +98,7 @@ fn register_project() {
 #[test]
 fn create_checkpoint() {
     let client = MemoryClient::new();
-    let bob = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob");
 
     let project_hash1 = H256::random();
     let checkpoint_id1 = client
@@ -105,6 +133,67 @@ fn create_checkpoint() {
         .unwrap()
         .unwrap();
     assert_eq!(checkpoint2, checkpoint2_);
+}
+
+#[test]
+fn set_checkpoint() {
+    let client = MemoryClient::new();
+    let charles = key_pair_from_string("Charles");
+
+    let (project_id, checkpoint_id) = create_project_with_checkpoint(&client, &charles);
+
+    let project_hash2 = H256::random();
+    let new_checkpoint_id = client
+        .create_checkpoint(&charles, project_hash2, Some(checkpoint_id))
+        .wait()
+        .unwrap();
+
+    client
+        .set_checkpoint(
+            &charles,
+            SetCheckpointParams {
+                project_id: project_id.clone(),
+                new_checkpoint_id,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    let new_project = client.get_project(project_id).wait().unwrap().unwrap();
+    assert_eq!(new_checkpoint_id, new_project.current_cp)
+}
+
+#[test]
+fn fail_to_set_checkpoint() {
+    let client = MemoryClient::new();
+    let david = key_pair_from_string("David");
+
+    let (project_id, _checkpoint_id) = create_project_with_checkpoint(&client, &david);
+
+    let project_hash2 = H256::random();
+    let garbage = CheckpointId::random();
+    let new_checkpoint_id = client
+        .create_checkpoint(&david, project_hash2, Some(garbage))
+        .wait()
+        .unwrap();
+
+    // `panic::catch_unwind` is necessary here because it is not yet possible
+    // to extract errors from failing transactions yet.
+    let res = panic::catch_unwind(|| {
+        client
+            .set_checkpoint(
+                &david,
+                SetCheckpointParams {
+                    project_id: project_id.clone(),
+                    new_checkpoint_id,
+                },
+            )
+            .wait()
+    });
+    assert!(
+        res.is_err(),
+        "Error: Invalid checkpoint successfully set as project's checkpoint."
+    )
 }
 
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
