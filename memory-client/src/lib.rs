@@ -53,8 +53,9 @@
 use futures01::{future, prelude::*};
 use std::sync::{Arc, Mutex};
 
+use parity_scale_codec::{Decode, FullCodec};
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
-use srml_support::storage::{StorageMap as _, StorageValue as _};
+use srml_support::storage::generator::{StorageMap, StorageValue};
 
 use radicle_registry_runtime::{
     balances, registry, Executive, GenesisConfig, Hash, Hashing, Runtime,
@@ -106,6 +107,37 @@ impl MemoryClient {
         let result = test_ext.execute_with(f);
         Box::new(future::ok(result))
     }
+
+    pub fn fetch_value<S: StorageValue<Value>, Value: FullCodec>(&self) -> Response<S::Query, Error>
+    where
+        S::Query: Send + 'static,
+    {
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let result = storage_lookup(test_ext, S::storage_value_final_key());
+        Box::new(
+            result
+                .map(S::from_optional_value_to_query)
+                .map_err(Error::Codec)
+                .into_future(),
+        )
+    }
+
+    pub fn fetch_map_value<S: StorageMap<Key, Value>, Key: FullCodec, Value: FullCodec>(
+        &self,
+        key: Key,
+    ) -> Response<S::Query, Error>
+    where
+        S::Query: Send + 'static,
+    {
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let result = storage_lookup(test_ext, S::storage_map_final_key(key));
+        Box::new(
+            result
+                .map(S::from_optional_value_to_query)
+                .map_err(Error::Codec)
+                .into_future(),
+        )
+    }
 }
 
 impl Client for MemoryClient {
@@ -153,18 +185,30 @@ impl Client for MemoryClient {
     }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
-        self.run(|| balances::Module::<Runtime>::free_balance(account_id))
+        Box::new(self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()))
     }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
-        self.run(|| registry::store::Projects::get(id))
+        Box::new(self.fetch_map_value::<registry::store::Projects, _, _>(id))
     }
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
-        self.run(registry::store::ProjectIds::get)
+        Box::new(self.fetch_value::<registry::store::ProjectIds, _>())
     }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
-        self.run(|| registry::store::Checkpoints::get(id))
+        Box::new(self.fetch_map_value::<registry::store::Checkpoints, _, _>(id))
+    }
+}
+
+/// Lookup and decode a storage value in the [TestExternalities] context.
+fn storage_lookup<Value: Decode>(
+    test_ext: &mut sr_io::TestExternalities,
+    key: impl AsRef<[u8]>,
+) -> Result<Option<Value>, parity_scale_codec::Error> {
+    let maybe_data = test_ext.execute_with(|| sr_io::storage(key.as_ref()));
+    match maybe_data {
+        Some(data) => Value::decode(&mut data.as_slice()).map(Some),
+        None => Ok(None),
     }
 }

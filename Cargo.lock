@@ -2983,6 +2983,7 @@ name = "radicle_registry_memory_client"
 version = "0.1.0"
 dependencies = [
  "futures01",
+ "parity-scale-codec",
  "radicle_registry_client_common",
  "radicle_registry_client_interface",
  "radicle_registry_runtime",

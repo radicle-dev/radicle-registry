@@ -12,6 +12,7 @@ radicle_registry_client_interface = { path = "../client-interface" }
 radicle_registry_client_common = { path = "../client-common" }
 
 futures01 = "0.1"
+parity-scale-codec = "1.0"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
