@@ -1,7 +1,8 @@
 //! Run the registry ledger in memory.
 //!
 //! This crate provides an implementation of the registry [Client] that uses the native runtime
-//! code with in-memory state. This allows you to use the ledger logic without running a node.
+//! code with in-memory state. This allows you to use the ledger logic without running a node. [See
+//! below](#differences) for a list of differences to the real node client.
 //!
 //! The crate re-exports all items from [radicle_registry_client_interface]. You need to import the
 //! [Client] trait to access the client methods.
@@ -43,6 +44,11 @@
 //! assert_eq!(project.description, "DESCRIPTION");
 //! assert_eq!(project.img_url, "IMG_URL");
 //! ```
+//!
+//! # Differences
+//!
+//! The [MemoryClient] does not produce blocks. In particular the `blocks` field in
+//! [TransactionApplied]` always equals `Hash::default` when returned from [Client::submit].
 
 use futures01::{future, prelude::*};
 use std::sync::{Arc, Mutex};
@@ -103,10 +109,10 @@ impl MemoryClient {
 }
 
 impl Client for MemoryClient {
-    fn submit(&self, key_pair: &ed25519::Pair, call: Call) -> Response<TxHash, Error> {
-        let account_id = key_pair.public();
+    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error> {
+        let account_id = author.public();
         let client = self.clone();
-        let key_pair = key_pair.clone();
+        let key_pair = author.clone();
         Box::new(
             self.get_transaction_extra(&account_id)
                 .and_then(move |extra| {
@@ -118,9 +124,19 @@ impl Client for MemoryClient {
                             extra.nonce,
                             extra.genesis_hash,
                         );
-                        let xt_hash = Hashing::hash_of(&extrinsic);
+                        let tx_hash = Hashing::hash_of(&extrinsic);
+                        let event_start_index = srml_system::Module::<Runtime>::event_count();
                         Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
-                        xt_hash
+                        let events = srml_system::Module::<Runtime>::events()
+                            .into_iter()
+                            .skip(event_start_index as usize)
+                            .map(|event_record| event_record.event)
+                            .collect();
+                        TransactionApplied {
+                            tx_hash,
+                            block: Default::default(),
+                            events,
+                        }
                     })
                 }),
         )

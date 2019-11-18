@@ -2940,6 +2940,7 @@ dependencies = [
  "radicle_registry_client_common",
  "radicle_registry_client_interface",
  "radicle_registry_runtime",
+ "sr-primitives",
  "srml-support",
  "srml-system",
  "substrate-primitives",

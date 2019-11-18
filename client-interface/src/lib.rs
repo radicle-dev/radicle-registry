@@ -12,9 +12,10 @@ use radicle_registry_runtime::Hash;
 
 pub use radicle_registry_runtime::{
     registry::{
-        Checkpoint, CheckpointId, CreateCheckpointParams, Project, ProjectId, RegisterProjectParams,
+        Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
+        ProjectId, RegisterProjectParams,
     },
-    AccountId, Balance, Index,
+    AccountId, Balance, Event, Index,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
@@ -39,6 +40,18 @@ pub struct TransferParams {
     pub balance: Balance,
 }
 
+/// Result of a transaction being included in a block.
+///
+/// Returned after submitting an transaction to the blockchain.
+#[derive(Clone, Debug)]
+pub struct TransactionApplied {
+    pub tx_hash: TxHash,
+    /// The hash of the block the transaction is included in.
+    pub block: Hash,
+    /// Events emitted by this transaction
+    pub events: Vec<Event>,
+}
+
 #[derive(Clone, Debug)]
 /// Message calls that can be sent to the ledger in a transaction.
 pub enum Call {
@@ -54,9 +67,10 @@ pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
 pub trait Client {
-    /// Sign and submit a ledger call as a transaction to the blockchain. Returns the hash of the
-    /// transaction once it has been included in a block.
-    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TxHash, Error>;
+    /// Sign and submit a ledger call as a transaction to the blockchain.
+    ///
+    /// Succeeds if the transaction has been included in a block.
+    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error>;
 
     fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error>;
 

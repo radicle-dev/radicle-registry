@@ -29,3 +29,6 @@ rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 git = "https://github.com/paritytech/substrate"
 rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
 
+[dependencies.sr-primitives]
+git = "https://github.com/paritytech/substrate"
+rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
