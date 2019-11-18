@@ -221,6 +221,37 @@ fn fail_to_set_checkpoint() {
     )
 }
 
+#[test]
+fn set_checkpoint_without_permission() {
+    let client = MemoryClient::new();
+    let eve = key_pair_from_string("Eve");
+
+    let (project_id, checkpoint_id) = create_project_with_checkpoint(&client, &eve);
+
+    let project_hash2 = H256::random();
+    let new_checkpoint_id = client
+        .create_checkpoint(&eve, project_hash2, Some(checkpoint_id))
+        .wait()
+        .unwrap();
+
+    let frank = key_pair_from_string("Frank");
+    let res = panic::catch_unwind(|| {
+        client
+            .set_checkpoint(
+                &frank,
+                SetCheckpointParams {
+                    project_id: project_id.clone(),
+                    new_checkpoint_id,
+                },
+            )
+            .wait()
+    });
+    assert!(
+        res.is_err(),
+        "Error: Successfully set a checkpoint without being a member of the project."
+    )
+}
+
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
 }
