@@ -1,8 +1,7 @@
 //! Node client for the radicle registry
 use futures01::prelude::*;
 
-use radicle_registry_runtime::registry;
-use substrate_subxt::balances::BalancesStore as _;
+use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod base;
 mod with_executor;
@@ -47,10 +46,10 @@ impl ClientT for Client {
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
         Box::new(
             self.base_client
-                .subxt_client
-                .free_balance(account_id.clone()),
+                .fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()),
         )
     }
+
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
         Box::new(
             self.base_client
@@ -61,8 +60,7 @@ impl ClientT for Client {
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
         Box::new(
             self.base_client
-                .fetch_value::<registry::store::ProjectIds, _>()
-                .map(|maybe_ids| maybe_ids.unwrap_or_default()),
+                .fetch_value::<registry::store::ProjectIds, _>(),
         )
     }
 
