@@ -35,10 +35,6 @@ impl String32 {
             Ok(String32(s))
         }
     }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
 }
 
 impl FromStr for String32 {
@@ -211,12 +207,15 @@ decl_module! {
             origin,
             params: SetCheckpointParams,
         ) -> DispatchResult {
-            ensure_signed(origin)?;
+            let sender = ensure_signed(origin)?;
 
             let opt_project = store::Projects::get(params.project_id.clone());
             let new_project = match opt_project {
                 None => return Err("The provided project ID is not associated with any project."),
                 Some(prj) => {
+                    if !prj.members.contains(&sender) {
+                        return Err("The `set_checkpoint` transaction sender is not a member of the project.")
+                    }
                     Project {
                         current_cp: params.new_checkpoint_id,
                         ..prj
