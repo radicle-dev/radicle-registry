@@ -4,7 +4,7 @@
 //! methods to get the ledger state.
 use futures01::prelude::*;
 
-use radicle_registry_runtime::Hash;
+pub use radicle_registry_runtime::Hash;
 
 pub use radicle_registry_runtime::{
     registry::{
@@ -18,7 +18,7 @@ pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPubli
 pub use substrate_primitives::{ed25519, H256};
 
 pub use crate::call::Call;
-pub use sr_primitives::traits::Hash as _;
+pub use crate::transaction::{Transaction, TransactionExtra};
 
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;
@@ -26,13 +26,6 @@ pub type Error = substrate_subxt::Error;
 #[doc(inline)]
 /// The hash of a transaction. Uniquely identifies a transaction.
 pub type TxHash = Hash;
-
-#[derive(Copy, Clone)]
-/// All data that is necessary to build the [SignedPayload] for a extrinsic.
-pub struct TransactionExtra {
-    pub nonce: Index,
-    pub genesis_hash: Hash,
-}
 
 #[derive(Clone, Debug)]
 pub struct TransferParams {
@@ -56,12 +49,22 @@ pub struct TransactionApplied<Call_: Call> {
     pub result: Call_::Result,
 }
 
-/// Return type for all [Client] methods.
+/// Return type for all [ClientT] methods.
 pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
 pub trait ClientT {
+    /// Submit a signed_transaction with a given ledger call.
+    ///
+    /// Succeeds if the transaction has been included in a block.
+    fn submit_transaction<Call_: Call>(
+        &self,
+        transaction: Transaction<Call_>,
+    ) -> Response<TransactionApplied<Call_>, Error>;
+
     /// Sign and submit a ledger call as a transaction to the blockchain.
+    ///
+    /// Same as [ClientT::submit_transaction] but takes care of signing the call.
     ///
     /// Succeeds if the transaction has been included in a block.
     fn submit<Call_: Call>(
@@ -69,6 +72,12 @@ pub trait ClientT {
         author: &ed25519::Pair,
         call: Call_,
     ) -> Response<TransactionApplied<Call_>, Error>;
+
+    /// Fetch the nonce for the given account from the chain state
+    fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error>;
+
+    /// Return the gensis hash of the chain we are communicating with.
+    fn genesis_hash(&self) -> Hash;
 
     fn transfer(
         &self,

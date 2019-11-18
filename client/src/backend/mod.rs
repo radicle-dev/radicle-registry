@@ -1,7 +1,5 @@
 //! Define trait for client backends and provide emulator and remote node implementation
-use radicle_registry_runtime::Hash;
-
-pub use radicle_registry_runtime::UncheckedExtrinsic;
+pub use radicle_registry_runtime::{Hash, UncheckedExtrinsic};
 
 use crate::interface::*;
 
@@ -36,6 +34,6 @@ pub trait Backend {
     /// Fetch a value from the runtime state storage.
     fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error>;
 
-    /// Get transaction extra from current ledger state to create valid transactions.
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error>;
+    /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
+    fn get_genesis_hash(&self) -> Hash;
 }

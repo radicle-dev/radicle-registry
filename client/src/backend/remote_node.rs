@@ -3,10 +3,7 @@ use futures01::future::Future;
 use sr_primitives::traits::Hash as _;
 use substrate_primitives::storage::StorageKey;
 
-use radicle_registry_runtime::{
-    opaque::Block as OpaqueBlock, AccountId, Event, Hash, Hashing, Runtime,
-};
-use substrate_subxt::system::SystemStore as _;
+use radicle_registry_runtime::{opaque::Block as OpaqueBlock, Event, Hash, Hashing, Runtime};
 
 use crate::backend;
 use crate::interface::*;
@@ -89,16 +86,8 @@ impl backend::Backend for RemoteNode {
         }))
     }
 
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
-        let genesis_hash = self.genesis_hash;
-        Box::new(
-            self.subxt_client
-                .account_nonce(account_id.clone())
-                .map(move |nonce| TransactionExtra {
-                    nonce,
-                    genesis_hash,
-                }),
-        )
+    fn get_genesis_hash(&self) -> Hash {
+        self.genesis_hash
     }
 }
 

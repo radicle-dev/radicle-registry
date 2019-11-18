@@ -1,8 +1,9 @@
-//! Build a signed extrinsic
+//! Provides [Transaction] and [TransactionExtra].
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
 use sr_primitives::generic::{Era, SignedPayload};
 use sr_primitives::traits::SignedExtension;
+use std::marker::PhantomData;
 
 pub use radicle_registry_runtime::{
     registry::{Project, ProjectId},
@@ -11,24 +12,60 @@ pub use radicle_registry_runtime::{
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::ed25519;
 
-pub use crate::interface::{Call, TransactionExtra};
+pub use crate::call::Call;
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
+
+#[derive(Clone, Debug)]
+/// Transaction the can be submitted to the blockchain.
+///
+/// A transaction includes
+/// * the author
+/// * the runtime call
+/// * extra data to like the gensis hash and account nonce
+/// * a valid signature
+///
+/// The transaction type is generic over the runtime call parameter which must implement [Call].
+///
+/// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
+/// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
+pub struct Transaction<Call_: Call> {
+    _phantom_data: PhantomData<Call_>,
+    pub(crate) extrinsic: UncheckedExtrinsic,
+}
+
+impl<Call_: Call> Transaction<Call_> {
+    /// Create and sign a transaction for the given call.
+    pub fn new_signed(
+        signer: &ed25519::Pair,
+        call: Call_,
+        transaction_extra: TransactionExtra,
+    ) -> Self {
+        let extrinsic = signed_extrinsic(signer, call.into_runtime_call(), transaction_extra);
+        Transaction {
+            _phantom_data: PhantomData,
+            extrinsic,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+/// The data that is required from the blockchain state to create a valid transaction.
+pub struct TransactionExtra {
+    /// The nonce of the account that is the transaction author.
+    pub nonce: Index,
+    pub genesis_hash: Hash,
+}
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
 /// validation checks. See the `Checkable` implementation of [UncheckedExtrinsic] for how
 /// validation is performed.
 ///
 /// `genesis_hash` is the genesis hash of the block chain this intrinsic is valid for.
-pub fn signed_extrinsic(
+fn signed_extrinsic(
     signer: &ed25519::Pair,
     call: RuntimeCall,
-    nonce: Index,
-    genesis_hash: Hash,
+    extra: TransactionExtra,
 ) -> UncheckedExtrinsic {
-    let extra = TransactionExtra {
-        nonce,
-        genesis_hash,
-    };
     let (runtime_extra, additional_signed) = transaction_extra_to_runtime_extra(extra);
     let raw_payload = SignedPayload::from_raw(call, runtime_extra, additional_signed);
     let signature = raw_payload.using_encoded(|payload| signer.sign(payload));
@@ -116,8 +153,10 @@ mod test {
         let xt = signed_extrinsic(
             &key_pair,
             paint_system::Call::fill_block().into(),
-            0,
-            genesis_hash,
+            TransactionExtra {
+                nonce: 0,
+                genesis_hash,
+            },
         );
 
         test_ext
