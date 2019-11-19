@@ -11,7 +11,7 @@ use radicle_registry_runtime::{
     balances, registry, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime,
 };
 
-use radicle_registry_client_interface::*;
+use crate::interface::*;
 
 /// [Client] implementation using native runtime code and in memory state through
 /// [sr_io::TestExternalities].

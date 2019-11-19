@@ -2,11 +2,7 @@
 //!
 //! The [Client] trait defines one method for each transaction of the registry ledger as well as
 //! methods to get the ledger state.
-//!
-//! [radicle_registry_client_interface] provides a [Client] implementation that talks to a running node.
-//! [radicle_registry_memory_client] provides an implementation that runs the ledger in memory and
-//! can be used for testing.
-use futures::prelude::*;
+use futures01::prelude::*;
 
 use radicle_registry_runtime::Hash;
 
@@ -21,9 +17,7 @@ pub use radicle_registry_runtime::{
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
 
-mod call;
-
-pub use call::Call;
+pub use crate::call::Call;
 
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;

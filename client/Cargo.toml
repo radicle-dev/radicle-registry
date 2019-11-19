@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 radicle_registry_runtime = { path = "../runtime" }
-radicle_registry_client_interface = { path = "../client-interface" }
 substrate-subxt = { path = "../subxt" }
 
 env_logger = "0.7"
