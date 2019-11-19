@@ -3,7 +3,7 @@
 /// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
 use futures::prelude::*;
 
-use radicle_registry_memory_client::*;
+use radicle_registry_client::*;
 
 #[test]
 fn register_project() {

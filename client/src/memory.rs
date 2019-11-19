@@ -1,59 +1,4 @@
-//! Run the registry ledger in memory.
-//!
-//! This crate provides an implementation of the registry [Client] that uses the native runtime
-//! code with in-memory state. This allows you to use the ledger logic without running a node. [See
-//! below](#differences) for a list of differences to the real node client.
-//!
-//! The crate re-exports all items from [radicle_registry_client_interface]. You need to import the
-//! [Client] trait to access the client methods.
-//!
-//! ```rust
-//! # use futures01::prelude::*;
-//! use radicle_registry_memory_client::{
-//!     H256, MemoryClient, Client, CryptoPair, RegisterProjectParams, ed25519
-//! };
-//! use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
-//!
-//! let client = MemoryClient::new();
-//! let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
-//!
-//! let project_hash = H256::random();
-//! let checkpoint_id = client
-//!     .create_checkpoint(
-//!         &alice,
-//!         project_hash,
-//!         None
-//!     )
-//!     .wait()
-//!     .unwrap();
-//!
-//!     let project_id = (
-//!         ProjectName::from_string("NAME".to_string()).unwrap(),
-//!         ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
-//!     );
-//! client
-//!     .register_project(
-//!         &alice,
-//!         RegisterProjectParams {
-//!             id: project_id.clone(),
-//!             description: "DESCRIPTION".to_string(),
-//!             img_url: "IMG_URL".to_string(),
-//!             checkpoint_id,
-//!         },
-//!     )
-//!     .wait()
-//!     .unwrap();
-//!
-//! let project = client.get_project(project_id.clone()).wait().unwrap().unwrap();
-//! assert_eq!(project.id, project_id);
-//! assert_eq!(project.description, "DESCRIPTION");
-//! assert_eq!(project.img_url, "IMG_URL");
-//! ```
-//!
-//! # Differences
-//!
-//! The [MemoryClient] does not produce blocks. In particular the `blocks` field in
-//! [TransactionApplied]` always equals `Hash::default` when returned from [Client::submit].
+//! Provides [MemoryClient] to run the registry ledger in memory.
 
 use futures01::{future, prelude::*};
 use std::sync::{Arc, Mutex};
@@ -66,10 +11,15 @@ use radicle_registry_runtime::{
     balances, registry, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime,
 };
 
-pub use radicle_registry_client_interface::*;
+use radicle_registry_client_interface::*;
 
 /// [Client] implementation using native runtime code and in memory state through
 /// [sr_io::TestExternalities].
+///
+/// # Differences with real [Client]
+///
+/// The [MemoryClient] does not produce blocks. In particular the `blocks` field in
+/// [TransactionApplied]` always equals `Hash::default` when returned from [Client::submit].
 ///
 /// The responses returned from the client never result in an [Error].
 #[derive(Clone)]
