@@ -5380,7 +5380,7 @@ dependencies = [
 
 [[package]]
 name = "substrate-subxt"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "derive_more 0.14.1",
  "env_logger 0.6.2",

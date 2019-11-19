@@ -17,7 +17,7 @@
 use crate::{
     error::Error,
     metadata::Metadata,
-    srml::{
+    paint::{
         balances::Balances,
         system::System,
     },
@@ -84,8 +84,8 @@ impl<T: System> Rpc<T> {
                     Some(data) => {
                         let value = Decode::decode(&mut &data.0[..])?;
                         Ok(Some(value))
-                    },
-                    None => Ok(None)
+                    }
+                    None => Ok(None),
                 }
             })
     }
@@ -294,7 +294,7 @@ pub struct ExtrinsicSuccess<T: System> {
     /// Extrinsic hash.
     pub extrinsic: T::Hash,
     /// Raw runtime events, can be decoded by the caller.
-    pub events: Vec<srml_system::EventRecord<T::Event, T::Hash>>,
+    pub events: Vec<paint_system::EventRecord<T::Event, T::Hash>>,
 }
 
 /// Waits for events for the block triggered by the extrinsic
