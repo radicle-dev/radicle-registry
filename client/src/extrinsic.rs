@@ -1,4 +1,4 @@
-//! This create provides code that is common to all client implementations.
+//! Build a signed extrinsic
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
 use sr_primitives::generic::{Era, SignedPayload};
