@@ -2,18 +2,18 @@ use alloc::format;
 use alloc::prelude::v1::*;
 use alloc::vec;
 use codec::{Decode, Encode, Error as CodecError, Input};
-use sr_primitives::weights::SimpleDispatchInfo;
-use srml_support::{
+use paint_support::{
     decl_event, decl_module, decl_storage, dispatch::Result as DispatchResult,
     storage::StorageMap as _, storage::StorageValue as _,
 };
+use sr_primitives::weights::SimpleDispatchInfo;
 
 use sr_std::str::FromStr;
 
 use substrate_primitives::H256;
 
-use srml_system as system;
-use srml_system::ensure_signed;
+use paint_system as system;
+use paint_system::ensure_signed;
 
 use crate::AccountId;
 
@@ -121,8 +121,8 @@ pub struct SetCheckpointParams {
     pub new_checkpoint_id: CheckpointId,
 }
 
-pub trait Trait: srml_system::Trait<AccountId = AccountId, Origin = crate::Origin> {
-    type Event: From<Event> + Into<<Self as srml_system::Trait>::Event>;
+pub trait Trait: paint_system::Trait<AccountId = AccountId, Origin = crate::Origin> {
+    type Event: From<Event> + Into<<Self as paint_system::Trait>::Event>;
 }
 
 pub mod store {

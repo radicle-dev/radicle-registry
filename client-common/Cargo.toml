@@ -10,22 +10,22 @@ radicle_registry_client_interface = { path = "../client-interface" }
 
 parity-scale-codec = "1.0"
 
-[dependencies.srml-system]
+[dependencies.paint-system]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
-[dependencies.srml-transaction-payment]
+[dependencies.paint-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"

@@ -56,12 +56,12 @@ fn transaction_extra_to_runtime_extra(
     SignedExtra,
     <SignedExtra as SignedExtension>::AdditionalSigned,
 ) {
-    let check_version = srml_system::CheckVersion::new();
-    let check_genesis = srml_system::CheckGenesis::new();
-    let check_era = srml_system::CheckEra::from(Era::Immortal);
-    let check_nonce = srml_system::CheckNonce::from(extra.nonce);
-    let check_weight = srml_system::CheckWeight::new();
-    let charge_transaction_payment = srml_transaction_payment::ChargeTransactionPayment::from(0);
+    let check_version = paint_system::CheckVersion::new();
+    let check_genesis = paint_system::CheckGenesis::new();
+    let check_era = paint_system::CheckEra::from(Era::Immortal);
+    let check_nonce = paint_system::CheckNonce::from(extra.nonce);
+    let check_weight = paint_system::CheckWeight::new();
+    let charge_transaction_payment = paint_transaction_payment::ChargeTransactionPayment::from(0);
 
     let additional_signed = (
         check_version
@@ -105,15 +105,15 @@ mod test {
     /// Assert that extrinsics created with [create_and_sign] are validated by the runtime.
     fn check_extrinsic() {
         let genesis_config = GenesisConfig {
-            srml_aura: None,
-            srml_balances: None,
-            srml_sudo: None,
+            paint_aura: None,
+            paint_balances: None,
+            paint_sudo: None,
             system: None,
         };
         let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let (key_pair, _) = ed25519::Pair::generate();
 
-        type System = srml_system::Module<Runtime>;
+        type System = paint_system::Module<Runtime>;
         let genesis_hash = test_ext.execute_with(|| {
             System::initialize(
                 &1,
@@ -126,7 +126,7 @@ mod test {
 
         let xt = signed_extrinsic(
             &key_pair,
-            srml_system::Call::fill_block().into(),
+            paint_system::Call::fill_block().into(),
             0,
             genesis_hash,
         );

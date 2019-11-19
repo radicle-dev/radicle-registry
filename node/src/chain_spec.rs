@@ -41,7 +41,7 @@ fn dev_genesis_config() -> GenesisConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
         }),
-        srml_balances: Some(BalancesConfig {
+        paint_balances: Some(BalancesConfig {
             balances: endowed_accounts
                 .iter()
                 .cloned()
@@ -49,7 +49,7 @@ fn dev_genesis_config() -> GenesisConfig {
                 .collect(),
             vesting: vec![],
         }),
-        srml_sudo: Some(SudoConfig { key: root_key }),
-        srml_aura: Some(AuraConfig { authorities }),
+        paint_sudo: Some(SudoConfig { key: root_key }),
+        paint_aura: Some(AuraConfig { authorities }),
     }
 }

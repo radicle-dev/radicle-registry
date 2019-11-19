@@ -58,9 +58,9 @@
 use futures01::{future, prelude::*};
 use std::sync::{Arc, Mutex};
 
+use paint_support::storage::generator::{StorageMap, StorageValue};
 use parity_scale_codec::{Decode, FullCodec};
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
-use srml_support::storage::generator::{StorageMap, StorageValue};
 
 use radicle_registry_runtime::{
     balances, registry, Executive, GenesisConfig, Hash, Hashing, Runtime,
@@ -81,20 +81,20 @@ pub struct MemoryClient {
 impl MemoryClient {
     pub fn new() -> Self {
         let genesis_config = GenesisConfig {
-            srml_aura: None,
-            srml_balances: None,
-            srml_sudo: None,
+            paint_aura: None,
+            paint_balances: None,
+            paint_sudo: None,
             system: None,
         };
         let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = test_ext.execute_with(|| {
-            srml_system::Module::<Runtime>::initialize(
+            paint_system::Module::<Runtime>::initialize(
                 &1,
                 &[0u8; 32].into(),
                 &[0u8; 32].into(),
                 &Default::default(),
             );
-            srml_system::Module::<Runtime>::block_hash(0)
+            paint_system::Module::<Runtime>::block_hash(0)
         });
         MemoryClient {
             test_ext: Arc::new(Mutex::new(test_ext)),
@@ -162,9 +162,9 @@ impl Client for MemoryClient {
                             extra.genesis_hash,
                         );
                         let tx_hash = Hashing::hash_of(&extrinsic);
-                        let event_start_index = srml_system::Module::<Runtime>::event_count();
+                        let event_start_index = paint_system::Module::<Runtime>::event_count();
                         Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
-                        let events = srml_system::Module::<Runtime>::events()
+                        let events = paint_system::Module::<Runtime>::events()
                             .into_iter()
                             .skip(event_start_index as usize)
                             .map(|event_record| event_record.event)
@@ -182,7 +182,7 @@ impl Client for MemoryClient {
     fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
         let test_ext = &mut self.test_ext.lock().unwrap();
         let nonce =
-            test_ext.execute_with(|| srml_system::Module::<Runtime>::account_nonce(account_id));
+            test_ext.execute_with(|| paint_system::Module::<Runtime>::account_nonce(account_id));
         Box::new(future::ok(TransactionExtra {
             nonce,
             genesis_hash: self.genesis_hash,
@@ -211,7 +211,7 @@ fn storage_lookup<Value: Decode>(
     test_ext: &mut sr_io::TestExternalities,
     key: impl AsRef<[u8]>,
 ) -> Result<Option<Value>, parity_scale_codec::Error> {
-    let maybe_data = test_ext.execute_with(|| sr_io::storage(key.as_ref()));
+    let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key.as_ref()));
     match maybe_data {
         Some(data) => Value::decode(&mut data.as_slice()).map(Some),
         None => Ok(None),
