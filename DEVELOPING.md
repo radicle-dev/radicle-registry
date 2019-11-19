@@ -24,7 +24,6 @@ Packages
 * `node` contains the node code which includes the runtime code.
 * `client` contains the high-level client library for interacting with the
   registry through a node and a memory test double.
-* `client-common` provides code that is used by the node client and the memory
 * `client-interface` defines the trait for clients and provides the necessary
   data types.
 * `cli` contains a binary for interacting with the registry node to submit

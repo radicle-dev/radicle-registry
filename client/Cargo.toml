@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 radicle_registry_runtime = { path = "../runtime" }
-radicle_registry_client_common = { path = "../client-common" }
 radicle_registry_client_interface = { path = "../client-interface" }
 substrate-subxt = { path = "../subxt" }
 
@@ -22,6 +21,10 @@ git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.paint-support]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+
+[dependencies.paint-transaction-payment]
 git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 

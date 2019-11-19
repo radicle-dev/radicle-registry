@@ -3638,22 +3638,6 @@ dependencies = [
  "log 0.4.8",
  "paint-support",
  "paint-system",
- "parity-scale-codec",
- "radicle_registry_client_common",
- "radicle_registry_client_interface",
- "radicle_registry_runtime",
- "sr-io",
- "sr-primitives",
- "substrate-primitives",
- "substrate-subxt",
- "tokio",
-]
-
-[[package]]
-name = "radicle_registry_client_common"
-version = "0.1.0"
-dependencies = [
- "paint-system",
  "paint-transaction-payment",
  "parity-scale-codec",
  "radicle_registry_client_interface",
@@ -3661,6 +3645,8 @@ dependencies = [
  "sr-io",
  "sr-primitives",
  "substrate-primitives",
+ "substrate-subxt",
+ "tokio",
 ]
 
 [[package]]

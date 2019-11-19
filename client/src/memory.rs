@@ -104,7 +104,7 @@ impl Client for MemoryClient {
         Box::new(
             self.get_transaction_extra(&account_id)
                 .and_then(move |extra| {
-                    let extrinsic = radicle_registry_client_common::signed_extrinsic(
+                    let extrinsic = crate::extrinsic::signed_extrinsic(
                         &key_pair,
                         call.into_runtime_call(),
                         extra.nonce,

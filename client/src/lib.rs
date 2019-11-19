@@ -8,6 +8,7 @@ use futures01::prelude::*;
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod base;
+mod extrinsic;
 mod memory;
 mod with_executor;
 
