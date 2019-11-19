@@ -8,13 +8,15 @@ use futures01::prelude::*;
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod base;
+mod call;
 mod extrinsic;
+mod interface;
 mod memory;
 mod with_executor;
 
-pub use radicle_registry_client_interface::{Client as ClientT, *};
-
 pub use crate::base::Error;
+pub use crate::call::Call;
+pub use crate::interface::{Client as ClientT, *};
 pub use crate::memory::MemoryClient;
 pub use crate::with_executor::ClientWithExecutor;
 

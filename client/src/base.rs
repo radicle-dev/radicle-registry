@@ -5,7 +5,7 @@ use sr_primitives::traits::Hash as _;
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
-use radicle_registry_client_interface::{CryptoPair as _, Response, TransactionExtra};
+use crate::interface::{CryptoPair as _, Response, TransactionExtra};
 use radicle_registry_runtime::{
     opaque::Block as OpaqueBlock, AccountId, Call as RuntimeCall, Event, Hash, Hashing, Runtime,
 };

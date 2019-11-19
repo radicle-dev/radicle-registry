@@ -3640,29 +3640,12 @@ dependencies = [
  "paint-system",
  "paint-transaction-payment",
  "parity-scale-codec",
- "radicle_registry_client_interface",
  "radicle_registry_runtime",
  "sr-io",
  "sr-primitives",
  "substrate-primitives",
  "substrate-subxt",
  "tokio",
-]
-
-[[package]]
-name = "radicle_registry_client_interface"
-version = "0.1.0"
-dependencies = [
- "futures 0.1.29",
- "paint-support",
- "paint-system",
- "paint-transaction-payment",
- "parity-scale-codec",
- "radicle_registry_runtime",
- "sr-io",
- "sr-primitives",
- "substrate-primitives",
- "substrate-subxt",
 ]
 
 [[package]]
