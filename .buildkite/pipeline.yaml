@@ -2,7 +2,7 @@ steps:
   - label: "Check formatting, lint, build and test "
     command: 'ci/run'
     env:
-      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:380b136cc99473571edcc5618701975bb59d6c0f4d1c520ce520385cffd051b1
+      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:14f86dacda303f96b14cb1e41dc2e54be70f89ee6917920dd58207239a405f17
       DOCKER_FILE: ci/base-image/Dockerfile
     agents:
       platform: "linux"
