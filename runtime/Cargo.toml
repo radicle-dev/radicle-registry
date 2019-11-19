@@ -153,4 +153,4 @@ substrate-wasm-builder-runner = "1.0.2"
 
 [dev-dependencies]
 futures = "0.1"
-radicle_registry_memory_client = { path = "../memory-client" }
+radicle_registry_client = { path = "../client" }

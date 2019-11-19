@@ -1,15 +1,21 @@
-//! Node client for the radicle registry
+//! Clients for the radicle registry.
+//!
+//! This crate provides two high-level clients for the radicle registry. [Client] talks to a
+//! radicle registry node. [MemoryClient] provides the same interface but runs the ledger in
+//! memory. This is useful for developing and testing.
 use futures01::prelude::*;
 
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod base;
+mod memory;
 mod with_executor;
 
 pub use radicle_registry_client_interface::{Client as ClientT, *};
 
-pub use base::Error;
-pub use with_executor::ClientWithExecutor;
+pub use crate::base::Error;
+pub use crate::memory::MemoryClient;
+pub use crate::with_executor::ClientWithExecutor;
 
 /// Client to interact with the radicle registry ledger through a local node.
 ///
