@@ -50,9 +50,9 @@ re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
 Developing with the Client
 --------------------------
 
-For development we provide `radicle_registry_client::MemoryClient`. This client
-implementation allows you to run the registry ledger logic in memory with the
-same interface that the node client provides. See the API docs for more
+For development you can create a ledger emulator with
+`radicle_registry_client::Client::new_emulator()`. Instead of connecting to a
+node this client runs the ledger in memory. See the API docs for more
 information.
 
 

@@ -1,4 +1,4 @@
-//! Provide an abstract trait for registry clients and the necessary types.
+//! Provide an abstract trait for the registry client and the necessary types.
 //!
 //! The [Client] trait defines one method for each transaction of the registry ledger as well as
 //! methods to get the ledger state.
@@ -69,8 +69,6 @@ pub trait Client {
         author: &ed25519::Pair,
         call: Call_,
     ) -> Response<TransactionApplied<Call_>, Error>;
-
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error>;
 
     fn transfer(
         &self,

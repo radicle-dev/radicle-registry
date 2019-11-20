@@ -7,9 +7,6 @@ set -euo pipefail
 cargo doc \
   --no-deps \
   -p radicle_registry_client \
-  -p radicle_registry_client_interface \
-  -p radicle_registry_runtime \
-  -p radicle_registry_memory_client \
   -p substrate-subxt \
   -p substrate-primitives \
   -p sr-io \

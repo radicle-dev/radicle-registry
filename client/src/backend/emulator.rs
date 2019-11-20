@@ -1,0 +1,116 @@
+//! Provides [Emulator] backend to run the registry ledger in memory.
+
+use futures01::future;
+use std::sync::{Arc, Mutex};
+
+use sr_primitives::{traits::Hash as _, BuildStorage as _};
+
+use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
+
+use crate::backend;
+use crate::interface::*;
+
+/// [backend::Backend] implementation using native runtime code and in memory state through
+/// [sr_io::TestExternalities] to emulate the ledger.
+///
+/// # Differences with real [Client]
+///
+/// The [Emulator] does not produce blocks. In particular the `blocks` field in
+/// [TransactionApplied]` always equals `Hash::default` when returned from [Client::submit].
+///
+/// The responses returned from the client never result in an [Error].
+#[derive(Clone)]
+pub struct Emulator {
+    test_ext: Arc<Mutex<sr_io::TestExternalities>>,
+    genesis_hash: Hash,
+}
+
+impl Emulator {
+    pub fn new() -> Self {
+        let genesis_config = make_genesis_config();
+        let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+        let genesis_hash = init_runtime(&mut test_ext);
+        Emulator {
+            test_ext: Arc::new(Mutex::new(test_ext)),
+            genesis_hash,
+        }
+    }
+}
+
+impl backend::Backend for Emulator {
+    fn submit(
+        &self,
+        extrinsic: backend::UncheckedExtrinsic,
+    ) -> Response<backend::TransactionApplied, Error> {
+        let tx_hash = Hashing::hash_of(&extrinsic);
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let events = test_ext.execute_with(move || {
+            let event_start_index = paint_system::Module::<Runtime>::event_count();
+            // We ignore the dispatch result. It is provided through the system event
+            // TODO Pass on apply errors instead of unwrapping.
+            let _dispatch_result = Executive::apply_extrinsic(extrinsic).unwrap();
+            paint_system::Module::<Runtime>::events()
+                .into_iter()
+                .skip(event_start_index as usize)
+                .map(|event_record| event_record.event)
+                .collect::<Vec<Event>>()
+        });
+        Box::new(future::ok(backend::TransactionApplied {
+            tx_hash,
+            block: Default::default(),
+            events,
+        }))
+    }
+
+    fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error> {
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key.as_ref()));
+        Box::new(future::ok(maybe_data))
+    }
+
+    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let nonce =
+            test_ext.execute_with(|| paint_system::Module::<Runtime>::account_nonce(account_id));
+        Box::new(future::ok(TransactionExtra {
+            nonce,
+            genesis_hash: self.genesis_hash,
+        }))
+    }
+}
+
+/// Create [GenesisConfig] for the emulated chain.
+///
+/// Initializes the balance of the `//Alice` account with `2^60` tokens.
+fn make_genesis_config() -> GenesisConfig {
+    GenesisConfig {
+        paint_aura: None,
+        paint_balances: Some(BalancesConfig {
+            balances: vec![(
+                ed25519::Pair::from_string("//Alice", None)
+                    .unwrap()
+                    .public(),
+                1 << 60,
+            )],
+            vesting: vec![],
+        }),
+        paint_sudo: None,
+        system: None,
+    }
+}
+
+/// Initialize the runtime state so that it is usable and return the genesis hash.
+fn init_runtime(test_ext: &mut sr_io::TestExternalities) -> Hash {
+    test_ext.execute_with(|| {
+        // Insert the genesis block (number `1`) into the system. We don’t care about the
+        // other parameters, they are not relevant.
+        paint_system::Module::<Runtime>::initialize(
+            &1,
+            &[0u8; 32].into(),
+            &[0u8; 32].into(),
+            &Default::default(),
+        );
+        // Now we can retrieve the block hash. But here the block number is zero-based.
+        paint_system::Module::<Runtime>::block_hash(0)
+    })
+}

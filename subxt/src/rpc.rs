@@ -54,7 +54,7 @@ pub type BlockNumber<T> = NumberOrHex<<T as System>::BlockNumber>;
 
 /// Client for substrate rpc interfaces
 pub struct Rpc<T: System> {
-    state: StateClient<T::Hash>,
+    pub state: StateClient<T::Hash>,
     chain: ChainClient<T::BlockNumber, T::Hash, T::Header, ChainBlock<T>>,
     author: AuthorClient<T::Hash, T::Hash>,
 }
