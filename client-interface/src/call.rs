@@ -30,7 +30,9 @@ impl Call for registry::RegisterProjectParams {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(registry::Event::ProjectRegistered(_project_id)) => Some(Ok(())),
+                Event::registry(registry::Event::ProjectRegistered(_project_id, _account_id)) => {
+                    Some(Ok(()))
+                }
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error.message)),
@@ -92,6 +94,19 @@ impl Call for crate::TransferParams {
 
     fn into_runtime_call(self) -> RuntimeCall {
         balances::Call::transfer(self.recipient, self.balance).into()
+    }
+}
+
+impl Call for registry::TransferFromProjectParams {
+    type Result = Result<(), Option<&'static str>>;
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+        Ok(dispatch_result.map_err(|dispatch_error| dispatch_error.message))
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::transfer_from_project(self).into()
     }
 }
 

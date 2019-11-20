@@ -39,11 +39,6 @@ fn register_project() {
 
     assert_eq!(tx_applied.result, Ok(()));
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone()).into()
-    );
-
     let project = client
         .get_project(project_id.clone())
         .wait()
@@ -53,6 +48,11 @@ fn register_project() {
     assert_eq!(project.description, "DESCRIPTION");
     assert_eq!(project.img_url, "IMG_URL");
     assert_eq!(project.current_cp, checkpoint_id);
+
+    assert_eq!(
+        tx_applied.events[0],
+        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id.clone()).into()
+    );
 
     let checkpoint = client
         .get_checkpoint(checkpoint_id)

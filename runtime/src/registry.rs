@@ -3,19 +3,22 @@ use alloc::prelude::v1::*;
 use alloc::vec;
 use codec::{Decode, Encode, Error as CodecError, Input};
 use paint_support::{
-    decl_event, decl_module, decl_storage, dispatch::Result as DispatchResult,
-    storage::StorageMap as _, storage::StorageValue as _,
+    decl_event, decl_module, decl_storage,
+    dispatch::Result as DispatchResult,
+    storage::StorageMap as _,
+    storage::StorageValue as _,
+    traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 use sr_primitives::weights::SimpleDispatchInfo;
 
 use sr_std::str::FromStr;
 
-use substrate_primitives::H256;
+use substrate_primitives::{crypto::UncheckedFrom, H256};
 
 use paint_system as system;
 use paint_system::ensure_signed;
 
-use crate::AccountId;
+use crate::{AccountId, Balance, Hash};
 
 /// Type to represent project names and domains.
 ///
@@ -88,6 +91,7 @@ pub type Version = String;
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
     pub id: ProjectId,
+    pub account_id: AccountId,
     pub description: String,
     pub img_url: String,
     pub members: Vec<AccountId>,
@@ -121,7 +125,16 @@ pub struct SetCheckpointParams {
     pub new_checkpoint_id: CheckpointId,
 }
 
-pub trait Trait: paint_system::Trait<AccountId = AccountId, Origin = crate::Origin> {
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct TransferFromProjectParams {
+    pub project: ProjectId,
+    pub recipient: AccountId,
+    pub value: Balance,
+}
+
+pub trait Trait:
+    paint_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
+{
     type Event: From<Event> + Into<<Self as paint_system::Trait>::Event>;
 }
 
@@ -170,8 +183,12 @@ decl_module! {
         pub fn register_project(origin, params: RegisterProjectParams) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project_id = params.id.clone();
+            let account_id = AccountId::unchecked_from(
+                paint_randomness_collective_flip::Module::<T>::random(b"project-account-id")
+            );
             let project = Project {
                 id: project_id.clone(),
+                account_id: account_id.clone(),
                 description: params.description,
                 img_url: params.img_url,
                 members: vec![sender],
@@ -182,8 +199,19 @@ decl_module! {
             store::ProjectIds::append_or_put(vec![project_id.clone()]);
             store::InitialCheckpoints::insert(project_id.clone(), params.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(project_id.clone()));
+            Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
             Ok(())
+        }
+
+        #[weight = SimpleDispatchInfo::FreeNormal]
+        pub fn transfer_from_project(origin, params: TransferFromProjectParams) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+            let project = store::Projects::get(params.project).ok_or("Project does not exist")?;
+            let is_member = project.members.contains(&sender);
+            if !is_member {
+                Err("Sender is not a project member")?;
+            }
+            <crate::Balances as Currency<_>>::transfer(&project.account_id, &params.recipient, params.value, ExistenceRequirement::KeepAlive)
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
@@ -237,7 +265,7 @@ decl_module! {
 }
 decl_event!(
     pub enum Event {
-        ProjectRegistered(ProjectId),
+        ProjectRegistered(ProjectId, AccountId),
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectId, CheckpointId),
     }
