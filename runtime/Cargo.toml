@@ -22,10 +22,12 @@ std = [
     "paint-timestamp/std",
     "paint-transaction-payment/std",
     "sr-api/std",
+    "substrate-block-builder-runtime-api/std",
     "substrate-consensus-aura-primitives/std",
     "substrate-offchain-primitives/std",
     "substrate-primitives/std",
     "substrate-session/std",
+    "substrate-transaction-pool-runtime-api/std",
 ]
 
 [dependencies.codec]

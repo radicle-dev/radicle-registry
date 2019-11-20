@@ -13,12 +13,17 @@ use radicle_registry_runtime::Hash;
 pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
-        ProjectId, RegisterProjectParams, SetCheckpointParams, String32,
+        ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
+        String32,
     },
     AccountId, Balance, Event, Index,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
+
+mod call;
+
+pub use call::Call;
 
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;
@@ -44,23 +49,16 @@ pub struct TransferParams {
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionApplied {
+pub struct TransactionApplied<Call_: Call> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// Events emitted by this transaction
     pub events: Vec<Event>,
-}
-
-#[derive(Clone, Debug)]
-/// Message calls that can be sent to the ledger in a transaction.
-pub enum Call {
-    /// Registers a project with the given parameters.
-    RegisterProject(RegisterProjectParams),
-    /// Transfer `balance` from the author account to the recipient account.
-    Transfer(TransferParams),
-    CreateCheckpoint(CreateCheckpointParams),
-    SetCheckpoint(SetCheckpointParams),
+    /// The result of the runtime call.
+    ///
+    /// See [Call::result_from_events].
+    pub result: Call_::Result,
 }
 
 /// Return type for all [Client] methods.
@@ -71,7 +69,11 @@ pub trait Client {
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Succeeds if the transaction has been included in a block.
-    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error>;
+    fn submit<Call_: Call>(
+        &self,
+        author: &ed25519::Pair,
+        call: Call_,
+    ) -> Response<TransactionApplied<Call_>, Error>;
 
     fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error>;
 
@@ -84,10 +86,10 @@ pub trait Client {
         Box::new(
             self.submit(
                 key_pair,
-                Call::Transfer(TransferParams {
+                TransferParams {
                     recipient: recipient.clone(),
                     balance,
-                }),
+                },
             )
             .map(|_| ()),
         )
@@ -100,10 +102,7 @@ pub trait Client {
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
     ) -> Response<(), Error> {
-        Box::new(
-            self.submit(author, Call::RegisterProject(project_params))
-                .map(|_| ()),
-        )
+        Box::new(self.submit(author, project_params).map(|_| ()))
     }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
@@ -120,11 +119,11 @@ pub trait Client {
         Box::new(
             self.submit(
                 author,
-                Call::CreateCheckpoint(CreateCheckpointParams {
+                CreateCheckpointParams {
                     checkpoint_id,
                     project_hash,
                     previous_checkpoint,
-                }),
+                },
             )
             .map(move |_| checkpoint_id),
         )
@@ -135,11 +134,8 @@ pub trait Client {
     fn set_checkpoint(
         &self,
         author: &ed25519::Pair,
-        set_cp_params: SetCheckpointParams,
+        params: SetCheckpointParams,
     ) -> Response<(), Error> {
-        Box::new(
-            self.submit(author, Call::SetCheckpoint(set_cp_params))
-                .map(|_| ()),
-        )
+        Box::new(self.submit(author, params).map(|_| ()))
     }
 }

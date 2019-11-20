@@ -1,7 +1,6 @@
 //! This create provides code that is common to all client implementations.
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
-use radicle_registry_runtime::{balances, registry};
 use sr_primitives::generic::{Era, SignedPayload};
 use sr_primitives::traits::SignedExtension;
 
@@ -36,16 +35,6 @@ pub fn signed_extrinsic(
     let (call, extra, _) = raw_payload.deconstruct();
 
     UncheckedExtrinsic::new_signed(call, signer.public(), signature, extra)
-}
-
-/// Transforms a public ledger call into an internal runtime call.
-pub fn into_runtime_call(call: Call) -> RuntimeCall {
-    match call {
-        Call::RegisterProject(params) => registry::Call::register_project(params).into(),
-        Call::Transfer(params) => balances::Call::transfer(params.recipient, params.balance).into(),
-        Call::CreateCheckpoint(params) => registry::Call::create_checkpoint(params).into(),
-        Call::SetCheckpoint(params) => registry::Call::set_checkpoint(params).into(),
-    }
 }
 
 /// Return the [SignedExtra] data that is part of [UncheckedExtrinsic] and the associated

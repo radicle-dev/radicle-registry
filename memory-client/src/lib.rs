@@ -63,7 +63,7 @@ use parity_scale_codec::{Decode, FullCodec};
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
 
 use radicle_registry_runtime::{
-    balances, registry, Executive, GenesisConfig, Hash, Hashing, Runtime,
+    balances, registry, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime,
 };
 
 pub use radicle_registry_client_interface::*;
@@ -82,7 +82,15 @@ impl MemoryClient {
     pub fn new() -> Self {
         let genesis_config = GenesisConfig {
             paint_aura: None,
-            paint_balances: None,
+            paint_balances: Some(BalancesConfig {
+                balances: vec![(
+                    ed25519::Pair::from_string("//Alice", None)
+                        .unwrap()
+                        .public(),
+                    1 << 60,
+                )],
+                vesting: vec![],
+            }),
             paint_sudo: None,
             system: None,
         };
@@ -100,17 +108,6 @@ impl MemoryClient {
             test_ext: Arc::new(Mutex::new(test_ext)),
             genesis_hash,
         }
-    }
-
-    /// Run substrate runtime code in the test environment associated with this client.
-    ///
-    /// This is safe (with respect to [RefCell::borrow_mut]) as long as `f` does not call
-    /// [Client::run] recursively.
-    fn run<T: Send + 'static>(&self, f: impl FnOnce() -> T) -> Response<T, Error> {
-        // We panic on poison errors
-        let test_ext = &mut self.test_ext.lock().unwrap();
-        let result = test_ext.execute_with(f);
-        Box::new(future::ok(result))
     }
 
     pub fn fetch_value<S: StorageValue<Value>, Value: FullCodec>(&self) -> Response<S::Query, Error>
@@ -146,34 +143,40 @@ impl MemoryClient {
 }
 
 impl Client for MemoryClient {
-    fn submit(&self, author: &ed25519::Pair, call: Call) -> Response<TransactionApplied, Error> {
+    fn submit<Call_: Call>(
+        &self,
+        author: &ed25519::Pair,
+        call: Call_,
+    ) -> Response<TransactionApplied<Call_>, Error> {
         let account_id = author.public();
         let client = self.clone();
         let key_pair = author.clone();
         Box::new(
             self.get_transaction_extra(&account_id)
                 .and_then(move |extra| {
-                    client.run(move || {
-                        let runtime_call = radicle_registry_client_common::into_runtime_call(call);
-                        let extrinsic = radicle_registry_client_common::signed_extrinsic(
-                            &key_pair,
-                            runtime_call,
-                            extra.nonce,
-                            extra.genesis_hash,
-                        );
-                        let tx_hash = Hashing::hash_of(&extrinsic);
+                    let extrinsic = radicle_registry_client_common::signed_extrinsic(
+                        &key_pair,
+                        call.into_runtime_call(),
+                        extra.nonce,
+                        extra.genesis_hash,
+                    );
+                    let tx_hash = Hashing::hash_of(&extrinsic);
+                    let test_ext = &mut client.test_ext.lock().unwrap();
+                    let events = test_ext.execute_with(move || {
                         let event_start_index = paint_system::Module::<Runtime>::event_count();
-                        Executive::apply_extrinsic(extrinsic).unwrap().unwrap();
-                        let events = paint_system::Module::<Runtime>::events()
+                        let _apply_outcome = Executive::apply_extrinsic(extrinsic).unwrap();
+                        paint_system::Module::<Runtime>::events()
                             .into_iter()
                             .skip(event_start_index as usize)
                             .map(|event_record| event_record.event)
-                            .collect();
-                        TransactionApplied {
-                            tx_hash,
-                            block: Default::default(),
-                            events,
-                        }
+                            .collect::<Vec<Event>>()
+                    });
+                    let result = Call_::result_from_events(events.clone())?;
+                    Ok(TransactionApplied {
+                        tx_hash,
+                        block: Default::default(),
+                        events,
+                        result,
                     })
                 }),
         )
