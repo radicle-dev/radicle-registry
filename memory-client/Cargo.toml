@@ -16,20 +16,20 @@ parity-scale-codec = "1.0"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
-[dependencies.srml-support]
+[dependencies.paint-support]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
-[dependencies.srml-system]
+[dependencies.paint-system]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
-rev = "14345ac157f656ac032d2566b0a2dfb005b32c60"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"

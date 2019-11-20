@@ -32,7 +32,14 @@ use parity_scale_codec::{
     Decode,
     Encode,
 };
-use runtime_primitives::generic::UncheckedExtrinsic;
+use runtime_primitives::{
+    generic::UncheckedExtrinsic,
+    traits::{
+        IdentifyAccount,
+        Verify,
+    },
+    MultiSignature,
+};
 use sr_version::RuntimeVersion;
 use std::marker::PhantomData;
 use substrate_primitives::{
@@ -51,13 +58,7 @@ use crate::{
         SignedExtra,
     },
     metadata::MetadataError,
-    rpc::{
-        BlockNumber,
-        ChainBlock,
-        MapStream,
-        Rpc,
-    },
-    srml::{
+    paint::{
         balances::Balances,
         system::{
             System,
@@ -65,32 +66,38 @@ use crate::{
         },
         ModuleCalls,
     },
+    rpc::{
+        BlockNumber,
+        ChainBlock,
+        MapStream,
+        Rpc,
+    },
 };
 
 mod codec;
 mod error;
 mod extrinsic;
 mod metadata;
+mod paint;
 mod rpc;
 mod runtimes;
-mod srml;
 
 pub use error::Error;
+pub use paint::*;
 pub use rpc::ExtrinsicSuccess;
 pub use runtimes::*;
-pub use srml::*;
 
 fn connect<T: System>(url: &Url) -> impl Future<Item = Rpc<T>, Error = Error> {
     ws::connect(url).map_err(Into::into)
 }
 
 /// ClientBuilder for constructing a Client.
-pub struct ClientBuilder<T: System> {
-    _marker: std::marker::PhantomData<T>,
+pub struct ClientBuilder<T: System, S = MultiSignature> {
+    _marker: std::marker::PhantomData<(T, S)>,
     url: Option<Url>,
 }
 
-impl<T: System> ClientBuilder<T> {
+impl<T: System, S> ClientBuilder<T, S> {
     /// Creates a new ClientBuilder.
     pub fn new() -> Self {
         Self {
@@ -106,7 +113,7 @@ impl<T: System> ClientBuilder<T> {
     }
 
     /// Creates a new Client.
-    pub fn build(self) -> impl Future<Item = Client<T>, Error = Error> {
+    pub fn build(self) -> impl Future<Item = Client<T, S>, Error = Error> {
         let url = self.url.unwrap_or_else(|| {
             Url::parse("ws://127.0.0.1:9944").expect("Is valid url; qed")
         });
@@ -119,6 +126,7 @@ impl<T: System> ClientBuilder<T> {
                         genesis_hash,
                         metadata,
                         runtime_version,
+                        _marker: PhantomData,
                     }
                 })
         })
@@ -126,25 +134,27 @@ impl<T: System> ClientBuilder<T> {
 }
 
 /// Client to interface with a substrate node.
-pub struct Client<T: System> {
+pub struct Client<T: System, S = MultiSignature> {
     url: Url,
     genesis_hash: T::Hash,
     metadata: Metadata,
     runtime_version: RuntimeVersion,
+    _marker: PhantomData<fn() -> S>,
 }
 
-impl<T: System> Clone for Client<T> {
+impl<T: System, S> Clone for Client<T, S> {
     fn clone(&self) -> Self {
         Self {
             url: self.url.clone(),
             genesis_hash: self.genesis_hash.clone(),
             metadata: self.metadata.clone(),
             runtime_version: self.runtime_version.clone(),
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T: System + Balances + 'static> Client<T> {
+impl<T: System + Balances + 'static, S: 'static> Client<T, S> {
     /// Connect a new RPC client and return it.
     pub fn connect(&self) -> impl Future<Item = Rpc<T>, Error = Error> {
         connect(&self.url)
@@ -228,16 +238,18 @@ impl<T: System + Balances + 'static> Client<T> {
         &self,
         signer: P,
         nonce: Option<T::Index>,
-    ) -> impl Future<Item = XtBuilder<T, P>, Error = Error>
+    ) -> impl Future<Item = XtBuilder<T, P, S>, Error = Error>
     where
         P: Pair,
-        P::Public: Into<T::AccountId> + Into<T::Address>,
         P::Signature: Codec,
+        S: Verify,
+        S::Signer: From<P::Public> + IdentifyAccount<AccountId = T::AccountId>,
     {
         let client = self.clone();
+        let account_id = S::Signer::from(signer.public()).into_account();
         match nonce {
             Some(nonce) => Either::A(future::ok(nonce)),
-            None => Either::B(self.account_nonce(signer.public().into())),
+            None => Either::B(self.account_nonce(account_id)),
         }
         .map(|nonce| {
             let genesis_hash = client.genesis_hash.clone();
@@ -261,8 +273,8 @@ pub enum Valid {}
 pub enum Invalid {}
 
 /// Transaction builder.
-pub struct XtBuilder<T: System, P, V = Invalid> {
-    client: Client<T>,
+pub struct XtBuilder<T: System, P, S, V = Invalid> {
+    client: Client<T, S>,
     nonce: T::Index,
     runtime_version: RuntimeVersion,
     genesis_hash: T::Hash,
@@ -271,7 +283,7 @@ pub struct XtBuilder<T: System, P, V = Invalid> {
     marker: PhantomData<fn() -> V>,
 }
 
-impl<T: System + Balances + 'static, P, V> XtBuilder<T, P, V>
+impl<T: System + Balances + 'static, P, S: 'static, V> XtBuilder<T, P, S, V>
 where
     P: Pair,
 {
@@ -286,19 +298,19 @@ where
     }
 
     /// Sets the nonce to a new value.
-    pub fn set_nonce(&mut self, nonce: T::Index) -> &mut XtBuilder<T, P, V> {
+    pub fn set_nonce(&mut self, nonce: T::Index) -> &mut XtBuilder<T, P, S, V> {
         self.nonce = nonce;
         self
     }
 
     /// Increment the nonce
-    pub fn increment_nonce(&mut self) -> &mut XtBuilder<T, P, V> {
+    pub fn increment_nonce(&mut self) -> &mut XtBuilder<T, P, S, V> {
         self.set_nonce(self.nonce() + 1.into());
         self
     }
 
     /// Sets the module call to a new value
-    pub fn set_call<F>(&self, module: &'static str, f: F) -> XtBuilder<T, P, Valid>
+    pub fn set_call<F>(&self, module: &'static str, f: F) -> XtBuilder<T, P, S, Valid>
     where
         F: FnOnce(ModuleCalls<T, P>) -> Result<Encoded, MetadataError>,
     {
@@ -320,17 +332,17 @@ where
     }
 }
 
-impl<T: srml_system::Trait + 'static + System, P, V> XtBuilder<T, P, V>
+impl<T: paint_system::Trait + 'static + System, P, S: 'static, V> XtBuilder<T, P, S, V>
 where
     P: Pair,
-    <T as srml_system::Trait>::Call: Encode,
+    <T as paint_system::Trait>::Call: Encode,
 {
-    /// Sets the module call to a new value of the [srml_system::Trait::Call] type associated with
+    /// Sets the module call to a new value of the [paint_system::Trait::Call] type associated with
     /// the runtime.
     pub fn set_system_call(
         &self,
-        call: impl Into<<T as srml_system::Trait>::Call>,
-    ) -> XtBuilder<T, P, Valid> {
+        call: impl Into<<T as paint_system::Trait>::Call>,
+    ) -> XtBuilder<T, P, S, Valid> {
         let call = Ok(Encoded(call.into().encode()));
         XtBuilder {
             client: self.client.clone(),
@@ -344,11 +356,13 @@ where
     }
 }
 
-impl<T: System + Balances + Send + Sync + 'static, P> XtBuilder<T, P, Valid>
+impl<T: System + Balances + Send + Sync + 'static, P, S: 'static>
+    XtBuilder<T, P, S, Valid>
 where
     P: Pair,
-    P::Public: Into<T::Address>,
-    P::Signature: Codec,
+    S: Verify + Codec + From<P::Signature>,
+    S::Signer: From<P::Public> + IdentifyAccount<AccountId = T::AccountId>,
+    T::Address: From<T::AccountId>,
 {
     /// Creates and signs an Extrinsic for the supplied `Call`
     pub fn create_and_sign(
@@ -357,16 +371,11 @@ where
         UncheckedExtrinsic<
             T::Address,
             Encoded,
-            P::Signature,
+            S,
             <DefaultExtra<T> as SignedExtra<T>>::Extra,
         >,
         Error,
-    >
-    where
-        P: Pair,
-        P::Public: Into<T::Address>,
-        P::Signature: Codec,
-    {
+    > {
         let signer = self.signer.clone();
         let account_nonce = self.nonce.clone();
         let version = self.runtime_version.spec_version;
@@ -383,7 +392,7 @@ where
         );
 
         let extra = extrinsic::DefaultExtra::new(version, account_nonce, genesis_hash);
-        let xt = extrinsic::create_and_sign(signer, call, extra)?;
+        let xt = extrinsic::create_and_sign::<_, _, _, S, _>(signer, call, extra)?;
         Ok(xt)
     }
 

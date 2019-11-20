@@ -1,7 +1,7 @@
 use futures01::future::Future;
+use paint_support::storage::generator::{StorageMap, StorageValue};
 use parity_scale_codec::FullCodec;
 use sr_primitives::traits::Hash as _;
-use srml_support::storage::generator::{StorageMap, StorageValue};
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
@@ -130,7 +130,7 @@ fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<V
         .events
         .iter()
         .filter_map(|event_record| match event_record.phase {
-            srml_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
+            paint_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
                 Some(event_record.event.clone())
             }
             _ => None,
