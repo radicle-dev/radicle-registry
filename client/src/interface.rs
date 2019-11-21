@@ -107,7 +107,7 @@ pub trait Client {
         &self,
         author: &ed25519::Pair,
         project_hash: H256,
-        previous_checkpoint: Option<CheckpointId>,
+        previous_checkpoint_id: Option<CheckpointId>,
     ) -> Response<CheckpointId, Error> {
         let checkpoint_id = CheckpointId::random();
         Box::new(
@@ -116,7 +116,7 @@ pub trait Client {
                 CreateCheckpointParams {
                     checkpoint_id,
                     project_hash,
-                    previous_checkpoint,
+                    previous_checkpoint_id,
                 },
             )
             .map(move |_| checkpoint_id),

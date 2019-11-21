@@ -116,7 +116,7 @@ pub struct Checkpoint {
 pub struct CreateCheckpointParams {
     pub checkpoint_id: CheckpointId,
     pub project_hash: H256,
-    pub previous_checkpoint: Option<CheckpointId>,
+    pub previous_checkpoint_id: Option<CheckpointId>,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
@@ -148,8 +148,8 @@ pub mod store {
             // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
             pub ProjectIds: Vec<ProjectId>;
-            // The below map indexes each checkpoint's id to their predecessor
-            // checkpoint's id, should it exist.
+            // The below map indexes each checkpoint's id to the checkpoint
+            // it points to, should it exist.
             pub Checkpoints: map CheckpointId => Option<Checkpoint>;
         }
     }
@@ -233,8 +233,19 @@ decl_module! {
             params: CreateCheckpointParams,
         ) -> DispatchResult {
             ensure_signed(origin)?;
+
+            match params.previous_checkpoint_id {
+                None => {}
+                Some(cp_id) => {
+                    match store::Checkpoints::get(cp_id) {
+                        None => return Err("Parent checkpoint does not exist"),
+                        Some(_) => {}
+                    }
+                }
+            };
+
             let checkpoint = Checkpoint {
-                parent: params.previous_checkpoint,
+                parent: params.previous_checkpoint_id,
                 hash: params.project_hash,
             };
             store::Checkpoints::insert(params.checkpoint_id, checkpoint);
