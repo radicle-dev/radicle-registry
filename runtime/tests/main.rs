@@ -174,6 +174,30 @@ fn create_checkpoint() {
 }
 
 #[test]
+fn create_checkpoint_without_parent() {
+    let client = MemoryClient::new();
+    let bob = key_pair_from_string("Bob");
+
+    let checkpoint_id = CheckpointId::random();
+    let project_hash = H256::random();
+    let previous_checkpoint_id = Some(CheckpointId::random());
+
+    let tx_applied = client
+        .submit(
+            &bob,
+            CreateCheckpointParams {
+                checkpoint_id,
+                project_hash,
+                previous_checkpoint_id,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    assert_eq!(tx_applied.result, Err(None))
+}
+
+#[test]
 fn set_checkpoint() {
     let client = MemoryClient::new();
     let charles = key_pair_from_string("Charles");
@@ -199,41 +223,6 @@ fn set_checkpoint() {
 
     let new_project = client.get_project(project.id).wait().unwrap().unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp)
-}
-
-#[test]
-fn fail_to_set_checkpoint() {
-    let client = MemoryClient::new();
-    let david = key_pair_from_string("David");
-
-    let project = create_project_with_checkpoint(&client, &david);
-
-    let project_hash2 = H256::random();
-    let garbage = CheckpointId::random();
-    let new_checkpoint_id = client
-        .create_checkpoint(&david, project_hash2, Some(garbage))
-        .wait()
-        .unwrap();
-
-    let tx_applied = client
-        .submit(
-            &david,
-            SetCheckpointParams {
-                project_id: project.id.clone(),
-                new_checkpoint_id,
-            },
-        )
-        .wait()
-        .unwrap();
-
-    assert_eq!(tx_applied.result, Err(None));
-    let updated_project = client
-        .get_project(project.id.clone())
-        .wait()
-        .unwrap()
-        .unwrap();
-    assert_eq!(updated_project.current_cp, project.current_cp);
-    assert_ne!(updated_project.current_cp, new_checkpoint_id);
 }
 
 #[test]
