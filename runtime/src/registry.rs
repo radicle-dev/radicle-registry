@@ -165,31 +165,36 @@ pub mod store {
 
 pub use store::Store;
 
-/// Given a checkpoint, return its oldest ancestor present in storage.
-///
-/// Note that this doesn't necessarily have to be the initial checkpoint of
-/// that checkpoint's project - even though this would mean the computed
-/// checkpoint, and every other checkpoint along the way, is invalid because
-/// their ancestry does not include the initial checkpoint.
-///
-/// Such an error can be handled by comparing the result of this function
-/// with the checkpoint used to register the project, available in
-/// `store::InitialCheckpoints`.
-fn get_initial_checkpoint(checkpoint_id: CheckpointId) -> CheckpointId {
+/// Returns true iff `checkpoint_id` descends from `initial_cp_id`.
+fn descends_from_initial_checkpoint(
+    checkpoint_id: CheckpointId,
+    initial_cp_id: CheckpointId,
+) -> bool {
+    if checkpoint_id == initial_cp_id {
+        return true;
+    };
+
+    let mut ancestor_id = checkpoint_id;
+
     // The number of storage requests made in this loop grows linearly
     // with the size of the checkpoint's ancestry.
     //
     // The loop's total runtime will also depend on the performance of
     // each `store::StorageMap::get` request.
-    let mut ancestor_id = checkpoint_id;
     while let Some(cp) = store::Checkpoints::get(ancestor_id) {
         match cp.parent {
-            None => break,
-            Some(cp_id) => ancestor_id = cp_id,
+            None => return false,
+            Some(cp_id) => {
+                if cp_id == initial_cp_id {
+                    return true;
+                } else {
+                    ancestor_id = cp_id;
+                }
+            }
         }
     }
 
-    ancestor_id
+    false
 }
 
 decl_module! {
@@ -296,8 +301,11 @@ decl_module! {
                 }
             };
 
-            let ancestor_id = get_initial_checkpoint(params.new_checkpoint_id);
-            if Some(ancestor_id) != store::InitialCheckpoints::get(params.project_id.clone()) {
+            let initial_cp = match store::InitialCheckpoints::get(params.project_id.clone()) {
+                None => return Err("A registered project must necessarily have an initial checkpoint."),
+                Some(cp) => cp,
+            };
+            if !descends_from_initial_checkpoint(params.new_checkpoint_id, initial_cp) {
                 return Err("The provided checkpoint ID is not a descendant of the project's initial checkpoint.")
             }
 
