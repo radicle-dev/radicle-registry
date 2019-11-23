@@ -316,6 +316,48 @@ fn fail_to_set_nonexistent_checkpoint() {
 }
 
 #[test]
+fn set_fork_checkpoint() {
+    let client = MemoryClient::new();
+    let grace = key_pair_from_string("Grace");
+
+    let project = create_project_with_checkpoint(&client, &grace);
+
+    let mut current_cp = project.current_cp;
+
+    // How many checkpoints to create.
+    let n = 5;
+    let mut checkpoints: Vec<CheckpointId> = Vec::with_capacity(n);
+    for _ in 0..n {
+        let new_checkpoint_id = client
+            .create_checkpoint(&grace, H256::random(), Some(current_cp))
+            .wait()
+            .unwrap();
+        current_cp = new_checkpoint_id;
+        checkpoints.push(new_checkpoint_id);
+    }
+
+    let forked_checkpoint_id = client
+        .create_checkpoint(&grace, H256::random(), Some(checkpoints[2]))
+        .wait()
+        .unwrap();
+
+    client
+        .set_checkpoint(
+            &grace,
+            SetCheckpointParams {
+                project_id: project.id.clone(),
+                new_checkpoint_id: forked_checkpoint_id,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    let project_1 = client.get_project(project.id).wait().unwrap().unwrap();
+
+    assert_eq!(project_1.current_cp, forked_checkpoint_id)
+}
+
+#[test]
 fn transfer_fail() {
     let client = MemoryClient::new();
     let alice = key_pair_from_string("Alice");
