@@ -205,7 +205,6 @@ fn create_checkpoint_without_parent() {
     let client = MemoryClient::new();
     let bob = key_pair_from_string("Bob");
 
-    let checkpoint_id = CheckpointId::random();
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
 
@@ -213,7 +212,6 @@ fn create_checkpoint_without_parent() {
         .submit(
             &bob,
             CreateCheckpointParams {
-                checkpoint_id,
                 project_hash,
                 previous_checkpoint_id,
             },

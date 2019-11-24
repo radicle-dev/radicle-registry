@@ -19,7 +19,8 @@ use substrate_primitives::{crypto::UncheckedFrom, H256};
 use paint_system as system;
 use paint_system::ensure_signed;
 
-use crate::{AccountId, Balance, Hash};
+use crate::{AccountId, Balance, Hash, Hashing};
+use sr_primitives::traits::Hash as _;
 
 /// Type to represent project names and domains.
 ///
@@ -122,7 +123,6 @@ pub struct Checkpoint {
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct CreateCheckpointParams {
-    pub checkpoint_id: CheckpointId,
     pub project_hash: H256,
     pub previous_checkpoint_id: Option<CheckpointId>,
 }
@@ -265,9 +265,10 @@ decl_module! {
                 parent: params.previous_checkpoint_id,
                 hash: params.project_hash,
             };
-            store::Checkpoints::insert(params.checkpoint_id, checkpoint);
+            let checkpoint_id = Hashing::hash_of(&checkpoint);
+            store::Checkpoints::insert(checkpoint_id, checkpoint);
 
-            Self::deposit_event(Event::CheckpointCreated(params.checkpoint_id));
+            Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
             Ok(())
         }
 

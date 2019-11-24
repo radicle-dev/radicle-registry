@@ -8,7 +8,7 @@ use parity_scale_codec::{Decode, FullCodec};
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
 
 use radicle_registry_runtime::{
-    balances, registry, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime,
+    balances, registry, BalancesConfig, Executive, GenesisConfig, Hash, Runtime,
 };
 
 use crate::interface::*;
