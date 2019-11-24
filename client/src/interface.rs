@@ -12,12 +12,13 @@ pub use radicle_registry_runtime::{
         ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
         String32, TransferFromProjectParams,
     },
-    AccountId, Balance, Event, Index,
+    AccountId, Balance, Event, Hashing, Index,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};
 
 pub use crate::call::Call;
+pub use sr_primitives::traits::Hash as _;
 
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;
@@ -109,12 +110,14 @@ pub trait Client {
         project_hash: H256,
         previous_checkpoint_id: Option<CheckpointId>,
     ) -> Response<CheckpointId, Error> {
-        let checkpoint_id = CheckpointId::random();
+        let checkpoint_id = Hashing::hash_of(&Checkpoint {
+            parent: previous_checkpoint_id,
+            hash: project_hash,
+        });
         Box::new(
             self.submit(
                 author,
                 CreateCheckpointParams {
-                    checkpoint_id,
                     project_hash,
                     previous_checkpoint_id,
                 },

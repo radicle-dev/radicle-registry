@@ -1,6 +1,8 @@
 //! Defines [Call] trait and implementations for all transaction parameters.
 
-use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
+use radicle_registry_runtime::{
+    balances, registry, registry::CheckpointId, Call as RuntimeCall, Event,
+};
 use sr_primitives::DispatchError;
 
 /// Indicates that parsing the events into the approriate call result failed.
@@ -45,13 +47,15 @@ impl Call for registry::RegisterProjectParams {
 }
 
 impl Call for registry::CreateCheckpointParams {
-    type Result = Result<(), Option<&'static str>>;
+    type Result = Result<CheckpointId, Option<&'static str>>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
-                Event::registry(registry::Event::CheckpointCreated(_checkpoint_id)) => Some(Ok(())),
+                Event::registry(registry::Event::CheckpointCreated(checkpoint_id)) => {
+                    Some(Ok(*checkpoint_id))
+                }
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error.message)),
