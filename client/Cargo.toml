@@ -9,8 +9,8 @@ radicle_registry_runtime = { path = "../runtime" }
 substrate-subxt = { path = "../subxt" }
 
 env_logger = "0.7"
-futures-preview = { version = "=0.3.0-alpha.19", features = ["async-await", "compat"] }
 futures01 = { package = "futures", version = "0.1" }
+futures03 = { package = "futures", version = "0.3", features = ["compat"] }
 log = "0.4"
 parity-scale-codec = "1.0"
 tokio = "0.1"

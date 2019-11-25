@@ -1038,18 +1038,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4914ae450db1921a56c91bde97a27846287d062087d4a652efc09bb3a01ebda"
 
 [[package]]
-name = "futures-join-macro-preview"
-version = "0.3.0-alpha.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59e260e6b48ce7d99936c40a7088d782a499a67bef41da5481d21b439454bcea"
-dependencies = [
- "proc-macro-hack",
- "proc-macro2 1.0.6",
- "quote 1.0.2",
- "syn 1.0.11",
-]
-
-[[package]]
 name = "futures-macro"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1073,18 +1061,6 @@ dependencies = [
  "futures-io-preview",
  "futures-sink-preview",
  "futures-util-preview",
-]
-
-[[package]]
-name = "futures-select-macro-preview"
-version = "0.3.0-alpha.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df2ae43560eb10b5e50604c53bead6c9c75eade7081390cd3cce66e1582958f7"
-dependencies = [
- "proc-macro-hack",
- "proc-macro2 1.0.6",
- "quote 1.0.2",
- "syn 1.0.11",
 ]
 
 [[package]]
@@ -1122,6 +1098,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0d66274fb76985d3c62c886d1da7ac4c0903a8c9f754e8fe0f35a6a6cc39e76"
 dependencies = [
+ "futures 0.1.29",
  "futures-channel",
  "futures-core",
  "futures-io",
@@ -1145,13 +1122,9 @@ dependencies = [
  "futures-channel-preview",
  "futures-core-preview",
  "futures-io-preview",
- "futures-join-macro-preview",
- "futures-select-macro-preview",
  "futures-sink-preview",
  "memchr",
  "pin-utils",
- "proc-macro-hack",
- "proc-macro-nested",
  "slab",
 ]
 
@@ -3644,7 +3617,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger 0.7.1",
  "futures 0.1.29",
- "futures-preview",
+ "futures 0.3.1",
  "log 0.4.8",
  "paint-support",
  "paint-system",
