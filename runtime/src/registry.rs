@@ -10,6 +10,7 @@ use paint_support::{
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 use sr_primitives::weights::SimpleDispatchInfo;
+use std::fmt;
 
 use sr_std::str::FromStr;
 
@@ -47,6 +48,12 @@ impl FromStr for String32 {
     /// longer than 32 characters.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         String32::from_string(s.to_string())
+    }
+}
+
+impl fmt::Display for String32 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
