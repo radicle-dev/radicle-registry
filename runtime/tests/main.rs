@@ -116,6 +116,33 @@ fn register_project_with_duplicate_id() {
 }
 
 #[test]
+fn register_project_with_bad_checkpoint() {
+    let client = MemoryClient::new();
+    let alice = key_pair_from_string("Alice");
+
+    let checkpoint_id = H256::random();
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
+
+    let params = RegisterProjectParams {
+        id: project_id.clone(),
+        description: "DESCRIPTION".to_string(),
+        img_url: "IMG_URL".to_string(),
+        checkpoint_id,
+    };
+
+    let tx_applied = client.submit(&alice, params).wait().unwrap();
+
+    assert_eq!(tx_applied.result, Err(None));
+
+    let no_project = client.get_project(project_id).wait().unwrap();
+
+    assert!(no_project.is_none())
+}
+
+#[test]
 fn long_string32() {
     fn long_string(n: usize) -> Result<String32, String> {
         String32::from_string(std::iter::repeat("X").take(n).collect::<String>())

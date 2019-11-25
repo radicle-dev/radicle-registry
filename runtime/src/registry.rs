@@ -199,6 +199,15 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn register_project(origin, params: RegisterProjectParams) -> DispatchResult {
             let sender = ensure_signed(origin)?;
+
+            if store::Checkpoints::get(params.checkpoint_id).is_none() {
+                return Err("The checkpoint provided to register the project does not exist.")
+            }
+            match store::Projects::get(params.id.clone()) {
+                None => {}
+                Some (_) => return Err("A project with the supplied ID already exists."),
+            };
+
             let project_id = params.id.clone();
             match store::Projects::get(project_id.clone()) {
                 None => {}
