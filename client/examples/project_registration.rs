@@ -1,6 +1,6 @@
-use futures::compat::{Compat, Future01CompatExt};
-use futures::future::FutureExt;
 use futures01::future::Future;
+use futures03::compat::{Compat, Future01CompatExt};
+use futures03::future::FutureExt;
 
 use radicle_registry_client::{
     ed25519, Client, ClientT as _, CryptoPair as _, Error, RegisterProjectParams, H256,
