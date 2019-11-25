@@ -10,8 +10,8 @@ use paint_support::{
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 use sr_primitives::weights::SimpleDispatchInfo;
-use std::fmt;
 
+use sr_std::fmt;
 use sr_std::str::FromStr;
 
 use substrate_primitives::{crypto::UncheckedFrom, H256};
