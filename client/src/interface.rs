@@ -81,7 +81,7 @@ pub trait Client {
             self.submit(
                 key_pair,
                 TransferParams {
-                    recipient: recipient.clone(),
+                    recipient: *recipient,
                     balance,
                 },
             )

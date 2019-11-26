@@ -44,7 +44,7 @@ fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id.clone()).into()
+        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
     );
 
     let has_project = client
@@ -317,7 +317,7 @@ fn project_account_transfer() {
             &alice,
             TransferFromProjectParams {
                 project: project.id.clone(),
-                recipient: bob.clone(),
+                recipient: bob,
                 value: 1000,
             },
         )
@@ -352,7 +352,7 @@ fn project_account_transfer_non_member() {
             &bob,
             TransferFromProjectParams {
                 project: project.id.clone(),
-                recipient: bob.public().clone(),
+                recipient: bob.public(),
                 value: 1000,
             },
         )
@@ -386,11 +386,7 @@ fn create_project_with_checkpoint(client: &MemoryClient, author: &ed25519::Pair)
         .wait()
         .unwrap();
 
-    client
-        .get_project(project_id.clone())
-        .wait()
-        .unwrap()
-        .unwrap()
+    client.get_project(project_id).wait().unwrap().unwrap()
 }
 
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {

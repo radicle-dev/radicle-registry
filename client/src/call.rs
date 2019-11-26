@@ -118,13 +118,11 @@ impl Call for registry::TransferFromProjectParams {
 /// Returns an outer [EventParseError] if no [paint_system::Event] was present in `events`.
 ///
 /// Because of an issue with substrate the `message` field of [DispatchError] will always be `None`
-fn get_dispatch_result(events: &Vec<Event>) -> Result<Result<(), DispatchError>, EventParseError> {
+fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
             paint_system::Event::ExtrinsicSuccess => Some(Ok(())),
-            paint_system::Event::ExtrinsicFailed(ref dispatch_error) => {
-                Some(Err(dispatch_error.clone()))
-            }
+            paint_system::Event::ExtrinsicFailed(ref dispatch_error) => Some(Err(*dispatch_error)),
         },
         _ => None,
     })
@@ -134,12 +132,12 @@ fn get_dispatch_result(events: &Vec<Event>) -> Result<Result<(), DispatchError>,
 ///
 /// Returns an error if no matching element was found.
 fn find_event<T>(
-    events: &Vec<Event>,
+    events: &[Event],
     event_name: &'static str,
     f: impl Fn(&Event) -> Option<T>,
 ) -> Result<T, EventParseError> {
     events
         .iter()
         .find_map(f)
-        .ok_or(format!("{} event is missing", event_name))
+        .ok_or_else(|| format!("{} event is missing", event_name))
 }
