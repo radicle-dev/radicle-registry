@@ -51,6 +51,7 @@ impl FromStr for String32 {
     }
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for String32 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
