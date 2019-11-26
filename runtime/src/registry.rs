@@ -192,6 +192,10 @@ decl_module! {
         pub fn register_project(origin, params: RegisterProjectParams) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project_id = params.id.clone();
+            match store::Projects::get(project_id.clone()) {
+                None => {}
+                Some (_) => return Err("A project with the supplied ID already exists."),
+            };
             let account_id = AccountId::unchecked_from(
                 paint_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
