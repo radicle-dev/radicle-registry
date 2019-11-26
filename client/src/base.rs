@@ -43,7 +43,7 @@ impl Client {
         let key = StorageKey(Vec::from(S::storage_value_final_key().as_ref()));
         self.subxt_client
             .fetch::<Value>(key)
-            .map(|maybe_value| S::from_optional_value_to_query(maybe_value))
+            .map(S::from_optional_value_to_query)
     }
 
     pub fn fetch_map_value<S: StorageMap<Key, Value>, Key: FullCodec, Value: FullCodec>(
@@ -53,7 +53,7 @@ impl Client {
         let key = StorageKey(Vec::from(S::storage_map_final_key(key).as_ref()));
         self.subxt_client
             .fetch::<Value>(key)
-            .map(|maybe_value| S::from_optional_value_to_query(maybe_value))
+            .map(S::from_optional_value_to_query)
     }
 
     pub fn get_transaction_extra(
@@ -79,7 +79,7 @@ impl Client {
         call: RuntimeCall,
     ) -> impl Future<Item = ExtrinsicSuccess, Error = Error> {
         let key_pair = key_pair.clone();
-        let account_id = key_pair.public().clone();
+        let account_id = key_pair.public();
         let subxt_client = self.subxt_client.clone();
         self.get_transaction_extra(&account_id)
             .and_then(move |extra: TransactionExtra| {
@@ -107,12 +107,12 @@ impl Client {
         ext_success: ExtrinsicSuccess,
     ) -> impl Future<Item = Vec<Event>, Error = Error> {
         self.subxt_client
-            .block(Some(ext_success.block.clone()))
+            .block(Some(ext_success.block))
             .and_then(move |maybe_signed_block| {
                 let block = maybe_signed_block.unwrap().block;
                 // TODO panic and explain
                 extract_events(block, ext_success)
-                    .ok_or(Error::from("Extrinsic not found in block"))
+                    .ok_or_else(|| Error::from("Extrinsic not found in block"))
             })
     }
 }

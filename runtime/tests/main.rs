@@ -68,6 +68,54 @@ fn register_project() {
 }
 
 #[test]
+fn register_project_with_duplicate_id() {
+    let client = MemoryClient::new();
+    let alice = key_pair_from_string("Alice");
+
+    let project_hash = H256::random();
+    let checkpoint_id = client
+        .create_checkpoint(&alice, project_hash, None)
+        .wait()
+        .unwrap();
+    let project_id = (
+        ProjectName::from_string("NAME".to_string()).unwrap(),
+        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
+    );
+
+    let params = RegisterProjectParams {
+        id: project_id.clone(),
+        description: "DESCRIPTION".to_string(),
+        img_url: "IMG_URL".to_string(),
+        checkpoint_id,
+    };
+
+    client
+        .register_project(&alice, params.clone())
+        .wait()
+        .unwrap();
+
+    // Duplicate submission with different description and image URL.
+    let registration_2 = client
+        .submit(
+            &alice,
+            RegisterProjectParams {
+                description: "DESCRIPTION_2".to_string(),
+                img_url: "IMG_URL_2".to_string(),
+                ..params
+            },
+        )
+        .wait()
+        .unwrap();
+
+    assert_eq!(registration_2.result, Err(None));
+
+    let project = client.get_project(project_id).wait().unwrap().unwrap();
+
+    assert_eq!("DESCRIPTION", project.description);
+    assert_eq!("IMG_URL", project.img_url)
+}
+
+#[test]
 fn long_string32() {
     fn long_string(n: usize) -> Result<String32, String> {
         String32::from_string(std::iter::repeat("X").take(n).collect::<String>())
@@ -149,11 +197,7 @@ fn set_checkpoint() {
         .wait()
         .unwrap();
 
-    let new_project = client
-        .get_project(project.id.clone())
-        .wait()
-        .unwrap()
-        .unwrap();
+    let new_project = client.get_project(project.id).wait().unwrap().unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp)
 }
 

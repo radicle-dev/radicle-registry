@@ -151,8 +151,12 @@ pub mod store {
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
             pub Projects: map ProjectId => Option<Project>;
+            // The below map indexes each existing project's id to the
+            // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
             pub ProjectIds: Vec<ProjectId>;
+            // The below map indexes each checkpoint's id to their predecessor
+            // checkpoint's id, should it exist.
             pub Checkpoints: map CheckpointId => Option<Checkpoint>;
         }
     }
@@ -160,12 +164,17 @@ pub mod store {
 
 pub use store::Store;
 
-/// Given a checkpoint, return its oldest ancestor.
-fn get_root_checkpoint(checkpoint_id: CheckpointId) -> CheckpointId {
-    // At the end of this loop, the value of `ancestor_id` will be
-    // the ID of the first ancestor of the checkpoint in
-    // `params: SetCheckpointParams`.
-    //
+/// Given a checkpoint, return its oldest ancestor present in storage.
+///
+/// Note that this doesn't necessarily have to be the initial checkpoint of
+/// that checkpoint's project - even though this would mean the computed
+/// checkpoint, and every other checkpoint along the way, is invalid because
+/// their ancestry does not include the initial checkpoint.
+///
+/// Such an error can be handled by comparing the result of this function
+/// with the checkpoint used to register the project, available in
+/// `store::InitialCheckpoints`.
+fn get_initial_checkpoint(checkpoint_id: CheckpointId) -> CheckpointId {
     // The number of storage requests made in this loop grows linearly
     // with the size of the checkpoint's ancestry.
     //
@@ -190,6 +199,10 @@ decl_module! {
         pub fn register_project(origin, params: RegisterProjectParams) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project_id = params.id.clone();
+            match store::Projects::get(project_id.clone()) {
+                None => {}
+                Some (_) => return Err("A project with the supplied ID already exists."),
+            };
             let account_id = AccountId::unchecked_from(
                 paint_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
@@ -258,9 +271,9 @@ decl_module! {
                 }
             };
 
-            let ancestor_id = get_root_checkpoint(params.new_checkpoint_id);
+            let ancestor_id = get_initial_checkpoint(params.new_checkpoint_id);
             if Some(ancestor_id) != store::InitialCheckpoints::get(params.project_id.clone()) {
-                return Err("The provided checkpoint ID is not a descendant of the project's first checkpoint.")
+                return Err("The provided checkpoint ID is not a descendant of the project's initial checkpoint.")
             }
 
             store::Projects::insert(new_project.id.clone(), new_project.clone());
