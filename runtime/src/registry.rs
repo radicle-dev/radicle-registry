@@ -269,6 +269,9 @@ decl_module! {
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
+            if store::Checkpoints::get(params.new_checkpoint_id).is_none() {
+                return Err("The provided checkpoint does not exist")
+            }
             let opt_project = store::Projects::get(params.project_id.clone());
             let new_project = match opt_project {
                 None => return Err("The provided project ID is not associated with any project."),

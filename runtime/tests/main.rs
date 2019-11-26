@@ -261,6 +261,36 @@ fn set_checkpoint_without_permission() {
 }
 
 #[test]
+fn fail_to_set_nonexistent_checkpoint() {
+    let client = MemoryClient::new();
+    let david = key_pair_from_string("David");
+
+    let project = create_project_with_checkpoint(&client, &david);
+
+    let garbage = CheckpointId::random();
+
+    let tx_applied = client
+        .submit(
+            &david,
+            SetCheckpointParams {
+                project_id: project.id.clone(),
+                new_checkpoint_id: garbage,
+            },
+        )
+        .wait()
+        .unwrap();
+
+    assert_eq!(tx_applied.result, Err(None));
+    let updated_project = client
+        .get_project(project.id.clone())
+        .wait()
+        .unwrap()
+        .unwrap();
+    assert_eq!(updated_project.current_cp, project.current_cp);
+    assert_ne!(updated_project.current_cp, garbage);
+}
+
+#[test]
 fn transfer_fail() {
     let client = MemoryClient::new();
     let alice = key_pair_from_string("Alice");
