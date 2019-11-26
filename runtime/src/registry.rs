@@ -201,7 +201,7 @@ decl_module! {
             );
             let project = Project {
                 id: project_id.clone(),
-                account_id: account_id.clone(),
+                account_id: account_id,
                 description: params.description,
                 img_url: params.img_url,
                 members: vec![sender],
@@ -222,7 +222,7 @@ decl_module! {
             let project = store::Projects::get(params.project).ok_or("Project does not exist")?;
             let is_member = project.members.contains(&sender);
             if !is_member {
-                Err("Sender is not a project member")?;
+                return Err("Sender is not a project member")
             }
             <crate::Balances as Currency<_>>::transfer(&project.account_id, &params.recipient, params.value, ExistenceRequirement::KeepAlive)
         }
