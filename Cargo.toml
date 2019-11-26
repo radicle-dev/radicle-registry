@@ -10,9 +10,6 @@ edition = "2018"
 members = [
   "cli",
   "client",
-  "client-common",
-  "client-interface",
-  "memory-client",
   "node",
   "runtime",
   "subxt",

@@ -1,4 +1,4 @@
-//! This create provides code that is common to all client implementations.
+//! Build a signed extrinsic
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
 use sr_primitives::generic::{Era, SignedPayload};
@@ -11,7 +11,7 @@ pub use radicle_registry_runtime::{
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::ed25519;
 
-pub use radicle_registry_client_interface::{Call, TransactionExtra};
+pub use crate::interface::{Call, TransactionExtra};
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all

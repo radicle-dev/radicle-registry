@@ -23,12 +23,7 @@ Packages
   lives on chain.
 * `node` contains the node code which includes the runtime code.
 * `client` contains the high-level client library for interacting with the
-  registry through a node.
-* `client-common` provides code that is used by the node client and the memory
-* `client-interface` defines the trait for clients and provides the necessary
-  data types.
-* `memory-client` contains a implementation of the Client interface that uses an
-  in-memory instantiation of the registry ledger.
+  registry through a node and a memory test double.
 * `cli` contains a binary for interacting with the registry node to submit
   transactions and read state.
 * `subxt` contains a copy of [`subxt`][subxt], the Rust client library for

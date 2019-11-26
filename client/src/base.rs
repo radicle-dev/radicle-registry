@@ -5,8 +5,7 @@ use sr_primitives::traits::Hash as _;
 use substrate_primitives::ed25519;
 use substrate_primitives::storage::StorageKey;
 
-use radicle_registry_client_common::signed_extrinsic;
-use radicle_registry_client_interface::{CryptoPair as _, Response, TransactionExtra};
+use crate::interface::{CryptoPair as _, Response, TransactionExtra};
 use radicle_registry_runtime::{
     opaque::Block as OpaqueBlock, AccountId, Call as RuntimeCall, Event, Hash, Hashing, Runtime,
 };
@@ -84,7 +83,12 @@ impl Client {
         let subxt_client = self.subxt_client.clone();
         self.get_transaction_extra(&account_id)
             .and_then(move |extra: TransactionExtra| {
-                let xt = signed_extrinsic(&key_pair, call, extra.nonce, extra.genesis_hash);
+                let xt = crate::extrinsic::signed_extrinsic(
+                    &key_pair,
+                    call,
+                    extra.nonce,
+                    extra.genesis_hash,
+                );
                 subxt_client
                     .connect()
                     .and_then(move |rpc| rpc.submit_and_watch_extrinsic(xt))
