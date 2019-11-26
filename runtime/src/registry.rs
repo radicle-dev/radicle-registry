@@ -11,6 +11,7 @@ use paint_support::{
 };
 use sr_primitives::weights::SimpleDispatchInfo;
 
+use sr_std::fmt;
 use sr_std::str::FromStr;
 
 use substrate_primitives::{crypto::UncheckedFrom, H256};
@@ -47,6 +48,13 @@ impl FromStr for String32 {
     /// longer than 32 characters.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         String32::from_string(s.to_string())
+    }
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for String32 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
