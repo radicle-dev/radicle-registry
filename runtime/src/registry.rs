@@ -102,6 +102,30 @@ pub mod store {
 
 pub use store::Store;
 
+/// Returns true iff `project_hash` is not present in any ancestor of
+/// `checkpoint_id`.
+fn unique_hash_in_ancestry(project_hash: H256, checkpoint_id: CheckpointId) -> bool {
+    let mut ancestor_id = checkpoint_id;
+
+    // The number of storage requests made in this loop grows linearly
+    // with the size of the checkpoint's ancestry.
+    //
+    // The loop's total runtime will also depend on the performance of
+    // each `store::StorageMap::get` request.
+    while let Some(cp) = store::Checkpoints::get(ancestor_id) {
+        if cp.hash == project_hash {
+            return false;
+        } else {
+            match cp.parent {
+                None => return true,
+                Some(cp_id) => ancestor_id = cp_id,
+            }
+        }
+    }
+
+    false
+}
+
 /// Returns true iff `checkpoint_id` descends from `initial_cp_id`.
 fn descends_from_initial_checkpoint(
     checkpoint_id: CheckpointId,
@@ -198,7 +222,9 @@ decl_module! {
                 Some(cp_id) => {
                     match store::Checkpoints::get(cp_id) {
                         None => return Err("Parent checkpoint does not exist"),
-                        Some(_) => {}
+                        Some(_) => if !unique_hash_in_ancestry(params.project_hash, cp_id) {
+                            return Err("Project hash already used.")
+                        }
                     }
                 }
             };
