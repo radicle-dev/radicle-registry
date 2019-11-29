@@ -153,4 +153,5 @@ substrate-wasm-builder-runner = "1.0.2"
 
 [dev-dependencies]
 futures = "0.1"
+rand = "0.7.2"
 radicle_registry_client = { path = "../client" }

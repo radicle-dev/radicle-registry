@@ -1,5 +1,7 @@
 /// Runtime tests implemented using the emulator backend of the client.
 use futures::prelude::*;
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 
 use radicle_registry_client::*;
 
@@ -13,36 +15,22 @@ fn register_project() {
         .create_checkpoint(&alice, project_hash, None)
         .wait()
         .unwrap();
-    let project_id = (
-        ProjectName::from_string("NAME".to_string()).unwrap(),
-        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
-    );
-    let tx_applied = client
-        .submit(
-            &alice,
-            RegisterProjectParams {
-                id: project_id.clone(),
-                description: "DESCRIPTION".to_string(),
-                img_url: "IMG_URL".to_string(),
-                checkpoint_id,
-            },
-        )
-        .wait()
-        .unwrap();
+    let params = random_register_project_params(checkpoint_id);
+    let tx_applied = client.submit(&alice, params.clone()).wait().unwrap();
 
     let project = client
-        .get_project(project_id.clone())
+        .get_project(params.id.clone())
         .wait()
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, project_id);
-    assert_eq!(project.description, "DESCRIPTION");
-    assert_eq!(project.img_url, "IMG_URL");
+    assert_eq!(project.id, params.clone().id);
+    assert_eq!(project.description, params.description);
+    assert_eq!(project.img_url, params.img_url);
     assert_eq!(project.current_cp, checkpoint_id);
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
+        RegistryEvent::ProjectRegistered(params.clone().id, project.account_id).into()
     );
 
     let has_project = client
@@ -50,7 +38,7 @@ fn register_project() {
         .wait()
         .unwrap()
         .iter()
-        .any(|id| *id == project_id);
+        .any(|id| *id == params.id);
     assert!(has_project, "Registered project not found in project list");
 
     let checkpoint_ = Checkpoint {
@@ -75,17 +63,8 @@ fn register_project_with_duplicate_id() {
         .create_checkpoint(&alice, project_hash, None)
         .wait()
         .unwrap();
-    let project_id = (
-        ProjectName::from_string("NAME".to_string()).unwrap(),
-        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
-    );
 
-    let params = RegisterProjectParams {
-        id: project_id.clone(),
-        description: "DESCRIPTION".to_string(),
-        img_url: "IMG_URL".to_string(),
-        checkpoint_id,
-    };
+    let params = random_register_project_params(checkpoint_id);
 
     client
         .register_project(&alice, params.clone())
@@ -99,7 +78,7 @@ fn register_project_with_duplicate_id() {
             RegisterProjectParams {
                 description: "DESCRIPTION_2".to_string(),
                 img_url: "IMG_URL_2".to_string(),
-                ..params
+                ..params.clone()
             },
         )
         .wait()
@@ -107,10 +86,10 @@ fn register_project_with_duplicate_id() {
 
     assert_eq!(registration_2.result, Err(None));
 
-    let project = client.get_project(project_id).wait().unwrap().unwrap();
+    let project = client.get_project(params.id).wait().unwrap().unwrap();
 
-    assert_eq!("DESCRIPTION", project.description);
-    assert_eq!("IMG_URL", project.img_url)
+    assert_eq!(params.description, project.description);
+    assert_eq!(params.img_url, project.img_url)
 }
 
 #[test]
@@ -119,23 +98,14 @@ fn register_project_with_bad_checkpoint() {
     let alice = key_pair_from_string("Alice");
 
     let checkpoint_id = H256::random();
-    let project_id = (
-        ProjectName::from_string("NAME".to_string()).unwrap(),
-        ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
-    );
 
-    let params = RegisterProjectParams {
-        id: project_id.clone(),
-        description: "DESCRIPTION".to_string(),
-        img_url: "IMG_URL".to_string(),
-        checkpoint_id,
-    };
+    let params = random_register_project_params(checkpoint_id);
 
-    let tx_applied = client.submit(&alice, params).wait().unwrap();
+    let tx_applied = client.submit(&alice, params.clone()).wait().unwrap();
 
     assert_eq!(tx_applied.result, Err(None));
 
-    let no_project = client.get_project(project_id).wait().unwrap();
+    let no_project = client.get_project(params.id).wait().unwrap();
 
     assert!(no_project.is_none())
 }
@@ -450,29 +420,53 @@ fn project_account_transfer_non_member() {
 }
 
 fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
-    let project_id = ("NAME".parse().unwrap(), "DOMAIN".parse().unwrap());
-
     let checkpoint_id = client
         .create_checkpoint(&author, H256::random(), None)
         .wait()
         .unwrap();
 
+    let params = random_register_project_params(checkpoint_id);
+
     client
-        .register_project(
-            &author,
-            RegisterProjectParams {
-                id: project_id.clone(),
-                description: "DESCRIPTION".to_string(),
-                img_url: "IMG_URL".to_string(),
-                checkpoint_id,
-            },
-        )
+        .register_project(&author, params.clone())
         .wait()
         .unwrap();
 
-    client.get_project(project_id).wait().unwrap().unwrap()
+    client.get_project(params.id).wait().unwrap().unwrap()
 }
 
 fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
+}
+
+/// Create random parameters to register a project with.
+/// The project's name and domain will be alphanumeric strings with 32
+/// characters, and the description and image URL will be alphanumeric strings
+/// with 50 characters.
+fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterProjectParams {
+    let name = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .collect::<String>();
+    let domain = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .collect::<String>();
+    let id = (name.parse().unwrap(), domain.parse().unwrap());
+
+    let description = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(50)
+        .collect::<String>();
+    let img_url = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(50)
+        .collect::<String>();
+
+    RegisterProjectParams {
+        id,
+        description,
+        img_url,
+        checkpoint_id,
+    }
 }
