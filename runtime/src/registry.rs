@@ -1,7 +1,6 @@
-use alloc::format;
 use alloc::prelude::v1::*;
 use alloc::vec;
-use codec::{Decode, Encode, Error as CodecError, Input};
+use codec::{Decode, Encode};
 use paint_support::{
     decl_event, decl_module, decl_storage,
     dispatch::Result as DispatchResult,
@@ -11,75 +10,13 @@ use paint_support::{
 };
 use sr_primitives::weights::SimpleDispatchInfo;
 
-use sr_std::fmt;
-use sr_std::str::FromStr;
-
 use substrate_primitives::{crypto::UncheckedFrom, H256};
 
 use paint_system as system;
 use paint_system::ensure_signed;
 
-use crate::{AccountId, Balance, Hash, Hashing};
+use crate::{AccountId, Balance, Hash, Hashing, String32};
 use sr_primitives::traits::Hash as _;
-
-/// Type to represent project names and domains.
-///
-/// Since their lengths are limited to 32 characters, a smart constructor is
-/// provided to check validity.
-#[derive(Encode, Clone, Debug, Eq, PartialEq)]
-pub struct String32(String);
-
-impl String32 {
-    pub fn from_string(s: String) -> Result<Self, String> {
-        if s.len() > 32 {
-            Err(format!(
-                "The provided string's length exceeded 32 characters: {:?}",
-                s
-            ))
-        } else {
-            Ok(String32(s))
-        }
-    }
-}
-
-impl FromStr for String32 {
-    type Err = String;
-
-    /// This function only raises an error if the `String` it is passed is
-    /// longer than 32 characters.
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        String32::from_string(s.to_string())
-    }
-}
-
-#[cfg(feature = "std")]
-impl fmt::Display for String32 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Decode for String32 {
-    fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
-        let decoded: String = String::decode(input)?;
-        if decoded.len() > 32 {
-            Err(From::from("String32 length was more than 32 characters."))
-        } else {
-            Ok(String32(decoded))
-        }
-    }
-}
-
-#[test]
-fn encode_then_decode() {
-    let string = String32::from_string(String::from("ôítÏйгますいщαφδвы")).unwrap();
-
-    let encoded = string.encode();
-
-    let decoded = <String32>::decode(&mut &encoded[..]).unwrap();
-
-    assert_eq!(string, decoded)
-}
 
 /// The name a project is registered with.
 pub type ProjectName = String32;

@@ -10,9 +10,9 @@ pub use radicle_registry_runtime::{
     registry::{
         Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
         ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
-        String32, TransferFromProjectParams,
+        TransferFromProjectParams,
     },
-    AccountId, Balance, Event, Hashing, Index,
+    AccountId, Balance, Event, Hashing, Index, String32,
 };
 pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use substrate_primitives::{ed25519, H256};

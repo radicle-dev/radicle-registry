@@ -64,6 +64,9 @@ pub type EventRecord = paint_system::EventRecord<Event, Hash>;
 
 pub mod registry;
 
+mod string32;
+pub use string32::String32;
+
 pub use paint_balances as balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
