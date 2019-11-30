@@ -1,5 +1,5 @@
+use frame_support::storage::generator::{StorageMap, StorageValue};
 use futures01::future::Future;
-use paint_support::storage::generator::{StorageMap, StorageValue};
 use parity_scale_codec::FullCodec;
 use sr_primitives::traits::Hash as _;
 use substrate_primitives::ed25519;
@@ -48,9 +48,9 @@ impl Client {
 
     pub fn fetch_map_value<S: StorageMap<Key, Value>, Key: FullCodec, Value: FullCodec>(
         &self,
-        key: Key,
+        k: Key,
     ) -> impl Future<Item = S::Query, Error = Error> {
-        let key = StorageKey(Vec::from(S::storage_map_final_key(key).as_ref()));
+        let key = StorageKey(S::storage_map_final_key(k));
         self.subxt_client
             .fetch::<Value>(key)
             .map(S::from_optional_value_to_query)
@@ -134,7 +134,7 @@ fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<V
         .events
         .iter()
         .filter_map(|event_record| match event_record.phase {
-            paint_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
+            frame_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
                 Some(event_record.event.clone())
             }
             _ => None,

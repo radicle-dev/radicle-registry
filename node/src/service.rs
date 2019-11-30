@@ -1,7 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use aura_primitives::sr25519::AuthorityPair as AuraPair;
-use futures::prelude::*;
+use futures01::prelude::*;
 use inherents::InherentDataProviders;
 use network::construct_simple_protocol;
 use radicle_registry_runtime::{self, opaque::Block, GenesisConfig, RuntimeApi};
@@ -98,7 +98,7 @@ pub fn new_full<C: Send + Default + 'static>(
             client.clone(),
             proposer,
             service.network(),
-            inherent_data_providers.clone(),
+            inherent_data_providers,
             force_authoring,
             service.keystore(),
         )?;

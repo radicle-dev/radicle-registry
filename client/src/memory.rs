@@ -3,7 +3,7 @@
 use futures01::{future, prelude::*};
 use std::sync::{Arc, Mutex};
 
-use paint_support::storage::generator::{StorageMap, StorageValue};
+use frame_support::storage::generator::{StorageMap, StorageValue};
 use parity_scale_codec::{Decode, FullCodec};
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
 
@@ -31,8 +31,8 @@ pub struct MemoryClient {
 impl MemoryClient {
     pub fn new() -> Self {
         let genesis_config = GenesisConfig {
-            paint_aura: None,
-            paint_balances: Some(BalancesConfig {
+            pallet_aura: None,
+            pallet_balances: Some(BalancesConfig {
                 balances: vec![(
                     ed25519::Pair::from_string("//Alice", None)
                         .unwrap()
@@ -41,18 +41,18 @@ impl MemoryClient {
                 )],
                 vesting: vec![],
             }),
-            paint_sudo: None,
+            pallet_sudo: None,
             system: None,
         };
         let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = test_ext.execute_with(|| {
-            paint_system::Module::<Runtime>::initialize(
+            frame_system::Module::<Runtime>::initialize(
                 &1,
                 &[0u8; 32].into(),
                 &[0u8; 32].into(),
                 &Default::default(),
             );
-            paint_system::Module::<Runtime>::block_hash(0)
+            frame_system::Module::<Runtime>::block_hash(0)
         });
         MemoryClient {
             test_ext: Arc::new(Mutex::new(test_ext)),
@@ -113,9 +113,9 @@ impl Client for MemoryClient {
                     let tx_hash = Hashing::hash_of(&extrinsic);
                     let test_ext = &mut client.test_ext.lock().unwrap();
                     let events = test_ext.execute_with(move || {
-                        let event_start_index = paint_system::Module::<Runtime>::event_count();
+                        let event_start_index = frame_system::Module::<Runtime>::event_count();
                         let _apply_outcome = Executive::apply_extrinsic(extrinsic).unwrap();
-                        paint_system::Module::<Runtime>::events()
+                        frame_system::Module::<Runtime>::events()
                             .into_iter()
                             .skip(event_start_index as usize)
                             .map(|event_record| event_record.event)
@@ -135,7 +135,7 @@ impl Client for MemoryClient {
     fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
         let test_ext = &mut self.test_ext.lock().unwrap();
         let nonce =
-            test_ext.execute_with(|| paint_system::Module::<Runtime>::account_nonce(account_id));
+            test_ext.execute_with(|| frame_system::Module::<Runtime>::account_nonce(account_id));
         Box::new(future::ok(TransactionExtra {
             nonce,
             genesis_hash: self.genesis_hash,

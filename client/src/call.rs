@@ -1,5 +1,6 @@
 //! Defines [Call] trait and implementations for all transaction parameters.
 
+use frame_support::weights::DispatchInfo;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
 use sr_primitives::DispatchError;
 
@@ -29,7 +30,7 @@ impl Call for registry::RegisterProjectParams {
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
-            Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
+            Ok(_dispatch_info) => find_event(&events, "ProjectRegistered", |event| match event {
                 Event::registry(registry::Event::ProjectRegistered(_project_id, _account_id)) => {
                     Some(Ok(()))
                 }
@@ -50,7 +51,7 @@ impl Call for registry::CreateCheckpointParams {
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
+            Ok(_dispatch_info) => find_event(&events, "CheckpointCreated", |event| match event {
                 Event::registry(registry::Event::CheckpointCreated(_checkpoint_id)) => Some(Ok(())),
                 _ => None,
             }),
@@ -69,7 +70,7 @@ impl Call for registry::SetCheckpointParams {
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
+            Ok(_dispatch_info) => find_event(&events, "CheckpointSet", |event| match event {
                 Event::registry(registry::Event::CheckpointSet(_project_id, _checkpoint_id)) => {
                     Some(Ok(()))
                 }
@@ -89,7 +90,9 @@ impl Call for crate::TransferParams {
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
-        Ok(dispatch_result.map_err(|dispatch_error| dispatch_error.message))
+        Ok(dispatch_result
+            .map_err(|dispatch_error| dispatch_error.message)
+            .map(|_| ()))
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -102,7 +105,9 @@ impl Call for registry::TransferFromProjectParams {
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
-        Ok(dispatch_result.map_err(|dispatch_error| dispatch_error.message))
+        Ok(dispatch_result
+            .map_err(|dispatch_error| dispatch_error.message)
+            .map(|_| ()))
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -112,17 +117,21 @@ impl Call for registry::TransferFromProjectParams {
 
 /// Extract the dispatch result of an extrinsic from the extrinsic events.
 ///
-/// Looks for the [paint_system::Event] in the list of events and returns the inner result based on
+/// Looks for the [frame_system::Event] in the list of events and returns the inner result based on
 /// the event.
 ///
-/// Returns an outer [EventParseError] if no [paint_system::Event] was present in `events`.
+/// Returns an outer [EventParseError] if no [frame_system::Event] was present in `events`.
 ///
 /// Because of an issue with substrate the `message` field of [DispatchError] will always be `None`
-fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, EventParseError> {
+fn get_dispatch_result(
+    events: &[Event],
+) -> Result<Result<DispatchInfo, DispatchError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
-            paint_system::Event::ExtrinsicSuccess => Some(Ok(())),
-            paint_system::Event::ExtrinsicFailed(ref dispatch_error) => Some(Err(*dispatch_error)),
+            frame_system::Event::ExtrinsicSuccess(ref dispatch_info) => Some(Ok(*dispatch_info)),
+            frame_system::Event::ExtrinsicFailed(ref dispatch_error, _) => {
+                Some(Err(*dispatch_error))
+            }
         },
         _ => None,
     })

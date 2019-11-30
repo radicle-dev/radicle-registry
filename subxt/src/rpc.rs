@@ -17,7 +17,7 @@
 use crate::{
     error::Error,
     metadata::Metadata,
-    paint::{
+    frame::{
         balances::Balances,
         system::System,
     },
@@ -47,7 +47,10 @@ use substrate_rpc_api::{
     chain::ChainClient,
     state::StateClient,
 };
-use substrate_rpc_primitives::number::NumberOrHex;
+use substrate_rpc_primitives::{
+    list::ListOrValue,
+    number::NumberOrHex,
+};
 
 pub type ChainBlock<T> = SignedBlock<Block<<T as System>::Header, OpaqueExtrinsic>>;
 pub type BlockNumber<T> = NumberOrHex<<T as System>::BlockNumber>;
@@ -94,10 +97,15 @@ impl<T: System> Rpc<T> {
     pub fn genesis_hash(&self) -> impl Future<Item = T::Hash, Error = Error> {
         let block_zero = T::BlockNumber::min_value();
         self.chain
-            .block_hash(Some(NumberOrHex::Number(block_zero)))
+            .block_hash(Some(ListOrValue::Value(NumberOrHex::Number(block_zero))))
             .map_err(Into::into)
-            .and_then(|genesis_hash| {
-                future::result(genesis_hash.ok_or("Genesis hash not found".into()))
+            .and_then(|list_or_value| {
+                future::result(
+                    match list_or_value {
+                        ListOrValue::Value(genesis_hash) => genesis_hash.ok_or_else(|| "Genesis hash not found".into()),
+                        ListOrValue::List(_) => Err("Expected a Value, got a List".into()),
+                    }
+                )
             })
     }
 
@@ -115,9 +123,17 @@ impl<T: System> Rpc<T> {
     /// Get a block hash, returns hash of latest block by default
     pub fn block_hash(
         &self,
-        hash: Option<BlockNumber<T>>,
+        block_number: Option<BlockNumber<T>>,
     ) -> impl Future<Item = Option<T::Hash>, Error = Error> {
-        self.chain.block_hash(hash).map_err(Into::into)
+        self.chain
+            .block_hash(block_number.map(ListOrValue::Value))
+            .map_err(Into::into)
+            .and_then(|list_or_value| {
+                match list_or_value {
+                    ListOrValue::Value(hash) => Ok(hash),
+                    ListOrValue::List(_) => Err("Expected a Value, got a List".into()),
+                }
+            })
     }
 
     /// Get a Block
@@ -149,7 +165,7 @@ use substrate_primitives::{
     storage::StorageChangeSet,
     twox_128,
 };
-use txpool::watcher::Status;
+use txpool_api::watcher::Status;
 
 type MapClosure<T> = Box<dyn Fn(T) -> T + Send>;
 pub type MapStream<T> = stream::Map<TypedSubscriptionStream<T>, MapClosure<T>>;
@@ -294,7 +310,7 @@ pub struct ExtrinsicSuccess<T: System> {
     /// Extrinsic hash.
     pub extrinsic: T::Hash,
     /// Raw runtime events, can be decoded by the caller.
-    pub events: Vec<paint_system::EventRecord<T::Event, T::Hash>>,
+    pub events: Vec<frame_system::EventRecord<T::Event, T::Hash>>,
 }
 
 /// Waits for events for the block triggered by the extrinsic
