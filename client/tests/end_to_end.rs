@@ -51,7 +51,7 @@ fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id.clone()).into()
+        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
     );
 
     let checkpoint = client
