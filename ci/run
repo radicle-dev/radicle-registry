@@ -15,8 +15,10 @@ fi
 TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 echo "--- Load cache"
-declare -i cache_version=8
+declare -i cache_version=10
 target_cache=/cache/target-v${cache_version}
+target_cache_key_file="$target_cache/_key"
+cache_key="$(sha256sum Cargo.lock | cut -f 1 -d ' ')"
 
 if [[ $BUILDKITE_BRANCH = "master" ]]; then
   declare -i old_cache_version="$cache_version - 1"
@@ -28,6 +30,13 @@ if [[ $BUILDKITE_BRANCH = "master" ]]; then
 fi
 
 if [[ -d "$target_cache" ]]; then
+  if [[ -f "$target_cache_key_file" ]]; then
+    if [[ "$(cat $target_cache_key_file)" != "$cache_key" ]]; then
+      echo "Error: Target cache key does not match project cache key."
+      echo "Please update the cache version in ./ci/run"
+      exit 1
+    fi
+  fi
   time cp -aT "$target_cache" target
   echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
 else
@@ -69,6 +78,7 @@ rm -rf \
 
 if [[ ! -d "$target_cache" ]]; then
   time cp -aTu target "$target_cache"
+  echo "$cache_key" > "$target_cache_key_file"
   echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
 else
   echo "Cache $target_cache does already exist"
