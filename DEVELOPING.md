@@ -23,7 +23,7 @@ Packages
   lives on chain.
 * `node` contains the node code which includes the runtime code.
 * `client` contains the high-level client library for interacting with the
-  registry through a node and a memory test double.
+  registry through a node and an emulator implementation.
 * `cli` contains a binary for interacting with the registry node to submit
   transactions and read state.
 * `subxt` contains a copy of [`subxt`][subxt], the Rust client library for
@@ -33,8 +33,8 @@ Packages
 Testing
 -------
 
-Black-box tests for the runtime logic are implemented with the `MemoryClient` in
-`runtime/tests/main.rs`.
+Black-box tests for the runtime logic are implemented with the client emulator
+in `runtime/tests/main.rs`.
 
 End-to-end tests that run against a real node are implemented in
 `client/tests/end_to_end.rs`

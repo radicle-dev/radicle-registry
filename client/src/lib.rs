@@ -1,30 +1,33 @@
 //! Clients for the radicle registry.
 //!
-//! This crate provides two high-level clients for the radicle registry. [Client] talks to a
-//! radicle registry node. [MemoryClient] provides the same interface but runs the ledger in
-//! memory. This is useful for developing and testing.
+//! This crate provides a high-level registry ledger [Client] and all related types.
+//!
+//! [Client::new_emulator] creates a client that emulates the ledger in memory without having a
+//! local node.
 use futures01::prelude::*;
+use std::sync::Arc;
 
+use parity_scale_codec::{Decode, FullCodec};
+
+use paint_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 
-mod base;
+mod backend;
 mod call;
 mod extrinsic;
 mod interface;
-mod memory;
 mod with_executor;
 
-pub use crate::base::Error;
 pub use crate::call::Call;
 pub use crate::interface::{Client as ClientT, *};
-pub use crate::memory::MemoryClient;
 pub use crate::with_executor::ClientWithExecutor;
 
-/// Client to interact with the radicle registry ledger through a local node.
+/// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
-/// Implements [ClientT] for interacting with the ledger.
+/// The client can either use a full node as the backend (see [Client::create]) or emulate the
+/// registry in memory with [Client::new_emulator].
 pub struct Client {
-    base_client: base::Client,
+    backend: Arc<dyn backend::Backend + Sync + Send>,
 }
 
 impl Client {
@@ -32,7 +35,80 @@ impl Client {
     ///
     /// Fails if it cannot connect to a node.
     pub fn create() -> impl Future<Item = Self, Error = Error> {
-        base::Client::create().map(|base_client| Client { base_client })
+        backend::remote_node::RemoteNode::create().map(Self::new)
+    }
+
+    /// Create a new client that emulates the registry ledger in memory. See
+    /// [backend::emulator::Emulator] for details.
+    pub fn new_emulator() -> Self {
+        Self::new(backend::emulator::Emulator::new())
+    }
+
+    fn new(backend: impl backend::Backend + Sync + Send + 'static) -> Self {
+        Client {
+            backend: Arc::new(backend),
+        }
+    }
+
+    /// Fetch a value from the state storage based on a [StorageValue] implementation provided by
+    /// the runtime.
+    ///
+    /// ```ignore
+    /// client.fetch_value::<paint_balance::TotalIssuance<Runtime>, _>();
+    /// ```
+    fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
+        &self,
+    ) -> Response<S::Query, Error>
+    where
+        S::Query: Send + 'static,
+    {
+        Box::new(
+            self.backend
+                .fetch(S::storage_value_final_key().as_ref())
+                .and_then(|maybe_data| {
+                    let value = match maybe_data {
+                        Some(data) => {
+                            let value = Decode::decode(&mut &data[..])?;
+                            Some(value)
+                        }
+                        None => None,
+                    };
+                    Ok(S::from_optional_value_to_query(value))
+                }),
+        )
+    }
+
+    /// Fetch a value from a map in the state storage based on a [StorageMap] implementation
+    /// provided by the runtime.
+    ///
+    /// ```ignore
+    /// client.fetch_map_value::<paint_system::AccountNonce<Runtime>, _, _>(account_id);
+    /// ```
+    fn fetch_map_value<
+        S: StorageMap<Key, Value>,
+        Key: FullCodec,
+        Value: FullCodec + Send + 'static,
+    >(
+        &self,
+        key: Key,
+    ) -> Response<S::Query, Error>
+    where
+        S::Query: Send + 'static,
+    {
+        Box::new(
+            self.backend
+                .fetch(S::storage_map_final_key(key).as_ref())
+                .and_then(|maybe_data| {
+                    let value = match maybe_data {
+                        Some(data) => {
+                            let value = Decode::decode(&mut &data[..])?;
+                            Some(value)
+                        }
+                        None => None,
+                    };
+                    Ok(S::from_optional_value_to_query(value))
+                }),
+        )
     }
 }
 
@@ -42,57 +118,62 @@ impl ClientT for Client {
         author: &ed25519::Pair,
         call: Call_,
     ) -> Response<TransactionApplied<Call_>, Error> {
-        let base_client = self.base_client.clone();
+        let account_id = author.public();
+        let key_pair = author.clone();
+        let backend2 = self.backend.clone();
         Box::new(
-            self.base_client
-                .submit_runtime_call(author, call.into_runtime_call())
-                .and_then(move |ext_success| {
-                    let tx_hash = ext_success.extrinsic;
-                    let block = ext_success.block;
-                    base_client
-                        .extract_events(ext_success)
-                        .and_then(move |events| {
-                            let result = Call_::result_from_events(events.clone())?;
-                            Ok(TransactionApplied {
-                                tx_hash,
-                                block,
-                                events,
-                                result,
-                            })
+            self.backend
+                .get_transaction_extra(&account_id)
+                .and_then(move |extra| {
+                    let extrinsic = crate::extrinsic::signed_extrinsic(
+                        &key_pair,
+                        call.into_runtime_call(),
+                        extra.nonce,
+                        extra.genesis_hash,
+                    );
+                    backend2.submit(extrinsic).and_then(|tx_applied| {
+                        let events = tx_applied.events;
+                        let tx_hash = tx_applied.tx_hash;
+                        let block = tx_applied.block;
+                        let result = Call_::result_from_events(events.clone())?;
+                        Ok(TransactionApplied {
+                            tx_hash,
+                            block,
+                            events,
+                            result,
                         })
+                    })
                 }),
         )
     }
 
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
-        self.base_client.get_transaction_extra(account_id)
-    }
-
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
-        Box::new(
-            self.base_client
-                .fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()),
-        )
+        Box::new(self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()))
     }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
-        Box::new(
-            self.base_client
-                .fetch_map_value::<registry::store::Projects, _, _>(id),
-        )
+        Box::new(self.fetch_map_value::<registry::store::Projects, _, _>(id))
     }
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
-        Box::new(
-            self.base_client
-                .fetch_value::<registry::store::ProjectIds, _>(),
-        )
+        Box::new(self.fetch_value::<registry::store::ProjectIds, _>())
     }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
-        Box::new(
-            self.base_client
-                .fetch_map_value::<registry::store::Checkpoints, _, _>(id),
-        )
+        Box::new(self.fetch_map_value::<registry::store::Checkpoints, _, _>(id))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /// Assert that [Client] implements [Sync], [Send] and has a `'static` lifetime bound.
+    ///
+    /// The code does not need to run, we only want it to compile.
+    #[allow(dead_code)]
+    fn client_is_sync_send_static() {
+        fn is_sync_send(_x: impl Sync + Send + 'static) {}
+        is_sync_send(Client::new_emulator());
     }
 }

@@ -1,13 +1,11 @@
-/// Runtime tests implemented with [MemoryClient].
-///
-/// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
+/// Runtime tests implemented using the emulator backend of the client.
 use futures::prelude::*;
 
 use radicle_registry_client::*;
 
 #[test]
 fn register_project() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
@@ -69,7 +67,7 @@ fn register_project() {
 
 #[test]
 fn register_project_with_duplicate_id() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
@@ -117,7 +115,7 @@ fn register_project_with_duplicate_id() {
 
 #[test]
 fn register_project_with_bad_checkpoint() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
     let checkpoint_id = H256::random();
@@ -162,7 +160,7 @@ fn long_string32() {
 
 #[test]
 fn create_checkpoint() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let bob = key_pair_from_string("Bob");
 
     let project_hash1 = H256::random();
@@ -202,7 +200,7 @@ fn create_checkpoint() {
 
 #[test]
 fn create_checkpoint_without_parent() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let bob = key_pair_from_string("Bob");
 
     let project_hash = H256::random();
@@ -224,7 +222,7 @@ fn create_checkpoint_without_parent() {
 
 #[test]
 fn set_checkpoint() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let charles = key_pair_from_string("Charles");
 
     let project = create_project_with_checkpoint(&client, &charles);
@@ -252,7 +250,7 @@ fn set_checkpoint() {
 
 #[test]
 fn set_checkpoint_without_permission() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let eve = key_pair_from_string("Eve");
 
     let project = create_project_with_checkpoint(&client, &eve);
@@ -287,7 +285,7 @@ fn set_checkpoint_without_permission() {
 
 #[test]
 fn fail_to_set_nonexistent_checkpoint() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let david = key_pair_from_string("David");
 
     let project = create_project_with_checkpoint(&client, &david);
@@ -317,7 +315,7 @@ fn fail_to_set_nonexistent_checkpoint() {
 
 #[test]
 fn set_fork_checkpoint() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let grace = key_pair_from_string("Grace");
 
     let project = create_project_with_checkpoint(&client, &grace);
@@ -359,7 +357,7 @@ fn set_fork_checkpoint() {
 
 #[test]
 fn transfer_fail() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
 
@@ -381,7 +379,7 @@ fn transfer_fail() {
 /// a project to another account.
 #[test]
 fn project_account_transfer() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
     let project = create_project_with_checkpoint(&client, &alice);
@@ -419,7 +417,7 @@ fn project_account_transfer() {
 #[test]
 /// Test that a transfer from a project account fails if the sender is not a project member.
 fn project_account_transfer_non_member() {
-    let client = MemoryClient::new();
+    let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob");
     let project = create_project_with_checkpoint(&client, &alice);
@@ -451,7 +449,7 @@ fn project_account_transfer_non_member() {
     );
 }
 
-fn create_project_with_checkpoint(client: &MemoryClient, author: &ed25519::Pair) -> Project {
+fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
     let project_id = ("NAME".parse().unwrap(), "DOMAIN".parse().unwrap());
 
     let checkpoint_id = client
