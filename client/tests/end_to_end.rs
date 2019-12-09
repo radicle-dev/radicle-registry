@@ -4,15 +4,15 @@
 
 use futures01::future::Future as _;
 use radicle_registry_client::{
-    ed25519, Checkpoint, ClientT as _, ClientWithExecutor, CryptoPair, RegisterProjectParams,
-    RegistryEvent, H256,
+    ed25519, Checkpoint, Client, ClientT as _, CryptoPair, RegisterProjectParams, RegistryEvent,
+    H256,
 };
 use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
 
 #[test]
 fn register_project() {
     env_logger::init();
-    let client = ClientWithExecutor::create().unwrap();
+    let client = Client::create_with_executor().unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
