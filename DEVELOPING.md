@@ -40,6 +40,15 @@ End-to-end tests that run against a real node are implemented in
 `client/tests/end_to_end.rs`
 
 
+Changelog
+---------
+
+We use `./CHANGELOG.md` to record all changes visible to users of the client.
+Changes are added to the “Upcoming” section of the change log as part of commit
+that makes the change. That is they are included in every pull request. For
+breaking changes a migration path must be provided.
+
+
 Upstream `subxt`
 ----------------
 
