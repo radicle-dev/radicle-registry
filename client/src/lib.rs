@@ -2,8 +2,12 @@
 //!
 //! This crate provides a high-level registry ledger [Client] and all related types.
 //!
+//! Create a remote node client with [Client::create].
+//!
 //! [Client::new_emulator] creates a client that emulates the ledger in memory without having a
 //! local node.
+//!
+//! [Client::create_with_executor] creates a client that uses its own runtime to spawn futures.
 use futures01::prelude::*;
 use std::sync::Arc;
 
@@ -16,11 +20,9 @@ mod backend;
 mod call;
 mod extrinsic;
 mod interface;
-mod with_executor;
 
 pub use crate::call::Call;
 pub use crate::interface::{Client as ClientT, *};
-pub use crate::with_executor::ClientWithExecutor;
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
@@ -35,13 +37,22 @@ impl Client {
     ///
     /// Fails if it cannot connect to a node.
     pub fn create() -> impl Future<Item = Self, Error = Error> {
-        backend::remote_node::RemoteNode::create().map(Self::new)
+        backend::RemoteNode::create().map(Self::new)
+    }
+
+    /// Same as [Client::create] but calls to the client spawn futures in an executor owned by the
+    /// client.
+    ///
+    /// This makes it possible to call [Future::wait] on the client even if that function is called
+    /// in an event loop of another executor.
+    pub fn create_with_executor() -> Result<Self, Error> {
+        backend::RemoteNodeWithExecutor::create().map(Self::new)
     }
 
     /// Create a new client that emulates the registry ledger in memory. See
     /// [backend::emulator::Emulator] for details.
     pub fn new_emulator() -> Self {
-        Self::new(backend::emulator::Emulator::new())
+        Self::new(backend::Emulator::new())
     }
 
     fn new(backend: impl backend::Backend + Sync + Send + 'static) -> Self {

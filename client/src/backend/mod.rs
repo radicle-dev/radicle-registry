@@ -5,8 +5,13 @@ pub use radicle_registry_runtime::UncheckedExtrinsic;
 
 use crate::interface::*;
 
-pub mod emulator;
-pub mod remote_node;
+mod emulator;
+mod remote_node;
+mod remote_node_with_executor;
+
+pub use emulator::Emulator;
+pub use remote_node::RemoteNode;
+pub use remote_node_with_executor::RemoteNodeWithExecutor;
 
 /// Indicator that a transaction has been included in a block and has run in the runtime.
 ///

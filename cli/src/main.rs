@@ -1,6 +1,6 @@
 use futures01::prelude::*;
 use radicle_registry_client::{
-    ed25519, ClientT, ClientWithExecutor, CryptoPair as _, RegisterProjectParams, String32, H256,
+    ed25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, String32, H256,
 };
 use structopt::StructOpt;
 
@@ -46,7 +46,7 @@ fn run(args: Args) {
             domain,
             project_hash,
         } => {
-            let client = ClientWithExecutor::create().unwrap();
+            let client = Client::create_with_executor().unwrap();
             let checkpoint_id = client
                 .create_checkpoint(&author_key_pair, project_hash, None)
                 .wait()
