@@ -1,6 +1,6 @@
 //! Provide an abstract trait for the registry client and the necessary types.
 //!
-//! The [Client] trait defines one method for each transaction of the registry ledger as well as
+//! The [ClientT] trait defines one method for each transaction of the registry ledger as well as
 //! methods to get the ledger state.
 use futures01::prelude::*;
 
@@ -60,7 +60,7 @@ pub struct TransactionApplied<Call_: Call> {
 pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
-pub trait Client {
+pub trait ClientT {
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Succeeds if the transaction has been included in a block.
@@ -75,18 +75,7 @@ pub trait Client {
         key_pair: &ed25519::Pair,
         recipient: &AccountId,
         balance: Balance,
-    ) -> Response<(), Error> {
-        Box::new(
-            self.submit(
-                key_pair,
-                TransferParams {
-                    recipient: *recipient,
-                    balance,
-                },
-            )
-            .map(|_| ()),
-        )
-    }
+    ) -> Response<(), Error>;
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error>;
 
@@ -94,9 +83,7 @@ pub trait Client {
         &self,
         author: &ed25519::Pair,
         project_params: RegisterProjectParams,
-    ) -> Response<(), Error> {
-        Box::new(self.submit(author, project_params).map(|_| ()))
-    }
+    ) -> Response<(), Error>;
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 
@@ -107,22 +94,7 @@ pub trait Client {
         author: &ed25519::Pair,
         project_hash: H256,
         previous_checkpoint_id: Option<CheckpointId>,
-    ) -> Response<CheckpointId, Error> {
-        let checkpoint_id = Hashing::hash_of(&Checkpoint {
-            parent: previous_checkpoint_id,
-            hash: project_hash,
-        });
-        Box::new(
-            self.submit(
-                author,
-                CreateCheckpointParams {
-                    project_hash,
-                    previous_checkpoint_id,
-                },
-            )
-            .map(move |_| checkpoint_id),
-        )
-    }
+    ) -> Response<CheckpointId, Error>;
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
 
@@ -130,7 +102,5 @@ pub trait Client {
         &self,
         author: &ed25519::Pair,
         params: SetCheckpointParams,
-    ) -> Response<(), Error> {
-        Box::new(self.submit(author, params).map(|_| ()))
-    }
+    ) -> Response<(), Error>;
 }

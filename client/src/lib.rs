@@ -22,7 +22,7 @@ mod extrinsic;
 mod interface;
 
 pub use crate::call::Call;
-pub use crate::interface::{Client as ClientT, *};
+pub use crate::interface::*;
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
@@ -158,8 +158,34 @@ impl ClientT for Client {
         )
     }
 
+    fn transfer(
+        &self,
+        key_pair: &ed25519::Pair,
+        recipient: &AccountId,
+        balance: Balance,
+    ) -> Response<(), Error> {
+        Box::new(
+            self.submit(
+                key_pair,
+                TransferParams {
+                    recipient: *recipient,
+                    balance,
+                },
+            )
+            .map(|_| ()),
+        )
+    }
+
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
         Box::new(self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()))
+    }
+
+    fn register_project(
+        &self,
+        author: &ed25519::Pair,
+        project_params: RegisterProjectParams,
+    ) -> Response<(), Error> {
+        Box::new(self.submit(author, project_params).map(|_| ()))
     }
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
@@ -168,6 +194,36 @@ impl ClientT for Client {
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
         Box::new(self.fetch_value::<registry::store::ProjectIds, _>())
+    }
+
+    fn create_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        project_hash: H256,
+        previous_checkpoint_id: Option<CheckpointId>,
+    ) -> Response<CheckpointId, Error> {
+        let checkpoint_id = Hashing::hash_of(&Checkpoint {
+            parent: previous_checkpoint_id,
+            hash: project_hash,
+        });
+        Box::new(
+            self.submit(
+                author,
+                CreateCheckpointParams {
+                    project_hash,
+                    previous_checkpoint_id,
+                },
+            )
+            .map(move |_| checkpoint_id),
+        )
+    }
+
+    fn set_checkpoint(
+        &self,
+        author: &ed25519::Pair,
+        params: SetCheckpointParams,
+    ) -> Response<(), Error> {
+        Box::new(self.submit(author, params).map(|_| ()))
     }
 
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {

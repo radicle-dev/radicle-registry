@@ -16,6 +16,8 @@ You’ll need to build the client with Rust Nightly.
 To build and view the client documentation run `./scripts/build-client-docs
 --open`.
 
+You can find examples in the `./client/examples` directory.
+
 
 Account Keys
 ------------
