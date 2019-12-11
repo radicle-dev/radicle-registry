@@ -102,7 +102,11 @@ impl backend::Backend for RemoteNode {
     }
 }
 
-/// TODO doc
+/// Given an [ExtrinsicSuccess] struct for a transaction and the block the includes the transaction
+/// return all the events belonging to the transaction.
+///
+/// Returns `None` if no events for the transaction were found. This should be treated as an error
+/// since the events should at least include the system event for the transaction.
 fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<Vec<Event>> {
     let xt_index = block
         .extrinsics
