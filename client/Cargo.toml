@@ -15,26 +15,26 @@ log = "0.4"
 parity-scale-codec = "1.0"
 tokio = "0.1"
 
-[dependencies.paint-system]
+[dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-support]
+[dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-transaction-payment]
+[dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.substrate-primitives]
+[dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.sr-primitives]
+[dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.sr-io]
+[dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"

@@ -3,7 +3,7 @@
 use futures01::future;
 use std::sync::{Arc, Mutex};
 
-use sr_primitives::{traits::Hash as _, BuildStorage as _};
+use sp_runtime::{traits::Hash as _, BuildStorage as _};
 
 use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
 
@@ -21,14 +21,14 @@ use crate::interface::*;
 /// The responses returned from the client never result in an [Error].
 #[derive(Clone)]
 pub struct Emulator {
-    test_ext: Arc<Mutex<sr_io::TestExternalities>>,
+    test_ext: Arc<Mutex<sp_io::TestExternalities>>,
     genesis_hash: Hash,
 }
 
 impl Emulator {
     pub fn new() -> Self {
         let genesis_config = make_genesis_config();
-        let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+        let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = init_runtime(&mut test_ext);
         Emulator {
             test_ext: Arc::new(Mutex::new(test_ext)),
@@ -45,11 +45,11 @@ impl backend::Backend for Emulator {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let test_ext = &mut self.test_ext.lock().unwrap();
         let events = test_ext.execute_with(move || {
-            let event_start_index = paint_system::Module::<Runtime>::event_count();
+            let event_start_index = frame_system::Module::<Runtime>::event_count();
             // We ignore the dispatch result. It is provided through the system event
             // TODO Pass on apply errors instead of unwrapping.
             let _dispatch_result = Executive::apply_extrinsic(extrinsic).unwrap();
-            paint_system::Module::<Runtime>::events()
+            frame_system::Module::<Runtime>::events()
                 .into_iter()
                 .skip(event_start_index as usize)
                 .map(|event_record| event_record.event)
@@ -64,7 +64,7 @@ impl backend::Backend for Emulator {
 
     fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error> {
         let test_ext = &mut self.test_ext.lock().unwrap();
-        let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key));
+        let maybe_data = test_ext.execute_with(|| sp_io::storage::get(key));
         Box::new(future::ok(maybe_data))
     }
 
@@ -78,8 +78,8 @@ impl backend::Backend for Emulator {
 /// Initializes the balance of the `//Alice` account with `2^60` tokens.
 fn make_genesis_config() -> GenesisConfig {
     GenesisConfig {
-        paint_aura: None,
-        paint_balances: Some(BalancesConfig {
+        pallet_aura: None,
+        pallet_balances: Some(BalancesConfig {
             balances: vec![(
                 ed25519::Pair::from_string("//Alice", None)
                     .unwrap()
@@ -88,23 +88,24 @@ fn make_genesis_config() -> GenesisConfig {
             )],
             vesting: vec![],
         }),
-        paint_sudo: None,
+        pallet_sudo: None,
+        grandpa: None,
         system: None,
     }
 }
 
 /// Initialize the runtime state so that it is usable and return the genesis hash.
-fn init_runtime(test_ext: &mut sr_io::TestExternalities) -> Hash {
+fn init_runtime(test_ext: &mut sp_io::TestExternalities) -> Hash {
     test_ext.execute_with(|| {
         // Insert the genesis block (number `1`) into the system. We don’t care about the
         // other parameters, they are not relevant.
-        paint_system::Module::<Runtime>::initialize(
+        frame_system::Module::<Runtime>::initialize(
             &1,
             &[0u8; 32].into(),
             &[0u8; 32].into(),
             &Default::default(),
         );
         // Now we can retrieve the block hash. But here the block number is zero-based.
-        paint_system::Module::<Runtime>::block_hash(0)
+        frame_system::Module::<Runtime>::block_hash(0)
     })
 }

@@ -19,7 +19,7 @@ use jsonrpc_core_client::RpcError;
 use parity_scale_codec::Error as CodecError;
 use runtime_primitives::transaction_validity::TransactionValidityError;
 use std::io::Error as IoError;
-use substrate_primitives::crypto::SecretStringError;
+use sp_core::crypto::SecretStringError;
 
 /// Error enum.
 #[derive(Debug, derive_more::From, derive_more::Display)]

@@ -40,9 +40,9 @@ use runtime_primitives::{
     },
     MultiSignature,
 };
-use sr_version::RuntimeVersion;
+use sp_version::RuntimeVersion;
 use std::marker::PhantomData;
-use substrate_primitives::{
+use sp_core::{
     storage::{
         StorageChangeSet,
         StorageKey,
@@ -58,7 +58,7 @@ use crate::{
         SignedExtra,
     },
     metadata::MetadataError,
-    paint::{
+    frame::{
         balances::Balances,
         system::{
             System,
@@ -77,13 +77,13 @@ use crate::{
 mod codec;
 mod error;
 mod extrinsic;
+mod frame;
 mod metadata;
-mod paint;
 mod rpc;
 mod runtimes;
 
 pub use error::Error;
-pub use paint::*;
+pub use frame::*;
 pub use rpc::ExtrinsicSuccess;
 pub use runtimes::*;
 
@@ -332,16 +332,16 @@ where
     }
 }
 
-impl<T: paint_system::Trait + 'static + System, P, S: 'static, V> XtBuilder<T, P, S, V>
+impl<T: frame_system::Trait + 'static + System, P, S: 'static, V> XtBuilder<T, P, S, V>
 where
     P: Pair,
-    <T as paint_system::Trait>::Call: Encode,
+    <T as frame_system::Trait>::Call: Encode,
 {
-    /// Sets the module call to a new value of the [paint_system::Trait::Call] type associated with
+    /// Sets the module call to a new value of the [frame_system::Trait::Call] type associated with
     /// the runtime.
     pub fn set_system_call(
         &self,
-        call: impl Into<<T as paint_system::Trait>::Call>,
+        call: impl Into<<T as frame_system::Trait>::Call>,
     ) -> XtBuilder<T, P, S, Valid> {
         let call = Ok(Encoded(call.into().encode()));
         XtBuilder {

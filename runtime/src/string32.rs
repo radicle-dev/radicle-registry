@@ -3,8 +3,8 @@ use alloc::format;
 use alloc::prelude::v1::*;
 use codec::{Decode, Encode, Error as CodecError, Input};
 
-use sr_std::fmt;
-use sr_std::str::FromStr;
+use sp_std::fmt;
+use sp_std::str::FromStr;
 
 /// Type to represent project names and domains.
 ///

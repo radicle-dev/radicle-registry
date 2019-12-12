@@ -1,22 +1,23 @@
 use alloc::prelude::v1::*;
 use alloc::vec;
 use codec::{Decode, Encode};
-use paint_support::{
+use frame_support::weights::SimpleDispatchInfo;
+use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::Result as DispatchResult,
     storage::StorageMap as _,
     storage::StorageValue as _,
-    traits::{Currency, ExistenceRequirement, Randomness as _},
+    traits::{Currency, ExistenceRequirement},
 };
-use sr_primitives::weights::SimpleDispatchInfo;
 
-use substrate_primitives::{crypto::UncheckedFrom, H256};
+use sp_core::{crypto::UncheckedFrom, H256};
 
-use paint_system as system;
-use paint_system::ensure_signed;
+use frame_support::traits::Randomness;
+use frame_system as system;
+use frame_system::ensure_signed;
 
 use crate::{AccountId, Balance, Hash, Hashing, String32};
-use sr_primitives::traits::Hash as _;
+use sp_runtime::traits::Hash as _;
 
 /// The name a project is registered with.
 pub type ProjectName = String32;
@@ -78,9 +79,9 @@ pub struct TransferFromProjectParams {
 }
 
 pub trait Trait:
-    paint_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
+    frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
 {
-    type Event: From<Event> + Into<<Self as paint_system::Trait>::Event>;
+    type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 }
 
 pub mod store {
@@ -156,7 +157,7 @@ decl_module! {
                 Some (_) => return Err("A project with the supplied ID already exists."),
             };
             let account_id = AccountId::unchecked_from(
-                paint_randomness_collective_flip::Module::<T>::random(b"project-account-id")
+                pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
             let project = Project {
                 id: project_id.clone(),

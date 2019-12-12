@@ -18,7 +18,7 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
-use substrate_primitives::storage::StorageKey;
+use sp_core::storage::StorageKey;
 
 #[derive(Debug, Clone, derive_more::Display)]
 pub enum MetadataError {
@@ -174,14 +174,14 @@ impl<K: Encode, V: Decode + Clone> StorageMap<K, V> {
         bytes.extend(key.encode());
         let hash = match self.hasher {
             StorageHasher::Blake2_128 => {
-                substrate_primitives::blake2_128(&bytes).to_vec()
+                sp_core::blake2_128(&bytes).to_vec()
             }
             StorageHasher::Blake2_256 => {
-                substrate_primitives::blake2_256(&bytes).to_vec()
+                sp_core::blake2_256(&bytes).to_vec()
             }
-            StorageHasher::Twox128 => substrate_primitives::twox_128(&bytes).to_vec(),
-            StorageHasher::Twox256 => substrate_primitives::twox_256(&bytes).to_vec(),
-            StorageHasher::Twox64Concat => substrate_primitives::twox_64(&bytes).to_vec(),
+            StorageHasher::Twox128 => sp_core::twox_128(&bytes).to_vec(),
+            StorageHasher::Twox256 => sp_core::twox_256(&bytes).to_vec(),
+            StorageHasher::Twox64Concat => sp_core::twox_64(&bytes).to_vec(),
         };
         StorageKey(hash)
     }
@@ -281,7 +281,7 @@ impl TryFrom<RuntimeMetadataPrefixed> for Metadata {
             Err(Error::InvalidPrefix)?;
         }
         let meta = match metadata.1 {
-            RuntimeMetadata::V8(meta) => meta,
+            RuntimeMetadata::V9(meta) => meta,
             _ => Err(Error::InvalidVersion)?,
         };
         let mut modules = HashMap::new();

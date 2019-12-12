@@ -1,11 +1,13 @@
 use aura_primitives::sr25519::AuthorityId as AuraId;
+use grandpa_primitives::AuthorityId as GrandpaId;
 use primitives::{Pair, Public};
 use radicle_registry_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
+    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+    WASM_BINARY,
 };
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
+pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
 
 pub fn dev() -> ChainSpec {
     ChainSpec::from_genesis(
@@ -34,14 +36,15 @@ fn dev_genesis_config() -> GenesisConfig {
         get_from_seed::<AccountId>("Alice//stash"),
         get_from_seed::<AccountId>("Bob//stash"),
     ];
-    let authorities = vec![get_from_seed::<AuraId>("Alice")];
+    let aura_authorities = vec![get_from_seed::<AuraId>("Alice")];
+    let grandpa_authorities = vec![(get_from_seed::<GrandpaId>("Alice"), 1)];
     let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
         }),
-        paint_balances: Some(BalancesConfig {
+        pallet_balances: Some(BalancesConfig {
             balances: endowed_accounts
                 .iter()
                 .cloned()
@@ -49,7 +52,12 @@ fn dev_genesis_config() -> GenesisConfig {
                 .collect(),
             vesting: vec![],
         }),
-        paint_sudo: Some(SudoConfig { key: root_key }),
-        paint_aura: Some(AuraConfig { authorities }),
+        pallet_sudo: Some(SudoConfig { key: root_key }),
+        pallet_aura: Some(AuraConfig {
+            authorities: aura_authorities,
+        }),
+        grandpa: Some(GrandpaConfig {
+            authorities: grandpa_authorities,
+        }),
     }
 }

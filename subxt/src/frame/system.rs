@@ -1,9 +1,9 @@
-//! Implements support for the paint_system module.
+//! Implements support for the frame_system module.
 use crate::{
     codec::Encoded,
     error::Error,
     metadata::MetadataError,
-    paint::{
+    frame::{
         balances::Balances,
         ModuleCalls,
     },
@@ -34,9 +34,9 @@ use runtime_primitives::traits::{
 use runtime_support::Parameter;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
-use substrate_primitives::Pair;
+use sp_core::Pair;
 
-/// The subset of the `paint::Trait` that a client must implement.
+/// The subset of the `frame::Trait` that a client must implement.
 pub trait System: 'static + Eq + Clone + Debug {
     /// Account index (aka nonce) type. This stores the number of previous
     /// transactions associated with a sender account.
@@ -87,7 +87,7 @@ pub trait System: 'static + Eq + Clone + Debug {
         + Ord
         + Default;
 
-    /// The address type. This instead of `<paint_system::Trait::Lookup as StaticLookup>::Source`.
+    /// The address type. This instead of `<frame_system::Trait::Lookup as StaticLookup>::Source`.
     type Address: Codec + Clone + PartialEq + Debug;
 
     /// The block header.
@@ -100,9 +100,9 @@ pub trait System: 'static + Eq + Clone + Debug {
 }
 
 /// Blanket impl for using existing runtime types
-impl<T: paint_system::Trait + Debug> System for T
+impl<T: frame_system::Trait + Debug> System for T
 where
-    <T as paint_system::Trait>::Header: serde::de::DeserializeOwned,
+    <T as frame_system::Trait>::Header: serde::de::DeserializeOwned,
 {
     type Index = T::Index;
     type BlockNumber = T::BlockNumber;
@@ -158,7 +158,7 @@ pub trait SystemXt {
     /// Signature type
     type Signature: Verify;
 
-    /// Create a call for the paint system module
+    /// Create a call for the frame system module
     fn system<F>(
         &self,
         f: F,

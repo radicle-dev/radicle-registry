@@ -1,6 +1,6 @@
 [package]
 name = "substrate-subxt"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2018"
 
@@ -23,56 +23,57 @@ serde = { version = "1.0", features = ["derive"] }
 url = "1.7"
 
 [dependencies.runtime_metadata]
-package = "paint-metadata"
+package = "frame-metadata"
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
 [dependencies.runtime_primitives]
-package = "sr-primitives"
+package = "sp-runtime"
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
 [dependencies.runtime_support]
-package = "paint-support"
+package = "frame-support"
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.sr-version]
+[dependencies.sp-version]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-balances]
+[dependencies.pallet-balances]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-contracts]
+[dependencies.pallet-contracts]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-indices]
+[dependencies.pallet-indices]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.paint-system]
+[dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.substrate-primitives]
+[dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.substrate-rpc-api]
+[dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+package = "sc-rpc-api"
 
-[dependencies.substrate-rpc-primitives]
+[dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dependencies.txpool]
-package = "substrate-transaction-graph"
+[dependencies.txpool-api]
+package = "sp-transaction-pool"
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
 
 [dev-dependencies]
@@ -82,8 +83,8 @@ wabt = "0.9.0"
 
 [dev-dependencies.node-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
 
-[dev-dependencies.substrate-keyring]
+[dev-dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"

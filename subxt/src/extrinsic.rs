@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with substrate-subxt.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::paint::{
+use crate::frame::{
     balances::Balances,
     system::System,
 };
@@ -37,10 +37,10 @@ use runtime_primitives::{
     transaction_validity::TransactionValidityError,
 };
 use std::marker::PhantomData;
-use substrate_primitives::Pair;
+use sp_core::Pair;
 
 /// SignedExtra checks copied from substrate, in order to remove requirement to implement
-/// substrate's `paint_system::Trait`
+/// substrate's `frame_system::Trait`
 
 /// Ensure the runtime version registered in the transaction is the same as at present.
 ///
@@ -64,6 +64,7 @@ where
     type Call = ();
     type AdditionalSigned = u32;
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -93,6 +94,7 @@ where
     type Call = ();
     type AdditionalSigned = T::Hash;
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -124,6 +126,7 @@ where
     type Call = ();
     type AdditionalSigned = T::Hash;
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -143,6 +146,7 @@ where
     type Call = ();
     type AdditionalSigned = ();
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -162,6 +166,7 @@ where
     type Call = ();
     type AdditionalSigned = ();
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -182,6 +187,7 @@ where
     type Call = ();
     type AdditionalSigned = ();
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -201,6 +207,7 @@ where
     type Call = ();
     type AdditionalSigned = ();
     type Pre = ();
+    type DispatchInfo = ();
     fn additional_signed(
         &self,
     ) -> Result<Self::AdditionalSigned, TransactionValidityError> {
@@ -261,6 +268,7 @@ impl<T: System + Balances + Send + Sync> SignedExtension for DefaultExtra<T> {
     type AdditionalSigned =
         <<Self as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned;
     type Pre = ();
+    type DispatchInfo = ();
 
     fn additional_signed(
         &self,

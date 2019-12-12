@@ -21,9 +21,9 @@ use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
 
-use paint_support::storage::generator::{StorageMap, StorageValue};
+use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
-use sr_primitives::traits::Hash as _;
+use sp_runtime::traits::Hash as _;
 
 mod backend;
 mod call;
@@ -195,7 +195,7 @@ impl ClientT for Client {
     }
 
     fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
-        Box::new(self.fetch_map_value::<paint_system::AccountNonce<Runtime>, _, _>(*account_id))
+        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id))
     }
 
     fn transfer(

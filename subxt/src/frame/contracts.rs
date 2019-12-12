@@ -1,11 +1,11 @@
-//! Implements support for the paint_contracts module.
+//! Implements support for the frame_contracts module.
 use crate::{
     codec::{
         compact,
         Encoded,
     },
     metadata::MetadataError,
-    paint::{
+    frame::{
         balances::Balances,
         system::System,
         ModuleCalls,
@@ -17,24 +17,24 @@ use runtime_primitives::traits::{
     IdentifyAccount,
     Verify,
 };
-use substrate_primitives::Pair;
+use sp_core::Pair;
 
 /// Gas units are chosen to be represented by u64 so that gas metering
 /// instructions can operate on them efficiently.
 pub type Gas = u64;
 
-/// The subset of the `paint_contracts::Trait` that a client must implement.
+/// The subset of the `frame_contracts::Trait` that a client must implement.
 pub trait Contracts: System + Balances {}
 
 /// Blanket impl for using existing runtime types
 impl<
-        T: paint_contracts::Trait
-            + paint_system::Trait
-            + paint_balances::Trait
+        T: pallet_contracts::Trait
+            + frame_system::Trait
+            + pallet_balances::Trait
             + std::fmt::Debug,
     > Contracts for T
 where
-    <T as paint_system::Trait>::Header: serde::de::DeserializeOwned,
+    <T as frame_system::Trait>::Header: serde::de::DeserializeOwned,
 {
 }
 
@@ -47,7 +47,7 @@ pub trait ContractsXt {
     /// Signature type
     type Signature: Verify;
 
-    /// Create a call for the paint contracts module
+    /// Create a call for the frame contracts module
     fn contracts<F>(
         &self,
         f: F,

@@ -1,4 +1,4 @@
-//! Implements support for the paint_balances module.
+//! Implements support for the frame_balances module.
 use crate::{
     codec::{
         compact,
@@ -6,7 +6,7 @@ use crate::{
     },
     error::Error,
     metadata::MetadataError,
-    paint::{
+    frame::{
         system::System,
         ModuleCalls,
     },
@@ -28,9 +28,9 @@ use runtime_primitives::traits::{
 };
 use runtime_support::Parameter;
 use std::fmt::Debug;
-use substrate_primitives::Pair;
+use sp_core::Pair;
 
-/// The subset of the `paint_balances::Trait` that a client must implement.
+/// The subset of the `frame_balances::Trait` that a client must implement.
 pub trait Balances: System {
     /// The balance of an account.
     type Balance: Parameter
@@ -45,9 +45,9 @@ pub trait Balances: System {
 }
 
 /// Blanket impl for using existing runtime types
-impl<T: paint_system::Trait + paint_balances::Trait + Debug> Balances for T
+impl<T: frame_system::Trait + pallet_balances::Trait + Debug> Balances for T
 where
-    <T as paint_system::Trait>::Header: serde::de::DeserializeOwned,
+    <T as frame_system::Trait>::Header: serde::de::DeserializeOwned,
 {
     type Balance = T::Balance;
 }
@@ -110,7 +110,7 @@ pub trait BalancesXt {
     /// Signature type
     type Signature: Verify;
 
-    /// Create a call for the paint balances module
+    /// Create a call for the frame balances module
     fn balances<F>(
         &self,
         f: F,

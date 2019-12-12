@@ -14,8 +14,8 @@ pub use radicle_registry_runtime::{
     },
     AccountId, Balance, Event, Hashing, Index, String32,
 };
-pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
-pub use substrate_primitives::{ed25519, H256};
+pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
+pub use sp_core::{ed25519, H256};
 
 pub use crate::call::Call;
 pub use crate::transaction::{Transaction, TransactionExtra};
