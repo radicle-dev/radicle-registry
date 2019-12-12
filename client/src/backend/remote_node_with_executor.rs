@@ -42,9 +42,8 @@ impl backend::Backend for RemoteNodeWithExecutor {
         self.run_sync(move |backend| backend.fetch(key))
     }
 
-    /// Get transaction extra from current ledger state to create valid transactions.
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
-        self.run_sync(move |backend| backend.get_transaction_extra(account_id))
+    fn get_genesis_hash(&self) -> Hash {
+        self.backend.get_genesis_hash()
     }
 }
 

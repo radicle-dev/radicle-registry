@@ -64,18 +64,12 @@ impl backend::Backend for Emulator {
 
     fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error> {
         let test_ext = &mut self.test_ext.lock().unwrap();
-        let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key.as_ref()));
+        let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key));
         Box::new(future::ok(maybe_data))
     }
 
-    fn get_transaction_extra(&self, account_id: &AccountId) -> Response<TransactionExtra, Error> {
-        let test_ext = &mut self.test_ext.lock().unwrap();
-        let nonce =
-            test_ext.execute_with(|| paint_system::Module::<Runtime>::account_nonce(account_id));
-        Box::new(future::ok(TransactionExtra {
-            nonce,
-            genesis_hash: self.genesis_hash,
-        }))
+    fn get_genesis_hash(&self) -> Hash {
+        self.genesis_hash
     }
 }
 

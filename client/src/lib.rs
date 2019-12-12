@@ -8,6 +8,14 @@
 //! local node.
 //!
 //! [Client::create_with_executor] creates a client that uses its own runtime to spawn futures.
+//!
+//! # Transactions
+//!
+//! A [Transaction] can be created and signed offline using [Transaction::new_signed]. This
+//! constructor requires the account nonce and genesis hash of the chain. Those can be obtained
+//! using [ClientT::account_nonce] and [ClientT::genesis_hash]. See
+//! `./client/examples/transaction_signing.rs`.
+//!
 use futures01::prelude::*;
 use std::sync::Arc;
 
@@ -15,19 +23,20 @@ use parity_scale_codec::{Decode, FullCodec};
 
 use paint_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
+use sr_primitives::traits::Hash as _;
 
 mod backend;
 mod call;
-mod extrinsic;
 mod interface;
+mod transaction;
 
-pub use crate::call::Call;
 pub use crate::interface::*;
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
 /// The client can either use a full node as the backend (see [Client::create]) or emulate the
 /// registry in memory with [Client::new_emulator].
+#[derive(Clone)]
 pub struct Client {
     backend: Arc<dyn backend::Backend + Sync + Send>,
 }
@@ -124,6 +133,28 @@ impl Client {
 }
 
 impl ClientT for Client {
+    fn submit_transaction<Call_: Call>(
+        &self,
+        transaction: Transaction<Call_>,
+    ) -> Response<TransactionApplied<Call_>, Error> {
+        Box::new(
+            self.backend
+                .submit(transaction.extrinsic)
+                .and_then(move |tx_applied| {
+                    let events = tx_applied.events;
+                    let tx_hash = tx_applied.tx_hash;
+                    let block = tx_applied.block;
+                    let result = Call_::result_from_events(events.clone())?;
+                    Ok(TransactionApplied {
+                        tx_hash,
+                        block,
+                        events,
+                        result,
+                    })
+                }),
+        )
+    }
+
     fn submit<Call_: Call>(
         &self,
         author: &ed25519::Pair,
@@ -131,31 +162,40 @@ impl ClientT for Client {
     ) -> Response<TransactionApplied<Call_>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
-        let backend2 = self.backend.clone();
-        Box::new(
-            self.backend
-                .get_transaction_extra(&account_id)
-                .and_then(move |extra| {
-                    let extrinsic = crate::extrinsic::signed_extrinsic(
-                        &key_pair,
-                        call.into_runtime_call(),
-                        extra.nonce,
-                        extra.genesis_hash,
-                    );
-                    backend2.submit(extrinsic).and_then(|tx_applied| {
-                        let events = tx_applied.events;
-                        let tx_hash = tx_applied.tx_hash;
-                        let block = tx_applied.block;
-                        let result = Call_::result_from_events(events.clone())?;
-                        Ok(TransactionApplied {
-                            tx_hash,
-                            block,
-                            events,
-                            result,
-                        })
+        let genesis_hash = self.genesis_hash();
+        let client = self.clone();
+        Box::new(self.account_nonce(&account_id).and_then(move |nonce| {
+            let transaction = Transaction::new_signed(
+                &key_pair,
+                call,
+                TransactionExtra {
+                    nonce,
+                    genesis_hash,
+                },
+            );
+            client
+                .submit_transaction(transaction)
+                .and_then(move |tx_applied| {
+                    let events = tx_applied.events;
+                    let tx_hash = tx_applied.tx_hash;
+                    let block = tx_applied.block;
+                    let result = Call_::result_from_events(events.clone())?;
+                    Ok(TransactionApplied {
+                        tx_hash,
+                        block,
+                        events,
+                        result,
                     })
-                }),
-        )
+                })
+        }))
+    }
+
+    fn genesis_hash(&self) -> Hash {
+        self.backend.get_genesis_hash()
+    }
+
+    fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
+        Box::new(self.fetch_map_value::<paint_system::AccountNonce<Runtime>, _, _>(*account_id))
     }
 
     fn transfer(
