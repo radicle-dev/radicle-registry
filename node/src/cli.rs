@@ -17,7 +17,7 @@ where
     E: IntoExit,
 {
     type Config<T> = Configuration<(), T>;
-    match parse_and_prepare::<NoCustom, NoCustom, _>(&version, "substrate-node", args) {
+    match parse_and_prepare::<NoCustom, NoCustom, _>(&version, "radicle-registry", args) {
         ParseAndPrepare::Run(cmd) => cmd.run(
             load_spec,
             exit,
@@ -66,13 +66,12 @@ where
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
-    if id == "dev" {
-        Ok(Some(chain_spec::dev()))
-    } else {
-        Err(format!(
+    match chain_spec::from_id(id) {
+        Some(spec) => Ok(Some(spec)),
+        _ => Err(format!(
             "Unknown chain spec \"{}\". You must run the node with --dev",
             id
-        ))
+        )),
     }
 }
 
