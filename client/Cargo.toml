@@ -3,6 +3,7 @@ name = "radicle_registry_client"
 version = "0.1.0"
 authors = ["Thomas Scholtes <thomas@monadic.xyz>"]
 edition = "2018"
+license = "GPL-3.0-only"
 
 [dependencies]
 radicle_registry_runtime = { path = "../runtime" }
