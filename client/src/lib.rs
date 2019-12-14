@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
 
-use paint_support::storage::generator::{StorageMap, StorageValue};
+use paint_support::storage::generator::StorageMap;
 use radicle_registry_runtime::{balances, registry, Runtime};
 use sr_primitives::traits::Hash as _;
 
@@ -76,24 +76,28 @@ impl Client {
     /// ```ignore
     /// client.fetch_value::<paint_balance::TotalIssuance<Runtime>, _>();
     /// ```
-    fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
+    fn fetch_map_keys<
+        S: StorageMap<Key, Value>,
+        Key: FullCodec,
+        Value: FullCodec + Send + 'static,
+    >(
         &self,
-    ) -> Response<S::Query, Error>
+        key: Key,
+    ) -> Response<Vec<S::Query>, Error>
     where
         S::Query: Send + 'static,
     {
         Box::new(
             self.backend
-                .fetch(S::storage_value_final_key().as_ref())
+                .fetch_keys(S::prefix().as_ref())
                 .and_then(|maybe_data| {
-                    let value = match maybe_data {
+                    match maybe_data {
                         Some(data) => {
-                            let value = Decode::decode(&mut &data[..])?;
-                            Some(value)
+                            Ok(Decode::decode(&mut &data[..])?);
                         }
-                        None => None,
+                        None => Err(None),
                     };
-                    Ok(S::from_optional_value_to_query(value))
+                    Ok(keys)
                 }),
         )
     }
@@ -233,7 +237,7 @@ impl ClientT for Client {
     }
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
-        Box::new(self.fetch_value::<registry::store::ProjectIds, _>())
+        Box::new(self.fetch_map_keys::<registry::store::Projects, _>())
     }
 
     fn create_checkpoint(

@@ -175,6 +175,21 @@ impl<T: System + Balances + 'static> Rpc<T> {
             .map_err(Into::into)
     }
 
+    pub fn project_storage_keys(
+        &self,
+    ) -> impl Future<Item = Vec<StorageKey>, Error = Error>
+    {
+        let registry_storage_prefix = b"Counter";
+        let projects_storage_prefix = b"Projects";
+        let registry_subkey = twox_128(registry_storage_prefix);
+        let projects_subkey = twox_128(projects_storage_prefix);
+        let key = [registry_subkey, projects_subkey].concat();
+
+        self.state
+            .storage_keys(StorageKey(key), None)
+            .map_err(Into::into)
+    }
+
     /// Subscribe to blocks.
     pub fn subscribe_blocks(
         &self,

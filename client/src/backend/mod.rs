@@ -11,6 +11,8 @@ pub use emulator::Emulator;
 pub use remote_node::RemoteNode;
 pub use remote_node_with_executor::RemoteNodeWithExecutor;
 
+use substrate_primitives::storage::StorageKey;
+
 /// Indicator that a transaction has been included in a block and has run in the runtime.
 ///
 /// Obtained after a transaction has been submitted and processed.
@@ -33,6 +35,8 @@ pub trait Backend {
 
     /// Fetch a value from the runtime state storage.
     fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error>;
+
+    fn fetch_keys(&self, key_prefix: &[u8]) -> Response<Option<Vec<StorageKey>>, Error>;
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;

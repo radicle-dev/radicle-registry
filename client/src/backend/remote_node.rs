@@ -86,6 +86,10 @@ impl backend::Backend for RemoteNode {
         }))
     }
 
+    fn fetch_keys(&self, key_prefix: &[u8]) -> Response<Vec<StorageKey>, Error> {
+        let key = StorageKey(Vec::from(key));
+    }
+
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
     }

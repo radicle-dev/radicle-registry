@@ -1,6 +1,8 @@
 //! Provides [Emulator] backend to run the registry ledger in memory.
 
 use futures01::future;
+use parity_scale_codec::Decode;
+use std::marker::PhantomData; 
 use std::sync::{Arc, Mutex};
 
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
@@ -33,6 +35,40 @@ impl Emulator {
         Emulator {
             test_ext: Arc::new(Mutex::new(test_ext)),
             genesis_hash,
+        }
+    }
+}
+
+/// Iterator for prefixed map.
+pub struct PrefixIterator<Value> {
+    prefix: Vec<u8>,
+    previous_key: Vec<u8>,
+    phantom_data: PhantomData<Value>,
+}
+
+impl<Value: Decode> Iterator for PrefixIterator<Value> {
+    type Item = Value;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match sr_io::storage::next_key(&self.previous_key)
+            .filter(|n| n.starts_with(&self.prefix[..]))
+        {
+            Some(next_key) => {
+                let value = paint_support::storage::unhashed::get(&next_key);
+
+                if value.is_none() {
+                    runtime_print!(
+                        "ERROR: returned next_key has no value:\nkey is {:?}\nnext_key is {:?}",
+                        &self.previous_key,
+                        &next_key,
+                    );
+                }
+
+                self.previous_key = next_key;
+
+                value
+            }
+            _ => None,
         }
     }
 }

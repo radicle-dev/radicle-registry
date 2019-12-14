@@ -5,7 +5,6 @@ use paint_support::{
     decl_event, decl_module, decl_storage,
     dispatch::Result as DispatchResult,
     storage::StorageMap as _,
-    storage::StorageValue as _,
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 use sr_primitives::weights::SimpleDispatchInfo;
@@ -92,7 +91,6 @@ pub mod store {
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
-            pub ProjectIds: Vec<ProjectId>;
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
             pub Checkpoints: map CheckpointId => Option<Checkpoint>;
@@ -168,7 +166,6 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), project);
-            store::ProjectIds::append_or_put(vec![project_id.clone()]);
             store::InitialCheckpoints::insert(project_id.clone(), params.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
