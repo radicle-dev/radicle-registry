@@ -8,6 +8,7 @@ version = "0.1.0"
 default = ["std"]
 std = [
     "codec/std",
+    "paint-grandpa/std",
     "serde",
     "sr-primitives/std",
     "sr-io/std",
@@ -147,6 +148,12 @@ default_features = false
 git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 default_features = false
+
+[dependencies.paint-grandpa]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+default_features = false
+package = "paint-grandpa"
 
 [build-dependencies]
 substrate-wasm-builder-runner = "1.0.2"

@@ -12,7 +12,7 @@ Then you can start the network with `docker-compose up`
 ### Overview
 
 * Devnet consists of three authority nodes running Aura.
-* Grandpa (for finalization) is currently not enabled
+* Grandpa (for finalization) is currently enabled.
 * Chain data of nodes is persisted in Docker volumes.
 * We expose the RPC API of the first node on the standard RPC API port.
 * See `local_devnet()` for chain spec in `../node/src/chain_spec.rs`.

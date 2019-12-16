@@ -849,6 +849,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "finality-grandpa"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34754852da8d86bc509715292c73140a5b678656d0b16132acd6737bdb5fd5f8"
+dependencies = [
+ "futures 0.1.29",
+ "hashbrown 0.6.3",
+ "log 0.4.8",
+ "num-traits",
+ "parity-scale-codec",
+ "parking_lot 0.9.0",
+]
+
+[[package]]
 name = "fixed-hash"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3650,6 +3664,8 @@ dependencies = [
  "substrate-consensus-aura",
  "substrate-consensus-aura-primitives",
  "substrate-executor",
+ "substrate-finality-grandpa",
+ "substrate-finality-grandpa-primitives",
  "substrate-inherents",
  "substrate-network",
  "substrate-primitives",
@@ -3667,6 +3683,7 @@ dependencies = [
  "paint-aura",
  "paint-balances",
  "paint-executive",
+ "paint-grandpa",
  "paint-randomness-collective-flip",
  "paint-sudo",
  "paint-support",
@@ -4894,6 +4911,36 @@ dependencies = [
  "primitive-types",
  "sr-std",
  "substrate-primitives-storage",
+]
+
+[[package]]
+name = "substrate-finality-grandpa"
+version = "2.0.0"
+source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
+dependencies = [
+ "finality-grandpa",
+ "fork-tree",
+ "futures 0.1.29",
+ "futures-preview",
+ "log 0.4.8",
+ "paint-finality-tracker",
+ "parity-scale-codec",
+ "parking_lot 0.9.0",
+ "rand 0.7.2",
+ "serde_json",
+ "sr-primitives",
+ "substrate-client",
+ "substrate-client-api",
+ "substrate-consensus-common",
+ "substrate-finality-grandpa-primitives",
+ "substrate-header-metadata",
+ "substrate-inherents",
+ "substrate-keystore",
+ "substrate-network",
+ "substrate-primitives",
+ "substrate-telemetry",
+ "tokio-executor",
+ "tokio-timer",
 ]
 
 [[package]]
