@@ -6,8 +6,10 @@
 use aura_primitives::sr25519::AuthorityId as AuraId;
 use primitives::{Pair, Public};
 use radicle_registry_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
+    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+    WASM_BINARY,
 };
+use substrate_finality_grandpa_primitives::AuthorityId as GrandpaId;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
@@ -43,7 +45,8 @@ fn dev_genesis_config() -> GenesisConfig {
         get_from_seed::<AccountId>("Alice//stash"),
         get_from_seed::<AccountId>("Bob//stash"),
     ];
-    let authorities = vec![get_from_seed::<AuraId>("Alice")];
+    let aura_authorities = vec![get_from_seed::<AuraId>("Alice")];
+    let grandpa_authorities = vec![(get_from_seed::<GrandpaId>("Alice"), 1)];
     let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
@@ -59,7 +62,12 @@ fn dev_genesis_config() -> GenesisConfig {
             vesting: vec![],
         }),
         paint_sudo: Some(SudoConfig { key: root_key }),
-        paint_aura: Some(AuraConfig { authorities }),
+        paint_aura: Some(AuraConfig {
+            authorities: aura_authorities,
+        }),
+        paint_grandpa: Some(GrandpaConfig {
+            authorities: grandpa_authorities,
+        }),
     }
 }
 
@@ -84,10 +92,15 @@ fn local_dev_genesis_config() -> GenesisConfig {
         get_from_seed::<AccountId>("Alice//stash"),
         get_from_seed::<AccountId>("Bob//stash"),
     ];
-    let authorities = vec![
+    let aura_authorities = vec![
         get_from_seed::<AuraId>("Alice"),
         get_from_seed::<AuraId>("Bob"),
         get_from_seed::<AuraId>("Charlie"),
+    ];
+    let grandpa_authorities = vec![
+        (get_from_seed::<GrandpaId>("Alice"), 1),
+        (get_from_seed::<GrandpaId>("Bob"), 1),
+        (get_from_seed::<GrandpaId>("Charlie"), 1),
     ];
     let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
@@ -104,7 +117,12 @@ fn local_dev_genesis_config() -> GenesisConfig {
             vesting: vec![],
         }),
         paint_sudo: Some(SudoConfig { key: root_key }),
-        paint_aura: Some(AuraConfig { authorities }),
+        paint_aura: Some(AuraConfig {
+            authorities: aura_authorities,
+        }),
+        paint_grandpa: Some(GrandpaConfig {
+            authorities: grandpa_authorities,
+        }),
     }
 }
 

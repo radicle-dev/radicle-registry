@@ -13,6 +13,8 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 extern crate alloc;
 
+use paint_grandpa::fg_primitives;
+use paint_grandpa::AuthorityList as GrandpaAuthorityList;
 use paint_support::{construct_runtime, parameter_types, traits::Randomness};
 use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
 use sr_primitives::weights::Weight;
@@ -88,6 +90,7 @@ pub mod opaque {
     impl_opaque_keys! {
         pub struct SessionKeys {
             pub aura: Aura,
+            pub grandpa: Grandpa,
         }
     }
 }
@@ -153,6 +156,10 @@ impl paint_system::Trait for Runtime {
 
 impl paint_aura::Trait for Runtime {
     type AuthorityId = AuraId;
+}
+
+impl paint_grandpa::Trait for Runtime {
+    type Event = Event;
 }
 
 parameter_types! {
@@ -221,6 +228,7 @@ construct_runtime!(
                 Timestamp: paint_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: paint_randomness_collective_flip::{Module, Storage},
                 Aura: paint_aura::{Module, Config<T>, Inherent(Timestamp)},
+                Grandpa: paint_grandpa::{Module, Call, Storage, Config, Event},
                 Balances: paint_balances::{default, Error},
                 Sudo: paint_sudo,
                 Registry: registry::{Module, Call, Storage, Event},
@@ -328,6 +336,12 @@ impl_runtime_apis! {
     impl substrate_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
             opaque::SessionKeys::generate(seed)
+        }
+    }
+
+    impl fg_primitives::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> GrandpaAuthorityList {
+            Grandpa::grandpa_authorities()
         }
     }
 }

@@ -89,6 +89,7 @@ fn make_genesis_config() -> GenesisConfig {
             vesting: vec![],
         }),
         paint_sudo: None,
+        paint_grandpa: None,
         system: None,
     }
 }

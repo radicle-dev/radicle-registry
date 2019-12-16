@@ -135,6 +135,7 @@ mod test {
             paint_balances: None,
             paint_sudo: None,
             system: None,
+            paint_grandpa: None,
         };
         let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let (key_pair, _) = ed25519::Pair::generate();
