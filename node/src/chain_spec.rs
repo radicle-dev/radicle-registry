@@ -24,10 +24,10 @@ use radicle_registry_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
     WASM_BINARY,
 };
-use substrate_finality_grandpa_primitives::AuthorityId as GrandpaId;
+use sc_finality_grandpa::AuthorityId as GrandpaId;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
+pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
 
 pub fn from_id(id: &str) -> Option<ChainSpec> {
     if id == "dev" {

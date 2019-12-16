@@ -23,14 +23,14 @@ pub use radicle_registry_runtime::Hash;
 
 pub use radicle_registry_runtime::{
     registry::{
-        Checkpoint, CheckpointId, CreateCheckpointParams, Event as RegistryEvent, Project,
-        ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
+        Checkpoint, CheckpointId, CreateCheckpointParams, DispatchError, Event as RegistryEvent,
+        Project, ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
         TransferFromProjectParams,
     },
     AccountId, Balance, Event, Hashing, Index, String32,
 };
-pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPublic};
-pub use substrate_primitives::{ed25519, H256};
+pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
+pub use sp_core::{ed25519, H256};
 
 pub use crate::call::Call;
 pub use crate::error::Error;

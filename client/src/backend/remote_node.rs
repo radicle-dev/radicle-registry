@@ -21,11 +21,11 @@ use futures03::prelude::*;
 use jsonrpc_core_client::RpcChannel;
 use parity_scale_codec::{Decode, Encode as _};
 use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
-use sp_transaction_pool_api::TransactionStatus as TxStatus;
-use sr_primitives::{generic::SignedBlock, traits::Hash as _};
+use sp_core::{storage::StorageKey, twox_128};
+use sp_rpc::{list::ListOrValue, number::NumberOrHex};
+use sp_runtime::{generic::SignedBlock, traits::Hash as _};
+use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
-use substrate_primitives::{storage::StorageKey, twox_128};
-use substrate_rpc_primitives::{list::ListOrValue, number::NumberOrHex};
 use url::Url;
 
 use radicle_registry_runtime::{
@@ -98,7 +98,7 @@ impl RemoteNode {
             None => return Err(Error::from("watch_extrinsic stream terminated")),
             Some(tx_status) => match tx_status {
                 TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => (),
-                TxStatus::Finalized(_block_hash) => {
+                TxStatus::InBlock(_block_hash) => {
                     return Err("Invalid tx status \"Finalized\"".into())
                 }
                 TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
@@ -114,7 +114,7 @@ impl RemoteNode {
                     None => return Err(Error::from("watch_extrinsic stream terminated")),
                     Some(tx_status) => match tx_status {
                         TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
-                        TxStatus::Finalized(block_hash) => return Ok(block_hash),
+                        TxStatus::InBlock(block_hash) => return Ok(block_hash),
                         TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
                         TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
                         TxStatus::Invalid => return Err("Extrinsic Invalid".into()),

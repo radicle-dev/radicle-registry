@@ -23,10 +23,10 @@ use futures::{
     FutureExt, TryFutureExt,
 };
 use log::info;
+pub use sc_cli::{error, IntoExit, VersionInfo};
+use sc_cli::{informant, parse_and_prepare, NoCustom, ParseAndPrepare};
+use sc_service::{AbstractService, Configuration, Roles as ServiceRoles};
 use std::cell::RefCell;
-pub use substrate_cli::{error, IntoExit, VersionInfo};
-use substrate_cli::{informant, parse_and_prepare, NoCustom, ParseAndPrepare};
-use substrate_service::{AbstractService, Configuration, Roles as ServiceRoles};
 use tokio::runtime::Runtime;
 
 /// Parse command line arguments into service configuration.

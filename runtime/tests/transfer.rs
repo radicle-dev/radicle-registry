@@ -24,7 +24,7 @@ fn transfer_fail() {
             balance: balance_alice + 1,
         },
     );
-    assert_eq!(tx_applied.result, Err(None));
+    assert!(tx_applied.result.is_err());
 }
 
 /// Test that we can transfer money to a project and that the project owner can transfer money from
