@@ -94,7 +94,7 @@ fn register_project_with_duplicate_id() {
         },
     );
 
-    assert_eq!(registration_2.result, Err(None));
+    assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 
     let project = client.get_project(params.id).wait().unwrap().unwrap();
 
@@ -113,7 +113,7 @@ fn register_project_with_bad_checkpoint() {
 
     let tx_applied = common::submit_ok(&client, &alice, params.clone());
 
-    assert_eq!(tx_applied.result, Err(None));
+    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
 
     let no_project = client.get_project(params.id).wait().unwrap();
 

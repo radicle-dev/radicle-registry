@@ -76,7 +76,7 @@ fn set_checkpoint_without_permission() {
         .wait()
         .unwrap()
         .unwrap();
-    assert_eq!(tx_applied.result, Err(None));
+    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
     assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, new_checkpoint_id);
 }
@@ -99,7 +99,7 @@ fn fail_to_set_nonexistent_checkpoint() {
         },
     );
 
-    assert_eq!(tx_applied.result, Err(None));
+    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
     let updated_project = client
         .get_project(project.id.clone())
         .wait()

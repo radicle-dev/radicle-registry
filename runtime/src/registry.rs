@@ -15,23 +15,24 @@
 
 use alloc::prelude::v1::*;
 use alloc::vec;
+pub use frame_support::dispatch::DispatchError;
 use frame_support::weights::SimpleDispatchInfo;
 use frame_support::{
     decl_event, decl_module, decl_storage,
-    dispatch::Result as DispatchResult,
+    dispatch::DispatchResult,
     storage::StorageMap as _,
     storage::StorageValue as _,
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 use parity_scale_codec::{Decode, Encode};
 
-use substrate_primitives::{crypto::UncheckedFrom, H256};
+use sp_core::{crypto::UncheckedFrom, H256};
 
 use frame_system as system;
 use frame_system::ensure_signed;
 
 use crate::{AccountId, Balance, Hash, Hashing, String32};
-use sr_primitives::traits::Hash as _;
+use sp_runtime::traits::Hash as _;
 
 /// The name a project is registered with.
 pub type ProjectName = String32;
@@ -149,6 +150,12 @@ fn descends_from_initial_checkpoint(
     false
 }
 
+// TODO Note on `DispatchError`
+//
+// This datatype is now an `enum`, and some of its variants can be used to
+// provide richer errors in the case of runtime failures.
+//
+// This will be handled in a future issue.
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         fn deposit_event() = default;
@@ -158,17 +165,17 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(params.checkpoint_id).is_none() {
-                return Err("The checkpoint provided to register the project does not exist.")
+                return Err(DispatchError::Other("The checkpoint provided to register the project does not exist."))
             }
             match store::Projects::get(params.id.clone()) {
                 None => {}
-                Some (_) => return Err("A project with the supplied ID already exists."),
+                Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
             };
 
             let project_id = params.id.clone();
             match store::Projects::get(project_id.clone()) {
                 None => {}
-                Some (_) => return Err("A project with the supplied ID already exists."),
+                Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
             };
             let account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
@@ -196,7 +203,7 @@ decl_module! {
             let project = store::Projects::get(params.project).ok_or("Project does not exist")?;
             let is_member = project.members.contains(&sender);
             if !is_member {
-                return Err("Sender is not a project member")
+                return Err(DispatchError::Other("Sender is not a project member"))
             }
             <crate::Balances as Currency<_>>::transfer(&project.account_id, &params.recipient, params.value, ExistenceRequirement::KeepAlive)
         }
@@ -212,7 +219,7 @@ decl_module! {
                 None => {}
                 Some(cp_id) => {
                     match store::Checkpoints::get(cp_id) {
-                        None => return Err("Parent checkpoint does not exist"),
+                        None => return Err(DispatchError::Other("Parent checkpoint does not exist")),
                         Some(_) => {}
                     }
                 }
@@ -237,14 +244,14 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(params.new_checkpoint_id).is_none() {
-                return Err("The provided checkpoint does not exist")
+                return Err(DispatchError::Other("The provided checkpoint does not exist"))
             }
             let opt_project = store::Projects::get(params.project_id.clone());
             let new_project = match opt_project {
-                None => return Err("The provided project ID is not associated with any project."),
+                None => return Err(DispatchError::Other("The provided project ID is not associated with any project.")),
                 Some(prj) => {
                     if !prj.members.contains(&sender) {
-                        return Err("The `set_checkpoint` transaction sender is not a member of the project.")
+                        return Err(DispatchError::Other("The `set_checkpoint` transaction sender is not a member of the project."))
                     }
                     Project {
                         current_cp: params.new_checkpoint_id,
@@ -254,11 +261,11 @@ decl_module! {
             };
 
             let initial_cp = match store::InitialCheckpoints::get(params.project_id.clone()) {
-                None => return Err("A registered project must necessarily have an initial checkpoint."),
+                None => return Err(DispatchError::Other("A registered project must necessarily have an initial checkpoint.")),
                 Some(cp) => cp,
             };
             if !descends_from_initial_checkpoint(params.new_checkpoint_id, initial_cp) {
-                return Err("The provided checkpoint ID is not a descendant of the project's initial checkpoint.")
+                return Err(DispatchError::Other("The provided checkpoint ID is not a descendant of the project's initial checkpoint."))
             }
 
             store::Projects::insert(new_project.id.clone(), new_project.clone());

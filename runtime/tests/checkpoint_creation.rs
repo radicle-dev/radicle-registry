@@ -78,5 +78,5 @@ fn create_checkpoint_without_parent() {
         },
     );
 
-    assert_eq!(tx_applied.result, Err(None))
+    assert_eq!(tx_applied.result, Err(DispatchError::Other("")))
 }

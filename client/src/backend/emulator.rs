@@ -18,7 +18,7 @@
 use futures03::future::BoxFuture;
 use std::sync::{Arc, Mutex};
 
-use sr_primitives::{traits::Hash as _, BuildStorage as _};
+use sp_runtime::{traits::Hash as _, BuildStorage as _};
 
 use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
 
@@ -26,7 +26,7 @@ use crate::backend;
 use crate::interface::*;
 
 /// [backend::Backend] implementation using native runtime code and in memory state through
-/// [sr_io::TestExternalities] to emulate the ledger.
+/// [sp_io::TestExternalities] to emulate the ledger.
 ///
 /// # Differences with real [Client]
 ///
@@ -36,14 +36,14 @@ use crate::interface::*;
 /// The responses returned from the client never result in an [Error].
 #[derive(Clone)]
 pub struct Emulator {
-    test_ext: Arc<Mutex<sr_io::TestExternalities>>,
+    test_ext: Arc<Mutex<sp_io::TestExternalities>>,
     genesis_hash: Hash,
 }
 
 impl Emulator {
     pub fn new() -> Self {
         let genesis_config = make_genesis_config();
-        let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+        let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = init_runtime(&mut test_ext);
         Emulator {
             test_ext: Arc::new(Mutex::new(test_ext)),
@@ -90,7 +90,7 @@ impl backend::Backend for Emulator {
         }
 
         let test_ext = &mut self.test_ext.lock().unwrap();
-        let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key));
+        let maybe_data = test_ext.execute_with(|| sp_io::storage::get(key));
         Ok(maybe_data)
     }
 
@@ -121,7 +121,7 @@ fn make_genesis_config() -> GenesisConfig {
 }
 
 /// Initialize the runtime state so that it is usable and return the genesis hash.
-fn init_runtime(test_ext: &mut sr_io::TestExternalities) -> Hash {
+fn init_runtime(test_ext: &mut sp_io::TestExternalities) -> Hash {
     test_ext.execute_with(|| {
         // Insert the genesis block (number `1`) into the system. We don’t care about the
         // other parameters, they are not relevant.

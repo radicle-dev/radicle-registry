@@ -15,10 +15,8 @@
 
 //! Defines [Call] trait and implementations for all transaction parameters.
 
-use radicle_registry_runtime::{
-    balances, registry, registry::CheckpointId, Call as RuntimeCall, Event,
-};
-use sr_primitives::DispatchError;
+use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
+use sp_runtime::DispatchError;
 
 /// Indicates that parsing the events into the approriate call result failed.
 type EventParseError = String;
@@ -41,7 +39,7 @@ pub trait Call: Send + 'static {
 }
 
 impl Call for registry::RegisterProjectParams {
-    type Result = Result<(), Option<&'static str>>;
+    type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -52,7 +50,7 @@ impl Call for registry::RegisterProjectParams {
                 }
                 _ => None,
             }),
-            Err(dispatch_error) => Ok(Err(dispatch_error.message)),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
         }
     }
 
@@ -62,7 +60,7 @@ impl Call for registry::RegisterProjectParams {
 }
 
 impl Call for registry::CreateCheckpointParams {
-    type Result = Result<CheckpointId, Option<&'static str>>;
+    type Result = Result<registry::CheckpointId, DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -73,7 +71,7 @@ impl Call for registry::CreateCheckpointParams {
                 }
                 _ => None,
             }),
-            Err(dispatch_error) => Ok(Err(dispatch_error.message)),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
         }
     }
 
@@ -83,7 +81,7 @@ impl Call for registry::CreateCheckpointParams {
 }
 
 impl Call for registry::SetCheckpointParams {
-    type Result = Result<(), Option<&'static str>>;
+    type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -94,7 +92,7 @@ impl Call for registry::SetCheckpointParams {
                 }
                 _ => None,
             }),
-            Err(dispatch_error) => Ok(Err(dispatch_error.message)),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
         }
     }
 
@@ -104,11 +102,10 @@ impl Call for registry::SetCheckpointParams {
 }
 
 impl Call for crate::TransferParams {
-    type Result = Result<(), Option<&'static str>>;
+    type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        Ok(dispatch_result.map_err(|dispatch_error| dispatch_error.message))
+        get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -117,11 +114,10 @@ impl Call for crate::TransferParams {
 }
 
 impl Call for registry::TransferFromProjectParams {
-    type Result = Result<(), Option<&'static str>>;
+    type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        Ok(dispatch_result.map_err(|dispatch_error| dispatch_error.message))
+        get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {

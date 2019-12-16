@@ -24,6 +24,8 @@ Upcoming
   be created with `Client::new_emulator()`.
 * All library and binary names have been changed to use dashes instead of
   underscores e.g. `radicle_registry_node` becomes `radicle-registry-node`.
+* The error type in `get_dispatch_result` has changed from
+  `Option<&'static str>` to `sp_runtime::DispatchError`.
 
 ### Addition
 
