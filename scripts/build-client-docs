@@ -6,7 +6,7 @@ set -euo pipefail
 
 cargo doc \
   --no-deps \
-  -p radicle_registry_client \
+  -p radicle-registry-client \
   -p substrate-subxt \
   -p substrate-primitives \
   -p sr-io \

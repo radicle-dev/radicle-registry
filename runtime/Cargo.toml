@@ -1,5 +1,5 @@
 [package]
-name = "radicle_registry_runtime"
+name = "radicle-registry-runtime"
 authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
 version = "0.1.0"
@@ -162,4 +162,4 @@ substrate-wasm-builder-runner = "1.0.2"
 [dev-dependencies]
 futures = "0.1"
 rand = "0.7.2"
-radicle_registry_client = { path = "../client" }
+radicle-registry-client = { path = "../client" }

@@ -1,5 +1,5 @@
 [package]
-name = "radicle_registry_node"
+name = "radicle-registry-node"
 authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
 version = "0.1.0"
@@ -22,7 +22,7 @@ version = "1.0.0"
 features = ["termination"]
 version = "3.1.3"
 
-[dependencies.radicle_registry_runtime]
+[dependencies.radicle-registry-runtime]
 path = "../runtime"
 
 [dependencies.aura]

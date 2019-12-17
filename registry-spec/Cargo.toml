@@ -1,5 +1,5 @@
 [package]
-name = "oscoin-ledger-spec"
+name = "radicle-registry-spec"
 version = "0.1.0"
 authors = [
   "Thomas Scholtes <thomas@monadic.xyz>",

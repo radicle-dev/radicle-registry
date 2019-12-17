@@ -8,7 +8,7 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 Using the Client
 ----------------
 
-The client for the registry node is provided by the `radicle_registry_client`
+The client for the registry node is provided by the `radicle-registry-client`
 package in the `./client` directory.
 
 You’ll need to build the client with Rust Nightly.
@@ -23,23 +23,23 @@ Account Keys
 ------------
 
 We use Ed25519 keys for accounts. Key creation and handling functionality is
-provided by the `radicle_registry_client::ed25519` module. To use this module
-you will likely need to import the `radicle_registry_client::CryptoPair` and
-`radicle_registry_client::CryptoPublic` traits.
+provided by the `radicle-registry-client::ed25519` module. To use this module
+you will likely need to import the `radicle-registry-client::CryptoPair` and
+`radicle-registry-client::CryptoPublic` traits.
 
 You can create key pairs using [`CryptoPair::generate()`][api-pair-generate]
 ```rust
-use radicle_registry_client::{ed25519, CryptoPair};
+use radicle-registry-client::{ed25519, CryptoPair};
 let (key, seed) = ed25519::Pair::generate();
 ```
 
 To create keys from human readable strings, use [`CryptoPair::from_string`][api-pair-from-string].
 ```rust
-use radicle_registry_client::{ed25519, CryptoPair};
+use radicle-registry-client::{ed25519, CryptoPair};
 let alice = ed25519::Pair::from_string("//Alice", None);
 ```
 
-The `radicle_registry_client::ed25519` module and the crypto traits are
+The `radicle-registry-client::ed25519` module and the crypto traits are
 re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
 [`substrate_primitives::crypto`][api-crypto], respectively
 
@@ -53,7 +53,7 @@ Developing with the Client
 --------------------------
 
 For development you can create a ledger emulator with
-`radicle_registry_client::Client::new_emulator()`. Instead of connecting to a
+`radicle-registry-client::Client::new_emulator()`. Instead of connecting to a
 node this client runs the ledger in memory. See the API docs for more
 information.
 
@@ -87,7 +87,7 @@ Using the CLI
 -------------
 
 We provide a CLI to talk read and update the ledger in the `cli` directory. To
-learn more run `cargo run -p radicle_registry_cli -- --help`.
+learn more run `cargo run -p radicle-registry-cli -- --help`.
 
 
 [dev-manual]: ./DEVELOPING.md
