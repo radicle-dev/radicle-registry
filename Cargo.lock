@@ -2661,10 +2661,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "oscoin-ledger-spec"
-version = "0.1.0"
-
-[[package]]
 name = "owning_ref"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3612,21 +3608,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "radicle_registry"
+name = "radicle-registry"
 version = "0.1.0"
 
 [[package]]
-name = "radicle_registry_cli"
+name = "radicle-registry-cli"
 version = "0.1.0"
 dependencies = [
  "futures 0.1.29",
  "pretty_env_logger",
- "radicle_registry_client",
+ "radicle-registry-client",
  "structopt",
 ]
 
 [[package]]
-name = "radicle_registry_client"
+name = "radicle-registry-client"
 version = "0.1.0"
 dependencies = [
  "env_logger 0.7.1",
@@ -3637,7 +3633,7 @@ dependencies = [
  "paint-system",
  "paint-transaction-payment",
  "parity-scale-codec",
- "radicle_registry_runtime",
+ "radicle-registry-runtime",
  "sr-io",
  "sr-primitives",
  "substrate-primitives",
@@ -3646,7 +3642,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "radicle_registry_node"
+name = "radicle-registry-node"
 version = "0.1.0"
 dependencies = [
  "ctrlc",
@@ -3656,7 +3652,7 @@ dependencies = [
  "log 0.4.8",
  "parity-scale-codec",
  "parking_lot 0.9.0",
- "radicle_registry_runtime",
+ "radicle-registry-runtime",
  "sr-io",
  "substrate-basic-authorship",
  "substrate-cli",
@@ -3676,7 +3672,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "radicle_registry_runtime"
+name = "radicle-registry-runtime"
 version = "0.1.0"
 dependencies = [
  "futures 0.1.29",
@@ -3691,7 +3687,7 @@ dependencies = [
  "paint-timestamp",
  "paint-transaction-payment",
  "parity-scale-codec",
- "radicle_registry_client",
+ "radicle-registry-client",
  "rand 0.7.2",
  "serde",
  "sr-api",
@@ -3708,6 +3704,10 @@ dependencies = [
  "substrate-transaction-pool-runtime-api",
  "substrate-wasm-builder-runner 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "radicle-registry-spec"
+version = "0.1.0"
 
 [[package]]
 name = "rand"

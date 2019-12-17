@@ -10,7 +10,7 @@ if [[ "$NODE_NAME" = "alice" ]]; then
   )
 fi
 
-exec /usr/local/bin/radicle_registry_node \
+exec /usr/local/bin/radicle-registry-node \
   --keystore-path "/keystore/$NODE_NAME" \
   --base-path /data \
   --name "$NODE_NAME" \

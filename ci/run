@@ -15,7 +15,7 @@ fi
 TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 echo "--- Load cache"
-declare -i cache_version=12
+declare -i cache_version=13
 target_cache=/cache/target-v${cache_version}
 target_cache_key_file="$target_cache/_key"
 cache_key="$(sha256sum Cargo.lock | cut -f 1 -d ' ')"
@@ -55,8 +55,8 @@ export RUSTFLAGS="-D warnings"
 cargo build --all --all-targets --release
 
 echo "--- cargo test"
-echo "Starting radicle_registry_node"
-RUST_LOG=error ./target/release/radicle_registry_node \
+echo "Starting radicle-registry-node"
+RUST_LOG=error ./target/release/radicle-registry-node \
   --dev \
   --base-path /tmp/radicle-registry \
   &
@@ -68,13 +68,13 @@ kill "$registry_node_pid"
 
 echo "--- Save cache"
 # Remove large build artifacts that are faster to build than cache.
-# The `target/release/radicle_registry_node` file is kept because they
+# The `target/release/radicle-registry-node` file is kept because they
 # are uploaded to Buildkite (i.e. the node).
 # The folder and its contents are deleted at a later step in the build.
 mkdir artifacts
-mv target/release/radicle_registry_node artifacts
+mv target/release/radicle-registry-node artifacts
 rm -rf \
-  target/*/radicle_registry_node* \
+  target/*/radicle-registry-node* \
   target/*/incremental \
   target/*/wbuild/target/*/incremental \
   target/*/wbuild-runner/target/*/incremental

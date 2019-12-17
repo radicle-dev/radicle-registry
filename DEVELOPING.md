@@ -24,7 +24,7 @@ Running development node
 ------------------------
 
 ~~~
-BUILD_DUMMY_WASM_BINARY=0 cargo build --release -p radicle_registry_node
+BUILD_DUMMY_WASM_BINARY=0 cargo build --release -p radicle-registry-node
 ./scripts/run-dev-node
 ~~~
 

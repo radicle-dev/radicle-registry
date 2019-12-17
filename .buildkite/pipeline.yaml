@@ -13,4 +13,4 @@ steps:
     # works during running builds), see
     # https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact.
     artifact_paths:
-      - "artifacts/radicle_registry_node"
+      - "artifacts/radicle-registry-node"
