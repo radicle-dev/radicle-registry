@@ -41,5 +41,9 @@ rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
+[dependencies.substrate-transaction-graph]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+
 [dev-dependencies]
 rand = "0.7.2"
