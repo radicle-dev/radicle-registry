@@ -16,16 +16,14 @@ fn transfer_fail() {
     let bob = common::key_pair_from_string("Bob").public();
 
     let balance_alice = client.free_balance(&alice.public()).wait().unwrap();
-    let tx_applied = client
-        .submit(
-            &alice,
-            TransferParams {
-                recipient: bob,
-                balance: balance_alice + 1,
-            },
-        )
-        .wait()
-        .unwrap();
+    let tx_applied = common::submit_ok(
+        &client,
+        &alice,
+        TransferParams {
+            recipient: bob,
+            balance: balance_alice + 1,
+        },
+    );
     assert_eq!(tx_applied.result, Err(None));
 }
 
@@ -39,16 +37,14 @@ fn project_account_transfer() {
     let project = common::create_project_with_checkpoint(&client, &alice);
 
     assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
-    client
-        .submit(
-            &alice,
-            TransferParams {
-                recipient: project.account_id,
-                balance: 2000,
-            },
-        )
-        .wait()
-        .unwrap();
+    common::submit_ok(
+        &client,
+        &alice,
+        TransferParams {
+            recipient: project.account_id,
+            balance: 2000,
+        },
+    );
     assert_eq!(
         client.free_balance(&project.account_id).wait().unwrap(),
         2000
@@ -56,17 +52,15 @@ fn project_account_transfer() {
 
     assert_eq!(client.free_balance(&bob).wait().unwrap(), 0);
 
-    client
-        .submit(
-            &alice,
-            TransferFromProjectParams {
-                project: project.id.clone(),
-                recipient: bob,
-                value: 1000,
-            },
-        )
-        .wait()
-        .unwrap();
+    common::submit_ok(
+        &client,
+        &alice,
+        TransferFromProjectParams {
+            project: project.id.clone(),
+            recipient: bob,
+            value: 1000,
+        },
+    );
     assert_eq!(client.free_balance(&bob).wait().unwrap(), 1000);
     assert_eq!(
         client.free_balance(&project.account_id).wait().unwrap(),
@@ -82,32 +76,28 @@ fn project_account_transfer_non_member() {
     let bob = common::key_pair_from_string("Bob");
     let project = common::create_project_with_checkpoint(&client, &alice);
 
-    client
-        .submit(
-            &alice,
-            TransferParams {
-                recipient: project.account_id,
-                balance: 2000,
-            },
-        )
-        .wait()
-        .unwrap();
+    common::submit_ok(
+        &client,
+        &alice,
+        TransferParams {
+            recipient: project.account_id,
+            balance: 2000,
+        },
+    );
     assert_eq!(
         client.free_balance(&project.account_id).wait().unwrap(),
         2000
     );
 
-    client
-        .submit(
-            &bob,
-            TransferFromProjectParams {
-                project: project.id.clone(),
-                recipient: bob.public(),
-                value: 1000,
-            },
-        )
-        .wait()
-        .unwrap();
+    common::submit_ok(
+        &client,
+        &bob,
+        TransferFromProjectParams {
+            project: project.id.clone(),
+            recipient: bob.public(),
+            value: 1000,
+        },
+    );
 
     assert_eq!(
         client.free_balance(&project.account_id).wait().unwrap(),

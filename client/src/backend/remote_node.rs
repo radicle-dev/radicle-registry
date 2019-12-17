@@ -14,8 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! [backend::Backend] implementation for a remote full node
-use futures01::prelude::Stream as _;
+use futures01::stream::Stream as _;
 use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
+use futures03::future::BoxFuture;
 use futures03::prelude::*;
 use jsonrpc_core_client::RpcChannel;
 use parity_scale_codec::{Decode, Encode as _};
@@ -82,7 +83,7 @@ impl RemoteNode {
     async fn submit_transaction(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Result<BlockHash, Error> {
+    ) -> Result<impl Future<Output = Result<Hash, Error>>, Error> {
         let tx_status_stream = self
             .rpc
             .author
@@ -92,19 +93,35 @@ impl RemoteNode {
 
         let mut tx_status_stream = tx_status_stream.map_err(Error::from).compat();
 
-        loop {
-            let opt_tx_status = tx_status_stream.try_next().await?;
-            match opt_tx_status {
-                None => return Err(Error::from("watch_extrinsic stream terminated")),
-                Some(tx_status) => match tx_status {
-                    TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
-                    TxStatus::Finalized(block_hash) => return Ok(block_hash),
-                    TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
-                    TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
-                    TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
-                },
-            }
+        let opt_tx_status = tx_status_stream.try_next().await?;
+        match opt_tx_status {
+            None => return Err(Error::from("watch_extrinsic stream terminated")),
+            Some(tx_status) => match tx_status {
+                TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => (),
+                TxStatus::Finalized(_block_hash) => {
+                    return Err("Invalid tx status \"Finalized\"".into())
+                }
+                TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
+                TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
+                TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
+            },
         }
+
+        Ok(async move {
+            loop {
+                let opt_tx_status = tx_status_stream.try_next().await?;
+                match opt_tx_status {
+                    None => return Err(Error::from("watch_extrinsic stream terminated")),
+                    Some(tx_status) => match tx_status {
+                        TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
+                        TxStatus::Finalized(block_hash) => return Ok(block_hash),
+                        TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
+                        TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
+                        TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
+                    },
+                }
+            }
+        })
     }
 
     /// Return all the events belonging to the transaction included in the given block.
@@ -126,10 +143,12 @@ impl RemoteNode {
 
         let opt_signed_block = self.rpc.chain.block(Some(block_hash)).compat().await?;
         let block = opt_signed_block
-            .expect("Block that should include submitted transaction does not exist")
+            .ok_or_else(|| {
+                Error::from("Block that should include submitted transaction does not exist")
+            })?
             .block;
-        Ok(extract_transaction_events(tx_hash, block, event_records)
-            .expect("Failed to extract transaction events"))
+        extract_transaction_events(tx_hash, block, event_records)
+            .ok_or_else(|| Error::from("Failed to extract transaction events"))
     }
 }
 
@@ -138,15 +157,20 @@ impl backend::Backend for RemoteNode {
     async fn submit(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Result<backend::TransactionApplied, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&xt);
-        let block_hash = self.submit_transaction(xt).await?;
-        let events = self.get_transaction_events(tx_hash, block_hash).await?;
-        Ok(backend::TransactionApplied {
-            tx_hash,
-            block: block_hash,
-            events,
-        })
+        let block_hash_future = self.submit_transaction(xt).await?;
+        let this = self.clone();
+
+        Ok(Box::pin(async move {
+            let block_hash = block_hash_future.await?;
+            let events = this.get_transaction_events(tx_hash, block_hash).await?;
+            Ok(backend::TransactionApplied {
+                tx_hash,
+                block: block_hash,
+                events,
+            })
+        }))
     }
 
     async fn fetch(

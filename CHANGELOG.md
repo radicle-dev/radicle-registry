@@ -6,6 +6,9 @@ Upcoming
 
 ### Breaking changes
 
+* `Client::submit` and  `Client::submit_transaction` now return a wrapped
+  future. This allows consumers to distinguish the accepted and applied states
+  of a transaction.
 * Remove convenience methods for submitting transactions from the client
   - `Client::transfer`
   - `Client::register_project`

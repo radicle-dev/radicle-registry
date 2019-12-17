@@ -31,6 +31,11 @@ async fn go() -> Result<(), Error> {
         },
     );
 
-    client.submit_transaction(transfer_tx).compat().await?;
+    client
+        .submit_transaction(transfer_tx)
+        .compat()
+        .await?
+        .compat()
+        .await?;
     Ok(())
 }

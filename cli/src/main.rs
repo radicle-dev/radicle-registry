@@ -70,6 +70,8 @@ fn run(args: Args) {
                 )
                 .wait()
                 .unwrap()
+                .wait()
+                .unwrap()
                 .result
                 .unwrap();
             let project_id = (name, domain);
@@ -83,6 +85,8 @@ fn run(args: Args) {
                         checkpoint_id,
                     },
                 )
+                .wait()
+                .unwrap()
                 .wait()
                 .unwrap();
             println!("Registered project with ID {:?}", project_id)

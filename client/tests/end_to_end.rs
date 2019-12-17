@@ -9,31 +9,26 @@ mod common;
 
 #[test]
 fn register_project() {
-    env_logger::init();
+    let _ = env_logger::try_init();
     let client = Client::create_with_executor().unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
-    let checkpoint_id = client
-        .submit(
-            &alice,
-            CreateCheckpointParams {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id = common::submit_ok(
+        &client,
+        &alice,
+        CreateCheckpointParams {
+            project_hash,
+            previous_checkpoint_id: None,
+        },
+    )
+    .result
+    .unwrap();
 
     let register_project_params = common::random_register_project_params(checkpoint_id);
 
     let project_id = register_project_params.id.clone();
-    let tx_applied = client
-        .submit(&alice, register_project_params.clone())
-        .wait()
-        .unwrap();
+    let tx_applied = common::submit_ok(&client, &alice, register_project_params.clone());
 
     assert_eq!(tx_applied.result, Ok(()));
 
@@ -70,4 +65,31 @@ fn register_project() {
         .iter()
         .any(|id| *id == project_id.clone());
     assert!(has_project, "Registered project not found in project list")
+}
+
+#[test]
+/// Submit a transaction with an invalid genesis hash and expect an error.
+fn invalid_transaction() {
+    let _ = env_logger::try_init();
+    let client = Client::create_with_executor().unwrap();
+    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+
+    let transfer_tx = Transaction::new_signed(
+        &alice,
+        TransferParams {
+            recipient: alice.public(),
+            balance: 1000,
+        },
+        TransactionExtra {
+            nonce: 0,
+            genesis_hash: Hash::zero(),
+        },
+    );
+
+    let response = client.submit_transaction(transfer_tx).wait();
+    match response {
+        Err(Error::Other(_)) => (),
+        Err(error) => panic!("Unexpected error {:?}", error),
+        Ok(_) => panic!("Transaction was accepted unexpectedly"),
+    }
 }
