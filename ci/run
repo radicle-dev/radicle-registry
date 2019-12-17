@@ -72,7 +72,8 @@ echo "--- Save cache"
 # are uploaded to Buildkite (i.e. the node).
 # The folder and its contents are deleted at a later step in the build.
 mkdir artifacts
-mv target/release/radicle-registry-node artifacts
+cp -a target/release/radicle-registry-node artifacts
+cp -a target/release/radicle-registry-node ci/node-image
 rm -rf \
   target/*/radicle-registry-node* \
   target/*/incremental \
