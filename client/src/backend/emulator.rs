@@ -15,7 +15,6 @@
 
 //! Provides [Emulator] backend to run the registry ledger in memory.
 
-use futures01::future;
 use std::sync::{Arc, Mutex};
 
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
@@ -52,11 +51,12 @@ impl Emulator {
     }
 }
 
+#[async_trait::async_trait]
 impl backend::Backend for Emulator {
-    fn submit(
+    async fn submit(
         &self,
         extrinsic: backend::UncheckedExtrinsic,
-    ) -> Response<backend::TransactionApplied, Error> {
+    ) -> Result<backend::TransactionApplied, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let test_ext = &mut self.test_ext.lock().unwrap();
         let events = test_ext.execute_with(move || {
@@ -70,17 +70,17 @@ impl backend::Backend for Emulator {
                 .map(|event_record| event_record.event)
                 .collect::<Vec<Event>>()
         });
-        Box::new(future::ok(backend::TransactionApplied {
+        Ok(backend::TransactionApplied {
             tx_hash,
             block: Default::default(),
             events,
-        }))
+        })
     }
 
-    fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error> {
+    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
         let test_ext = &mut self.test_ext.lock().unwrap();
         let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key));
-        Box::new(future::ok(maybe_data))
+        Ok(maybe_data)
     }
 
     fn get_genesis_hash(&self) -> Hash {

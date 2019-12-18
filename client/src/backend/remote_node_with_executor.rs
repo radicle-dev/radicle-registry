@@ -14,14 +14,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [RemoteNodeWithExecutor] backend
-use futures01::prelude::*;
+use futures03::compat::Executor01CompatExt;
+use futures03::task::SpawnExt;
 use std::sync::Arc;
 
 use crate::backend;
 use crate::interface::*;
 
 /// Client backend that wraps [crate::backend::RemoteNode] but spawns all futures in
-/// its own executor.
+/// its own executor using [tokio::runtime::Runtime].
 #[derive(Clone)]
 pub struct RemoteNodeWithExecutor {
     backend: backend::RemoteNode,
@@ -29,57 +30,42 @@ pub struct RemoteNodeWithExecutor {
 }
 
 impl RemoteNodeWithExecutor {
-    pub fn create() -> Result<Self, Error> {
-        let runtime = Arc::new(tokio::runtime::Runtime::new().unwrap());
-        let backend = run_sync(&runtime, backend::RemoteNode::create())?;
-        Ok(RemoteNodeWithExecutor { backend, runtime })
-    }
-
-    fn run_sync<T, F>(&self, f: impl FnOnce(&backend::RemoteNode) -> F) -> Response<T, Error>
-    where
-        F: Future<Item = T, Error = Error> + Send + 'static,
-        T: Send + 'static,
-    {
-        Box::new(run_sync(&self.runtime, f(&self.backend)).into_future())
+    pub async fn create() -> Result<Self, Error> {
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let backend = Executor01CompatExt::compat(runtime.executor())
+            .spawn_with_handle(backend::RemoteNode::create())
+            .unwrap()
+            .await?;
+        Ok(RemoteNodeWithExecutor {
+            backend,
+            runtime: Arc::new(runtime),
+        })
     }
 }
 
+#[async_trait::async_trait]
 impl backend::Backend for RemoteNodeWithExecutor {
-    fn submit(
+    async fn submit(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Response<backend::TransactionApplied, Error> {
-        self.run_sync(move |backend| backend.submit(xt))
+    ) -> Result<backend::TransactionApplied, Error> {
+        let backend = self.backend.clone();
+        let handle = Executor01CompatExt::compat(self.runtime.executor())
+            .spawn_with_handle(async move { backend.submit(xt).await })
+            .unwrap();
+        handle.await
     }
 
-    /// Fetch a value from the runtime state storage.
-    fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error> {
-        self.run_sync(move |backend| backend.fetch(key))
+    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
+        let backend = self.backend.clone();
+        let key = Vec::from(key);
+        let handle = Executor01CompatExt::compat(self.runtime.executor())
+            .spawn_with_handle(async move { backend.fetch(&key).await })
+            .unwrap();
+        handle.await
     }
 
     fn get_genesis_hash(&self) -> Hash {
         self.backend.get_genesis_hash()
     }
-}
-
-/// Spawn the future in the given runtime and wait for the result.
-fn run_sync<T, E>(
-    runtime: &tokio::runtime::Runtime,
-    f: impl Future<Item = T, Error = E> + Send + 'static,
-) -> Result<T, E>
-where
-    T: Send + 'static,
-    E: Send + 'static,
-{
-    let (sender, receiver) = futures01::sync::oneshot::channel();
-    runtime.executor().spawn(f.then(|res| {
-        // Ignore errors: We don’t care if the receiver was dropped
-        sender.send(res).map_err(|_| ())
-    }));
-    receiver
-        .then(|res| match res {
-            Ok(value) => value,
-            Err(_err) => panic!("RemoteNodeWithExecutor: sender was dropped"),
-        })
-        .wait()
 }
