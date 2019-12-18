@@ -1,8 +1,9 @@
 [package]
 name = "radicle_registry_node"
-authors = ["Anonymous"]
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
 version = "0.1.0"
+license = "GPL-3.0-only"
 
 [dependencies]
 derive_more = "0.15.0"

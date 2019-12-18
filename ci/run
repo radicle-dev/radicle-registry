@@ -43,6 +43,9 @@ else
   echo "Cache $target_cache not available"
 fi
 
+echo "--- scripts/check-license-headers"
+time ./scripts/check-license-headers
+
 echo "--- cargo fmt"
 time cargo fmt --all -- --check
 

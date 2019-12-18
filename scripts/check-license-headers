@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# Iterate over all rust source files (except our `subxt` copy) and make sure the
+# files include the GPL3 license header.
+#
+# If run with the `--fix` option license headers are prepended if they are
+# missing.
+
+set -euo pipefail
+IFS=$'\n'
+
+license_header=$(cat ./LICENSE_HEADER)
+
+shopt -s globstar
+for file in */src/**/*.rs; do
+  if [[ "$file" = subxt/* ]]; then
+    continue
+  fi
+
+  file_start=$(head -n 15 "$file")
+
+  if [[ "$file_start" != "$license_header" ]]; then
+    if [[ "${1:-}" = "--fix" ]]; then
+      sed -i -e '1rLICENSE_HEADER' -e '1{h;d}' -e '2{x;G}' "$file"
+      echo "Adding license header to $file"
+    else
+      echo "License header missing for $file. Rerun with --fix to add license header."
+      exit 1
+    fi
+  fi
+done

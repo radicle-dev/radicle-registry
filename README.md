@@ -146,3 +146,8 @@ datatype in the crate, it compiles and is part of the build process.
   registry
 * `error.rs` defining errors that may arise when interacting with the registry.
 * `types.rs`, defining the primitive types that will populate the registry state.
+
+License
+-------
+
+This code is licensed under [GPL v3.0](./LICENSE.md).
