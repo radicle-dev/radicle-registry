@@ -1,0 +1,37 @@
+{
+    "ProjectName": "Vec<u8>",
+    "ProjectDomain": "Vec<u8>",
+    "CheckpointId": "u64",
+    "ProjectId": "(ProjectDomain, ProjectName)",
+    "Checkpoint": {
+      "parent": "Option<CheckpointId>",
+      "hash": "H256"
+    },
+    "CreateCheckpointParams": {
+      "project_hash": "H256",
+      "previous_checkpoint_id": "Option<CheckpointId>"
+    },
+    "Project": {
+      "id": "ProjectId",
+      "account_id": "AccountId",
+      "description": "Vec<u8>",
+      "img_url": "Vec<u8>",
+      "members": "Vec<AccountId>",
+      "current_cp": "CheckpointId"
+    },
+    "RegisterProjectParams": {
+      "id": "ProjectId",
+      "description": "Vec<u8>",
+      "img_url": "Vec<u8>",
+      "checkpoint_id": "CheckpointId"
+    },
+    "SetCheckpointParams": {
+      "project_id": "ProjectId",
+      "new_checkpoint_id": "CheckpointId"
+    },
+    "TransferFromProjectParams": {
+      "project": "ProjectId",
+      "recipient": "AccountId",
+      "value": "Balance"
+    }
+  }
