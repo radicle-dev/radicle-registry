@@ -15,7 +15,7 @@ fi
 TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 echo "--- Load cache"
-declare -i cache_version=13
+declare -i cache_version=14
 target_cache=/cache/target-v${cache_version}
 target_cache_key_file="$target_cache/_key"
 cache_key="$(sha256sum Cargo.lock | cut -f 1 -d ' ')"
