@@ -1,4 +1,3 @@
-
 // Radicle Registry
 // Copyright (C) 2019 Monadic GmbH <radicle@monadic.xyz>
 //
