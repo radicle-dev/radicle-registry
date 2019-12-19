@@ -30,7 +30,7 @@ RUN apt-get update \
         llvm-dev \
         make \
         pkg-config \
-        wget \
+        curl \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,7 +38,7 @@ RUN apt-get update \
 RUN set -euxo pipefail; \
     sccache_version=0.2.12; \
     sccache_base=sccache-$sccache_version-x86_64-unknown-linux-musl; \
-    wget --quiet https://github.com/mozilla/sccache/releases/download/$sccache_version/$sccache_base.tar.gz; \
+    curl -sSLO https://github.com/mozilla/sccache/releases/download/$sccache_version/$sccache_base.tar.gz; \
     echo "26fd04c1273952cc2a0f359a71c8a1857137f0ee3634058b3f4a63b69fc8eb7f  $sccache_base.tar.gz" | sha256sum -c -; \
     tar -zxf "$sccache_base.tar.gz"; \
     mv "$sccache_base/sccache" /usr/local/bin/sccache; \
@@ -56,7 +56,7 @@ RUN set -eux; \
         *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
     esac; \
     url="https://static.rust-lang.org/rustup/archive/1.20.2/${rustArch}/rustup-init"; \
-    wget "$url"; \
+    curl -sSLO "$url"; \
     echo "${rustupSha256} *rustup-init" | sha256sum -c -; \
     chmod +x rustup-init; \
     ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION; \
