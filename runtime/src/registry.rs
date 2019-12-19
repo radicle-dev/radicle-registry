@@ -13,7 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use sp_std::prelude::*;
 use codec::{Decode, Encode};
 use frame_support::weights::SimpleDispatchInfo;
 use frame_support::{
@@ -23,6 +22,7 @@ use frame_support::{
     storage::StorageValue as _,
     traits::{Currency, ExistenceRequirement, Randomness},
 };
+use sp_std::prelude::*;
 
 use sp_core::{crypto::UncheckedFrom, H256};
 
@@ -93,9 +93,7 @@ pub struct TransferFromProjectParams {
     pub value: Balance,
 }
 
-pub trait Trait:
-    system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
-{
+pub trait Trait: system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash> {
     type Event: From<Event> + Into<<Self as system::Trait>::Event>;
 }
 

@@ -19,11 +19,8 @@ use futures01::future;
 use std::sync::{Arc, Mutex};
 
 use sp_runtime::{
-    traits::{
-        Hash as _, IdentifyAccount
-    },
-    BuildStorage as _,
-    MultiSigner
+    traits::{Hash as _, IdentifyAccount},
+    BuildStorage as _, MultiSigner,
 };
 
 use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Runtime};
@@ -104,9 +101,10 @@ fn make_genesis_config() -> GenesisConfig {
             balances: vec![(
                 MultiSigner::from(
                     ed25519::Pair::from_string("//Alice", None)
-                    .unwrap()
-                    .public()
-                ).into_account(),
+                        .unwrap()
+                        .public(),
+                )
+                .into_account(),
                 1 << 60,
             )],
             vesting: vec![],

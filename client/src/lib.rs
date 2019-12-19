@@ -39,7 +39,7 @@ use parity_scale_codec::{Decode, FullCodec};
 use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 use sp_runtime::{
-    traits::{IdentifyAccount, Hash as _},
+    traits::{Hash as _, IdentifyAccount},
     MultiSigner,
 };
 
@@ -213,7 +213,9 @@ impl ClientT for Client {
     }
 
     fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
-        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(account_id.clone()))
+        Box::new(
+            self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(account_id.clone()),
+        )
     }
 
     fn transfer(

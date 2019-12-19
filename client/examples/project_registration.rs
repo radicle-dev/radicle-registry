@@ -21,7 +21,10 @@ async fn go() -> Result<(), Error> {
         .create_checkpoint(&alice, project_hash, None)
         .compat()
         .await?;
-    let project_id = ("NAME".to_string().into_bytes(), "DOMAIN".to_string().into_bytes());
+    let project_id = (
+        "NAME".to_string().into_bytes(),
+        "DOMAIN".to_string().into_bytes(),
+    );
     client
         .register_project(
             &alice,

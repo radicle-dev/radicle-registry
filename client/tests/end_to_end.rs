@@ -21,7 +21,10 @@ fn register_project() {
         .wait()
         .unwrap();
     println!("checkpoint: {:}", checkpoint_id);
-    let project_id = ( "NAME".to_string().into_bytes() , "DOMAIN".to_string().into_bytes() );
+    let project_id = (
+        "NAME".to_string().into_bytes(),
+        "DOMAIN".to_string().into_bytes(),
+    );
     let tx_applied = client
         .submit(
             &alice,

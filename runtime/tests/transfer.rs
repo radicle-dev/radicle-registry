@@ -6,10 +6,7 @@
 use futures::prelude::*;
 
 use radicle_registry_client::*;
-use sp_runtime::{
-    traits::IdentifyAccount,
-    MultiSigner
-};
+use sp_runtime::{traits::IdentifyAccount, MultiSigner};
 
 mod common;
 
@@ -19,7 +16,10 @@ fn transfer_fail() {
     let alice = common::key_pair_from_string("Alice");
     let bob = common::key_pair_from_string("Bob");
 
-    let balance_alice = client.free_balance(&MultiSigner::from(alice.public()).into_account()).wait().unwrap();
+    let balance_alice = client
+        .free_balance(&MultiSigner::from(alice.public()).into_account())
+        .wait()
+        .unwrap();
     let tx_applied = client
         .submit(
             &alice,

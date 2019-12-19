@@ -18,7 +18,7 @@ use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
 use sp_runtime::{
     generic::{Era, SignedPayload},
-    traits::{SignedExtension, IdentifyAccount},
+    traits::{IdentifyAccount, SignedExtension},
     MultiSigner,
 };
 use std::marker::PhantomData;
@@ -89,7 +89,12 @@ fn signed_extrinsic(
     let signature = raw_payload.using_encoded(|payload| signer.sign(payload));
     let (call, extra, _) = raw_payload.deconstruct();
 
-    UncheckedExtrinsic::new_signed(call, MultiSigner::from(signer.public()).into_account().into(), signature.into(), extra)
+    UncheckedExtrinsic::new_signed(
+        call,
+        MultiSigner::from(signer.public()).into_account().into(),
+        signature.into(),
+        extra,
+    )
 }
 
 /// Return the [SignedExtra] data that is part of [UncheckedExtrinsic] and the associated
@@ -180,8 +185,6 @@ mod test {
             },
         );
 
-        test_ext
-            .execute_with(move || xt.check(&context))
-            .unwrap();
+        test_ext.execute_with(move || xt.check(&context)).unwrap();
     }
 }
