@@ -5,6 +5,19 @@ Experimental Radicle Registry implementation with Substrate.
 
 See [`DEVELOPING.md`][dev-manual] for developer information.
 
+<!-- toc -->
+
+- [Using the Client](#using-the-client)
+- [Getting and Running the Node](#getting-and-running-the-node)
+- [Account Keys](#account-keys)
+- [Developing with the Client](#developing-with-the-client)
+- [Building and running the node](#building-and-running-the-node)
+- [Using the CLI](#using-the-cli)
+- [Build Artifacts](#build-artifacts)
+- [Registry Specification](#registry-specification)
+
+<!-- tocstop -->
+
 Using the Client
 ----------------
 
@@ -17,6 +30,24 @@ To build and view the client documentation run `./scripts/build-client-docs
 --open`.
 
 You can find examples in the `./client/examples` directory.
+
+
+Getting and Running the Node
+----------------------------
+
+We build binaries of the node and docker images for every master commit.
+
+The node binaries are available for the `x86_64-uknown-linux-gnu` target triple.
+They are provided as artifacts by our CI. You can find the through the
+[Buildkite UI][buildkite-master].
+
+You can pull a docker image of the node with
+```bash
+docker pull gcr.io/opensourcecoin/radicle-registry/node:<commit-sha>
+```
+In the image the node binary is located at `/usr/local/bin/radicle-registry-node`
+
+[buildkite-master]: https://buildkite.com/monadic/radicle-registry/builds?branch=master
 
 
 Account Keys
