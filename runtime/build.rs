@@ -1,21 +1,27 @@
-use substrate_wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
+// Copyright 2019 Parity Technologies (UK) Ltd.
+// This file is part of Substrate.
 
-const DUMMY_WASM_BINARY_ENV: &str = "BUILD_DUMMY_WASM_BINARY";
+// Substrate is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Substrate is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
+
+use wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
 
 fn main() {
-    match std::env::var(DUMMY_WASM_BINARY_ENV) {
-        Ok(ref val) if val == "0" || val == "false" => {
-            std::env::remove_var(DUMMY_WASM_BINARY_ENV);
-        }
-        _ => {
-            std::env::set_var(DUMMY_WASM_BINARY_ENV, "1");
-        }
-    }
-    build_current_project_with_rustflags(
-        "wasm_binary.rs",
-        WasmBuilderSource::Crates("1.0.7"),
-        // This instructs LLD to export __heap_base as a global variable, which is used by the
-        // external memory allocator.
-        "-Clink-arg=--export=__heap_base",
-    );
+	build_current_project_with_rustflags(
+		"wasm_binary.rs",
+		WasmBuilderSource::Crates("1.0.8"),
+		// This instructs LLD to export __heap_base as a global variable, which is used by the
+		// external memory allocator.
+		"-Clink-arg=--export=__heap_base",
+	);
 }

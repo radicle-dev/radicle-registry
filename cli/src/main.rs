@@ -1,6 +1,6 @@
 use futures01::prelude::*;
 use radicle_registry_client::{
-    ed25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, String32, H256,
+    sr25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, H256,
 };
 use structopt::StructOpt;
 
@@ -15,8 +15,8 @@ pub struct Args {
 
 impl Args {
     /// Return the key pair generated from [Args::author_key_seed].
-    fn author_key_pair(&self) -> ed25519::Pair {
-        ed25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None).unwrap()
+    fn author_key_pair(&self) -> sr25519::Pair {
+        sr25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None).unwrap()
     }
 }
 
@@ -25,9 +25,9 @@ pub enum Command {
     /// Register a project
     RegisterProject {
         /// Name of the project to register.
-        name: String32,
+        name: Vec<u8>,
         /// Domain of the project to register.
-        domain: String32,
+        domain: Vec<u8>,
         project_hash: H256,
     },
 }
@@ -57,14 +57,14 @@ fn run(args: Args) {
                     &author_key_pair,
                     RegisterProjectParams {
                         id: project_id.clone(),
-                        description: format!(""),
-                        img_url: format!(""),
+                        description: vec![],
+                        img_url: vec![],
                         checkpoint_id,
                     },
                 )
                 .wait()
                 .unwrap();
-            println!("Registered project with ID {:?}", project_id)
+            println!("Registered project with ID {:?}", project_id);
         }
     }
 }

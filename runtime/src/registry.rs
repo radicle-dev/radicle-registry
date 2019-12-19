@@ -1,5 +1,4 @@
-use alloc::prelude::v1::*;
-use alloc::vec;
+use sp_std::prelude::*;
 use codec::{Decode, Encode};
 use frame_support::weights::SimpleDispatchInfo;
 use frame_support::{
@@ -7,17 +6,18 @@ use frame_support::{
     dispatch::Result as DispatchResult,
     storage::StorageMap as _,
     storage::StorageValue as _,
-    traits::{Currency, ExistenceRequirement},
+    traits::{Currency, ExistenceRequirement, Randomness},
 };
 
 use sp_core::{crypto::UncheckedFrom, H256};
 
-use frame_support::traits::Randomness;
-use frame_system as system;
-use frame_system::ensure_signed;
+// use frame_support::traits::Randomness;
+use system;
+use system::ensure_signed;
 
-use crate::{AccountId, Balance, Hash, Hashing, String32};
+use crate::{AccountId, Balance, Hash};
 use sp_runtime::traits::Hash as _;
+type String32 = Vec<u8>;
 
 /// The name a project is registered with.
 pub type ProjectName = String32;
@@ -33,14 +33,14 @@ pub type ProjectId = (ProjectName, ProjectDomain);
 pub type CheckpointId = H256;
 
 /// A project's version. Used in checkpointing.
-pub type Version = String;
+pub type Version = String32;
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
     pub id: ProjectId,
     pub account_id: AccountId,
-    pub description: String,
-    pub img_url: String,
+    pub description: String32,
+    pub img_url: String32,
     pub members: Vec<AccountId>,
     pub current_cp: CheckpointId,
 }
@@ -48,8 +48,8 @@ pub struct Project {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProjectParams {
     pub id: ProjectId,
-    pub description: String,
-    pub img_url: String,
+    pub description: String32,
+    pub img_url: String32,
     pub checkpoint_id: CheckpointId,
 }
 
@@ -79,9 +79,9 @@ pub struct TransferFromProjectParams {
 }
 
 pub trait Trait:
-    frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
+    system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
 {
-    type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
+    type Event: From<Event> + Into<<Self as system::Trait>::Event>;
 }
 
 pub mod store {
@@ -157,11 +157,11 @@ decl_module! {
                 Some (_) => return Err("A project with the supplied ID already exists."),
             };
             let account_id = AccountId::unchecked_from(
-                pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
+                randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
             let project = Project {
                 id: project_id.clone(),
-                account_id: account_id,
+                account_id: account_id.clone(),
                 description: params.description,
                 img_url: params.img_url,
                 members: vec![sender],
@@ -208,7 +208,7 @@ decl_module! {
                 parent: params.previous_checkpoint_id,
                 hash: params.project_hash,
             };
-            let checkpoint_id = Hashing::hash_of(&checkpoint);
+            let checkpoint_id = T::Hashing::hash_of(&checkpoint);
             store::Checkpoints::insert(checkpoint_id, checkpoint);
 
             Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
