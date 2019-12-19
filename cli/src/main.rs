@@ -1,6 +1,6 @@
 use futures01::prelude::*;
 use radicle_registry_client::{
-    sr25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, H256,
+    ed25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, H256,
 };
 use structopt::StructOpt;
 
@@ -15,8 +15,8 @@ pub struct Args {
 
 impl Args {
     /// Return the key pair generated from [Args::author_key_seed].
-    fn author_key_pair(&self) -> sr25519::Pair {
-        sr25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None).unwrap()
+    fn author_key_pair(&self) -> ed25519::Pair {
+        ed25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None).unwrap()
     }
 }
 

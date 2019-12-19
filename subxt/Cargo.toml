@@ -25,55 +25,59 @@ url = "1.7"
 [dependencies.runtime_metadata]
 package = "frame-metadata"
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.runtime_primitives]
 package = "sp-runtime"
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.runtime_support]
 package = "frame-support"
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sp-version]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.pallet-balances]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.pallet-contracts]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.pallet-indices]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
+
+[dependencies.sp-std]
+git = "https://github.com/paritytech/substrate"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 package = "sc-rpc-api"
 
 [dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.txpool-api]
 package = "sp-transaction-pool"
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 
 [dev-dependencies]
@@ -83,8 +87,8 @@ wabt = "0.9.0"
 
 [dev-dependencies.node-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dev-dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"

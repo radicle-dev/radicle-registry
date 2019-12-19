@@ -6,6 +6,10 @@ use radicle_registry_client::{
     ed25519, Client, ClientT as _, CryptoPair as _, Error, Transaction, TransactionExtra,
     TransferParams,
 };
+use sp_runtime::{
+    traits::IdentifyAccount,
+    MultiSigner,
+};
 
 fn main() {
     env_logger::init();
@@ -19,11 +23,11 @@ async fn go() -> Result<(), Error> {
     let bob = ed25519::Pair::from_string("//Bob", None).unwrap();
     let client = Client::create().compat().await?;
 
-    let account_nonce = client.account_nonce(&alice.public()).compat().await?;
+    let account_nonce = client.account_nonce(&MultiSigner::from(alice.public()).into_account()).compat().await?;
     let transfer_tx = Transaction::new_signed(
         &alice,
         TransferParams {
-            recipient: bob.public(),
+            recipient: MultiSigner::from(bob.public()).into_account(),
             balance: 1000,
         },
         TransactionExtra {

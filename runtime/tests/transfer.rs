@@ -6,6 +6,10 @@
 use futures::prelude::*;
 
 use radicle_registry_client::*;
+use sp_runtime::{
+    traits::IdentifyAccount,
+    MultiSigner
+};
 
 mod common;
 
@@ -13,14 +17,14 @@ mod common;
 fn transfer_fail() {
     let client = Client::new_emulator();
     let alice = common::key_pair_from_string("Alice");
-    let bob = common::key_pair_from_string("Bob").public();
+    let bob = common::key_pair_from_string("Bob");
 
-    let balance_alice = client.free_balance(&alice.public()).wait().unwrap();
+    let balance_alice = client.free_balance(&MultiSigner::from(alice.public()).into_account()).wait().unwrap();
     let tx_applied = client
         .submit(
             &alice,
             TransferParams {
-                recipient: bob,
+                recipient: MultiSigner::from(bob.public()).into_account(),
                 balance: balance_alice + 1,
             },
         )
@@ -35,7 +39,7 @@ fn transfer_fail() {
 fn project_account_transfer() {
     let client = Client::new_emulator();
     let alice = common::key_pair_from_string("Alice");
-    let bob = common::key_pair_from_string("Bob").public();
+    let bob = MultiSigner::from(common::key_pair_from_string("Bob").public()).into_account();
     let project = common::create_project_with_checkpoint(&client, &alice);
 
     assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
@@ -55,7 +59,7 @@ fn project_account_transfer() {
             &alice,
             TransferFromProjectParams {
                 project: project.id.clone(),
-                recipient: bob,
+                recipient: bob.clone(),
                 value: 1000,
             },
         )
@@ -90,7 +94,7 @@ fn project_account_transfer_non_member() {
             &bob,
             TransferFromProjectParams {
                 project: project.id.clone(),
-                recipient: bob.public(),
+                recipient: MultiSigner::from(bob.public()).into_account(),
                 value: 1000,
             },
         )

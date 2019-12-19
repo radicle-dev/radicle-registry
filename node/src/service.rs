@@ -1,6 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use aura_primitives::sr25519::AuthorityPair as AuraPair;
+use aura_primitives::ed25519::AuthorityPair as AuraPair;
 use grandpa::{self, FinalityProofProvider as GrandpaFinalityProofProvider};
 use inherents::InherentDataProviders;
 use network::construct_simple_protocol;

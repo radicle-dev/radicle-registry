@@ -12,7 +12,7 @@ pub use radicle_registry_runtime::{
         ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
         TransferFromProjectParams,
     },
-    AccountId, Balance, Event, Hashing, Index, String32,
+    AccountId, Balance, Event, Index,
 };
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};

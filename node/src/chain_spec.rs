@@ -1,9 +1,9 @@
-use primitives::{Pair, Public, sr25519};
+use primitives::{Pair, Public, ed25519};
 use radicle_registry_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
 	SudoConfig, SystemConfig, WASM_BINARY, Signature, IndicesConfig
 };
-use aura_primitives::sr25519::{AuthorityId as AuraId};
+use aura_primitives::ed25519::{AuthorityId as AuraId};
 use grandpa_primitives::{AuthorityId as GrandpaId};
 use sc_service;
 use sp_runtime::traits::{Verify, IdentifyAccount};
@@ -59,12 +59,12 @@ impl Alternative {
 				|| testnet_genesis(vec![
 					get_authority_keys_from_seed("Alice"),
 				],
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<ed25519::Public>("Alice"),
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Alice"),
+					get_account_id_from_seed::<ed25519::Public>("Bob"),
+					get_account_id_from_seed::<ed25519::Public>("Alice//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Bob//stash"),
 				],
 				true),
 				vec![],
@@ -80,20 +80,20 @@ impl Alternative {
 					get_authority_keys_from_seed("Alice"),
 					get_authority_keys_from_seed("Bob"),
 				],
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<ed25519::Public>("Alice"),
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Alice"),
+					get_account_id_from_seed::<ed25519::Public>("Bob"),
+					get_account_id_from_seed::<ed25519::Public>("Charlie"),
+					get_account_id_from_seed::<ed25519::Public>("Dave"),
+					get_account_id_from_seed::<ed25519::Public>("Eve"),
+					get_account_id_from_seed::<ed25519::Public>("Ferdie"),
+					get_account_id_from_seed::<ed25519::Public>("Alice//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Bob//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Charlie//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Dave//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Eve//stash"),
+					get_account_id_from_seed::<ed25519::Public>("Ferdie//stash"),
 				],
 				true),
 				vec![],

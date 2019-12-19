@@ -2,7 +2,7 @@ use futures01::future::Future;
 use sp_core::storage::StorageKey;
 use sp_runtime::traits::Hash as _;
 
-use radicle_registry_runtime::{opaque::Block as OpaqueBlock, Event, Hash, Hashing, Runtime};
+use radicle_registry_runtime::{opaque::Block as OpaqueBlock, Event, Hash, Runtime};
 
 use crate::backend;
 use crate::interface::*;
@@ -101,7 +101,7 @@ fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<V
         .iter()
         .enumerate()
         .find_map(|(index, tx)| {
-            if Hashing::hash_of(tx) == ext_success.extrinsic {
+            if <Runtime as frame_system::Trait>::Hashing::hash_of(tx) == ext_success.extrinsic {
                 Some(index)
             } else {
                 None

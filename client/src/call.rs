@@ -98,7 +98,7 @@ impl Call for crate::TransferParams {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        balances::Call::transfer(self.recipient, self.balance).into()
+        balances::Call::transfer(self.recipient.into(), self.balance).into()
     }
 }
 

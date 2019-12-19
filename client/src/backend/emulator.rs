@@ -3,9 +3,15 @@
 use futures01::future;
 use std::sync::{Arc, Mutex};
 
-use sp_runtime::{traits::Hash as _, BuildStorage as _};
+use sp_runtime::{
+    traits::{
+        Hash as _, IdentifyAccount
+    },
+    BuildStorage as _,
+    MultiSigner
+};
 
-use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
+use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Runtime};
 
 use crate::backend;
 use crate::interface::*;
@@ -42,7 +48,7 @@ impl backend::Backend for Emulator {
         &self,
         extrinsic: backend::UncheckedExtrinsic,
     ) -> Response<backend::TransactionApplied, Error> {
-        let tx_hash = Hashing::hash_of(&extrinsic);
+        let tx_hash = <Runtime as frame_system::Trait>::Hashing::hash_of(&extrinsic);
         let test_ext = &mut self.test_ext.lock().unwrap();
         let events = test_ext.execute_with(move || {
             let event_start_index = frame_system::Module::<Runtime>::event_count();
@@ -78,17 +84,20 @@ impl backend::Backend for Emulator {
 /// Initializes the balance of the `//Alice` account with `2^60` tokens.
 fn make_genesis_config() -> GenesisConfig {
     GenesisConfig {
-        pallet_aura: None,
-        pallet_balances: Some(BalancesConfig {
+        aura: None,
+        balances: Some(BalancesConfig {
             balances: vec![(
-                ed25519::Pair::from_string("//Alice", None)
+                MultiSigner::from(
+                    ed25519::Pair::from_string("//Alice", None)
                     .unwrap()
-                    .public(),
+                    .public()
+                ).into_account(),
                 1 << 60,
             )],
             vesting: vec![],
         }),
-        pallet_sudo: None,
+        indices: None,
+        sudo: None,
         grandpa: None,
         system: None,
     }

@@ -80,8 +80,8 @@ fn register_project_with_duplicate_id() {
         .submit(
             &alice,
             RegisterProjectParams {
-                description: "DESCRIPTION_2".to_string(),
-                img_url: "IMG_URL_2".to_string(),
+                description: "DESCRIPTION_2".to_string().into_bytes(),
+                img_url: "IMG_URL_2".to_string().into_bytes(),
                 ..params.clone()
             },
         )

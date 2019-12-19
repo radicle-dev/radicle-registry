@@ -17,24 +17,28 @@ tokio = "0.1"
 
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
+
+[dependencies.pallet-indices]
+git = "https://github.com/paritytech/substrate"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "3d17cbd2fbcc337af49c861896ab4936b161bcee"
+rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c"

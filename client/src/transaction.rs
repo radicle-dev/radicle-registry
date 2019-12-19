@@ -1,8 +1,11 @@
 //! Provides [Transaction] and [TransactionExtra].
 use parity_scale_codec::Encode;
 use radicle_registry_runtime::UncheckedExtrinsic;
-use sp_runtime::generic::{Era, SignedPayload};
-use sp_runtime::traits::SignedExtension;
+use sp_runtime::{
+    generic::{Era, SignedPayload},
+    traits::{SignedExtension, IdentifyAccount},
+    MultiSigner,
+};
 use std::marker::PhantomData;
 
 pub use radicle_registry_runtime::{
@@ -71,7 +74,7 @@ fn signed_extrinsic(
     let signature = raw_payload.using_encoded(|payload| signer.sign(payload));
     let (call, extra, _) = raw_payload.deconstruct();
 
-    UncheckedExtrinsic::new_signed(call, signer.public(), signature, extra)
+    UncheckedExtrinsic::new_signed(call, MultiSigner::from(signer.public()).into_account().into(), signature.into(), extra)
 }
 
 /// Return the [SignedExtra] data that is part of [UncheckedExtrinsic] and the associated
@@ -124,16 +127,17 @@ fn transaction_extra_to_runtime_extra(
 mod test {
     use super::*;
     use radicle_registry_runtime::{GenesisConfig, Runtime};
-    use sp_runtime::traits::{Checkable, IdentityLookup};
+    use sp_runtime::traits::Checkable;
     use sp_runtime::BuildStorage as _;
 
     #[test]
     /// Assert that extrinsics created with [create_and_sign] are validated by the runtime.
     fn check_extrinsic() {
         let genesis_config = GenesisConfig {
-            pallet_aura: None,
-            pallet_balances: None,
-            pallet_sudo: None,
+            aura: None,
+            balances: None,
+            sudo: None,
+            indices: None,
             system: None,
             grandpa: None,
         };
@@ -141,6 +145,7 @@ mod test {
         let (key_pair, _) = ed25519::Pair::generate();
 
         type System = frame_system::Module<Runtime>;
+        let context = frame_system::ChainContext::<Runtime>::default();
         let genesis_hash = test_ext.execute_with(|| {
             System::initialize(
                 &1,
@@ -161,7 +166,7 @@ mod test {
         );
 
         test_ext
-            .execute_with(move || xt.check(&IdentityLookup::default()))
+            .execute_with(move || xt.check(&context))
             .unwrap();
     }
 }

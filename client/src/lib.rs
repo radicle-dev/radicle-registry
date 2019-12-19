@@ -23,7 +23,10 @@ use parity_scale_codec::{Decode, FullCodec};
 
 use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
-use sp_runtime::traits::Hash as _;
+use sp_runtime::{
+    traits::{IdentifyAccount, Hash as _},
+    MultiSigner,
+};
 
 mod backend;
 mod call;
@@ -160,11 +163,11 @@ impl ClientT for Client {
         author: &ed25519::Pair,
         call: Call_,
     ) -> Response<TransactionApplied<Call_>, Error> {
-        let account_id = author.public();
+        let account = MultiSigner::from(author.public()).into_account();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();
         let client = self.clone();
-        Box::new(self.account_nonce(&account_id).and_then(move |nonce| {
+        Box::new(self.account_nonce(&account).and_then(move |nonce| {
             let transaction = Transaction::new_signed(
                 &key_pair,
                 call,
@@ -195,7 +198,7 @@ impl ClientT for Client {
     }
 
     fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
-        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id))
+        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(account_id.clone()))
     }
 
     fn transfer(
@@ -208,7 +211,7 @@ impl ClientT for Client {
             self.submit(
                 key_pair,
                 TransferParams {
-                    recipient: *recipient,
+                    recipient: recipient.clone(),
                     balance,
                 },
             )
@@ -242,7 +245,7 @@ impl ClientT for Client {
         project_hash: H256,
         previous_checkpoint_id: Option<CheckpointId>,
     ) -> Response<CheckpointId, Error> {
-        let checkpoint_id = Hashing::hash_of(&Checkpoint {
+        let checkpoint_id = <Runtime as frame_system::Trait>::Hashing::hash_of(&Checkpoint {
             parent: previous_checkpoint_id,
             hash: project_hash,
         });

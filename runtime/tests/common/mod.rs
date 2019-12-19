@@ -30,21 +30,25 @@ pub fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterPr
     let name = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(32)
-        .collect::<String>();
+        .collect::<String>()
+        .into_bytes();
     let domain = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(32)
-        .collect::<String>();
-    let id = (name.parse().unwrap(), domain.parse().unwrap());
+        .collect::<String>()
+        .into_bytes();
+    let id = (name, domain);
 
     let description = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(50)
-        .collect::<String>();
+        .collect::<String>()
+        .into_bytes();
     let img_url = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(50)
-        .collect::<String>();
+        .collect::<String>()
+        .into_bytes();
 
     RegisterProjectParams {
         id,

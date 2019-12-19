@@ -59,7 +59,8 @@ pub trait System: 'static + Eq + Clone + Debug {
         + Default
         + Bounded
         + Copy
-        + std::hash::Hash;
+        + std::hash::Hash
+        + sp_std::str::FromStr;
 
     /// The output of the `Hashing` function.
     type Hash: Parameter
