@@ -1,3 +1,25 @@
+
+// Radicle Registry
+// Copyright (C) 2019 Monadic GmbH <radicle@monadic.xyz>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3 as
+// published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+//! Defines the [ChainSpec]s for various chains we want to run.
+//!
+//! Available chain specs
+//! * [dev] for runnning a single node locally and develop against it.
+//! * [local_testnet] for runnning a cluster of three nodes locally using Aura consensus.
+//! 
 use primitives::{Pair, Public, ed25519};
 use radicle_registry_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
@@ -140,4 +162,11 @@ fn testnet_genesis(initial_authorities: Vec<(AuraId, GrandpaId)>,
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		}),
 	}
+}
+
+/// Helper function to generate a crypto pair from seed
+pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
+    TPublic::Pair::from_string(&format!("//{}", seed), None)
+        .expect("static values are valid; qed")
+        .public()
 }

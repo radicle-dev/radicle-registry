@@ -1,8 +1,10 @@
 [package]
-name = "radicle_registry_runtime"
-version = "2.0.0"
-authors = ["Anonymous"]
+name = "radicle-registry-runtime"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
+version = "0.1.0"
+license = "GPL-3.0-only"
+
 
 [dependencies]
 aura = { version = "2.0.0", default-features = false, package = "pallet-aura", git = "https://github.com/paritytech/substrate", rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c" }
@@ -33,13 +35,19 @@ sp-std = { version = "2.0.0", default-features = false, git = "https://github.co
 sp-transaction-pool = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate", rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c" }
 sp-version = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate", rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c" }
 
+[dependencies.paint-grandpa]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+default_features = false
+package = "paint-grandpa"
+
 [build-dependencies]
 wasm-builder-runner = { version = "1.0.4", package = "substrate-wasm-builder-runner", git = "https://github.com/paritytech/substrate", rev = "2f1f3bd4af2c2521e32d884fbcd7ff991e5cac3c" }
 
 [dev-dependencies]
 futures = "0.1"
 rand = "0.7.2"
-radicle_registry_client = { path = "../client" }
+radicle-registry-client = { path = "../client" }
 
 [features]
 default = ["std"]

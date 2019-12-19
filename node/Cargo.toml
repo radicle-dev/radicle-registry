@@ -1,8 +1,9 @@
 [package]
-name = "radicle_registry_node"
-authors = ["Anonymous"]
+name = "radicle-registry-node"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
 version = "0.1.0"
+license = "GPL-3.0-only"
 default-run = "radicle_registry_node"
 
 [[bin]]
@@ -23,7 +24,7 @@ trie-root = "0.15.2"
 package = "parity-scale-codec"
 version = "1.0.0"
 
-[dependencies.radicle_registry_runtime]
+[dependencies.radicle-registry-runtime]
 path = "../runtime"
 
 [dependencies.sp-runtime]

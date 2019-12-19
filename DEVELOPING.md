@@ -5,11 +5,26 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 [node-template]: https://github.com/substrate-developer-hub/substrate-node-template
 
+### Table of contents
+
+<!-- toc -->
+
+- [Running development node](#running-development-node)
+- [Packages](#packages)
+- [Testing](#testing)
+- [Changelog](#changelog)
+- [Local devnet](#local-devnet)
+- [Upstream `subxt`](#upstream-subxt)
+- [Updating substrate](#updating-substrate)
+- [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
+
+<!-- tocstop -->
+
 Running development node
 ------------------------
 
 ~~~
-BUILD_DUMMY_WASM_BINARY=0 cargo build --release -p radicle_registry_node
+BUILD_DUMMY_WASM_BINARY=0 cargo build --release -p radicle-registry-node
 ./scripts/run-dev-node
 ~~~
 
@@ -47,6 +62,13 @@ We use `./CHANGELOG.md` to record all changes visible to users of the client.
 Changes are added to the “Upcoming” section of the change log as part of commit
 that makes the change. That is they are included in every pull request. For
 breaking changes a migration path must be provided.
+
+
+Local devnet
+------------
+
+We provide a `docker-compose` file to run a local devnet. See
+`./local-devnet/README.md` for more information.
 
 
 Upstream `subxt`

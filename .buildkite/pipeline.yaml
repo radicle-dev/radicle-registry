@@ -4,6 +4,8 @@ steps:
     env:
       DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry@sha256:14f86dacda303f96b14cb1e41dc2e54be70f89ee6917920dd58207239a405f17
       DOCKER_FILE: ci/base-image/Dockerfile
+      STEP_DOCKER_FILE: ci/node-image/Dockerfile
+      STEP_DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/node
     agents:
       platform: "linux"
       production: "true"
@@ -13,4 +15,4 @@ steps:
     # works during running builds), see
     # https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact.
     artifact_paths:
-      - "artifacts/radicle_registry_node"
+      - "artifacts/radicle-registry-node"

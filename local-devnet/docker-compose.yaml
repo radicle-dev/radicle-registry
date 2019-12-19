@@ -1,0 +1,30 @@
+version: "3.7"
+
+# Configuration shared between node services
+x-node: &node
+  image: ubuntu:eoan-20191101
+  volumes:
+  - ../target/release/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
+  - ./start-node.sh:/usr/local/bin/start-node.sh:ro
+  # Used by the --keystore-path option
+  - ./keystore:/keystore:ro
+  # Used by the --base-path option
+  - /data
+  command:
+  - /usr/local/bin/start-node.sh
+
+services:
+  alice:
+    <<: *node
+    ports:
+    - "9944:9944"
+    environment:
+      NODE_NAME: alice
+  bob:
+    <<: *node
+    environment:
+      NODE_NAME: bob
+  charlie:
+    <<: *node
+    environment:
+      NODE_NAME: charlie

@@ -1,11 +1,12 @@
 [package]
-name = "radicle_registry_client"
+name = "radicle-registry-client"
 version = "0.1.0"
 authors = ["Thomas Scholtes <thomas@monadic.xyz>"]
 edition = "2018"
+license = "GPL-3.0-only"
 
 [dependencies]
-radicle_registry_runtime = { path = "../runtime" }
+radicle-registry-runtime = { path = "../runtime" }
 substrate-subxt = { path = "../subxt" }
 
 env_logger = "0.7"

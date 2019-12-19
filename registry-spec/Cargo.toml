@@ -1,10 +1,11 @@
 [package]
-name = "oscoin-ledger-spec"
+name = "radicle-registry-spec"
 version = "0.1.0"
 authors = [
   "Thomas Scholtes <thomas@monadic.xyz>",
   "Alexandre Baldé <alexandre@monadic.xyz>"
 ]
 edition = "2018"
+license = "GPL-3.0-only"
 
 [dependencies]
