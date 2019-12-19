@@ -35,11 +35,13 @@ You can find examples in the `./client/examples` directory.
 Getting and Running the Node
 ----------------------------
 
-We build binaries of the node and docker images for every master commit.
+We build binaries of the node and docker images for every pushed commit.
 
-The node binaries are available for the `x86_64-uknown-linux-gnu` target triple.
-They are provided as artifacts by our CI. You can find the through the
-[Buildkite UI][buildkite-master].
+Node binaries are available for the `x86_64-unknown-linux-gnu` target triple.
+You can download them from
+```
+https://dl.bintray.com/oscoin/radicle-registry-files/git-<COMMIT_SHA>/x86_64-linux-gnu/radicle-registry-node
+```
 
 You can pull a docker image of the node with
 ```bash

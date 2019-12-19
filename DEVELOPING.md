@@ -117,8 +117,8 @@ After performing the necessary changes to the Dockerfile located in
 repository and run the following:
 
 ```bash
-docker build ci/base-image --tag gcr.io/opensourcecoin/radicle-registry
-docker push gcr.io/opensourcecoin/radicle-registry
+docker build ci/base-image --tag gcr.io/opensourcecoin/radicle-registry/ci-base
+docker push gcr.io/opensourcecoin/radicle-registry/ci-base
 ```
 
 The `docker push` command outputs the pushed image’s digest. To use the pushed
