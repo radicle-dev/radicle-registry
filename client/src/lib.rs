@@ -31,7 +31,13 @@
 //! using [ClientT::account_nonce] and [ClientT::genesis_hash]. See
 //! `./client/examples/transaction_signing.rs`.
 //!
+//! # Async executor
+//!
+//! If the client is created with [Client::create] the futures returned by the client must be
+//! spawned in a `tokio` v0.1.22 executor.
+//!
 use futures01::prelude::*;
+use futures03::future::Future as Future03;
 use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
@@ -61,7 +67,7 @@ impl Client {
     ///
     /// Fails if it cannot connect to a node.
     pub fn create() -> impl Future<Item = Self, Error = Error> {
-        backend::RemoteNode::create().map(Self::new)
+        future03_compat(backend::RemoteNode::create()).map(Self::new)
     }
 
     /// Same as [Client::create] but calls to the client spawn futures in an executor owned by the
@@ -70,7 +76,9 @@ impl Client {
     /// This makes it possible to call [Future::wait] on the client even if that function is called
     /// in an event loop of another executor.
     pub fn create_with_executor() -> Result<Self, Error> {
-        backend::RemoteNodeWithExecutor::create().map(Self::new)
+        future03_compat(backend::RemoteNodeWithExecutor::create())
+            .map(Self::new)
+            .wait()
     }
 
     /// Create a new client that emulates the registry ledger in memory. See
@@ -97,20 +105,18 @@ impl Client {
     where
         S::Query: Send + 'static,
     {
-        Box::new(
-            self.backend
-                .fetch(S::storage_value_final_key().as_ref())
-                .and_then(|maybe_data| {
-                    let value = match maybe_data {
-                        Some(data) => {
-                            let value = Decode::decode(&mut &data[..])?;
-                            Some(value)
-                        }
-                        None => None,
-                    };
-                    Ok(S::from_optional_value_to_query(value))
-                }),
-        )
+        let backend = self.backend.clone();
+        future03_compat(async move {
+            let maybe_data = backend.fetch(S::storage_value_final_key().as_ref()).await?;
+            let value = match maybe_data {
+                Some(data) => {
+                    let value = Decode::decode(&mut &data[..])?;
+                    Some(value)
+                }
+                None => None,
+            };
+            Ok(S::from_optional_value_to_query(value))
+        })
     }
 
     /// Fetch a value from a map in the state storage based on a [StorageMap] implementation
@@ -130,20 +136,22 @@ impl Client {
     where
         S::Query: Send + 'static,
     {
-        Box::new(
-            self.backend
-                .fetch(S::storage_map_final_key(key).as_ref())
-                .and_then(|maybe_data| {
-                    let value = match maybe_data {
-                        Some(data) => {
-                            let value = Decode::decode(&mut &data[..])?;
-                            Some(value)
-                        }
-                        None => None,
-                    };
-                    Ok(S::from_optional_value_to_query(value))
-                }),
-        )
+        let backend = self.backend.clone();
+        // We cannot move this code into the async block. The compiler complains about a processing
+        // cycle (E0391)
+        let key = S::storage_map_final_key(key);
+        let key = Vec::from(key.as_ref());
+        future03_compat(async move {
+            let maybe_data = backend.fetch(&key).await?;
+            let value = match maybe_data {
+                Some(data) => {
+                    let value = Decode::decode(&mut &data[..])?;
+                    Some(value)
+                }
+                None => None,
+            };
+            Ok(S::from_optional_value_to_query(value))
+        })
     }
 }
 
@@ -152,22 +160,20 @@ impl ClientT for Client {
         &self,
         transaction: Transaction<Call_>,
     ) -> Response<TransactionApplied<Call_>, Error> {
-        Box::new(
-            self.backend
-                .submit(transaction.extrinsic)
-                .and_then(move |tx_applied| {
-                    let events = tx_applied.events;
-                    let tx_hash = tx_applied.tx_hash;
-                    let block = tx_applied.block;
-                    let result = Call_::result_from_events(events.clone())?;
-                    Ok(TransactionApplied {
-                        tx_hash,
-                        block,
-                        events,
-                        result,
-                    })
-                }),
-        )
+        let backend = self.backend.clone();
+        future03_compat(async move {
+            let tx_applied = backend.submit(transaction.extrinsic).await?;
+            let events = tx_applied.events;
+            let tx_hash = tx_applied.tx_hash;
+            let block = tx_applied.block;
+            let result = Call_::result_from_events(events.clone())?;
+            Ok(TransactionApplied {
+                tx_hash,
+                block,
+                events,
+                result,
+            })
+        })
     }
 
     fn submit<Call_: Call>(
@@ -284,6 +290,13 @@ impl ClientT for Client {
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
         Box::new(self.fetch_map_value::<registry::store::Checkpoints, _, _>(id))
     }
+}
+
+/// Turn a 0.3 future into a boxed 0.1 future trait object.
+fn future03_compat<'a, Ok, Error>(
+    f: impl Future03<Output = Result<Ok, Error>> + 'a + Send,
+) -> Box<dyn Future<Item = Ok, Error = Error> + Send + 'a> {
+    Box::new(futures03::compat::Compat::new(Box::pin(f)))
 }
 
 #[cfg(test)]

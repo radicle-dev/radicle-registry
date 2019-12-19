@@ -1,4 +1,4 @@
-use futures01::future::Future;
+//! Offline signing and creation of a `Transfer` transaction.
 use futures03::compat::{Compat, Future01CompatExt};
 use futures03::future::FutureExt;
 
@@ -11,7 +11,6 @@ fn main() {
     env_logger::init();
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(Compat::new(go().boxed())).unwrap();
-    runtime.shutdown_now().wait().unwrap();
 }
 
 async fn go() -> Result<(), Error> {

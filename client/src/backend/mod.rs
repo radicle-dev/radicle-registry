@@ -41,13 +41,14 @@ pub struct TransactionApplied {
 ///
 /// The interface is low-level and mostly agnostic of the runtime code. Transaction extra data and
 /// event information from the runtime marks an exception
+#[async_trait::async_trait]
 pub trait Backend {
     /// Submit a signed transaction to the ledger and return when it has been applied and included
     /// in a block.
-    fn submit(&self, xt: UncheckedExtrinsic) -> Response<TransactionApplied, Error>;
+    async fn submit(&self, xt: UncheckedExtrinsic) -> Result<TransactionApplied, Error>;
 
     /// Fetch a value from the runtime state storage.
-    fn fetch(&self, key: &[u8]) -> Response<Option<Vec<u8>>, Error>;
+    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error>;
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;
