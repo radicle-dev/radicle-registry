@@ -34,6 +34,7 @@ time cargo fmt --all -- --check
 echo "--- cargo build"
 export BUILD_DUMMY_WASM_BINARY=0
 export RUSTFLAGS="-D warnings"
+cargo clippy --workspace --all-targets --release -- -D clippy::all
 cargo build --workspace --all-targets --release
 
 echo "--- cargo test"

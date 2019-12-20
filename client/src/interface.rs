@@ -33,10 +33,8 @@ pub use substrate_primitives::crypto::{Pair as CryptoPair, Public as CryptoPubli
 pub use substrate_primitives::{ed25519, H256};
 
 pub use crate::call::Call;
+pub use crate::error::Error;
 pub use crate::transaction::{Transaction, TransactionExtra};
-
-#[doc(inline)]
-pub type Error = substrate_subxt::Error;
 
 /// The hash of a block. Uniquely identifies a block.
 #[doc(inline)]

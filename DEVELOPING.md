@@ -14,7 +14,6 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Local devnet](#local-devnet)
-- [Upstream `subxt`](#upstream-subxt)
 - [Updating substrate](#updating-substrate)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
 
@@ -41,8 +40,6 @@ Packages
   registry through a node and an emulator implementation.
 * `cli` contains a binary for interacting with the registry node to submit
   transactions and read state.
-* `subxt` contains a copy of [`subxt`][subxt], the Rust client library for
-  substrate. This package serves as the base for `client`.
 
 
 Testing
@@ -69,34 +66,6 @@ Local devnet
 
 We provide a `docker-compose` file to run a local devnet. See
 `./local-devnet/README.md` for more information.
-
-
-Upstream `subxt`
-----------------
-
-This repository contains a modified copy of [`subxt`][subxt] in the `./subxt`
-directory. The repository also contains a Git submodule as reference to the
-`subxt` upstream.
-
-To include upstream patches of `subxt` in our copy use the following recipe
-
-~~~bash
-# Extract latest patches
-git --git-dir=subxt/vendor/.git fetch origin
-git --git-dir=subxt/vendor/.git format-patch HEAD..origin/master
-
-# Apply patches
-git am --directory=subxt *.patch
-
-# Update submodule revision
-git --git-dir=subxt/vendor/.git checkout origin/master
-~~~
-
-Finlly squash all the upstream patches. Use the commit title `subxt: Apply
-upstream patches` and include a list of all the upstream commits that were
-applied.
-
-[subxt]: https://github.com/paritytech/substrate-subxt
 
 
 Updating substrate

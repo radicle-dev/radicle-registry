@@ -17,36 +17,57 @@
 use futures01::prelude::Stream as _;
 use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
 use futures03::prelude::*;
+use jsonrpc_core_client::RpcChannel;
 use parity_scale_codec::{Decode, Encode as _};
-use sr_primitives::traits::Hash as _;
+use sr_primitives::{generic::SignedBlock, traits::Hash as _};
+use std::sync::Arc;
 use substrate_primitives::{storage::StorageKey, twox_128};
+use substrate_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
+use substrate_rpc_primitives::number::NumberOrHex;
 use substrate_transaction_graph::watcher::Status as TxStatus;
+use url::Url;
 
 use radicle_registry_runtime::{
-    opaque::Block as OpaqueBlock, Event, EventRecord, Hash, Hashing, Runtime,
+    opaque::Block as OpaqueBlock, BlockNumber, Event, EventRecord, Hash, Hashing, Header,
 };
 
 use crate::backend::{self, Backend};
 use crate::interface::*;
 
+type ChainBlock = SignedBlock<OpaqueBlock>;
+
+/// Collection of substrate RPC clients
+#[derive(Clone)]
+struct Rpc {
+    state: StateClient<BlockHash>,
+    chain: ChainClient<BlockNumber, Hash, Header, ChainBlock>,
+    author: AuthorClient<Hash, BlockHash>,
+}
+
 #[derive(Clone)]
 pub struct RemoteNode {
-    subxt_client: substrate_subxt::Client<Runtime>,
     genesis_hash: Hash,
+    rpc: Arc<Rpc>,
 }
 
 impl RemoteNode {
     pub async fn create() -> Result<Self, Error> {
-        let subxt_client = substrate_subxt::ClientBuilder::<Runtime>::new()
-            .build()
+        let url = Url::parse("ws://127.0.0.1:9944").expect("Is valid url; qed");
+        let channel: RpcChannel = jsonrpc_core_client::transports::ws::connect(&url)
             .compat()
             .await?;
-        let rpc = subxt_client.connect().compat().await?;
-        let genesis_hash = rpc.genesis_hash().compat().await?;
-        Ok(RemoteNode {
-            subxt_client,
-            genesis_hash,
-        })
+        let rpc = Arc::new(Rpc {
+            state: channel.clone().into(),
+            chain: channel.clone().into(),
+            author: channel.clone().into(),
+        });
+        let genesis_hash = rpc
+            .chain
+            .block_hash(Some(NumberOrHex::Number(BlockNumber::min_value())))
+            .compat()
+            .await?
+            .unwrap();
+        Ok(RemoteNode { genesis_hash, rpc })
     }
 
     /// Submit a transaction and return the block hash once it is included in a block.
@@ -54,9 +75,8 @@ impl RemoteNode {
         &self,
         xt: backend::UncheckedExtrinsic,
     ) -> Result<BlockHash, Error> {
-        let rpc = self.subxt_client.connect().compat().await?;
-
-        let tx_status_stream = rpc
+        let tx_status_stream = self
+            .rpc
             .author
             .watch_extrinsic(xt.encode().into())
             .compat()
@@ -96,8 +116,7 @@ impl RemoteNode {
         let event_records: Vec<radicle_registry_runtime::EventRecord> =
             Decode::decode(&mut &events_data[..]).map_err(Error::Codec)?;
 
-        let rpc = self.subxt_client.connect().compat().await?;
-        let opt_signed_block = rpc.chain.block(Some(block_hash)).compat().await?;
+        let opt_signed_block = self.rpc.chain.block(Some(block_hash)).compat().await?;
         let block = opt_signed_block
             .expect("Block that should include submitted transaction does not exist")
             .block;
@@ -128,8 +147,7 @@ impl backend::Backend for RemoteNode {
         block_hash: Option<BlockHash>,
     ) -> Result<Option<Vec<u8>>, Error> {
         let key = StorageKey(Vec::from(key));
-        let rpc = self.subxt_client.connect().compat().await?;
-        let maybe_data = rpc.state.storage(key, block_hash).compat().await?;
+        let maybe_data = self.rpc.state.storage(key, block_hash).compat().await?;
         Ok(maybe_data.map(|data| data.0))
     }
 
