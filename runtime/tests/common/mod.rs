@@ -1,5 +1,5 @@
 /// Miscellaneous helpers used throughout other tests.
-use futures::prelude::*;
+use futures01::prelude::*;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 

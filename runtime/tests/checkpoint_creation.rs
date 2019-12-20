@@ -3,7 +3,7 @@
 /// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
 ///
 /// The tests in this module concern checkpoint creation.
-use futures::prelude::*;
+use futures01::prelude::*;
 
 use radicle_registry_client::*;
 

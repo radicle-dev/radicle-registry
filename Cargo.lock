@@ -1154,6 +1154,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures01"
+version = "0.1.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ef8cbbf52909170053540c6c05a62433ddb60662dabee714e2a882caa864f22"
+dependencies = [
+ "futures 0.1.29",
+]
+
+[[package]]
 name = "gcc"
 version = "0.3.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3646,6 +3655,7 @@ dependencies = [
  "paint-transaction-payment",
  "parity-scale-codec",
  "radicle-registry-runtime",
+ "rand 0.7.2",
  "sr-io",
  "sr-primitives",
  "substrate-primitives",
@@ -3687,7 +3697,7 @@ dependencies = [
 name = "radicle-registry-runtime"
 version = "0.1.0"
 dependencies = [
- "futures 0.1.29",
+ "futures01",
  "paint-aura",
  "paint-balances",
  "paint-executive",

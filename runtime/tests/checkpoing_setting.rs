@@ -4,7 +4,7 @@
 ///
 /// The tests in this module concern checkpoint creation and setting project
 /// checkpoints.
-use futures::prelude::*;
+use futures01::prelude::*;
 
 use radicle_registry_client::*;
 
