@@ -82,10 +82,14 @@ impl backend::Backend for RemoteNode {
         })
     }
 
-    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
+    async fn fetch(
+        &self,
+        key: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<Vec<u8>>, Error> {
         let key = StorageKey(Vec::from(key));
         let rpc = self.subxt_client.connect().compat().await?;
-        let maybe_data = rpc.state.storage(key, None).compat().await?;
+        let maybe_data = rpc.state.storage(key, block_hash).compat().await?;
         Ok(maybe_data.map(|data| data.0))
     }
 

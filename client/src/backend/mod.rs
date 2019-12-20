@@ -47,8 +47,12 @@ pub trait Backend {
     /// in a block.
     async fn submit(&self, xt: UncheckedExtrinsic) -> Result<TransactionApplied, Error>;
 
-    /// Fetch a value from the runtime state storage.
-    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error>;
+    /// Fetch a value from the runtime state storage at the given block.
+    async fn fetch(
+        &self,
+        key: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<Vec<u8>>, Error>;
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;

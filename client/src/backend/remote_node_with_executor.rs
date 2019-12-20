@@ -56,11 +56,15 @@ impl backend::Backend for RemoteNodeWithExecutor {
         handle.await
     }
 
-    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
+    async fn fetch(
+        &self,
+        key: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<Vec<u8>>, Error> {
         let backend = self.backend.clone();
         let key = Vec::from(key);
         let handle = Executor01CompatExt::compat(self.runtime.executor())
-            .spawn_with_handle(async move { backend.fetch(&key).await })
+            .spawn_with_handle(async move { backend.fetch(&key, block_hash).await })
             .unwrap();
         handle.await
     }
