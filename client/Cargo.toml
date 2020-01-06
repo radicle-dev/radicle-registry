@@ -63,3 +63,4 @@ rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
 
 [dev-dependencies]
 rand = "0.7.2"
+radicle-registry-test-utils = { path = "../test-utils"}

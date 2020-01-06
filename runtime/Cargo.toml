@@ -169,3 +169,4 @@ substrate-wasm-builder-runner = "1.0.2"
 futures01 = "0.1"
 rand = "0.7.2"
 radicle-registry-client = { path = "../client" }
+radicle-registry-test-utils = { path = "../test-utils"}

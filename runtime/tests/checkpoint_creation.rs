@@ -6,16 +6,15 @@
 use futures01::prelude::*;
 
 use radicle_registry_client::*;
-
-mod common;
+use radicle_registry_test_utils::*;
 
 #[test]
 fn create_checkpoint() {
     let client = Client::new_emulator();
-    let bob = common::key_pair_from_string("Bob");
+    let bob = key_pair_from_string("Bob");
 
     let project_hash1 = H256::random();
-    let checkpoint_id1 = common::submit_ok(
+    let checkpoint_id1 = submit_ok(
         &client,
         &bob,
         CreateCheckpointParams {
@@ -27,7 +26,7 @@ fn create_checkpoint() {
     .unwrap();
 
     let project_hash2 = H256::random();
-    let checkpoint_id2 = common::submit_ok(
+    let checkpoint_id2 = submit_ok(
         &client,
         &bob,
         CreateCheckpointParams {
@@ -64,12 +63,12 @@ fn create_checkpoint() {
 #[test]
 fn create_checkpoint_without_parent() {
     let client = Client::new_emulator();
-    let bob = common::key_pair_from_string("Bob");
+    let bob = key_pair_from_string("Bob");
 
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
 
-    let tx_applied = common::submit_ok(
+    let tx_applied = submit_ok(
         &client,
         &bob,
         CreateCheckpointParams {

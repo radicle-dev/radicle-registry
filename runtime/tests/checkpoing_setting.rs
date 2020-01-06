@@ -7,18 +7,17 @@
 use futures01::prelude::*;
 
 use radicle_registry_client::*;
-
-mod common;
+use radicle_registry_test_utils::*;
 
 #[test]
 fn set_checkpoint() {
     let client = Client::new_emulator();
-    let charles = common::key_pair_from_string("Charles");
+    let charles = key_pair_from_string("Charles");
 
-    let project = common::create_project_with_checkpoint(&client, &charles);
+    let project = create_project_with_checkpoint(&client, &charles);
 
     let project_hash2 = H256::random();
-    let new_checkpoint_id = common::submit_ok(
+    let new_checkpoint_id = submit_ok(
         &client,
         &charles,
         CreateCheckpointParams {
@@ -29,7 +28,7 @@ fn set_checkpoint() {
     .result
     .unwrap();
 
-    common::submit_ok(
+    submit_ok(
         &client,
         &charles,
         SetCheckpointParams {
@@ -45,12 +44,12 @@ fn set_checkpoint() {
 #[test]
 fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
-    let eve = common::key_pair_from_string("Eve");
+    let eve = key_pair_from_string("Eve");
 
-    let project = common::create_project_with_checkpoint(&client, &eve);
+    let project = create_project_with_checkpoint(&client, &eve);
 
     let project_hash2 = H256::random();
-    let new_checkpoint_id = common::submit_ok(
+    let new_checkpoint_id = submit_ok(
         &client,
         &eve,
         CreateCheckpointParams {
@@ -61,8 +60,8 @@ fn set_checkpoint_without_permission() {
     .result
     .unwrap();
 
-    let frank = common::key_pair_from_string("Frank");
-    let tx_applied = common::submit_ok(
+    let frank = key_pair_from_string("Frank");
+    let tx_applied = submit_ok(
         &client,
         &frank,
         SetCheckpointParams {
@@ -84,13 +83,13 @@ fn set_checkpoint_without_permission() {
 #[test]
 fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
-    let david = common::key_pair_from_string("David");
+    let david = key_pair_from_string("David");
 
-    let project = common::create_project_with_checkpoint(&client, &david);
+    let project = create_project_with_checkpoint(&client, &david);
 
     let garbage = CheckpointId::random();
 
-    let tx_applied = common::submit_ok(
+    let tx_applied = submit_ok(
         &client,
         &david,
         SetCheckpointParams {
@@ -112,9 +111,9 @@ fn fail_to_set_nonexistent_checkpoint() {
 #[test]
 fn set_fork_checkpoint() {
     let client = Client::new_emulator();
-    let grace = common::key_pair_from_string("Grace");
+    let grace = key_pair_from_string("Grace");
 
-    let project = common::create_project_with_checkpoint(&client, &grace);
+    let project = create_project_with_checkpoint(&client, &grace);
 
     let mut current_cp = project.current_cp;
 
@@ -122,7 +121,7 @@ fn set_fork_checkpoint() {
     let n = 5;
     let mut checkpoints: Vec<CheckpointId> = Vec::with_capacity(n);
     for _ in 0..n {
-        let new_checkpoint_id = common::submit_ok(
+        let new_checkpoint_id = submit_ok(
             &client,
             &grace,
             CreateCheckpointParams {
@@ -136,7 +135,7 @@ fn set_fork_checkpoint() {
         checkpoints.push(new_checkpoint_id);
     }
 
-    let forked_checkpoint_id = common::submit_ok(
+    let forked_checkpoint_id = submit_ok(
         &client,
         &grace,
         CreateCheckpointParams {
@@ -147,7 +146,7 @@ fn set_fork_checkpoint() {
     .result
     .unwrap();
 
-    common::submit_ok(
+    submit_ok(
         &client,
         &grace,
         SetCheckpointParams {

@@ -4,8 +4,7 @@
 
 use futures01::future::Future as _;
 use radicle_registry_client::*;
-
-mod common;
+use radicle_registry_test_utils::*;
 
 #[test]
 fn register_project() {
@@ -15,7 +14,7 @@ fn register_project() {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
-    let checkpoint_id = common::submit_ok(
+    let checkpoint_id = submit_ok(
         &client,
         &alice,
         CreateCheckpointParams {
@@ -26,10 +25,10 @@ fn register_project() {
     .result
     .unwrap();
 
-    let register_project_params = common::random_register_project_params(checkpoint_id);
+    let register_project_params = random_register_project_params(checkpoint_id);
 
     let project_id = register_project_params.id.clone();
-    let tx_applied = common::submit_ok(&client, &alice, register_project_params.clone());
+    let tx_applied = submit_ok(&client, &alice, register_project_params.clone());
 
     assert_eq!(tx_applied.result, Ok(()));
 

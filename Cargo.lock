@@ -3487,6 +3487,7 @@ dependencies = [
  "parity-scale-codec",
  "radicle-registry-core",
  "radicle-registry-runtime",
+ "radicle-registry-test-utils",
  "rand 0.7.2",
  "sc-rpc-api",
  "sp-core",
@@ -3560,6 +3561,7 @@ dependencies = [
  "parity-scale-codec",
  "radicle-registry-client",
  "radicle-registry-core",
+ "radicle-registry-test-utils",
  "rand 0.7.2",
  "serde",
  "sp-api",
@@ -3580,6 +3582,17 @@ dependencies = [
 [[package]]
 name = "radicle-registry-spec"
 version = "0.1.0"
+
+[[package]]
+name = "radicle-registry-test-utils"
+version = "0.0.0"
+dependencies = [
+ "futures01",
+ "radicle-registry-client",
+ "radicle-registry-core",
+ "rand 0.7.2",
+ "sp-core",
+]
 
 [[package]]
 name = "rand"
