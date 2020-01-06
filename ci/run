@@ -64,25 +64,25 @@ function upload_to_bintray () {
   local -r api_url="https://bintray.com/api/v1"
   local -r subject="oscoin"
   local -r repo="radicle-registry-files"
-  local -r package="radicle-registy-node"
+  local -r package="radicle-registry-node"
   local -r version="git-$BUILDKITE_COMMIT"
   local -r target_triple="x86_64-linux-gnu"
   local -r remote_file="$version/$target_triple/radicle-registry-node"
   local -r local_file="./artifacts/radicle-registry-node"
-  local -r user="monadic-ci"
 
   local file_checksum
   file_checksum="$(sha256sum "$local_file" | cut -f1 -d ' ')"
 
   curl \
-    --show-error \
+    --fail --show-error \
     -X PUT \
-    --basic --user "$user:$BINTRAY_API_KEY" \
+    --basic --user "$BINTRAY_API_KEY" \
     -H "X-Bintray-Package: $package" \
     -H "X-Bintray-Version: $version" \
+    -H "X-Bintray-Override: 1" \
     -H "X-Bintray-Publish: 1" \
     -H "X-Checksum-Sha2: $file_checksum" \
-    "$api_url/content/$subject/$repo/$remote_file?publish=1" \
+    "$api_url/content/$subject/$repo/$remote_file" \
     --data-binary @$local_file
   # Response from curl does not end with new line
   echo
