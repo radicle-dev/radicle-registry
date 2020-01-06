@@ -7,15 +7,17 @@ license = "GPL-3.0-only"
 
 [dependencies]
 radicle-registry-runtime = { path = "../runtime" }
-substrate-subxt = { path = "../subxt" }
 
+async-trait = "0.1"
+derive_more = "0.15"
 env_logger = "0.7"
 futures01 = { package = "futures", version = "0.1" }
 futures03 = { package = "futures", version = "0.3", features = ["compat"] }
+jsonrpc-core-client = { version = "14.0", features = ["ws"] }
 log = "0.4"
 parity-scale-codec = "1.0"
 tokio = "0.1"
-async-trait = "0.1"
+url = "1.7"
 
 [dependencies.paint-system]
 git = "https://github.com/paritytech/substrate"
@@ -38,6 +40,14 @@ git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [dependencies.sr-io]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+
+[dependencies.substrate-rpc-api]
+git = "https://github.com/paritytech/substrate"
+rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+
+[dependencies.substrate-rpc-primitives]
 git = "https://github.com/paritytech/substrate"
 rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
 

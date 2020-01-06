@@ -48,6 +48,7 @@ use sr_primitives::traits::Hash as _;
 
 mod backend;
 mod call;
+mod error;
 mod interface;
 mod transaction;
 

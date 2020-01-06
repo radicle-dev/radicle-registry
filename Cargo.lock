@@ -474,15 +474,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cmake"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81fb25b677f8bf1eb325017cb6bb8452f87969db0fedb4f757b297bee78a7c62"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "const-random"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -678,18 +669,6 @@ name = "data-encoding"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4f47ca1860a761136924ddd2422ba77b2ea54fe8cc75b9040804a0d9d32ad97"
-
-[[package]]
-name = "derive_more"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d944ac6003ed268757ef1ee686753b57efc5fcf0ebe7b64c9fc81e7e32ff839"
-dependencies = [
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "rustc_version",
- "syn 0.15.44",
-]
 
 [[package]]
 name = "derive_more"
@@ -2476,73 +2455,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "node-primitives"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "sr-primitives",
- "substrate-primitives",
-]
-
-[[package]]
-name = "node-runtime"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "integer-sqrt",
- "node-primitives",
- "paint-authority-discovery",
- "paint-authorship",
- "paint-babe",
- "paint-balances",
- "paint-collective",
- "paint-contracts",
- "paint-contracts-rpc-runtime-api",
- "paint-democracy",
- "paint-elections-phragmen",
- "paint-executive",
- "paint-finality-tracker",
- "paint-grandpa",
- "paint-im-online",
- "paint-indices",
- "paint-membership",
- "paint-nicks",
- "paint-offences",
- "paint-randomness-collective-flip",
- "paint-session",
- "paint-staking",
- "paint-staking-reward-curve",
- "paint-sudo",
- "paint-support",
- "paint-system",
- "paint-system-rpc-runtime-api",
- "paint-timestamp",
- "paint-transaction-payment",
- "paint-transaction-payment-rpc-runtime-api",
- "paint-treasury",
- "paint-utility",
- "parity-scale-codec",
- "rustc-hex",
- "safe-mix",
- "serde",
- "sr-api",
- "sr-primitives",
- "sr-staking-primitives",
- "sr-std",
- "sr-version",
- "substrate-authority-discovery-primitives",
- "substrate-block-builder-runtime-api",
- "substrate-consensus-babe-primitives",
- "substrate-inherents",
- "substrate-keyring",
- "substrate-offchain-primitives",
- "substrate-primitives",
- "substrate-session",
- "substrate-transaction-pool-runtime-api",
- "substrate-wasm-builder-runner 1.0.4 (git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b)",
-]
-
-[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2710,60 +2622,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "paint-authority-discovery"
-version = "0.1.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-session",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
- "substrate-application-crypto",
- "substrate-authority-discovery-primitives",
- "substrate-primitives",
-]
-
-[[package]]
-name = "paint-authorship"
-version = "0.1.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "impl-trait-for-tuples",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "sr-io",
- "sr-primitives",
- "sr-std",
- "substrate-inherents",
- "substrate-primitives",
-]
-
-[[package]]
-name = "paint-babe"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "hex-literal",
- "paint-session",
- "paint-support",
- "paint-system",
- "paint-timestamp",
- "parity-scale-codec",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-staking-primitives",
- "sr-std",
- "substrate-consensus-babe-primitives",
- "substrate-inherents",
-]
-
-[[package]]
 name = "paint-balances"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -2776,81 +2634,6 @@ dependencies = [
  "sr-primitives",
  "sr-std",
  "substrate-keyring",
-]
-
-[[package]]
-name = "paint-collective"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "safe-mix",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
- "substrate-primitives",
-]
-
-[[package]]
-name = "paint-contracts"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "parity-wasm 0.40.3",
- "pwasm-utils",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-sandbox",
- "sr-std",
- "substrate-primitives",
- "wasmi-validation 0.2.0",
-]
-
-[[package]]
-name = "paint-contracts-rpc-runtime-api"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "parity-scale-codec",
- "serde",
- "sr-api",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
-name = "paint-democracy"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "safe-mix",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
-name = "paint-elections-phragmen"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "sr-primitives",
- "sr-std",
- "substrate-phragmen",
 ]
 
 [[package]]
@@ -2901,56 +2684,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "paint-im-online"
-version = "0.1.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-authorship",
- "paint-session",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-staking-primitives",
- "sr-std",
- "substrate-application-crypto",
- "substrate-primitives",
-]
-
-[[package]]
-name = "paint-indices"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "safe-mix",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
- "substrate-keyring",
- "substrate-primitives",
-]
-
-[[package]]
-name = "paint-membership"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
 name = "paint-metadata"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -2959,35 +2692,6 @@ dependencies = [
  "serde",
  "sr-std",
  "substrate-primitives",
-]
-
-[[package]]
-name = "paint-nicks"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
-name = "paint-offences"
-version = "1.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-balances",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-primitives",
- "sr-staking-primitives",
- "sr-std",
 ]
 
 [[package]]
@@ -3020,37 +2724,6 @@ dependencies = [
  "sr-staking-primitives",
  "sr-std",
  "substrate-trie",
-]
-
-[[package]]
-name = "paint-staking"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-authorship",
- "paint-session",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "safe-mix",
- "serde",
- "sr-io",
- "sr-primitives",
- "sr-staking-primitives",
- "sr-std",
- "substrate-keyring",
- "substrate-phragmen",
-]
-
-[[package]]
-name = "paint-staking-reward-curve"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "proc-macro-crate",
- "proc-macro2 1.0.6",
- "quote 1.0.2",
- "syn 1.0.11",
 ]
 
 [[package]]
@@ -3140,15 +2813,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "paint-system-rpc-runtime-api"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "parity-scale-codec",
- "sr-api",
-]
-
-[[package]]
 name = "paint-timestamp"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -3184,34 +2848,6 @@ dependencies = [
  "parity-scale-codec",
  "serde",
  "sr-api",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
-name = "paint-treasury"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-balances",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
-name = "paint-utility"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-io",
  "sr-primitives",
  "sr-std",
 ]
@@ -3593,17 +3229,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40361836defdd5871ff7e84096c6f6444af7fc157f8ef1789f54f147687caa20"
 
 [[package]]
-name = "pwasm-utils"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d473123ba135028544926f7aa6f34058d8bc6f120c4fcd3777f84af724280b3"
-dependencies = [
- "byteorder 1.3.2",
- "log 0.4.8",
- "parity-wasm 0.40.3",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3646,9 +3271,11 @@ name = "radicle-registry-client"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "derive_more",
  "env_logger 0.7.1",
  "futures 0.1.29",
  "futures 0.3.1",
+ "jsonrpc-core-client",
  "log 0.4.8",
  "paint-support",
  "paint-system",
@@ -3659,9 +3286,11 @@ dependencies = [
  "sr-io",
  "sr-primitives",
  "substrate-primitives",
- "substrate-subxt",
+ "substrate-rpc-api",
+ "substrate-rpc-primitives",
  "substrate-transaction-graph",
  "tokio",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -3669,7 +3298,7 @@ name = "radicle-registry-node"
 version = "0.1.0"
 dependencies = [
  "ctrlc",
- "derive_more 0.15.0",
+ "derive_more",
  "exit-future",
  "futures 0.1.29",
  "log 0.4.8",
@@ -3725,7 +3354,7 @@ dependencies = [
  "substrate-primitives",
  "substrate-session",
  "substrate-transaction-pool-runtime-api",
- "substrate-wasm-builder-runner 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "substrate-wasm-builder-runner",
 ]
 
 [[package]]
@@ -4454,18 +4083,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sr-sandbox"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "parity-scale-codec",
- "sr-io",
- "sr-std",
- "substrate-primitives",
- "wasmi",
-]
-
-[[package]]
 name = "sr-staking-primitives"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -4582,18 +4199,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "substrate-authority-discovery-primitives"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "parity-scale-codec",
- "sr-api",
- "sr-primitives",
- "sr-std",
- "substrate-application-crypto",
-]
-
-[[package]]
 name = "substrate-basic-authorship"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -4683,7 +4288,7 @@ dependencies = [
  "app_dirs",
  "atty",
  "clap",
- "derive_more 0.15.0",
+ "derive_more",
  "env_logger 0.7.1",
  "exit-future",
  "fdlimit",
@@ -4715,7 +4320,7 @@ name = "substrate-client"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "fnv",
  "futures 0.1.29",
  "futures-preview",
@@ -4747,7 +4352,7 @@ name = "substrate-client-api"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "fnv",
  "futures 0.1.29",
  "futures-preview",
@@ -4803,7 +4408,7 @@ name = "substrate-consensus-aura"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "futures 0.1.29",
  "futures-preview",
  "futures-timer",
@@ -4859,7 +4464,7 @@ name = "substrate-consensus-common"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "futures-preview",
  "futures-timer",
  "libp2p",
@@ -4906,7 +4511,7 @@ name = "substrate-executor"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "lazy_static",
  "libsecp256k1",
  "log 0.4.8",
@@ -4994,7 +4599,7 @@ name = "substrate-inherents"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "parity-scale-codec",
  "parking_lot 0.9.0",
  "sr-std",
@@ -5018,7 +4623,7 @@ name = "substrate-keystore"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "hex 0.3.2",
  "parking_lot 0.9.0",
  "rand 0.7.2",
@@ -5035,7 +4640,7 @@ source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429
 dependencies = [
  "bitflags",
  "bytes",
- "derive_more 0.15.0",
+ "derive_more",
  "either",
  "erased-serde",
  "fnv",
@@ -5131,16 +4736,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "substrate-phragmen"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
-dependencies = [
- "serde",
- "sr-primitives",
- "sr-std",
-]
-
-[[package]]
 name = "substrate-primitives"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -5223,7 +4818,7 @@ name = "substrate-rpc-api"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "futures-preview",
  "jsonrpc-core",
  "jsonrpc-core-client",
@@ -5305,7 +4900,7 @@ name = "substrate-service"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "exit-future",
  "futures 0.1.29",
  "futures-preview",
@@ -5384,37 +4979,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "substrate-subxt"
-version = "0.2.0"
-dependencies = [
- "derive_more 0.14.1",
- "env_logger 0.6.2",
- "futures 0.1.29",
- "jsonrpc-core-client",
- "log 0.4.8",
- "node-runtime",
- "num-traits",
- "paint-balances",
- "paint-contracts",
- "paint-indices",
- "paint-metadata",
- "paint-support",
- "paint-system",
- "parity-scale-codec",
- "serde",
- "sr-primitives",
- "sr-version",
- "substrate-keyring",
- "substrate-primitives",
- "substrate-rpc-api",
- "substrate-rpc-primitives",
- "substrate-transaction-graph",
- "tokio",
- "url 1.7.2",
- "wabt",
-]
-
-[[package]]
 name = "substrate-telemetry"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
@@ -5441,7 +5005,7 @@ name = "substrate-transaction-graph"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "futures-preview",
  "log 0.4.8",
  "parking_lot 0.9.0",
@@ -5455,7 +5019,7 @@ name = "substrate-transaction-pool"
 version = "2.0.0"
 source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 dependencies = [
- "derive_more 0.15.0",
+ "derive_more",
  "futures 0.3.1",
  "log 0.4.8",
  "parity-scale-codec",
@@ -5490,11 +5054,6 @@ dependencies = [
  "trie-db",
  "trie-root",
 ]
-
-[[package]]
-name = "substrate-wasm-builder-runner"
-version = "1.0.4"
-source = "git+https://github.com/paritytech/substrate?rev=dc4a8329b9c47790c25429a5df272b3648275c1b#dc4a8329b9c47790c25429a5df272b3648275c1b"
 
 [[package]]
 name = "substrate-wasm-builder-runner"
@@ -6113,29 +5672,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
-name = "wabt"
-version = "0.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c5c5c1286c6e578416982609f47594265f9d489f9b836157d403ad605a46693"
-dependencies = [
- "serde",
- "serde_derive",
- "serde_json",
- "wabt-sys",
-]
-
-[[package]]
-name = "wabt-sys"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af5d153dc96aad7dc13ab90835b892c69867948112d95299e522d370c4e13a08"
-dependencies = [
- "cc",
- "cmake",
- "glob",
-]
-
-[[package]]
 name = "want"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6260,16 +5796,7 @@ dependencies = [
  "num-rational",
  "num-traits",
  "parity-wasm 0.41.0",
- "wasmi-validation 0.3.0",
-]
-
-[[package]]
-name = "wasmi-validation"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bc0356e3df56e639fc7f7d8a99741915531e27ed735d911ed83d7e1339c8188"
-dependencies = [
- "parity-wasm 0.40.3",
+ "wasmi-validation",
 ]
 
 [[package]]
