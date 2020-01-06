@@ -6,17 +6,16 @@
 use futures01::prelude::*;
 
 use radicle_registry_client::*;
-
-mod common;
+use radicle_registry_test_utils::*;
 
 #[test]
 fn transfer_fail() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
-    let bob = common::key_pair_from_string("Bob").public();
+    let alice = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob").public();
 
     let balance_alice = client.free_balance(&alice.public()).wait().unwrap();
-    let tx_applied = common::submit_ok(
+    let tx_applied = submit_ok(
         &client,
         &alice,
         TransferParams {
@@ -32,12 +31,12 @@ fn transfer_fail() {
 #[test]
 fn project_account_transfer() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
-    let bob = common::key_pair_from_string("Bob").public();
-    let project = common::create_project_with_checkpoint(&client, &alice);
+    let alice = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob").public();
+    let project = create_project_with_checkpoint(&client, &alice);
 
     assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
-    common::submit_ok(
+    submit_ok(
         &client,
         &alice,
         TransferParams {
@@ -52,7 +51,7 @@ fn project_account_transfer() {
 
     assert_eq!(client.free_balance(&bob).wait().unwrap(), 0);
 
-    common::submit_ok(
+    submit_ok(
         &client,
         &alice,
         TransferFromProjectParams {
@@ -72,11 +71,11 @@ fn project_account_transfer() {
 /// Test that a transfer from a project account fails if the sender is not a project member.
 fn project_account_transfer_non_member() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
-    let bob = common::key_pair_from_string("Bob");
-    let project = common::create_project_with_checkpoint(&client, &alice);
+    let alice = key_pair_from_string("Alice");
+    let bob = key_pair_from_string("Bob");
+    let project = create_project_with_checkpoint(&client, &alice);
 
-    common::submit_ok(
+    submit_ok(
         &client,
         &alice,
         TransferParams {
@@ -89,7 +88,7 @@ fn project_account_transfer_non_member() {
         2000
     );
 
-    common::submit_ok(
+    submit_ok(
         &client,
         &bob,
         TransferFromProjectParams {

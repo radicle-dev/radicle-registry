@@ -1,0 +1,20 @@
+[package]
+edition = "2018"
+name = "radicle-registry-test-utils"
+description = "Testing utilities used in Radicle Registry development"
+version = "0.0.0"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+homepage = "https://github.com/radicle-dev/radicle-registry"
+documentation = "https://github.com/radicle-dev/radicle-registry"
+license = "GPL-3.0-only"
+repository = "https://github.com/radicle-dev/radicle-registry"
+
+[dependencies]
+futures01 = "0.1"
+rand = "0.7.2"
+radicle-registry-client = { path = "../client" }
+radicle-registry-core = { path = "../core" }
+
+[dependencies.sp-core]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"

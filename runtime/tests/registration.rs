@@ -6,16 +6,15 @@
 use futures01::prelude::*;
 
 use radicle_registry_client::*;
-
-mod common;
+use radicle_registry_test_utils::*;
 
 #[test]
 fn register_project() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
+    let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
-    let checkpoint_id = common::submit_ok(
+    let checkpoint_id = submit_ok(
         &client,
         &alice,
         CreateCheckpointParams {
@@ -25,8 +24,8 @@ fn register_project() {
     )
     .result
     .unwrap();
-    let params = common::random_register_project_params(checkpoint_id);
-    let tx_applied = common::submit_ok(&client, &alice, params.clone());
+    let params = random_register_project_params(checkpoint_id);
+    let tx_applied = submit_ok(&client, &alice, params.clone());
 
     let project = client
         .get_project(params.clone().id)
@@ -66,9 +65,9 @@ fn register_project() {
 #[test]
 fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
+    let alice = key_pair_from_string("Alice");
 
-    let checkpoint_id = common::submit_ok(
+    let checkpoint_id = submit_ok(
         &client,
         &alice,
         CreateCheckpointParams {
@@ -79,12 +78,12 @@ fn register_project_with_duplicate_id() {
     .result
     .unwrap();
 
-    let params = common::random_register_project_params(checkpoint_id);
+    let params = random_register_project_params(checkpoint_id);
 
-    common::submit_ok(&client, &alice, params.clone());
+    submit_ok(&client, &alice, params.clone());
 
     // Duplicate submission with different description and image URL.
-    let registration_2 = common::submit_ok(
+    let registration_2 = submit_ok(
         &client,
         &alice,
         RegisterProjectParams {
@@ -105,13 +104,13 @@ fn register_project_with_duplicate_id() {
 #[test]
 fn register_project_with_bad_checkpoint() {
     let client = Client::new_emulator();
-    let alice = common::key_pair_from_string("Alice");
+    let alice = key_pair_from_string("Alice");
 
     let checkpoint_id = H256::random();
 
-    let params = common::random_register_project_params(checkpoint_id);
+    let params = random_register_project_params(checkpoint_id);
 
-    let tx_applied = common::submit_ok(&client, &alice, params.clone());
+    let tx_applied = submit_ok(&client, &alice, params.clone());
 
     assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
 

@@ -1,4 +1,20 @@
-/// Miscellaneous helpers used throughout other tests.
+// Radicle Registry
+// Copyright (C) 2019 Monadic GmbH <radicle@monadic.xyz>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3 as
+// published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+//! Miscellaneous helpers used throughout Registry tests.
+
 use futures01::prelude::*;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
@@ -8,7 +24,6 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-#[allow(dead_code)]
 pub fn submit_ok<Call_: Call>(
     client: &Client,
     author: &ed25519::Pair,
@@ -22,7 +37,6 @@ pub fn submit_ok<Call_: Call>(
         .unwrap()
 }
 
-#[allow(dead_code)]
 pub fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
     let checkpoint_id = submit_ok(
         &client,
@@ -74,7 +88,6 @@ pub fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterPr
     }
 }
 
-#[allow(dead_code)]
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
 }
