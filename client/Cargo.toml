@@ -1,12 +1,16 @@
 [package]
-name = "radicle-registry-client"
-version = "0.1.0"
-authors = ["Thomas Scholtes <thomas@monadic.xyz>"]
 edition = "2018"
+name = "radicle-registry-client"
+description = "Client library to interact with Radicle Registry node"
+version = "0.0.0"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+homepage = "https://github.com/radicle-dev/radicle-registry"
+documentation = "https://github.com/radicle-dev/radicle-registry"
 license = "GPL-3.0-only"
+repository = "https://github.com/radicle-dev/radicle-registry"
 
 [dependencies]
-radicle-registry-runtime = { path = "../runtime" }
+radicle-registry-runtime = { version = "0.0.0", path = "../runtime" }
 
 async-trait = "0.1"
 derive_more = "0.15"
