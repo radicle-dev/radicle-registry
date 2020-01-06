@@ -1,9 +1,13 @@
 [package]
-name = "radicle-registry-runtime"
-authors = ["Monadic GmbH <radicle@monadic.xyz>"]
 edition = "2018"
-version = "0.1.0"
+name = "radicle-registry-runtime"
+description = "Substrate chain runtime for the Radicle Registry"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+version = "0.0.0"
+homepage = "https://github.com/radicle-dev/radicle-registry"
+documentation = "https://github.com/radicle-dev/radicle-registry"
 license = "GPL-3.0-only"
+repository = "https://github.com/radicle-dev/radicle-registry"
 
 [features]
 default = ["std"]
