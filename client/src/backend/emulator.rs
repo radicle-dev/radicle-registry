@@ -77,7 +77,15 @@ impl backend::Backend for Emulator {
         })
     }
 
-    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
+    async fn fetch(
+        &self,
+        key: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<Vec<u8>>, Error> {
+        if block_hash.is_some() {
+            panic!("Passing a block hash 'fetch' for the client emulator is not supported")
+        }
+
         let test_ext = &mut self.test_ext.lock().unwrap();
         let maybe_data = test_ext.execute_with(|| sr_io::storage::get(key));
         Ok(maybe_data)

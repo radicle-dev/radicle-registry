@@ -14,13 +14,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! [backend::Backend] implementation for a remote full node
-use futures03::compat::Future01CompatExt as _;
+use futures01::prelude::Stream as _;
+use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
+use futures03::prelude::*;
+use parity_scale_codec::{Decode, Encode as _};
 use sr_primitives::traits::Hash as _;
-use substrate_primitives::storage::StorageKey;
+use substrate_primitives::{storage::StorageKey, twox_128};
+use substrate_transaction_graph::watcher::Status as TxStatus;
 
-use radicle_registry_runtime::{opaque::Block as OpaqueBlock, Event, Hash, Hashing, Runtime};
+use radicle_registry_runtime::{
+    opaque::Block as OpaqueBlock, Event, EventRecord, Hash, Hashing, Runtime,
+};
 
-use crate::backend;
+use crate::backend::{self, Backend};
 use crate::interface::*;
 
 #[derive(Clone)]
@@ -28,8 +34,6 @@ pub struct RemoteNode {
     subxt_client: substrate_subxt::Client<Runtime>,
     genesis_hash: Hash,
 }
-
-type ExtrinsicSuccess = substrate_subxt::ExtrinsicSuccess<Runtime>;
 
 impl RemoteNode {
     pub async fn create() -> Result<Self, Error> {
@@ -45,22 +49,60 @@ impl RemoteNode {
         })
     }
 
-    /// Returns the list of events dispatched by the extrinsic.
-    ///
-    /// [ExtrinsicSuccess] contains the extrinsic hash and the list of all events in the block.
-    /// From this list we return only those events that were dispatched by the extinsic.
-    ///
-    /// Requires an API call to get the block
-    async fn extract_events(&self, ext_success: ExtrinsicSuccess) -> Result<Vec<Event>, Error> {
-        let maybe_signed_block = self
-            .subxt_client
-            .block(Some(ext_success.block))
+    /// Submit a transaction and return the block hash once it is included in a block.
+    async fn submit_transaction(
+        &self,
+        xt: backend::UncheckedExtrinsic,
+    ) -> Result<BlockHash, Error> {
+        let rpc = self.subxt_client.connect().compat().await?;
+
+        let tx_status_stream = rpc
+            .author
+            .watch_extrinsic(xt.encode().into())
             .compat()
             .await?;
-        let block = maybe_signed_block.unwrap().block;
-        // TODO panic and explain
-        extract_events(block, ext_success)
-            .ok_or_else(|| Error::from("Extrinsic not found in block"))
+
+        let mut tx_status_stream = tx_status_stream.map_err(Error::from).compat();
+
+        loop {
+            let opt_tx_status = tx_status_stream.try_next().await?;
+            match opt_tx_status {
+                None => return Err(Error::from("watch_extrinsic stream terminated")),
+                Some(tx_status) => match tx_status {
+                    TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
+                    TxStatus::Finalized(block_hash) => return Ok(block_hash),
+                    TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
+                    TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
+                    TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
+                },
+            }
+        }
+    }
+
+    /// Return all the events belonging to the transaction included in the given block.
+    ///
+    /// This requires the transaction to be included in the given block.
+    async fn get_transaction_events(
+        &self,
+        tx_hash: TxHash,
+        block_hash: BlockHash,
+    ) -> Result<Vec<Event>, Error> {
+        let events_key = b"System Events";
+        let storage_key = twox_128(events_key);
+        let events_data = self
+            .fetch(&storage_key[..], Some(block_hash))
+            .await?
+            .unwrap_or_default();
+        let event_records: Vec<radicle_registry_runtime::EventRecord> =
+            Decode::decode(&mut &events_data[..]).map_err(Error::Codec)?;
+
+        let rpc = self.subxt_client.connect().compat().await?;
+        let opt_signed_block = rpc.chain.block(Some(block_hash)).compat().await?;
+        let block = opt_signed_block
+            .expect("Block that should include submitted transaction does not exist")
+            .block;
+        Ok(extract_transaction_events(tx_hash, block, event_records)
+            .expect("Failed to extract transaction events"))
     }
 }
 
@@ -68,24 +110,26 @@ impl RemoteNode {
 impl backend::Backend for RemoteNode {
     async fn submit(
         &self,
-        extrinsic: backend::UncheckedExtrinsic,
+        xt: backend::UncheckedExtrinsic,
     ) -> Result<backend::TransactionApplied, Error> {
-        let rpc = self.subxt_client.connect().compat().await?;
-        let ext_success = rpc.submit_and_watch_extrinsic(extrinsic).compat().await?;
-        let tx_hash = ext_success.extrinsic;
-        let block = ext_success.block;
-        let events = self.extract_events(ext_success).await?;
+        let tx_hash = Hashing::hash_of(&xt);
+        let block_hash = self.submit_transaction(xt).await?;
+        let events = self.get_transaction_events(tx_hash, block_hash).await?;
         Ok(backend::TransactionApplied {
             tx_hash,
-            block,
+            block: block_hash,
             events,
         })
     }
 
-    async fn fetch(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
+    async fn fetch(
+        &self,
+        key: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<Vec<u8>>, Error> {
         let key = StorageKey(Vec::from(key));
         let rpc = self.subxt_client.connect().compat().await?;
-        let maybe_data = rpc.state.storage(key, None).compat().await?;
+        let maybe_data = rpc.state.storage(key, block_hash).compat().await?;
         Ok(maybe_data.map(|data| data.0))
     }
 
@@ -94,29 +138,35 @@ impl backend::Backend for RemoteNode {
     }
 }
 
-/// Given an [ExtrinsicSuccess] struct for a transaction and the block the includes the transaction
-/// return all the events belonging to the transaction.
+/// Return all the events belonging to the transaction included in the given block.
+///
+/// The following conditions must hold:
+/// * The transaction with `tx_hash` must be included in `block`.
+/// * `event_records` are the events deposited by the runtime when `block` was executed.
 ///
 /// Returns `None` if no events for the transaction were found. This should be treated as an error
 /// since the events should at least include the system event for the transaction.
-fn extract_events(block: OpaqueBlock, ext_success: ExtrinsicSuccess) -> Option<Vec<Event>> {
+fn extract_transaction_events(
+    tx_hash: TxHash,
+    block: OpaqueBlock,
+    event_records: Vec<EventRecord>,
+) -> Option<Vec<Event>> {
     let xt_index = block
         .extrinsics
         .iter()
         .enumerate()
         .find_map(|(index, tx)| {
-            if Hashing::hash_of(tx) == ext_success.extrinsic {
+            if Hashing::hash_of(tx) == tx_hash {
                 Some(index)
             } else {
                 None
             }
         })?;
-    let events = ext_success
-        .events
-        .iter()
+    let events = event_records
+        .into_iter()
         .filter_map(|event_record| match event_record.phase {
             paint_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
-                Some(event_record.event.clone())
+                Some(event_record.event)
             }
             _ => None,
         })

@@ -38,8 +38,12 @@ pub use crate::transaction::{Transaction, TransactionExtra};
 #[doc(inline)]
 pub type Error = substrate_subxt::Error;
 
+/// The hash of a block. Uniquely identifies a block.
 #[doc(inline)]
+pub type BlockHash = Hash;
+
 /// The hash of a transaction. Uniquely identifies a transaction.
+#[doc(inline)]
 pub type TxHash = Hash;
 
 #[derive(Clone, Debug)]

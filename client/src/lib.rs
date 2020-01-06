@@ -107,7 +107,9 @@ impl Client {
     {
         let backend = self.backend.clone();
         future03_compat(async move {
-            let maybe_data = backend.fetch(S::storage_value_final_key().as_ref()).await?;
+            let maybe_data = backend
+                .fetch(S::storage_value_final_key().as_ref(), None)
+                .await?;
             let value = match maybe_data {
                 Some(data) => {
                     let value = Decode::decode(&mut &data[..])?;
@@ -142,7 +144,7 @@ impl Client {
         let key = S::storage_map_final_key(key);
         let key = Vec::from(key.as_ref());
         future03_compat(async move {
-            let maybe_data = backend.fetch(&key).await?;
+            let maybe_data = backend.fetch(&key, None).await?;
             let value = match maybe_data {
                 Some(data) => {
                     let value = Decode::decode(&mut &data[..])?;
