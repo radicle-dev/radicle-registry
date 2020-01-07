@@ -16,7 +16,12 @@
 use crate::chain_spec;
 use crate::service;
 use aura_primitives::sr25519::AuthorityPair as AuraPair;
-use futures::{future, sync::oneshot, Future};
+use futures::{
+    channel::oneshot,
+    compat::Future01CompatExt,
+    future::{select, Map},
+    FutureExt, TryFutureExt,
+};
 use log::info;
 use std::cell::RefCell;
 pub use substrate_cli::{error, IntoExit, VersionInfo};
@@ -70,6 +75,11 @@ where
             load_spec,
             exit,
         ),
+        ParseAndPrepare::CheckBlock(cmd) => cmd.run_with_builder(
+            |config: Config<_>| Ok(new_full_start!(config).0),
+            load_spec,
+            exit,
+        ),
         ParseAndPrepare::PurgeChain(cmd) => cmd.run(load_spec),
         ParseAndPrepare::RevertChain(cmd) => {
             cmd.run_with_builder(|config: Config<_>| Ok(new_full_start!(config).0), load_spec)
@@ -95,27 +105,31 @@ where
     T: AbstractService,
     E: IntoExit,
 {
-    let (exit_send, exit) = exit_future::signal();
+    let (exit_send, exit) = oneshot::channel();
 
     let informant = informant::build(&service);
-    runtime.executor().spawn(exit.until(informant).map(|_| ()));
+
+    let future = select(exit, informant).map(|_| Ok(())).compat();
+
+    runtime.executor().spawn(future);
 
     // we eagerly drop the service so that the internal exit future is fired,
     // but we need to keep holding a reference to the global telemetry guard
     let _telemetry = service.telemetry();
 
     let service_res = {
-        let exit = e
-            .into_exit()
-            .map_err(|_| error::Error::Other("Exit future failed.".into()));
-        let service = service.map_err(error::Error::Service);
-        let select = service.select(exit).map(|_| ()).map_err(|(err, _)| err);
+        let exit = e.into_exit();
+        let service = service.map_err(error::Error::Service).compat();
+        let select = select(service, exit).map(|_| Ok(())).compat();
         runtime.block_on(select)
     };
 
-    exit_send.fire();
+    let _ = exit_send.send(());
 
     // TODO [andre]: timeout this future #1318
+
+    use futures01::Future;
+
     let _ = runtime.shutdown_on_idle().wait();
 
     service_res
@@ -124,7 +138,8 @@ where
 // handles ctrl-c
 pub struct Exit;
 impl IntoExit for Exit {
-    type Exit = future::MapErr<oneshot::Receiver<()>, fn(oneshot::Canceled) -> ()>;
+    #[allow(clippy::type_complexity)]
+    type Exit = Map<oneshot::Receiver<()>, fn(Result<(), oneshot::Canceled>) -> ()>;
     fn into_exit(self) -> Self::Exit {
         // can't use signal directly here because CtrlC takes only `Fn`.
         let (exit_send, exit) = oneshot::channel();
@@ -141,6 +156,6 @@ impl IntoExit for Exit {
         })
         .expect("Error setting Ctrl-C handler");
 
-        exit.map_err(drop)
+        exit.map(drop)
     }
 }

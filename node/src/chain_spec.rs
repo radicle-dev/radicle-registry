@@ -68,7 +68,7 @@ fn dev_genesis_config() -> GenesisConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
         }),
-        paint_balances: Some(BalancesConfig {
+        pallet_balances: Some(BalancesConfig {
             balances: endowed_accounts
                 .iter()
                 .cloned()
@@ -76,11 +76,11 @@ fn dev_genesis_config() -> GenesisConfig {
                 .collect(),
             vesting: vec![],
         }),
-        paint_sudo: Some(SudoConfig { key: root_key }),
-        paint_aura: Some(AuraConfig {
+        pallet_sudo: Some(SudoConfig { key: root_key }),
+        pallet_aura: Some(AuraConfig {
             authorities: aura_authorities,
         }),
-        paint_grandpa: Some(GrandpaConfig {
+        pallet_grandpa: Some(GrandpaConfig {
             authorities: grandpa_authorities,
         }),
     }
@@ -123,7 +123,7 @@ fn local_dev_genesis_config() -> GenesisConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
         }),
-        paint_balances: Some(BalancesConfig {
+        pallet_balances: Some(BalancesConfig {
             balances: endowed_accounts
                 .iter()
                 .cloned()
@@ -131,11 +131,11 @@ fn local_dev_genesis_config() -> GenesisConfig {
                 .collect(),
             vesting: vec![],
         }),
-        paint_sudo: Some(SudoConfig { key: root_key }),
-        paint_aura: Some(AuraConfig {
+        pallet_sudo: Some(SudoConfig { key: root_key }),
+        pallet_aura: Some(AuraConfig {
             authorities: aura_authorities,
         }),
-        paint_grandpa: Some(GrandpaConfig {
+        pallet_grandpa: Some(GrandpaConfig {
             authorities: grandpa_authorities,
         }),
     }

@@ -42,7 +42,7 @@ use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
 
-use paint_support::storage::generator::{StorageMap, StorageValue};
+use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod backend;
@@ -97,7 +97,7 @@ impl Client {
     /// the runtime.
     ///
     /// ```ignore
-    /// client.fetch_value::<paint_balance::TotalIssuance<Runtime>, _>();
+    /// client.fetch_value::<frame_balance::TotalIssuance<Runtime>, _>();
     /// ```
     fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
         &self,
@@ -125,7 +125,7 @@ impl Client {
     /// provided by the runtime.
     ///
     /// ```ignore
-    /// client.fetch_map_value::<paint_system::AccountNonce<Runtime>, _, _>(account_id);
+    /// client.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(account_id);
     /// ```
     fn fetch_map_value<
         S: StorageMap<Key, Value>,
@@ -142,7 +142,6 @@ impl Client {
         // We cannot move this code into the async block. The compiler complains about a processing
         // cycle (E0391)
         let key = S::storage_map_final_key(key);
-        let key = Vec::from(key.as_ref());
         future03_compat(async move {
             let maybe_data = backend.fetch(&key, None).await?;
             let value = match maybe_data {
@@ -218,7 +217,7 @@ impl ClientT for Client {
     }
 
     fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
-        Box::new(self.fetch_map_value::<paint_system::AccountNonce<Runtime>, _, _>(*account_id))
+        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id))
     }
 
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {

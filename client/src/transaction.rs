@@ -97,12 +97,12 @@ fn transaction_extra_to_runtime_extra(
     SignedExtra,
     <SignedExtra as SignedExtension>::AdditionalSigned,
 ) {
-    let check_version = paint_system::CheckVersion::new();
-    let check_genesis = paint_system::CheckGenesis::new();
-    let check_era = paint_system::CheckEra::from(Era::Immortal);
-    let check_nonce = paint_system::CheckNonce::from(extra.nonce);
-    let check_weight = paint_system::CheckWeight::new();
-    let charge_transaction_payment = paint_transaction_payment::ChargeTransactionPayment::from(0);
+    let check_version = frame_system::CheckVersion::new();
+    let check_genesis = frame_system::CheckGenesis::new();
+    let check_era = frame_system::CheckEra::from(Era::Immortal);
+    let check_nonce = frame_system::CheckNonce::from(extra.nonce);
+    let check_weight = frame_system::CheckWeight::new();
+    let charge_transaction_payment = pallet_transaction_payment::ChargeTransactionPayment::from(0);
 
     let additional_signed = (
         check_version
@@ -146,16 +146,16 @@ mod test {
     /// Assert that extrinsics created with [create_and_sign] are validated by the runtime.
     fn check_extrinsic() {
         let genesis_config = GenesisConfig {
-            paint_aura: None,
-            paint_balances: None,
-            paint_sudo: None,
+            pallet_aura: None,
+            pallet_balances: None,
+            pallet_sudo: None,
             system: None,
-            paint_grandpa: None,
+            pallet_grandpa: None,
         };
         let mut test_ext = sr_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let (key_pair, _) = ed25519::Pair::generate();
 
-        type System = paint_system::Module<Runtime>;
+        type System = frame_system::Module<Runtime>;
         let genesis_hash = test_ext.execute_with(|| {
             System::initialize(
                 &1,
@@ -168,7 +168,7 @@ mod test {
 
         let xt = signed_extrinsic(
             &key_pair,
-            paint_system::Call::fill_block().into(),
+            frame_system::Call::fill_block().into(),
             TransactionExtra {
                 nonce: 0,
                 genesis_hash,

@@ -12,34 +12,32 @@ repository = "https://github.com/radicle-dev/radicle-registry"
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "paint-grandpa/std",
+    "frame-executive/std",
+    "frame-support/std",
+    "frame-system/std",
+    "pallet-aura/std",
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "parity-scale-codec/std",
     "serde",
-    "sr-primitives/std",
+    "sr-api/std",
     "sr-io/std",
+    "sr-primitives/std",
     "sr-std/std",
     "sr-version/std",
-    "paint-aura/std",
-    "paint-balances/std",
-    "paint-executive/std",
-    "paint-sudo/std",
-    "paint-support/std",
-    "paint-system/std",
-    "paint-timestamp/std",
-    "paint-transaction-payment/std",
-    "sr-api/std",
     "substrate-block-builder-runtime-api/std",
     "substrate-consensus-aura-primitives/std",
     "substrate-offchain-primitives/std",
     "substrate-primitives/std",
     "substrate-session/std",
-    "substrate-transaction-pool-runtime-api/std",
 ]
 
-[dependencies.codec]
+[dependencies.parity-scale-codec]
 default-features = false
 features = ["derive", "full"]
-package = "parity-scale-codec"
 version = "1.0.0"
 
 [dependencies.serde]
@@ -47,118 +45,115 @@ features = ["derive"]
 optional = true
 version = "1.0.101"
 
-[dependencies.paint-aura]
+[dependencies.pallet-aura]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
 [dependencies.substrate-consensus-aura-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
-[dependencies.paint-balances]
+[dependencies.pallet-balances]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.sr-api]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-executive]
+[dependencies.frame-executive]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
-package = "paint-executive"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.substrate-offchain-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.sr-std]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-randomness-collective-flip]
+[dependencies.pallet-randomness-collective-flip]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.substrate-session]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
 [dependencies.substrate-block-builder-runtime-api]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
-[dependencies.substrate-transaction-pool-runtime-api]
+[dependencies.sp-transaction-pool-runtime-api]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
 [dependencies.substrate-inherents]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default-features = false
 
-[dependencies.paint-sudo]
+[dependencies.pallet-sudo]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
-package = "paint-sudo"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-support]
+[dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-system]
+[dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-timestamp]
+[dependencies.pallet-timestamp]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-transaction-payment]
+[dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
 [dependencies.sr-version]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
 
-[dependencies.paint-grandpa]
+[dependencies.pallet-grandpa]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 default_features = false
-package = "paint-grandpa"
 
 [build-dependencies]
 substrate-wasm-builder-runner = "1.0.2"

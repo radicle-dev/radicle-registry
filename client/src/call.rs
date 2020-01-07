@@ -131,17 +131,19 @@ impl Call for registry::TransferFromProjectParams {
 
 /// Extract the dispatch result of an extrinsic from the extrinsic events.
 ///
-/// Looks for the [paint_system::Event] in the list of events and returns the inner result based on
+/// Looks for the [frame_system::Event] in the list of events and returns the inner result based on
 /// the event.
 ///
-/// Returns an outer [EventParseError] if no [paint_system::Event] was present in `events`.
+/// Returns an outer [EventParseError] if no [frame_system::Event] was present in `events`.
 ///
 /// Because of an issue with substrate the `message` field of [DispatchError] will always be `None`
 fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
-            paint_system::Event::ExtrinsicSuccess => Some(Ok(())),
-            paint_system::Event::ExtrinsicFailed(ref dispatch_error) => Some(Err(*dispatch_error)),
+            frame_system::Event::ExtrinsicSuccess(_) => Some(Ok(())),
+            frame_system::Event::ExtrinsicFailed(ref dispatch_error, _) => {
+                Some(Err(*dispatch_error))
+            }
         },
         _ => None,
     })
