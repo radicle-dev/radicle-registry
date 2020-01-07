@@ -16,14 +16,30 @@ fn create_checkpoint() {
 
     let project_hash1 = H256::random();
     let checkpoint_id1 = client
-        .create_checkpoint(&bob, project_hash1, None)
+        .submit(
+            &bob,
+            CreateCheckpointParams {
+                project_hash: project_hash1,
+                previous_checkpoint_id: None,
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let project_hash2 = H256::random();
     let checkpoint_id2 = client
-        .create_checkpoint(&bob, project_hash2, Some(checkpoint_id1))
+        .submit(
+            &bob,
+            CreateCheckpointParams {
+                project_hash: project_hash2,
+                previous_checkpoint_id: Some(checkpoint_id1),
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let checkpoint1_ = Checkpoint {

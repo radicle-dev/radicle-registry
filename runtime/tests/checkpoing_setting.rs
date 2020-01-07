@@ -19,12 +19,20 @@ fn set_checkpoint() {
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = client
-        .create_checkpoint(&charles, project_hash2, Some(project.current_cp))
+        .submit(
+            &charles,
+            CreateCheckpointParams {
+                project_hash: project_hash2,
+                previous_checkpoint_id: Some(project.current_cp),
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     client
-        .set_checkpoint(
+        .submit(
             &charles,
             SetCheckpointParams {
                 project_id: project.id.clone(),
@@ -47,8 +55,16 @@ fn set_checkpoint_without_permission() {
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = client
-        .create_checkpoint(&eve, project_hash2, Some(project.current_cp))
+        .submit(
+            &eve,
+            CreateCheckpointParams {
+                project_hash: project_hash2,
+                previous_checkpoint_id: Some(project.current_cp),
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let frank = common::key_pair_from_string("Frank");
@@ -117,20 +133,36 @@ fn set_fork_checkpoint() {
     let mut checkpoints: Vec<CheckpointId> = Vec::with_capacity(n);
     for _ in 0..n {
         let new_checkpoint_id = client
-            .create_checkpoint(&grace, H256::random(), Some(current_cp))
+            .submit(
+                &grace,
+                CreateCheckpointParams {
+                    project_hash: H256::random(),
+                    previous_checkpoint_id: (Some(current_cp)),
+                },
+            )
             .wait()
+            .unwrap()
+            .result
             .unwrap();
         current_cp = new_checkpoint_id;
         checkpoints.push(new_checkpoint_id);
     }
 
     let forked_checkpoint_id = client
-        .create_checkpoint(&grace, H256::random(), Some(checkpoints[2]))
+        .submit(
+            &grace,
+            CreateCheckpointParams {
+                project_hash: H256::random(),
+                previous_checkpoint_id: (Some(checkpoints[2])),
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     client
-        .set_checkpoint(
+        .submit(
             &grace,
             SetCheckpointParams {
                 project_id: project.id.clone(),

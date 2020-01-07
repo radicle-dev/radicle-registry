@@ -14,9 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use futures01::prelude::*;
-use radicle_registry_client::{
-    ed25519, Client, ClientT, CryptoPair as _, RegisterProjectParams, String32, H256,
-};
+use radicle_registry_client::*;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -63,12 +61,20 @@ fn run(args: Args) {
         } => {
             let client = Client::create_with_executor().unwrap();
             let checkpoint_id = client
-                .create_checkpoint(&author_key_pair, project_hash, None)
+                .submit(
+                    &author_key_pair,
+                    CreateCheckpointParams {
+                        project_hash,
+                        previous_checkpoint_id: None,
+                    },
+                )
                 .wait()
+                .unwrap()
+                .result
                 .unwrap();
             let project_id = (name, domain);
             client
-                .register_project(
+                .submit(
                     &author_key_pair,
                     RegisterProjectParams {
                         id: project_id.clone(),
