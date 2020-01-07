@@ -96,37 +96,11 @@ pub trait ClientT {
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;
 
-    fn transfer(
-        &self,
-        key_pair: &ed25519::Pair,
-        recipient: &AccountId,
-        balance: Balance,
-    ) -> Response<(), Error>;
-
     fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error>;
-
-    fn register_project(
-        &self,
-        author: &ed25519::Pair,
-        project_params: RegisterProjectParams,
-    ) -> Response<(), Error>;
 
     fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
 
     fn list_projects(&self) -> Response<Vec<ProjectId>, Error>;
 
-    fn create_checkpoint(
-        &self,
-        author: &ed25519::Pair,
-        project_hash: H256,
-        previous_checkpoint_id: Option<CheckpointId>,
-    ) -> Response<CheckpointId, Error>;
-
     fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
-
-    fn set_checkpoint(
-        &self,
-        author: &ed25519::Pair,
-        params: SetCheckpointParams,
-    ) -> Response<(), Error>;
 }

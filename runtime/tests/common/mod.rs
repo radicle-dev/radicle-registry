@@ -8,16 +8,21 @@ use radicle_registry_client::*;
 #[allow(dead_code)]
 pub fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
     let checkpoint_id = client
-        .create_checkpoint(&author, H256::random(), None)
+        .submit(
+            &author,
+            CreateCheckpointParams {
+                project_hash: H256::random(),
+                previous_checkpoint_id: None,
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let params = random_register_project_params(checkpoint_id);
 
-    client
-        .register_project(&author, params.clone())
-        .wait()
-        .unwrap();
+    client.submit(&author, params.clone()).wait().unwrap();
 
     client.get_project(params.id).wait().unwrap().unwrap()
 }

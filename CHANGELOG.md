@@ -6,6 +6,12 @@ Upcoming
 
 ### Breaking changes
 
+* Remove convenience methods for submitting transactions from the client
+  - `Client::transfer`
+  - `Client::register_project`
+  - `Client::create_checkpoint`
+  - `Client::set_checkpoint`
+  Calls to these functions can be replaced by calls to `Client::submit`.
 * Eliminate `ClientWithExecutor`, use `Client::create_with_executor()` instead.
 * Eliminate `MemoryClient`. The memory client is now called the emulator and can
   be created with `Client::new_emulator()`.

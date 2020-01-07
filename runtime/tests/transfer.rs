@@ -40,7 +40,13 @@ fn project_account_transfer() {
 
     assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
     client
-        .transfer(&alice, &project.account_id, 2000)
+        .submit(
+            &alice,
+            TransferParams {
+                recipient: project.account_id,
+                balance: 2000,
+            },
+        )
         .wait()
         .unwrap();
     assert_eq!(
@@ -77,7 +83,13 @@ fn project_account_transfer_non_member() {
     let project = common::create_project_with_checkpoint(&client, &alice);
 
     client
-        .transfer(&alice, &project.account_id, 2000)
+        .submit(
+            &alice,
+            TransferParams {
+                recipient: project.account_id,
+                balance: 2000,
+            },
+        )
         .wait()
         .unwrap();
     assert_eq!(

@@ -16,8 +16,16 @@ fn register_project() {
 
     let project_hash = H256::random();
     let checkpoint_id = client
-        .create_checkpoint(&alice, project_hash, None)
+        .submit(
+            &alice,
+            CreateCheckpointParams {
+                project_hash,
+                previous_checkpoint_id: None,
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
     let params = common::random_register_project_params(checkpoint_id);
     let tx_applied = client.submit(&alice, params.clone()).wait().unwrap();
@@ -62,18 +70,22 @@ fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
     let alice = common::key_pair_from_string("Alice");
 
-    let project_hash = H256::random();
     let checkpoint_id = client
-        .create_checkpoint(&alice, project_hash, None)
+        .submit(
+            &alice,
+            CreateCheckpointParams {
+                project_hash: H256::random(),
+                previous_checkpoint_id: None,
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let params = common::random_register_project_params(checkpoint_id);
 
-    client
-        .register_project(&alice, params.clone())
-        .wait()
-        .unwrap();
+    client.submit(&alice, params.clone()).wait().unwrap();
 
     // Duplicate submission with different description and image URL.
     let registration_2 = client

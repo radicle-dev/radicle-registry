@@ -15,8 +15,16 @@ fn register_project() {
 
     let project_hash = H256::random();
     let checkpoint_id = client
-        .create_checkpoint(&alice, project_hash, None)
+        .submit(
+            &alice,
+            CreateCheckpointParams {
+                project_hash,
+                previous_checkpoint_id: None,
+            },
+        )
         .wait()
+        .unwrap()
+        .result
         .unwrap();
 
     let register_project_params = common::random_register_project_params(checkpoint_id);

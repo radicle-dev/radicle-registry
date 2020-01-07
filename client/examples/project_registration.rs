@@ -2,10 +2,7 @@ use futures01::future::Future;
 use futures03::compat::{Compat, Future01CompatExt};
 use futures03::future::FutureExt;
 
-use radicle_registry_client::{
-    ed25519, Client, ClientT as _, CryptoPair as _, Error, RegisterProjectParams, H256,
-};
-use radicle_registry_runtime::registry::{ProjectDomain, ProjectName};
+use radicle_registry_client::*;
 
 fn main() {
     env_logger::init();
@@ -19,15 +16,23 @@ async fn go() -> Result<(), Error> {
     let client = Client::create().compat().await?;
     let project_hash = H256::random();
     let checkpoint_id = client
-        .create_checkpoint(&alice, project_hash, None)
+        .submit(
+            &alice,
+            CreateCheckpointParams {
+                project_hash,
+                previous_checkpoint_id: None,
+            },
+        )
         .compat()
-        .await?;
+        .await?
+        .result
+        .unwrap();
     let project_id = (
         ProjectName::from_string("NAME".to_string()).unwrap(),
         ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
     );
     client
-        .register_project(
+        .submit(
             &alice,
             RegisterProjectParams {
                 id: project_id.clone(),
