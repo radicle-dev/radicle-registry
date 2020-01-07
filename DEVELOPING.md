@@ -9,6 +9,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 <!-- toc -->
 
+- [Build requirements](#build-requirements)
 - [Running development node](#running-development-node)
 - [Packages](#packages)
 - [Testing](#testing)
@@ -19,16 +20,31 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 <!-- tocstop -->
 
+Build requirements
+------------------
+
+1. Get [`rustup`][rustup-install]
+2. Run `./scripts/rustup-setup` to install all required `rustup` components and
+   targets.
+3. Install [`wasm-gc`][wasm-gc] via `cargo install --git https://github.com/alexcrichton/wasm-gc`
+
+
 Running development node
 ------------------------
 
 ~~~
-BUILD_DUMMY_WASM_BINARY=0 cargo build --release -p radicle-registry-node
+./scripts/build-dev-node
 ./scripts/run-dev-node
 ~~~
 
-The run script purges the chain data before running to avoid consensus issues.
-This means that state is not persisted between runs.
+The build script purges the chain data before running to avoid consensus issues.
+
+To purge the chain state manually run
+
+~~~
+./scripts/run-dev-node purge-chain
+~~~
+
 
 Packages
 --------
