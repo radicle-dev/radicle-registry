@@ -19,12 +19,12 @@ use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
 use futures03::prelude::*;
 use jsonrpc_core_client::RpcChannel;
 use parity_scale_codec::{Decode, Encode as _};
+use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
+use sp_transaction_pool_api::TransactionStatus as TxStatus;
 use sr_primitives::{generic::SignedBlock, traits::Hash as _};
 use std::sync::Arc;
 use substrate_primitives::{storage::StorageKey, twox_128};
-use substrate_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
-use substrate_rpc_primitives::number::NumberOrHex;
-use substrate_transaction_graph::watcher::Status as TxStatus;
+use substrate_rpc_primitives::{list::ListOrValue, number::NumberOrHex};
 use url::Url;
 
 use radicle_registry_runtime::{
@@ -61,12 +61,20 @@ impl RemoteNode {
             chain: channel.clone().into(),
             author: channel.clone().into(),
         });
-        let genesis_hash = rpc
+        let genesis_hash_result = rpc
             .chain
-            .block_hash(Some(NumberOrHex::Number(BlockNumber::min_value())))
+            .block_hash(Some(NumberOrHex::Number(BlockNumber::min_value()).into()))
             .compat()
-            .await?
-            .unwrap();
+            .await?;
+        let genesis_hash = match genesis_hash_result {
+            ListOrValue::Value(Some(genesis_hash)) => genesis_hash,
+            other => {
+                return Err(Error::Other(format!(
+                    "Invalid chain.block_hash result {:?}",
+                    other
+                )))
+            }
+        };
         Ok(RemoteNode { genesis_hash, rpc })
     }
 
@@ -107,10 +115,10 @@ impl RemoteNode {
         tx_hash: TxHash,
         block_hash: BlockHash,
     ) -> Result<Vec<Event>, Error> {
-        let events_key = b"System Events";
-        let storage_key = twox_128(events_key);
+        let events_key = [twox_128(b"System"), twox_128(b"Events")].concat();
+
         let events_data = self
-            .fetch(&storage_key[..], Some(block_hash))
+            .fetch(&events_key, Some(block_hash))
             .await?
             .unwrap_or_default();
         let event_records: Vec<radicle_registry_runtime::EventRecord> =
@@ -183,7 +191,7 @@ fn extract_transaction_events(
     let events = event_records
         .into_iter()
         .filter_map(|event_record| match event_record.phase {
-            paint_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
+            frame_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
                 Some(event_record.event)
             }
             _ => None,

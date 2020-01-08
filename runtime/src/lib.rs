@@ -28,14 +28,14 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 extern crate alloc;
 
-use paint_grandpa::fg_primitives;
-use paint_grandpa::AuthorityList as GrandpaAuthorityList;
-use paint_support::{construct_runtime, parameter_types, traits::Randomness};
+use frame_support::weights::Weight;
+use frame_support::{construct_runtime, parameter_types, traits::Randomness};
+use pallet_grandpa::fg_primitives;
+use pallet_grandpa::AuthorityList as GrandpaAuthorityList;
 use sr_primitives::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
-use sr_primitives::weights::Weight;
 use sr_primitives::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
-    ApplyResult, Perbill,
+    ApplyExtrinsicResult, Perbill,
 };
 use sr_std::prelude::*;
 use substrate_primitives::{ed25519, OpaqueMetadata};
@@ -77,14 +77,14 @@ pub type Hash = substrate_primitives::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
-pub type EventRecord = paint_system::EventRecord<Event, Hash>;
+pub type EventRecord = frame_system::EventRecord<Event, Hash>;
 
 pub mod registry;
 
 mod string32;
 pub use string32::String32;
 
-pub use paint_balances as balances;
+pub use pallet_balances as balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -137,7 +137,7 @@ parameter_types! {
     pub const Version: RuntimeVersion = VERSION;
 }
 
-impl paint_system::Trait for Runtime {
+impl frame_system::Trait for Runtime {
     /// The identifier used to distinguish between accounts.
     type AccountId = AccountId;
     /// The aggregated dispatch type that is available for extrinsics.
@@ -169,11 +169,11 @@ impl paint_system::Trait for Runtime {
     type Version = Version;
 }
 
-impl paint_aura::Trait for Runtime {
+impl pallet_aura::Trait for Runtime {
     type AuthorityId = AuraId;
 }
 
-impl paint_grandpa::Trait for Runtime {
+impl pallet_grandpa::Trait for Runtime {
     type Event = Event;
 }
 
@@ -182,7 +182,7 @@ parameter_types! {
     pub const MinimumPeriod: u64 = 300;
 }
 
-impl paint_timestamp::Trait for Runtime {
+impl pallet_timestamp::Trait for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
     type OnTimestampSet = Aura;
@@ -197,8 +197,8 @@ parameter_types! {
     pub const TransactionByteFee: u128 = 0;
 }
 
-impl paint_transaction_payment::Trait for Runtime {
-    type Currency = paint_balances::Module<Runtime>;
+impl pallet_transaction_payment::Trait for Runtime {
+    type Currency = pallet_balances::Module<Runtime>;
     type OnTransactionPayment = ();
     type TransactionBaseFee = TransactionBaseFee;
     type TransactionByteFee = TransactionByteFee;
@@ -206,7 +206,7 @@ impl paint_transaction_payment::Trait for Runtime {
     type FeeMultiplierUpdate = ();
 }
 
-impl paint_balances::Trait for Runtime {
+impl pallet_balances::Trait for Runtime {
     /// The type for recording an account's balance.
     type Balance = Balance;
     /// What to do if an account's free balance gets zeroed.
@@ -222,7 +222,7 @@ impl paint_balances::Trait for Runtime {
     type CreationFee = CreationFee;
 }
 
-impl paint_sudo::Trait for Runtime {
+impl pallet_sudo::Trait for Runtime {
     type Event = Event;
     type Proposal = Call;
 }
@@ -231,7 +231,7 @@ impl registry::Trait for Runtime {
     type Event = Event;
 }
 
-use paint_system as system;
+use frame_system as system;
 
 construct_runtime!(
         pub enum Runtime where
@@ -240,12 +240,12 @@ construct_runtime!(
                 UncheckedExtrinsic = UncheckedExtrinsic
         {
                 System: system::{Module, Call, Storage, Config, Event},
-                Timestamp: paint_timestamp::{Module, Call, Storage, Inherent},
-                RandomnessCollectiveFlip: paint_randomness_collective_flip::{Module, Storage},
-                Aura: paint_aura::{Module, Config<T>, Inherent(Timestamp)},
-                Grandpa: paint_grandpa::{Module, Call, Storage, Config, Event},
-                Balances: paint_balances::{default, Error},
-                Sudo: paint_sudo,
+                Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
+                RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Storage},
+                Aura: pallet_aura::{Module, Config<T>, Inherent(Timestamp)},
+                Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event},
+                Balances: pallet_balances::{default, Error},
+                Sudo: pallet_sudo,
                 Registry: registry::{Module, Call, Storage, Event},
         }
 );
@@ -260,22 +260,22 @@ pub type SignedBlock = generic::SignedBlock<Block>;
 pub type BlockId = generic::BlockId<Block>;
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
-    paint_system::CheckVersion<Runtime>,
-    paint_system::CheckGenesis<Runtime>,
-    paint_system::CheckEra<Runtime>,
-    paint_system::CheckNonce<Runtime>,
-    paint_system::CheckWeight<Runtime>,
-    paint_transaction_payment::ChargeTransactionPayment<Runtime>,
+    frame_system::CheckVersion<Runtime>,
+    frame_system::CheckGenesis<Runtime>,
+    frame_system::CheckEra<Runtime>,
+    frame_system::CheckNonce<Runtime>,
+    frame_system::CheckWeight<Runtime>,
+    pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
-pub type Executive = paint_executive::Executive<
+pub type Executive = frame_executive::Executive<
     Runtime,
     Block,
-    paint_system::ChainContext<Runtime>,
+    frame_system::ChainContext<Runtime>,
     Runtime,
     AllModules,
 >;
@@ -302,7 +302,7 @@ impl_runtime_apis! {
     }
 
     impl substrate_block_builder_runtime_api::BlockBuilder<Block> for Runtime {
-        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyResult {
+        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
             Executive::apply_extrinsic(extrinsic)
         }
 
@@ -326,7 +326,7 @@ impl_runtime_apis! {
         }
     }
 
-    impl substrate_transaction_pool_runtime_api::TaggedTransactionQueue<Block> for Runtime {
+    impl sp_transaction_pool_runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(tx: <Block as BlockT>::Extrinsic) -> TransactionValidity {
             Executive::validate_transaction(tx)
         }

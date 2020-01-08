@@ -16,7 +16,7 @@
 /// `String32` validation tests.
 use alloc::format;
 use alloc::prelude::v1::*;
-use codec::{Decode, Encode, Error as CodecError, Input};
+use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 
 use sr_std::fmt;
 use sr_std::str::FromStr;

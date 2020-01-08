@@ -23,41 +23,45 @@ parity-scale-codec = "1.0"
 tokio = "0.1"
 url = "1.7"
 
-[dependencies.paint-system]
+[dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
-[dependencies.paint-support]
+[dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
-[dependencies.paint-transaction-payment]
+[dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
 [dependencies.substrate-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
 [dependencies.sr-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
 [dependencies.sr-io]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
-[dependencies.substrate-rpc-api]
+[dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
 [dependencies.substrate-rpc-primitives]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
-[dependencies.substrate-transaction-graph]
+[dependencies.sc-transaction-graph]
 git = "https://github.com/paritytech/substrate"
-rev = "dc4a8329b9c47790c25429a5df272b3648275c1b"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
+
+[dependencies.sp-transaction-pool-api]
+git = "https://github.com/paritytech/substrate"
+rev = "1903f36f7bafea45eababfda9011a239b3aaab6c"
 
 [dev-dependencies]
 rand = "0.7.2"
