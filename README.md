@@ -7,33 +7,19 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 
 <!-- toc -->
 
+- [Getting the Node](#getting-the-node)
+- [Running the node](#running-the-node)
 - [Using the Client](#using-the-client)
-- [Getting and Running the Node](#getting-and-running-the-node)
 - [Account Keys](#account-keys)
 - [Developing with the Client](#developing-with-the-client)
-- [Building and running the node](#building-and-running-the-node)
 - [Using the CLI](#using-the-cli)
-- [Build Artifacts](#build-artifacts)
 - [Registry Specification](#registry-specification)
+- [License](#license)
 
 <!-- tocstop -->
 
-Using the Client
+Getting the Node
 ----------------
-
-The client for the registry node is provided by the `radicle-registry-client`
-package in the `./client` directory.
-
-You’ll need to build the client with Rust Nightly.
-
-To build and view the client documentation run `./scripts/build-client-docs
---open`.
-
-You can find examples in the `./client/examples` directory.
-
-
-Getting and Running the Node
-----------------------------
 
 We build binaries of the node and docker images for every pushed commit.
 
@@ -49,7 +35,43 @@ docker pull gcr.io/opensourcecoin/radicle-registry/node:<commit-sha>
 ```
 In the image the node binary is located at `/usr/local/bin/radicle-registry-node`
 
-[buildkite-master]: https://buildkite.com/monadic/radicle-registry/builds?branch=master
+To build the node from source see [`DEVELOPING.md`][dev-manual].
+
+
+Running the node
+----------------
+
+At the moment the node can be run only in development mode with the development
+chain specification.
+
+~~~
+radicle-registry-node --dev
+~~~
+
+This runs an isolated node with who is the single Aura validator and block
+producer.
+
+To reset the chain state and start fresh run
+
+~~~
+radicle-registry-node purge-chain --dev
+~~~
+
+For more information use the `--help` flag.
+
+
+Using the Client
+----------------
+
+The client for the registry node is provided by the `radicle-registry-client`
+package in the `./client` directory.
+
+You’ll need to build the client with Rust Nightly.
+
+To build and view the client documentation run `./scripts/build-client-docs
+--open`.
+
+You can find examples in the `./client/examples` directory.
 
 
 Account Keys
@@ -91,31 +113,6 @@ node this client runs the ledger in memory. See the API docs for more
 information.
 
 
-Building and running the node
------------------------------
-
-Building the development node:
-
-1. Get [`rustup`][rustup-install]
-2. Run `./scripts/rustup-setup` to install all required `rustup` components and
-   targets.
-3. Install [`wasm-gc`][wasm-gc] via `cargo install --git https://github.com/alexcrichton/wasm-gc`
-4. Build the node with `./scripts/build-dev-node`
-
-You can run the node with
-
-~~~
-./scripts/run-dev-node
-~~~
-
-To reset the chain state run
-
-~~~
-./scripts/run-dev-node purge-chain
-~~~
-
-Note that `build-dev-node` will also reset the chain state.
-
 Using the CLI
 -------------
 
@@ -127,32 +124,6 @@ learn more run `cargo run -p radicle-registry-cli -- --help`.
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
 [wasm-gc]: https://github.com/alexcrichton/wasm-gc
 
-Build Artifacts
----------------
-
-Each commit's successful CI build uploads an artifact - the built Substrate
-node.
-In order to access it, you can either use the Buildkite web UI, accessible
-via the commit's GitHub status , or run
-
-~~~
-curl -H "Authorization: Bearer $TOKEN" https://api.buildkite.com/v2/organizations/monadic/pipelines/radicle-registry/builds/{build.number}/jobs/{job.id}/artifacts/{artifact.id}/download
-~~~
-
-where `$TOKEN` is a valid Buildkite API access token that has at least the
-`read_artifacts` scope, and replace the items between curly brackets
-(e.g. `{build.number}`) with the appropriate values for the build and artifact
-that is wanted.
-
-The above command will return a JSON response with a URL to a Buildkite AWS
-S3 bucket that contains the desired artifact, which can then be `curl`ed
-again.
-
-For more information on Buildkite API tokens and permissions, as well as
-access to build artifacts, see:
-
-* https://buildkite.com/docs/apis/rest-api#authentication
-* https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact
 
 Registry Specification
 --------------------
