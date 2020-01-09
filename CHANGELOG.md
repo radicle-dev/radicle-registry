@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* Rename `Client::submit` to `Client::sign_and_submit_call`.
 * `Client::create` and `Client::create_with_executor` now require a `host`
   argument. Use `host = url::Host::parse("127.0.0.1").unwrap()` to have the old
   behavior.
