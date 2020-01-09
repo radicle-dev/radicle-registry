@@ -13,7 +13,10 @@ fn main() {
 
 async fn go() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
-    let client = Client::create().compat().await?;
+
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create(node_host).compat().await?;
+
     let project_hash = H256::random();
     let checkpoint_id = client
         .submit(

@@ -15,3 +15,4 @@ radicle-registry-client = { path = "../client" }
 futures01 = { package = "futures", version = "0.1" }
 pretty_env_logger = "0.3.1"
 structopt = "0.3"
+url = "1.7"

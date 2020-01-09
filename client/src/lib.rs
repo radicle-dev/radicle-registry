@@ -64,11 +64,11 @@ pub struct Client {
 }
 
 impl Client {
-    /// Connects to a registry node running on localhost and returns a [Client].
+    /// Connects to a registry node running on the given host and returns a [Client].
     ///
-    /// Fails if it cannot connect to a node.
-    pub fn create() -> impl Future<Item = Self, Error = Error> {
-        future03_compat(backend::RemoteNode::create()).map(Self::new)
+    /// Fails if it cannot connect to a node. Uses websocket over port 9944.
+    pub fn create(host: url::Host) -> impl Future<Item = Self, Error = Error> {
+        future03_compat(backend::RemoteNode::create(host)).map(Self::new)
     }
 
     /// Same as [Client::create] but calls to the client spawn futures in an executor owned by the
@@ -76,8 +76,8 @@ impl Client {
     ///
     /// This makes it possible to call [Future::wait] on the client even if that function is called
     /// in an event loop of another executor.
-    pub fn create_with_executor() -> impl Future<Item = Self, Error = Error> {
-        future03_compat(backend::RemoteNodeWithExecutor::create()).map(Self::new)
+    pub fn create_with_executor(host: url::Host) -> impl Future<Item = Self, Error = Error> {
+        future03_compat(backend::RemoteNodeWithExecutor::create(host)).map(Self::new)
     }
 
     /// Create a new client that emulates the registry ledger in memory. See

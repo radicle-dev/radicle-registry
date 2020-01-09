@@ -2376,7 +2376,7 @@ dependencies = [
  "tokio-codec 0.1.1",
  "tokio-io 0.1.12",
  "tokio-rustls",
- "url 2.1.0",
+ "url 2.1.1",
  "webpki-roots 0.18.0",
 ]
 
@@ -3057,7 +3057,7 @@ dependencies = [
  "percent-encoding 2.1.0",
  "serde",
  "unsigned-varint 0.2.3",
- "url 2.1.0",
+ "url 2.1.1",
 ]
 
 [[package]]
@@ -3424,6 +3424,7 @@ dependencies = [
  "pretty_env_logger",
  "radicle-registry-client",
  "structopt",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -5972,9 +5973,9 @@ dependencies = [
 
 [[package]]
 name = "url"
-version = "2.1.0"
+version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b414f6c464c879d7f9babf951f23bc3743fb7313c081b2e6ca719067ea9d61"
+checksum = "829d4a8476c35c9bf0bbce5a3b23f4106f79728039b726d292bb93bc106787cb"
 dependencies = [
  "idna 0.2.0",
  "matches",
@@ -6327,7 +6328,7 @@ dependencies = [
  "rand 0.7.2",
  "sha-1",
  "slab",
- "url 2.1.0",
+ "url 2.1.1",
 ]
 
 [[package]]

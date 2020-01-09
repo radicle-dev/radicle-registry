@@ -6,7 +6,9 @@ Upcoming
 
 ### Breaking changes
 
-* `Client::create_with_executor` now returns a future instead of a `Result`
+* `Client::create` and `Client::create_with_executor` now require a `host`
+  argument. Use `host = url::Host::parse("127.0.0.1").unwrap()` to have the old
+  behavior.
 * `Client::submit` and  `Client::submit_transaction` now return a wrapped
   future. This allows consumers to distinguish the accepted and applied states
   of a transaction.
