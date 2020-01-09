@@ -18,13 +18,13 @@
 //! Available chain specs
 //! * [dev] for runnning a single node locally and develop against it.
 //! * [local_devnet] for runnning a cluster of three nodes locally using Aura consensus.
-use aura_primitives::sr25519::AuthorityId as AuraId;
-use primitives::{Pair, Public};
 use radicle_registry_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
     WASM_BINARY,
 };
 use sc_finality_grandpa::AuthorityId as GrandpaId;
+use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+use sp_core::{Pair, Public};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;

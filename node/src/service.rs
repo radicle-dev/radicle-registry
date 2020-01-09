@@ -15,15 +15,15 @@
 
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use aura_primitives::sr25519::AuthorityPair as AuraPair;
-use inherents::InherentDataProviders;
-use network::construct_simple_protocol;
 use radicle_registry_runtime::{self, opaque::Block, GenesisConfig, RuntimeApi};
 use sc_client::LongestChain;
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
 use sc_finality_grandpa::{self, FinalityProofProvider as GrandpaFinalityProofProvider};
+use sc_network::construct_simple_protocol;
 use sc_service::{error::Error as ServiceError, AbstractService, Configuration, ServiceBuilder};
+use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
+use sp_inherents::InherentDataProviders;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -46,7 +46,7 @@ construct_simple_protocol! {
 macro_rules! new_full_start {
     ($config:expr) => {{
         let mut import_setup = None;
-        let inherent_data_providers = inherents::InherentDataProviders::new();
+        let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
         let builder = sc_service::ServiceBuilder::new_full::<
             radicle_registry_runtime::opaque::Block,
@@ -55,12 +55,12 @@ macro_rules! new_full_start {
         >($config)?
         .with_select_chain(|_config, backend| Ok(sc_client::LongestChain::new(backend.clone())))?
         .with_transaction_pool(|config, client, _fetcher| {
-            let pool_api = transaction_pool::FullChainApi::new(client.clone());
-            let pool = transaction_pool::BasicPool::new(config, pool_api);
+            let pool_api = sc_transaction_pool::FullChainApi::new(client.clone());
+            let pool = sc_transaction_pool::BasicPool::new(config, pool_api);
             let maintainer =
-                transaction_pool::FullBasicPoolMaintainer::new(pool.pool().clone(), client);
+                sc_transaction_pool::FullBasicPoolMaintainer::new(pool.pool().clone(), client);
             let maintainable_pool =
-                transaction_pool_api::MaintainableTransactionPool::new(pool, maintainer);
+                sp_transaction_pool::MaintainableTransactionPool::new(pool, maintainer);
             Ok(maintainable_pool)
         })?
         .with_import_queue(|_config, client, mut select_chain, transaction_pool| {
@@ -77,13 +77,13 @@ macro_rules! new_full_start {
                     _,
                 >(client.clone(), &*client, select_chain)?;
 
-            let aura_block_import = aura::AuraBlockImport::<_, _, _, AuraPair>::new(
+            let aura_block_import = sc_consensus_aura::AuraBlockImport::<_, _, _, AuraPair>::new(
                 grandpa_block_import.clone(),
                 client.clone(),
             );
 
-            let import_queue = aura::import_queue::<_, _, _, AuraPair, _>(
-                aura::SlotDuration::get_or_compute(&*client)?,
+            let import_queue = sc_consensus_aura::import_queue::<_, _, _, AuraPair, _>(
+                sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
                 aura_block_import,
                 Some(Box::new(grandpa_block_import.clone())),
                 None,
@@ -129,7 +129,7 @@ pub fn new_full<C: Send + Default + 'static>(
         .build()?;
 
     if participates_in_consensus {
-        let proposer = basic_authorship::ProposerFactory {
+        let proposer = sc_basic_authority::ProposerFactory {
             client: service.client(),
             transaction_pool: service.transaction_pool(),
         };
@@ -139,10 +139,10 @@ pub fn new_full<C: Send + Default + 'static>(
             .select_chain()
             .ok_or(ServiceError::SelectChainRequired)?;
         let can_author_with =
-            consensus_common::CanAuthorWithNativeVersion::new(client.executor().clone());
+            sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-        let aura = aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _, _>(
-            aura::SlotDuration::get_or_compute(&*client)?,
+        let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _, _>(
+            sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
             client,
             select_chain,
             block_import,
@@ -228,15 +228,15 @@ pub fn new_light<C: Send + Default + 'static>(
         .with_transaction_pool(|config, client, fetcher| {
             let fetcher = fetcher
                 .ok_or_else(|| "Trying to start light transaction pool without active fetcher")?;
-            let pool_api = transaction_pool::LightChainApi::new(client.clone(), fetcher.clone());
-            let pool = transaction_pool::BasicPool::new(config, pool_api);
-            let maintainer = transaction_pool::LightBasicPoolMaintainer::with_defaults(
+            let pool_api = sc_transaction_pool::LightChainApi::new(client.clone(), fetcher.clone());
+            let pool = sc_transaction_pool::BasicPool::new(config, pool_api);
+            let maintainer = sc_transaction_pool::LightBasicPoolMaintainer::with_defaults(
                 pool.pool().clone(),
                 client,
                 fetcher,
             );
             let maintainable_pool =
-                transaction_pool_api::MaintainableTransactionPool::new(pool, maintainer);
+                sp_transaction_pool::MaintainableTransactionPool::new(pool, maintainer);
             Ok(maintainable_pool)
         })?
         .with_import_queue_and_fprb(
@@ -257,8 +257,8 @@ pub fn new_light<C: Send + Default + 'static>(
                 let finality_proof_request_builder =
                     finality_proof_import.create_finality_proof_request_builder();
 
-                let import_queue = aura::import_queue::<_, _, _, AuraPair, ()>(
-                    aura::SlotDuration::get_or_compute(&*client)?,
+                let import_queue = sc_consensus_aura::import_queue::<_, _, _, AuraPair, ()>(
+                    sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
                     grandpa_block_import,
                     None,
                     Some(Box::new(finality_proof_import)),
