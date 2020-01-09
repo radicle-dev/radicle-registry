@@ -76,10 +76,8 @@ impl Client {
     ///
     /// This makes it possible to call [Future::wait] on the client even if that function is called
     /// in an event loop of another executor.
-    pub fn create_with_executor() -> Result<Self, Error> {
-        future03_compat(backend::RemoteNodeWithExecutor::create())
-            .map(Self::new)
-            .wait()
+    pub fn create_with_executor() -> impl Future<Item = Self, Error = Error> {
+        future03_compat(backend::RemoteNodeWithExecutor::create()).map(Self::new)
     }
 
     /// Create a new client that emulates the registry ledger in memory. See
