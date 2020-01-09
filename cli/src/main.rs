@@ -59,7 +59,7 @@ fn run(args: Args) {
             domain,
             project_hash,
         } => {
-            let client = Client::create_with_executor().unwrap();
+            let client = Client::create_with_executor().wait().unwrap();
             let checkpoint_id = client
                 .submit(
                     &author_key_pair,

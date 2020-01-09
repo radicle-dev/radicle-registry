@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* `Client::create_with_executor` now returns a future instead of a `Result`
 * `Client::submit` and  `Client::submit_transaction` now return a wrapped
   future. This allows consumers to distinguish the accepted and applied states
   of a transaction.
