@@ -59,7 +59,8 @@ fn run(args: Args) {
             domain,
             project_hash,
         } => {
-            let client = Client::create_with_executor().wait().unwrap();
+            let node_host = url::Host::parse("127.0.0.1").unwrap();
+            let client = Client::create_with_executor(node_host).wait().unwrap();
             let checkpoint_id = client
                 .submit(
                     &author_key_pair,

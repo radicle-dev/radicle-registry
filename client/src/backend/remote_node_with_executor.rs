@@ -31,10 +31,10 @@ pub struct RemoteNodeWithExecutor {
 }
 
 impl RemoteNodeWithExecutor {
-    pub async fn create() -> Result<Self, Error> {
+    pub async fn create(host: url::Host) -> Result<Self, Error> {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         let backend = Executor01CompatExt::compat(runtime.executor())
-            .spawn_with_handle(backend::RemoteNode::create())
+            .spawn_with_handle(backend::RemoteNode::create(host))
             .unwrap()
             .await?;
         Ok(RemoteNodeWithExecutor {

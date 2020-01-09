@@ -10,7 +10,8 @@ mod common;
 #[test]
 fn register_project() {
     let _ = env_logger::try_init();
-    let client = Client::create_with_executor().wait().unwrap();
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).wait().unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
@@ -71,7 +72,8 @@ fn register_project() {
 /// Submit a transaction with an invalid genesis hash and expect an error.
 fn invalid_transaction() {
     let _ = env_logger::try_init();
-    let client = Client::create_with_executor().wait().unwrap();
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).wait().unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let transfer_tx = Transaction::new_signed(

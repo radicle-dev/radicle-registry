@@ -52,8 +52,8 @@ pub struct RemoteNode {
 }
 
 impl RemoteNode {
-    pub async fn create() -> Result<Self, Error> {
-        let url = Url::parse("ws://127.0.0.1:9944").expect("Is valid url; qed");
+    pub async fn create(host: url::Host) -> Result<Self, Error> {
+        let url = Url::parse(&format!("ws://{}:9944", host)).expect("Is valid url; qed");
         let channel: RpcChannel = jsonrpc_core_client::transports::ws::connect(&url)
             .compat()
             .await?;
