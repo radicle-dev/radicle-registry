@@ -3461,6 +3461,8 @@ name = "radicle-registry-cli"
 version = "0.0.0"
 dependencies = [
  "futures 0.1.29",
+ "hex",
+ "lazy_static",
  "pretty_env_logger",
  "radicle-registry-client",
  "structopt",
