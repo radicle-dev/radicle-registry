@@ -19,6 +19,7 @@ use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
 use futures03::future::BoxFuture;
 use futures03::prelude::*;
 use jsonrpc_core_client::RpcChannel;
+use lazy_static::lazy_static;
 use parity_scale_codec::{Decode, Encode as _};
 use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
 use sp_core::{storage::StorageKey, twox_128};
@@ -49,6 +50,15 @@ struct Rpc {
 pub struct RemoteNode {
     genesis_hash: Hash,
     rpc: Arc<Rpc>,
+}
+
+lazy_static! {
+    static ref SYSTEM_EVENTS_STORAGE_KEY: [u8; 32] = {
+        let mut events_key = [0u8; 32];
+        events_key[0..16].copy_from_slice(&twox_128(b"System"));
+        events_key[16..32].copy_from_slice(&twox_128(b"Events"));
+        events_key
+    };
 }
 
 impl RemoteNode {
@@ -132,10 +142,8 @@ impl RemoteNode {
         tx_hash: TxHash,
         block_hash: BlockHash,
     ) -> Result<Vec<Event>, Error> {
-        let events_key = [twox_128(b"System"), twox_128(b"Events")].concat();
-
         let events_data = self
-            .fetch(&events_key, Some(block_hash))
+            .fetch(SYSTEM_EVENTS_STORAGE_KEY.as_ref(), Some(block_hash))
             .await?
             .unwrap_or_default();
         let event_records: Vec<radicle_registry_runtime::EventRecord> =

@@ -3479,6 +3479,7 @@ dependencies = [
  "futures 0.1.29",
  "futures 0.3.1",
  "jsonrpc-core-client",
+ "lazy_static",
  "log 0.4.8",
  "pallet-transaction-payment",
  "parity-scale-codec",
