@@ -14,6 +14,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Define trait for client backends and provide emulator and remote node implementation
+use futures03::future::BoxFuture;
+
 pub use radicle_registry_runtime::{Hash, UncheckedExtrinsic};
 
 use crate::interface::*;
@@ -43,9 +45,12 @@ pub struct TransactionApplied {
 /// event information from the runtime marks an exception
 #[async_trait::async_trait]
 pub trait Backend {
-    /// Submit a signed transaction to the ledger and return when it has been applied and included
-    /// in a block.
-    async fn submit(&self, xt: UncheckedExtrinsic) -> Result<TransactionApplied, Error>;
+    /// Submit a signed transaction to the ledger and returns a future that resolves when the
+    /// transaction has been applied and included in a block.
+    async fn submit(
+        &self,
+        xt: UncheckedExtrinsic,
+    ) -> Result<BoxFuture<'static, Result<TransactionApplied, Error>>, Error>;
 
     /// Fetch a value from the runtime state storage at the given block.
     async fn fetch(

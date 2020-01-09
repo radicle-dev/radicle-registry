@@ -37,6 +37,7 @@
 //! spawned in a `tokio` v0.1.22 executor.
 //!
 use futures01::prelude::*;
+use futures03::compat::Future01CompatExt;
 use futures03::future::Future as Future03;
 use std::sync::Arc;
 
@@ -160,20 +161,23 @@ impl ClientT for Client {
     fn submit_transaction<Call_: Call>(
         &self,
         transaction: Transaction<Call_>,
-    ) -> Response<TransactionApplied<Call_>, Error> {
+    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error> {
         let backend = self.backend.clone();
         future03_compat(async move {
-            let tx_applied = backend.submit(transaction.extrinsic).await?;
-            let events = tx_applied.events;
-            let tx_hash = tx_applied.tx_hash;
-            let block = tx_applied.block;
-            let result = Call_::result_from_events(events.clone())?;
-            Ok(TransactionApplied {
-                tx_hash,
-                block,
-                events,
-                result,
-            })
+            let tx_applied_future = backend.submit(transaction.extrinsic).await?;
+            Ok(future03_compat(async move {
+                let tx_applied = tx_applied_future.await?;
+                let events = tx_applied.events;
+                let tx_hash = tx_applied.tx_hash;
+                let block = tx_applied.block;
+                let result = Call_::result_from_events(events.clone())?;
+                Ok(TransactionApplied {
+                    tx_hash,
+                    block,
+                    events,
+                    result,
+                })
+            }))
         })
     }
 
@@ -181,12 +185,13 @@ impl ClientT for Client {
         &self,
         author: &ed25519::Pair,
         call: Call_,
-    ) -> Response<TransactionApplied<Call_>, Error> {
+    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();
         let client = self.clone();
-        Box::new(self.account_nonce(&account_id).and_then(move |nonce| {
+        future03_compat(async move {
+            let nonce = client.account_nonce(&account_id).compat().await?;
             let transaction = Transaction::new_signed(
                 &key_pair,
                 call,
@@ -195,21 +200,21 @@ impl ClientT for Client {
                     genesis_hash,
                 },
             );
-            client
-                .submit_transaction(transaction)
-                .and_then(move |tx_applied| {
-                    let events = tx_applied.events;
-                    let tx_hash = tx_applied.tx_hash;
-                    let block = tx_applied.block;
-                    let result = Call_::result_from_events(events.clone())?;
-                    Ok(TransactionApplied {
-                        tx_hash,
-                        block,
-                        events,
-                        result,
-                    })
+            let tx_applied_fut = client.submit_transaction(transaction).compat().await?;
+            Ok(future03_compat(async move {
+                let tx_applied = tx_applied_fut.compat().await?;
+                let events = tx_applied.events;
+                let tx_hash = tx_applied.tx_hash;
+                let block = tx_applied.block;
+                let result = Call_::result_from_events(events.clone())?;
+                Ok(TransactionApplied {
+                    tx_hash,
+                    block,
+                    events,
+                    result,
                 })
-        }))
+            }))
+        })
     }
 
     fn genesis_hash(&self) -> Hash {

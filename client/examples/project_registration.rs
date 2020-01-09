@@ -25,6 +25,8 @@ async fn go() -> Result<(), Error> {
         )
         .compat()
         .await?
+        .compat()
+        .await?
         .result
         .unwrap();
     let project_id = (
@@ -41,6 +43,8 @@ async fn go() -> Result<(), Error> {
                 checkpoint_id,
             },
         )
+        .compat()
+        .await?
         .compat()
         .await?;
     println!("{:?}", project_id);

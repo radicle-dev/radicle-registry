@@ -15,6 +15,7 @@
 
 //! Provides [RemoteNodeWithExecutor] backend
 use futures03::compat::Executor01CompatExt;
+use futures03::future::BoxFuture;
 use futures03::task::SpawnExt;
 use std::sync::Arc;
 
@@ -48,12 +49,14 @@ impl backend::Backend for RemoteNodeWithExecutor {
     async fn submit(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Result<backend::TransactionApplied, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
+        let exec = Executor01CompatExt::compat(self.runtime.executor());
         let backend = self.backend.clone();
-        let handle = Executor01CompatExt::compat(self.runtime.executor())
+        let handle = exec
             .spawn_with_handle(async move { backend.submit(xt).await })
             .unwrap();
-        handle.await
+        let fut = handle.await?;
+        Ok(Box::pin(exec.spawn_with_handle(fut).unwrap()))
     }
 
     async fn fetch(

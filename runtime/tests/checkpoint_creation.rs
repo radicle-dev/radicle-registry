@@ -15,32 +15,28 @@ fn create_checkpoint() {
     let bob = common::key_pair_from_string("Bob");
 
     let project_hash1 = H256::random();
-    let checkpoint_id1 = client
-        .submit(
-            &bob,
-            CreateCheckpointParams {
-                project_hash: project_hash1,
-                previous_checkpoint_id: None,
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id1 = common::submit_ok(
+        &client,
+        &bob,
+        CreateCheckpointParams {
+            project_hash: project_hash1,
+            previous_checkpoint_id: None,
+        },
+    )
+    .result
+    .unwrap();
 
     let project_hash2 = H256::random();
-    let checkpoint_id2 = client
-        .submit(
-            &bob,
-            CreateCheckpointParams {
-                project_hash: project_hash2,
-                previous_checkpoint_id: Some(checkpoint_id1),
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id2 = common::submit_ok(
+        &client,
+        &bob,
+        CreateCheckpointParams {
+            project_hash: project_hash2,
+            previous_checkpoint_id: Some(checkpoint_id1),
+        },
+    )
+    .result
+    .unwrap();
 
     let checkpoint1_ = Checkpoint {
         parent: None,
@@ -73,16 +69,14 @@ fn create_checkpoint_without_parent() {
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
 
-    let tx_applied = client
-        .submit(
-            &bob,
-            CreateCheckpointParams {
-                project_hash,
-                previous_checkpoint_id,
-            },
-        )
-        .wait()
-        .unwrap();
+    let tx_applied = common::submit_ok(
+        &client,
+        &bob,
+        CreateCheckpointParams {
+            project_hash,
+            previous_checkpoint_id,
+        },
+    );
 
     assert_eq!(tx_applied.result, Err(None))
 }

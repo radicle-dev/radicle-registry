@@ -15,6 +15,7 @@
 
 //! Provides [Emulator] backend to run the registry ledger in memory.
 
+use futures03::future::BoxFuture;
 use std::sync::{Arc, Mutex};
 
 use sr_primitives::{traits::Hash as _, BuildStorage as _};
@@ -56,7 +57,7 @@ impl backend::Backend for Emulator {
     async fn submit(
         &self,
         extrinsic: backend::UncheckedExtrinsic,
-    ) -> Result<backend::TransactionApplied, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let test_ext = &mut self.test_ext.lock().unwrap();
         let events = test_ext.execute_with(move || {
@@ -70,11 +71,13 @@ impl backend::Backend for Emulator {
                 .map(|event_record| event_record.event)
                 .collect::<Vec<Event>>()
         });
-        Ok(backend::TransactionApplied {
-            tx_hash,
-            block: Default::default(),
-            events,
-        })
+        Ok(Box::pin(futures03::future::ready(Ok(
+            backend::TransactionApplied {
+                tx_hash,
+                block: Default::default(),
+                events,
+            },
+        ))))
     }
 
     async fn fetch(

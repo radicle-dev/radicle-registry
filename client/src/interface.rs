@@ -71,24 +71,23 @@ pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
 
 /// Trait for ledger clients sending transactions and looking up state.
 pub trait ClientT {
-    /// Submit a signed_transaction with a given ledger call.
+    /// Submit a signed transaction.
     ///
-    /// Succeeds if the transaction has been included in a block.
+    /// Succeeds if the transaction has been accepted by the node. The wrapped future that is
+    /// returned can be used to wait for the transaction to be applied and included in a block.
     fn submit_transaction<Call_: Call>(
         &self,
         transaction: Transaction<Call_>,
-    ) -> Response<TransactionApplied<Call_>, Error>;
+    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error>;
 
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Same as [ClientT::submit_transaction] but takes care of signing the call.
-    ///
-    /// Succeeds if the transaction has been included in a block.
     fn submit<Call_: Call>(
         &self,
         author: &ed25519::Pair,
         call: Call_,
-    ) -> Response<TransactionApplied<Call_>, Error>;
+    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
     fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error>;

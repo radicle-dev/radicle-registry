@@ -15,20 +15,18 @@ fn register_project() {
     let alice = common::key_pair_from_string("Alice");
 
     let project_hash = H256::random();
-    let checkpoint_id = client
-        .submit(
-            &alice,
-            CreateCheckpointParams {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id = common::submit_ok(
+        &client,
+        &alice,
+        CreateCheckpointParams {
+            project_hash,
+            previous_checkpoint_id: None,
+        },
+    )
+    .result
+    .unwrap();
     let params = common::random_register_project_params(checkpoint_id);
-    let tx_applied = client.submit(&alice, params.clone()).wait().unwrap();
+    let tx_applied = common::submit_ok(&client, &alice, params.clone());
 
     let project = client
         .get_project(params.clone().id)
@@ -70,35 +68,31 @@ fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
     let alice = common::key_pair_from_string("Alice");
 
-    let checkpoint_id = client
-        .submit(
-            &alice,
-            CreateCheckpointParams {
-                project_hash: H256::random(),
-                previous_checkpoint_id: None,
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id = common::submit_ok(
+        &client,
+        &alice,
+        CreateCheckpointParams {
+            project_hash: H256::random(),
+            previous_checkpoint_id: None,
+        },
+    )
+    .result
+    .unwrap();
 
     let params = common::random_register_project_params(checkpoint_id);
 
-    client.submit(&alice, params.clone()).wait().unwrap();
+    common::submit_ok(&client, &alice, params.clone());
 
     // Duplicate submission with different description and image URL.
-    let registration_2 = client
-        .submit(
-            &alice,
-            RegisterProjectParams {
-                description: "DESCRIPTION_2".to_string(),
-                img_url: "IMG_URL_2".to_string(),
-                ..params.clone()
-            },
-        )
-        .wait()
-        .unwrap();
+    let registration_2 = common::submit_ok(
+        &client,
+        &alice,
+        RegisterProjectParams {
+            description: "DESCRIPTION_2".to_string(),
+            img_url: "IMG_URL_2".to_string(),
+            ..params.clone()
+        },
+    );
 
     assert_eq!(registration_2.result, Err(None));
 
@@ -117,7 +111,7 @@ fn register_project_with_bad_checkpoint() {
 
     let params = common::random_register_project_params(checkpoint_id);
 
-    let tx_applied = client.submit(&alice, params.clone()).wait().unwrap();
+    let tx_applied = common::submit_ok(&client, &alice, params.clone());
 
     assert_eq!(tx_applied.result, Err(None));
 

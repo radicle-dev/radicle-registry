@@ -5,24 +5,34 @@ use rand::Rng;
 
 use radicle_registry_client::*;
 
+/// Submit a transaction and wait for it to be successfully applied.
+///
+/// Panics if submission errors.
+#[allow(dead_code)]
+pub fn submit_ok<Call_: Call>(
+    client: &Client,
+    author: &ed25519::Pair,
+    call: Call_,
+) -> TransactionApplied<Call_> {
+    client.submit(&author, call).wait().unwrap().wait().unwrap()
+}
+
 #[allow(dead_code)]
 pub fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
-    let checkpoint_id = client
-        .submit(
-            &author,
-            CreateCheckpointParams {
-                project_hash: H256::random(),
-                previous_checkpoint_id: None,
-            },
-        )
-        .wait()
-        .unwrap()
-        .result
-        .unwrap();
+    let checkpoint_id = submit_ok(
+        &client,
+        &author,
+        CreateCheckpointParams {
+            project_hash: H256::random(),
+            previous_checkpoint_id: None,
+        },
+    )
+    .result
+    .unwrap();
 
     let params = random_register_project_params(checkpoint_id);
 
-    client.submit(&author, params.clone()).wait().unwrap();
+    submit_ok(&client, &author, params.clone());
 
     client.get_project(params.id).wait().unwrap().unwrap()
 }
