@@ -19,11 +19,20 @@ declare -r target_cache="/cache/target"
 # Incremental builds use timestamps of local code. Since we always
 # check it out fresh we can never use incremental builds.
 export CARGO_BUILD_INCREMENTAL=false
+# Most of the caching is done through caching ./target
+export SCCACHE_CACHE_SIZE="1G"
 
-echo "--- Link target dir to cache"
+echo "--- Prepare cache"
+free_cache_space_kb=$(df --output=avail /cache | sed -n 2p)
+min_free_cache_kb=$(( 800 * 1024 ))
+echo "$(( free_cache_space_kb / 1024 )) MiB free space on /cache"
+if [[ $free_cache_space_kb -le $min_free_cache_kb ]]; then
+  echo "Reseting cache with rm -rf /cache/*"
+  du -sh /cache/*
+  rm -rf /cache/*
+fi
 mkdir -p "$target_cache"
 ln -s "$target_cache" ./target
-echo "Size of ./target is $(du -Dsh "./target" | cut -f 1)"
 
 echo "--- scripts/check-license-headers"
 time ./scripts/check-license-headers
@@ -57,6 +66,8 @@ cp -a target/release/radicle-registry-node ci/node-image
 echo "--- Cleanup cache"
 # Remove all executables that need to be rebuild.
 find ./target -maxdepth 2 -executable -type f -exec rm {} \;
+# Remove artifats from local code
+rm -r target/release/deps/radicle* target/release/build/radicle*
 echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
 
 # Upload the node binary to bintray using the commit hash as the version.

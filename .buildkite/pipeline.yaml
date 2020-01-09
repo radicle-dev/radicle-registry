@@ -8,6 +8,7 @@ steps:
     agents:
       platform: "linux"
       production: "true"
+    timeout_in_minutes: 60
     # See https://buildkite.com/docs/pipelines/artifacts for how to download
     # the produced artifacts with Buildkite's agent CLI.
     # To download artifacts without the `buildkite-agent` tool (which only
