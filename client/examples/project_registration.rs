@@ -19,7 +19,7 @@ async fn go() -> Result<(), Error> {
 
     let project_hash = H256::random();
     let checkpoint_id = client
-        .submit(
+        .sign_and_submit_call(
             &alice,
             CreateCheckpointParams {
                 project_hash,
@@ -37,7 +37,7 @@ async fn go() -> Result<(), Error> {
         ProjectDomain::from_string("DOMAIN".to_string()).unwrap(),
     );
     client
-        .submit(
+        .sign_and_submit_call(
             &alice,
             RegisterProjectParams {
                 id: project_id.clone(),

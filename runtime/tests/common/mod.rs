@@ -14,7 +14,12 @@ pub fn submit_ok<Call_: Call>(
     author: &ed25519::Pair,
     call: Call_,
 ) -> TransactionApplied<Call_> {
-    client.submit(&author, call).wait().unwrap().wait().unwrap()
+    client
+        .sign_and_submit_call(&author, call)
+        .wait()
+        .unwrap()
+        .wait()
+        .unwrap()
 }
 
 #[allow(dead_code)]

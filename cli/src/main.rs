@@ -62,7 +62,7 @@ fn run(args: Args) {
             let node_host = url::Host::parse("127.0.0.1").unwrap();
             let client = Client::create_with_executor(node_host).wait().unwrap();
             let checkpoint_id = client
-                .submit(
+                .sign_and_submit_call(
                     &author_key_pair,
                     CreateCheckpointParams {
                         project_hash,
@@ -77,7 +77,7 @@ fn run(args: Args) {
                 .unwrap();
             let project_id = (name, domain);
             client
-                .submit(
+                .sign_and_submit_call(
                     &author_key_pair,
                     RegisterProjectParams {
                         id: project_id.clone(),

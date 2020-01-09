@@ -83,7 +83,7 @@ pub trait ClientT {
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Same as [ClientT::submit_transaction] but takes care of signing the call.
-    fn submit<Call_: Call>(
+    fn sign_and_submit_call<Call_: Call>(
         &self,
         author: &ed25519::Pair,
         call: Call_,

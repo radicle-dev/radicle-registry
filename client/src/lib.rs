@@ -179,7 +179,7 @@ impl ClientT for Client {
         })
     }
 
-    fn submit<Call_: Call>(
+    fn sign_and_submit_call<Call_: Call>(
         &self,
         author: &ed25519::Pair,
         call: Call_,
