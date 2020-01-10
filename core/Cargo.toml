@@ -1,0 +1,51 @@
+[package]
+edition = "2018"
+name = "radicle-registry-core"
+description = "Primitive types and functions used in the Radicle Registry"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+version = "0.0.0"
+homepage = "https://github.com/radicle-dev/radicle-registry"
+documentation = "https://github.com/radicle-dev/radicle-registry"
+license = "GPL-3.0-only"
+repository = "https://github.com/radicle-dev/radicle-registry"
+
+[features]
+default = ["std"]
+std = [
+    "frame-support/std",
+    "frame-system/std",
+    "parity-scale-codec/std",
+    "sp-core/std",
+    "sp-std/std",
+    "sp-runtime/std",
+]
+
+[dependencies.parity-scale-codec]
+default-features = false
+features = ["derive", "full"]
+version = "1.0.0"
+
+[dependencies.sp-core]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+default-features = false
+
+[dependencies.sp-runtime]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+default-features = false
+
+[dependencies.frame-support]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+default-features = false
+
+[dependencies.frame-system]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+default-features = false
+
+[dependencies.sp-std]
+git = "https://github.com/paritytech/substrate"
+rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+default-features = false

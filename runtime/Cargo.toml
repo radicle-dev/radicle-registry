@@ -22,6 +22,7 @@ std = [
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
     "parity-scale-codec/std",
+    "radicle-registry-core/std",
     "serde",
     "sp-api/std",
     "sp-block-builder/std",
@@ -35,6 +36,11 @@ std = [
     "sp-transaction-pool/std",
     "sp-version/std"
 ]
+
+[dependencies.radicle-registry-core]
+path = "../core"
+version = "0.0.0"
+default-features = false
 
 [dependencies.parity-scale-codec]
 default-features = false

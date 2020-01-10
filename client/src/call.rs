@@ -15,6 +15,7 @@
 
 //! Defines [Call] trait and implementations for all transaction parameters.
 
+use radicle_registry_core::*;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
 use sp_runtime::DispatchError;
 
@@ -38,7 +39,7 @@ pub trait Call: Send + 'static {
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
-impl Call for registry::RegisterProjectParams {
+impl Call for RegisterProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -59,8 +60,8 @@ impl Call for registry::RegisterProjectParams {
     }
 }
 
-impl Call for registry::CreateCheckpointParams {
-    type Result = Result<registry::CheckpointId, DispatchError>;
+impl Call for CreateCheckpointParams {
+    type Result = Result<CheckpointId, DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -80,7 +81,7 @@ impl Call for registry::CreateCheckpointParams {
     }
 }
 
-impl Call for registry::SetCheckpointParams {
+impl Call for SetCheckpointParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -113,7 +114,7 @@ impl Call for crate::TransferParams {
     }
 }
 
-impl Call for registry::TransferFromProjectParams {
+impl Call for TransferFromProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {

@@ -56,6 +56,9 @@ Packages
   registry through a node and an emulator implementation.
 * `cli` contains a binary for interacting with the registry node to submit
   transactions and read state.
+* `core` contains basic types used throughout the Radicle Registry.
+  If e.g. a trait or a datatype is used by more than one of the above packages,
+  it should probably go into `core`.
 
 
 Testing

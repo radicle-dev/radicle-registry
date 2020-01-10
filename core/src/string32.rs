@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-/// `String32` validation tests.
+/// `String32` type, and its validation tests.
 use alloc::format;
 use alloc::prelude::v1::*;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};

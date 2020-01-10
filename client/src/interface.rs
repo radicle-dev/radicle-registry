@@ -19,16 +19,11 @@
 //! methods to get the ledger state.
 use futures01::prelude::*;
 
+pub use radicle_registry_core::*;
+
 pub use radicle_registry_runtime::Hash;
 
-pub use radicle_registry_runtime::{
-    registry::{
-        Checkpoint, CheckpointId, CreateCheckpointParams, DispatchError, Event as RegistryEvent,
-        Project, ProjectDomain, ProjectId, ProjectName, RegisterProjectParams, SetCheckpointParams,
-        TransferFromProjectParams,
-    },
-    AccountId, Balance, Event, Hashing, Index, String32,
-};
+pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
