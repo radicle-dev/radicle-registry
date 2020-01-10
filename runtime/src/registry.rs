@@ -15,7 +15,6 @@
 
 use alloc::prelude::v1::*;
 use alloc::vec;
-pub use frame_support::dispatch::DispatchError;
 use frame_support::weights::SimpleDispatchInfo;
 use frame_support::{
     decl_event, decl_module, decl_storage,
@@ -24,74 +23,16 @@ use frame_support::{
     storage::StorageValue as _,
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
-use parity_scale_codec::{Decode, Encode};
 
-use sp_core::{crypto::UncheckedFrom, H256};
+use sp_core::crypto::UncheckedFrom;
 
 use frame_system as system;
 use frame_system::ensure_signed;
 
-use crate::{AccountId, Balance, Hash, Hashing, String32};
+use crate::{AccountId, Hash, Hashing};
 use sp_runtime::traits::Hash as _;
 
-/// The name a project is registered with.
-pub type ProjectName = String32;
-
-/// The domain under which the project's name is registered.
-///
-/// At present, the domain must be `rad`, alhtough others may be allowed in
-/// the future.
-pub type ProjectDomain = String32;
-
-pub type ProjectId = (ProjectName, ProjectDomain);
-
-pub type CheckpointId = H256;
-
-/// A project's version. Used in checkpointing.
-pub type Version = String;
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    pub id: ProjectId,
-    pub account_id: AccountId,
-    pub description: String,
-    pub img_url: String,
-    pub members: Vec<AccountId>,
-    pub current_cp: CheckpointId,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct RegisterProjectParams {
-    pub id: ProjectId,
-    pub description: String,
-    pub img_url: String,
-    pub checkpoint_id: CheckpointId,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Checkpoint {
-    pub parent: Option<CheckpointId>,
-    pub hash: H256,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct CreateCheckpointParams {
-    pub project_hash: H256,
-    pub previous_checkpoint_id: Option<CheckpointId>,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct SetCheckpointParams {
-    pub project_id: ProjectId,
-    pub new_checkpoint_id: CheckpointId,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct TransferFromProjectParams {
-    pub project: ProjectId,
-    pub recipient: AccountId,
-    pub value: Balance,
-}
+use radicle_registry_core::*;
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>

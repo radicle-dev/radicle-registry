@@ -46,43 +46,26 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
+pub use radicle_registry_core::*;
+
 /// An index to a block.
 pub type BlockNumber = u32;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = ed25519::Signature;
 
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = ed25519::Public;
-
 /// The type for looking up accounts. We don't expect more than 4 billion of them, but you
 /// never know...
 pub type AccountIndex = u32;
-
-/// Balance of an account.
-pub type Balance = u128;
-
-/// Index of a transaction in the chain.
-pub type Index = u32;
-
-/// The hashing algorightm to use
-pub type Hashing = BlakeTwo256;
 
 /// A hash of some data used by the chain.
 ///
 /// Same as [Hashing::Output].
 pub type Hash = sp_core::H256;
 
-/// Digest item type.
-pub type DigestItem = generic::DigestItem<Hash>;
-
 pub type EventRecord = frame_system::EventRecord<Event, Hash>;
 
 pub mod registry;
-
-mod string32;
-pub use string32::String32;
 
 pub use pallet_balances as balances;
 

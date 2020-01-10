@@ -3485,6 +3485,7 @@ dependencies = [
  "log 0.4.8",
  "pallet-transaction-payment",
  "parity-scale-codec",
+ "radicle-registry-core",
  "radicle-registry-runtime",
  "rand 0.7.2",
  "sc-rpc-api",
@@ -3495,6 +3496,18 @@ dependencies = [
  "sp-transaction-pool",
  "tokio 0.1.22",
  "url 1.7.2",
+]
+
+[[package]]
+name = "radicle-registry-core"
+version = "0.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -3546,6 +3559,7 @@ dependencies = [
  "pallet-transaction-payment",
  "parity-scale-codec",
  "radicle-registry-client",
+ "radicle-registry-core",
  "rand 0.7.2",
  "serde",
  "sp-api",

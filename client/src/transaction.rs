@@ -20,10 +20,7 @@ use sp_runtime::generic::{Era, SignedPayload};
 use sp_runtime::traits::SignedExtension;
 use std::marker::PhantomData;
 
-pub use radicle_registry_runtime::{
-    registry::{Project, ProjectId},
-    AccountId, Balance,
-};
+pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::ed25519;
 
