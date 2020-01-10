@@ -15,6 +15,7 @@
 
 use jsonrpc_core_client::RpcError;
 use parity_scale_codec::Error as CodecError;
+use sp_runtime::DispatchError;
 
 /// Error that may be returned by any of the [crate::ClientT] methods.
 #[derive(Debug, derive_more::From, derive_more::Display, derive_more::TryInto)]
@@ -23,6 +24,9 @@ pub enum Error {
     Codec(CodecError),
     /// Error from the underlying RPC connection.
     Rpc(RpcError),
+    /// Dispatch error from Substrate.
+    #[display(fmt = "{:?}", "_0")]
+    Dispatch(DispatchError),
     /// Invalid transaction
     InvalidTransaction(),
     /// Other error.
