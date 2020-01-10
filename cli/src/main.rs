@@ -17,80 +17,64 @@ use futures01::prelude::*;
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
+mod commands;
+use commands::*;
+
 #[derive(StructOpt, Debug, Clone)]
-pub struct Args {
-    #[structopt(long, default_value = "Alice")]
+#[structopt(max_term_width = 80)]
+struct Args {
     /// The key pair that is used to sign transaction is generated from this seed.
+    #[structopt(long, default_value = "Alice", value_name = "seed")]
     author_key_seed: String,
+
     #[structopt(subcommand)]
     command: Command,
+
+    /// IP address or domain name that hosts the RPC API
+    #[structopt(
+        long,
+        default_value = "127.0.0.1",
+        env = "RAD_NODE_HOST",
+        parse(try_from_str = url::Host::parse),
+    )]
+    node_host: url::Host,
 }
 
 impl Args {
-    /// Return the key pair generated from [Args::author_key_seed].
-    fn author_key_pair(&self) -> ed25519::Pair {
-        ed25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None).unwrap()
+    fn command_context(&self) -> CommandContext {
+        let author_key_pair =
+            ed25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None)
+                .unwrap();
+        let client = Client::create_with_executor(self.node_host.clone())
+            .wait()
+            .unwrap();
+        CommandContext {
+            author_key_pair,
+            client,
+        }
     }
 }
 
 #[derive(StructOpt, Debug, Clone)]
-pub enum Command {
-    /// Register a project
-    RegisterProject {
-        /// Name of the project to register.
-        name: String32,
-        /// Domain of the project to register.
-        domain: String32,
-        project_hash: H256,
-    },
+enum Command {
+    RegisterProject(RegisterProject),
+    ListProjects(ListProjects),
+    ShowProject(ShowProject),
 }
 
 fn main() {
     pretty_env_logger::init();
-    run(Args::from_args());
-}
+    let args = Args::from_args();
+    let command_context = args.command_context();
 
-fn run(args: Args) {
-    let author_key_pair = args.author_key_pair();
+    let result = match args.command {
+        Command::RegisterProject(cmd) => cmd.run(&command_context),
+        Command::ListProjects(cmd) => cmd.run(&command_context),
+        Command::ShowProject(cmd) => cmd.run(&command_context),
+    };
 
-    match args.command {
-        Command::RegisterProject {
-            name,
-            domain,
-            project_hash,
-        } => {
-            let node_host = url::Host::parse("127.0.0.1").unwrap();
-            let client = Client::create_with_executor(node_host).wait().unwrap();
-            let checkpoint_id = client
-                .sign_and_submit_call(
-                    &author_key_pair,
-                    CreateCheckpointParams {
-                        project_hash,
-                        previous_checkpoint_id: None,
-                    },
-                )
-                .wait()
-                .unwrap()
-                .wait()
-                .unwrap()
-                .result
-                .unwrap();
-            let project_id = (name, domain);
-            client
-                .sign_and_submit_call(
-                    &author_key_pair,
-                    RegisterProjectParams {
-                        id: project_id.clone(),
-                        description: format!(""),
-                        img_url: format!(""),
-                        checkpoint_id,
-                    },
-                )
-                .wait()
-                .unwrap()
-                .wait()
-                .unwrap();
-            println!("Registered project with ID {:?}", project_id)
-        }
+    match result {
+        Ok(_) => std::process::exit(0),
+        Err(_) => std::process::exit(1),
     }
 }
