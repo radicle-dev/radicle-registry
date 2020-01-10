@@ -1,18 +1,22 @@
+.test: &test
+  label: "Test"
+  command: "ci/run"
+  timeout_in_minutes: 60
+  env:
+    DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base@sha256:43990b4482544a2056cb61409d7e3171e4b67a2418323eab2fbd0844cad0c29c
+    STEP_DOCKER_FILE: ci/node-image/Dockerfile
+    STEP_DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/node
+    SHARED_MASTER_CACHE: true
+  agents:
+    platform: "linux"
+    production: "true"
+  artifact_paths:
+    - "artifacts/radicle-registry-node"
+
 steps:
-  - label: "Check formatting, lint, build and test "
-    command: 'ci/run'
-    env:
-      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base@sha256:43990b4482544a2056cb61409d7e3171e4b67a2418323eab2fbd0844cad0c29c
-      STEP_DOCKER_FILE: ci/node-image/Dockerfile
-      STEP_DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/node
-    agents:
-      platform: "linux"
-      production: "true"
-    timeout_in_minutes: 60
-    # See https://buildkite.com/docs/pipelines/artifacts for how to download
-    # the produced artifacts with Buildkite's agent CLI.
-    # To download artifacts without the `buildkite-agent` tool (which only
-    # works during running builds), see
-    # https://buildkite.com/docs/apis/rest-api/artifacts#download-an-artifact.
-    artifact_paths:
-      - "artifacts/radicle-registry-node"
+  - branches: master
+    concurrency: 1
+    concurrency_group: master
+    <<: *test
+  - branches: "!master"
+    <<: *test
