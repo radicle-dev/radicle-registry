@@ -146,3 +146,15 @@ impl CommandT for RegisterProject {
         }
     }
 }
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show the genesis hash the node uses
+pub struct ShowGenesisHash {}
+
+impl CommandT for ShowGenesisHash {
+    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+        let genesis_hash = command_context.client.genesis_hash();
+        println!("Gensis block hash: 0x{}", hex::encode(genesis_hash));
+        Ok(())
+    }
+}
