@@ -60,6 +60,7 @@ enum Command {
     RegisterProject(RegisterProject),
     ListProjects(ListProjects),
     ShowProject(ShowProject),
+    ShowGenesisHash(ShowGenesisHash),
 }
 
 fn main() {
@@ -71,6 +72,7 @@ fn main() {
         Command::RegisterProject(cmd) => cmd.run(&command_context),
         Command::ListProjects(cmd) => cmd.run(&command_context),
         Command::ShowProject(cmd) => cmd.run(&command_context),
+        Command::ShowGenesisHash(cmd) => cmd.run(&command_context),
     };
 
     match result {
