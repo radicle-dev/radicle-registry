@@ -3465,6 +3465,7 @@ dependencies = [
  "lazy_static",
  "pretty_env_logger",
  "radicle-registry-client",
+ "sp-core",
  "structopt",
  "url 1.7.2",
 ]

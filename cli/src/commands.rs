@@ -52,23 +52,30 @@ impl CommandT for ShowProject {
         };
         let opt_project = command_context
             .client
-            .get_project((project_name, RAD_DOMAIN.clone()))
+            .get_project((project_name.clone(), RAD_DOMAIN.clone()))
             .wait()
             .unwrap();
 
-        match opt_project {
+        let project = match opt_project {
             None => {
-                println!("Project not found");
-                Err(())
+                println!("Project {}.{} not found", project_name, RAD_DOMAIN.clone());
+                return Err(());
             }
-            Some(project) => {
-                println!("project: {}.{}", project.id.0, project.id.1);
-                println!("account id: {}", project.account_id);
-                println!("checkpoint: {}", project.current_cp);
-                println!("members: {:?}", project.members);
-                Ok(())
-            }
-        }
+            Some(project) => project,
+        };
+
+        let balance = command_context
+            .client
+            .free_balance(&project.account_id)
+            .wait()
+            .unwrap();
+
+        println!("project: {}.{}", project.id.0, project.id.1);
+        println!("account id: {}", project.account_id);
+        println!("balance: {}", balance);
+        println!("checkpoint: {}", project.current_cp);
+        println!("members: {:?}", project.members);
+        Ok(())
     }
 }
 #[derive(StructOpt, Debug, Clone)]
@@ -155,6 +162,74 @@ impl CommandT for ShowGenesisHash {
     fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let genesis_hash = command_context.client.genesis_hash();
         println!("Gensis block hash: 0x{}", hex::encode(genesis_hash));
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Transfer some funds to recipient
+pub struct Transfer {
+    #[structopt(parse(try_from_str = parse_account_id))]
+    /// Recipient Account in SS58 address format
+    recipient: AccountId,
+    funds: Balance,
+}
+
+fn parse_account_id(data: &str) -> Result<AccountId, String> {
+    sp_core::crypto::Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
+}
+
+impl CommandT for Transfer {
+    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+        let client = &command_context.client;
+
+        let transfer_fut = client
+            .sign_and_submit_call(
+                &command_context.author_key_pair,
+                TransferParams {
+                    recipient: self.recipient,
+                    balance: self.funds,
+                },
+            )
+            .wait()
+            .unwrap();
+        println!("transferring funds...");
+        let project_registered = transfer_fut.wait().unwrap();
+        match project_registered.result {
+            Ok(()) => {
+                println!(
+                    "transferred {} RAD to {} in block {}",
+                    self.funds, self.recipient, project_registered.block,
+                );
+                Ok(())
+            }
+            Err(_) => {
+                println!("transaction failed in block {}", project_registered.block,);
+                Err(())
+            }
+        }
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show the balance of an account
+pub struct ShowBalance {
+    #[structopt(
+        value_name = "account",
+        parse(try_from_str = parse_account_id),
+    )]
+    /// SS58 address
+    account_id: AccountId,
+}
+
+impl CommandT for ShowBalance {
+    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+        let balance = command_context
+            .client
+            .free_balance(&self.account_id)
+            .wait()
+            .unwrap();
+        println!("{} RAD", balance);
         Ok(())
     }
 }

@@ -61,6 +61,8 @@ enum Command {
     ListProjects(ListProjects),
     ShowProject(ShowProject),
     ShowGenesisHash(ShowGenesisHash),
+    Transfer(Transfer),
+    ShowBalance(ShowBalance),
 }
 
 fn main() {
@@ -73,6 +75,8 @@ fn main() {
         Command::ListProjects(cmd) => cmd.run(&command_context),
         Command::ShowProject(cmd) => cmd.run(&command_context),
         Command::ShowGenesisHash(cmd) => cmd.run(&command_context),
+        Command::Transfer(cmd) => cmd.run(&command_context),
+        Command::ShowBalance(cmd) => cmd.run(&command_context),
     };
 
     match result {
