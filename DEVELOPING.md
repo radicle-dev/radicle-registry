@@ -87,6 +87,13 @@ that makes the change. That is they are included in every pull request. For
 breaking changes a migration path must be provided.
 
 
+Continuous Deployment
+---------------------
+
+We’re continuously deploying master builds of the node to the devnet. We’re
+using Kubernetes for this. You can find the code in `ci/deploy`.
+
+
 Local devnet
 ------------
 

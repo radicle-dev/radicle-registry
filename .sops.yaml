@@ -1,0 +1,2 @@
+creation_rules:
+- gcp_kms: projects/radicle-registry-dev/locations/global/keyRings/dev/cryptoKeys/ci-secrets

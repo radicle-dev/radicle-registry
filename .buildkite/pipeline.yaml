@@ -20,3 +20,12 @@ steps:
     <<: *test
   - branches: "!master"
     <<: *test
+  - wait
+  - label: "Deploy"
+    branches: master
+    command: "ci/deploy"
+    env:
+      DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base@sha256:43990b4482544a2056cb61409d7e3171e4b67a2418323eab2fbd0844cad0c29c
+    agents:
+      platform: "linux"
+      production: "true"

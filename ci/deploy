@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Deploy a new node version to the devnet.
+
+set -euo pipefail
+
+if [[ ${CI_VERBOSE:-} =~ ^1|true$ ]]; then
+  set -x
+fi
+
+image="gcr.io/opensourcecoin/radicle-registry/node:$BUILDKITE_COMMIT"
+
+function kubectl() {
+  ./kubectl \
+    --token "$KUBECTL_TOKEN" \
+    --kubeconfig ./ci/kubeconfig.yaml \
+    --namespace devnet \
+    "$@"
+}
+
+curl -sSLO https://storage.googleapis.com/kubernetes-release/release/v1.17.0/bin/linux/amd64/kubectl
+echo "6e0aaaffe5507a44ec6b1b8a0fb585285813b78cc045f8804e70a6aac9d1cb4c *kubectl" | sha256sum -c -
+chmod +x kubectl
+source .secrets
+
+kubectl set image statefulsets.apps/devnet-nodes radicle-registry-node="$image"
+kubectl rollout status statefulsets devnet-nodes --timeout 2m
