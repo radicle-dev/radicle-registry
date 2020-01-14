@@ -19,17 +19,21 @@ async fn go() -> Result<(), Error> {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create(node_host).compat().await?;
 
+    // Construct `TransactionExtra` data that is required to validate a transaction.
     let account_nonce = client.account_nonce(&alice.public()).compat().await?;
+    let transaction_extra = TransactionExtra {
+        nonce: account_nonce,
+        genesis_hash: client.genesis_hash(),
+    };
+
+    // Construct the transaction
     let transfer_tx = Transaction::new_signed(
         &alice,
         TransferParams {
             recipient: bob.public(),
             balance: 1000,
         },
-        TransactionExtra {
-            nonce: account_nonce,
-            genesis_hash: client.genesis_hash(),
-        },
+        transaction_extra,
     );
 
     client

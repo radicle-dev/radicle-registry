@@ -79,7 +79,8 @@ Using the Client
 ----------------
 
 The client for the registry node is provided by the `radicle-registry-client`
-package in the `./client` directory.
+package in the `./client` directory. To get started take a look at
+`./client/examples/getting_started.rs`.
 
 You’ll need to build the client with Rust Nightly.
 
