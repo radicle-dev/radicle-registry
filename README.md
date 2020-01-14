@@ -41,15 +41,19 @@ To build the node from source see [`DEVELOPING.md`][dev-manual].
 Running the node
 ----------------
 
-At the moment the node can be run only in development mode with the development
-chain specification.
+The node can be run in development mode or with a specified chain. Currently,
+only the `devnet` chain is available.
+
+For more information use the `--help` flag.
+
+### Dev Mode
+
+In development mode the node runs an isolated network with only the node as an
+Aura validator and block producer.
 
 ~~~
 radicle-registry-node --dev
 ~~~
-
-This runs an isolated node with who is the single Aura validator and block
-producer.
 
 To reset the chain state and start fresh run
 
@@ -57,7 +61,18 @@ To reset the chain state and start fresh run
 radicle-registry-node purge-chain --dev
 ~~~
 
-For more information use the `--help` flag.
+### Devnet
+
+We host a devnet that you can connect to. To join you need to use the most
+recent pre-built binary (see “Getting the node”).
+
+~~~
+radicle-registry-node --chain devnet
+~~~
+
+We are frequently resetting the devnet blockchain. If you local node is not
+syncing blocks download the most recent version and run `radicle-registry-node
+purge-chain --chain devnet`.
 
 
 Using the Client

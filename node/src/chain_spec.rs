@@ -32,6 +32,8 @@ pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
 pub fn from_id(id: &str) -> Option<ChainSpec> {
     if id == "dev" {
         Some(dev())
+    } else if id == "devnet" {
+        Some(devnet())
     } else if id == "local-devnet" {
         Some(local_devnet())
     } else {
@@ -41,7 +43,7 @@ pub fn from_id(id: &str) -> Option<ChainSpec> {
 
 pub fn dev() -> ChainSpec {
     ChainSpec::from_genesis(
-        "Development",
+        "Development, isolated node",
         "dev",
         dev_genesis_config,
         vec![], // boot nodes
@@ -86,11 +88,30 @@ fn dev_genesis_config() -> GenesisConfig {
     }
 }
 
+pub fn devnet() -> ChainSpec {
+    ChainSpec::from_genesis(
+        "devnet",
+        "devnet",
+        devnet_genesis_config,
+        // boot nodes
+        // From key 000...001
+        vec![
+            "/ip4/35.233.120.254/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
+                .to_string(),
+        ],
+        None, // telemetry endpoints
+        // protocol_id
+        Some("devnet"),
+        None, // no properties
+        None, // no extensions
+    )
+}
+
 pub fn local_devnet() -> ChainSpec {
     ChainSpec::from_genesis(
-        "local devnet",
+        "local devnet, isolated on one machine",
         "local-devnet",
-        local_dev_genesis_config,
+        devnet_genesis_config,
         vec![], // boot nodes
         None,   // telemetry endpoints
         // protocol_id
@@ -100,7 +121,7 @@ pub fn local_devnet() -> ChainSpec {
     )
 }
 
-fn local_dev_genesis_config() -> GenesisConfig {
+fn devnet_genesis_config() -> GenesisConfig {
     let endowed_accounts = vec![
         get_from_seed::<AccountId>("Alice"),
         get_from_seed::<AccountId>("Bob"),
