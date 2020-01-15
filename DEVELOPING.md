@@ -28,6 +28,9 @@ Build requirements
    targets.
 3. Install [`wasm-gc`][wasm-gc] via `cargo install --git https://github.com/alexcrichton/wasm-gc`
 
+[rustup-install]: https://github.com/rust-lang/rustup.rs#installation
+[wasm-gc]: https://github.com/alexcrichton/wasm-gc
+
 
 Running development node
 ------------------------
