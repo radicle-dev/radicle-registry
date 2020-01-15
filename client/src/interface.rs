@@ -39,12 +39,6 @@ pub type BlockHash = Hash;
 #[doc(inline)]
 pub type TxHash = Hash;
 
-#[derive(Clone, Debug)]
-pub struct TransferParams {
-    pub recipient: AccountId,
-    pub balance: Balance,
-}
-
 /// Result of a transaction being included in a block.
 ///
 /// Returned after submitting an transaction to the blockchain.

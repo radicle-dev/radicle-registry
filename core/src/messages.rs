@@ -49,3 +49,9 @@ pub struct TransferFromProjectParams {
     pub recipient: AccountId,
     pub value: Balance,
 }
+
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct TransferParams {
+    pub recipient: AccountId,
+    pub balance: Balance,
+}

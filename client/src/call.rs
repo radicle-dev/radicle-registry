@@ -102,7 +102,7 @@ impl Call for SetCheckpointParams {
     }
 }
 
-impl Call for crate::TransferParams {
+impl Call for TransferParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
