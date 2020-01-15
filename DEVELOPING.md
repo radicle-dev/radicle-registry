@@ -12,7 +12,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Build requirements](#build-requirements)
 - [Running development node](#running-development-node)
 - [Packages](#packages)
-- [Testing](#testing)
+- [Running tests](#running-tests)
 - [Changelog](#changelog)
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
@@ -64,8 +64,12 @@ Packages
   it should probably go into `core`.
 
 
-Testing
--------
+Running tests
+-------------
+
+You can run all tests with `cargo test --workspace --all-targets`. For the
+end-to-end tests you need to [build and run a dev
+node](#running-development-node)
 
 Black-box tests for the runtime logic are implemented with the client emulator
 in `runtime/tests/main.rs`.
