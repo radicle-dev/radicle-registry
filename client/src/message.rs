@@ -26,7 +26,7 @@ type EventParseError = String;
 ///
 /// For every [RuntimeCall] that is exposed to the user we implement [Call] for the parameters
 /// struct of the runtime call.
-pub trait Call: Send + 'static {
+pub trait Message: Send + 'static {
     /// Result of executing the call in the runtime that is presented to the client user.
     type Result: Send + 'static;
 
@@ -39,7 +39,7 @@ pub trait Call: Send + 'static {
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
-impl Call for RegisterProjectParams {
+impl Message for RegisterProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -60,7 +60,7 @@ impl Call for RegisterProjectParams {
     }
 }
 
-impl Call for CreateCheckpointParams {
+impl Message for CreateCheckpointParams {
     type Result = Result<CheckpointId, DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -81,7 +81,7 @@ impl Call for CreateCheckpointParams {
     }
 }
 
-impl Call for SetCheckpointParams {
+impl Message for SetCheckpointParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -102,7 +102,7 @@ impl Call for SetCheckpointParams {
     }
 }
 
-impl Call for TransferParams {
+impl Message for TransferParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -114,7 +114,7 @@ impl Call for TransferParams {
     }
 }
 
-impl Call for TransferFromProjectParams {
+impl Message for TransferFromProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {

@@ -24,7 +24,7 @@ pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::ed25519;
 
-pub use crate::message::Call;
+pub use crate::message::Message;
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 #[derive(Clone, Debug)]
@@ -40,12 +40,12 @@ pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra
 ///
 /// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
 /// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
-pub struct Transaction<Call_: Call> {
+pub struct Transaction<Call_: Message> {
     _phantom_data: PhantomData<Call_>,
     pub(crate) extrinsic: UncheckedExtrinsic,
 }
 
-impl<Call_: Call> Transaction<Call_> {
+impl<Call_: Message> Transaction<Call_> {
     /// Create and sign a transaction for the given call.
     pub fn new_signed(
         signer: &ed25519::Pair,

@@ -27,8 +27,8 @@ pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
-pub use crate::message::Call;
 pub use crate::error::Error;
+pub use crate::message::Message;
 pub use crate::transaction::{Transaction, TransactionExtra};
 
 /// The hash of a block. Uniquely identifies a block.
@@ -43,7 +43,7 @@ pub type TxHash = Hash;
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionApplied<Call_: Call> {
+pub struct TransactionApplied<Call_: Message> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
@@ -65,7 +65,7 @@ pub trait ClientT {
     ///
     /// Succeeds if the transaction has been accepted by the node. The wrapped future that is
     /// returned can be used to wait for the transaction to be applied and included in a block.
-    async fn submit_transaction<Call_: Call>(
+    async fn submit_transaction<Call_: Message>(
         &self,
         transaction: Transaction<Call_>,
     ) -> Result<Response<TransactionApplied<Call_>, Error>, Error>;
@@ -73,7 +73,7 @@ pub trait ClientT {
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Same as [ClientT::submit_transaction] but takes care of signing the call.
-    async fn sign_and_submit_call<Call_: Call>(
+    async fn sign_and_submit_call<Call_: Message>(
         &self,
         author: &ed25519::Pair,
         call: Call_,

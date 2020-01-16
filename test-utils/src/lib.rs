@@ -23,7 +23,7 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-pub async fn submit_ok<Call_: Call>(
+pub async fn submit_ok<Call_: Message>(
     client: &Client,
     author: &ed25519::Pair,
     call: Call_,

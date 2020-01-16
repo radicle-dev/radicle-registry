@@ -39,9 +39,9 @@ use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod backend;
-mod message;
 mod error;
 mod interface;
+mod message;
 mod transaction;
 
 pub use crate::interface::*;
@@ -147,7 +147,7 @@ impl Client {
 
 #[async_trait::async_trait]
 impl ClientT for Client {
-    async fn submit_transaction<Call_: Call>(
+    async fn submit_transaction<Call_: Message>(
         &self,
         transaction: Transaction<Call_>,
     ) -> Result<Response<TransactionApplied<Call_>, Error>, Error> {
@@ -168,7 +168,7 @@ impl ClientT for Client {
         }))
     }
 
-    async fn sign_and_submit_call<Call_: Call>(
+    async fn sign_and_submit_call<Call_: Message>(
         &self,
         author: &ed25519::Pair,
         call: Call_,
