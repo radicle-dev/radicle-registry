@@ -75,4 +75,5 @@ pub struct Project {
     pub account_id: AccountId,
     pub members: Vec<AccountId>,
     pub current_cp: CheckpointId,
+    pub metadata: Vec<u8>,
 }

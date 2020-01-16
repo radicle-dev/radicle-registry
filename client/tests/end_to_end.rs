@@ -40,6 +40,7 @@ async fn register_project() {
         .unwrap();
     assert_eq!(project.id, register_project_message.id.clone());
     assert_eq!(project.current_cp, register_project_message.checkpoint_id);
+    assert_eq!(project.metadata, register_project_message.metadata);
 
     assert_eq!(
         tx_applied.events[0],

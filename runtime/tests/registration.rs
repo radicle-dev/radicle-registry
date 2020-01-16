@@ -33,6 +33,7 @@ async fn register_project() {
         .unwrap();
     assert_eq!(project.id, message.clone().id);
     assert_eq!(project.current_cp, checkpoint_id);
+    assert_eq!(project.metadata, message.clone().metadata);
 
     assert_eq!(
         tx_applied.events[0],
@@ -80,16 +81,20 @@ async fn register_project_with_duplicate_id() {
     let registration_2 = submit_ok(
         &client,
         &alice,
-        message::RegisterProject { ..message.clone() },
+        message::RegisterProject {
+            metadata: random_metadata(),
+            ..message.clone()
+        },
     )
     .await;
 
     assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 
-    let _project = client.get_project(message.id).await.unwrap().unwrap();
+    let project = client.get_project(message.id).await.unwrap().unwrap();
 
-    // TODO(nuno): assert that the project data is left untouched.
-    // This can be done again when the metadata field is added.
+    // Assert that the project data was not altered during the
+    // attempt to re-register the already existing project.
+    assert_eq!(message.metadata, project.metadata)
 }
 
 #[async_std::test]
