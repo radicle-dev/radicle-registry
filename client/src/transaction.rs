@@ -159,6 +159,7 @@ mod test {
                 &[0u8; 32].into(),
                 &[0u8; 32].into(),
                 &Default::default(),
+                frame_system::InitKind::Full,
             );
             System::block_hash(0)
         });

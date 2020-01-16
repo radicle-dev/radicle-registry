@@ -15,7 +15,10 @@
 
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use radicle_registry_runtime::{self, opaque::Block, GenesisConfig, RuntimeApi};
+use futures::{compat::Future01CompatExt, FutureExt};
+use std::sync::Arc;
+use std::time::Duration;
+
 use sc_client::LongestChain;
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
@@ -24,8 +27,8 @@ use sc_network::construct_simple_protocol;
 use sc_service::{error::Error as ServiceError, AbstractService, Configuration, ServiceBuilder};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_inherents::InherentDataProviders;
-use std::sync::Arc;
-use std::time::Duration;
+
+use radicle_registry_runtime::{self, opaque::Block, GenesisConfig, RuntimeApi};
 
 // Our native executor instance.
 native_executor_instance!(
@@ -141,7 +144,7 @@ pub fn new_full<C: Send + Default + 'static>(
         let can_author_with =
             sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-        let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _, _>(
+        let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _>(
             sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
             client,
             select_chain,
@@ -180,13 +183,17 @@ pub fn new_full<C: Send + Default + 'static>(
     match (is_authority, disable_grandpa) {
         (false, false) => {
             // start the lightweight GRANDPA observer
-            service.spawn_task(sc_finality_grandpa::run_grandpa_observer(
-                grandpa_config,
-                grandpa_link,
-                service.network(),
-                service.on_exit(),
-                service.spawn_task_handle(),
-            )?);
+            service.spawn_task(
+                sc_finality_grandpa::run_grandpa_observer(
+                    grandpa_config,
+                    grandpa_link,
+                    service.network(),
+                    service.on_exit(),
+                    service.spawn_task_handle(),
+                )?
+                .compat()
+                .map(drop),
+            );
         }
         (true, false) => {
             // start the full GRANDPA voter
@@ -203,7 +210,11 @@ pub fn new_full<C: Send + Default + 'static>(
 
             // the GRANDPA voter task is considered infallible, i.e.
             // if it fails we take down the service with it.
-            service.spawn_essential_task(sc_finality_grandpa::run_grandpa_voter(voter_config)?);
+            service.spawn_essential_task(
+                sc_finality_grandpa::run_grandpa_voter(voter_config)?
+                    .compat()
+                    .map(drop),
+            );
         }
         (_, true) => {
             sc_finality_grandpa::setup_disabled_grandpa(

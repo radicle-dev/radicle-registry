@@ -27,39 +27,39 @@ url = "1.7"
 
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dependencies.sp-transaction-pool]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
 [dev-dependencies]
 rand = "0.7.2"

@@ -17,4 +17,4 @@ radicle-registry-core = { path = "../core" }
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "91ddc4f1ffb3a961c0a39b28a6c6de1c4326d462"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
