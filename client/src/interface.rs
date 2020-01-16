@@ -43,16 +43,16 @@ pub type TxHash = Hash;
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionApplied<Call_: Message> {
+pub struct TransactionApplied<Message_: Message> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// Events emitted by this transaction
     pub events: Vec<Event>,
-    /// The result of the runtime call.
+    /// The result of the runtime message.
     ///
-    /// See [Call::result_from_events].
-    pub result: Call_::Result,
+    /// See [Message::result_from_events].
+    pub result: Message_::Result,
 }
 
 /// Return type for all [ClientT] methods.
@@ -65,19 +65,19 @@ pub trait ClientT {
     ///
     /// Succeeds if the transaction has been accepted by the node. The wrapped future that is
     /// returned can be used to wait for the transaction to be applied and included in a block.
-    async fn submit_transaction<Call_: Message>(
+    async fn submit_transaction<Message_: Message>(
         &self,
-        transaction: Transaction<Call_>,
-    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error>;
+        transaction: Transaction<Message_>,
+    ) -> Response<Response<TransactionApplied<Message_>, Error>, Error>;
 
-    /// Sign and submit a ledger call as a transaction to the blockchain.
+    /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
-    /// Same as [ClientT::submit_transaction] but takes care of signing the call.
-    async fn sign_and_submit_call<Call_: Message>(
+    /// Same as [ClientT::submit_transaction] but takes care of signing the message.
+    async fn sign_and_submit_message<Message_: Message>(
         &self,
         author: &ed25519::Pair,
-        call: Call_,
-    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error>;
+        message: Message_,
+    ) -> Response<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
     async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error>;

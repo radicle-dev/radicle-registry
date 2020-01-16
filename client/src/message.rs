@@ -13,24 +13,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines [Call] trait and implementations for all transaction parameters.
+//! Defines [Message] trait and implementations for all transaction parameters.
 
 use radicle_registry_core::*;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
 use sp_runtime::DispatchError;
 
-/// Indicates that parsing the events into the approriate call result failed.
+/// Indicates that parsing the events into the approriate message result failed.
 type EventParseError = String;
 
-/// Trait implemented for every runtime call.
+/// Trait implemented for every runtime message
 ///
-/// For every [RuntimeCall] that is exposed to the user we implement [Call] for the parameters
-/// struct of the runtime call.
+/// For every [RuntimeCall] that is exposed to the user we implement [Message] for the parameters
+/// struct of the runtime message.
 pub trait Message: Send + 'static {
-    /// Result of executing the call in the runtime that is presented to the client user.
+    /// Result of executing the message in the runtime that is presented to the client user.
     type Result: Send + 'static;
 
-    /// Parse all runtime events emitted by the call and return the appropriate call result.
+    /// Parse all runtime events emitted by the message and return the appropriate message result.
     ///
     /// Returns an error if the event list is not well formed. For example if an expected event is
     /// missing.

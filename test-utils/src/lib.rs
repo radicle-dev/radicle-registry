@@ -23,13 +23,13 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-pub async fn submit_ok<Call_: Message>(
+pub async fn submit_ok<Message_: Message>(
     client: &Client,
     author: &ed25519::Pair,
-    call: Call_,
-) -> TransactionApplied<Call_> {
+    message: Message_,
+) -> TransactionApplied<Message_> {
     client
-        .sign_and_submit_call(&author, call)
+        .sign_and_submit_message(&author, message)
         .await
         .unwrap()
         .await

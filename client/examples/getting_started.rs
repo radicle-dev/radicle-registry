@@ -45,11 +45,11 @@ async fn go() -> Result<(), Error> {
     let balance_bob = client.free_balance(&bob_public).await?;
     println!("Balance Bob:   {}", balance_bob);
 
-    // Sign and submit the call. If successful, returns a future that resolves when the transaction
-    // is included in a block.
+    // Sign and submit the message. If successful, returns a future that
+    // resolves when the transaction is included in a block.
     print!("Submitting transfer transaction... ");
     let transfer_submitted = client
-        .sign_and_submit_call(
+        .sign_and_submit_message(
             &alice,
             TransferParams {
                 recipient: bob_public,
