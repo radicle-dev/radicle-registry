@@ -20,12 +20,21 @@ use structopt::StructOpt;
 mod commands;
 use commands::*;
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 #[structopt(max_term_width = 80)]
 struct Args {
-    /// The key pair that is used to sign transaction is generated from this seed.
-    #[structopt(long, default_value = "Alice", value_name = "seed")]
-    author_key_seed: String,
+    /// Value to derive the key pair for signing transactions.
+    /// See
+    /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>
+    /// for information about the format of the string
+    #[structopt(
+        long,
+        default_value = "//Alice",
+        env = "RAD_AUTHOR_KEY",
+        value_name = "key",
+        parse(try_from_str = Args::parse_author_key)
+    )]
+    author_key: ed25519::Pair,
 
     #[structopt(subcommand)]
     command: Command,
@@ -42,16 +51,17 @@ struct Args {
 
 impl Args {
     fn command_context(&self) -> CommandContext {
-        let author_key_pair =
-            ed25519::Pair::from_string(format!("//{}", self.author_key_seed).as_ref(), None)
-                .unwrap();
         let client = Client::create_with_executor(self.node_host.clone())
             .wait()
             .unwrap();
         CommandContext {
-            author_key_pair,
+            author_key_pair: self.author_key.clone(),
             client,
         }
+    }
+
+    fn parse_author_key(s: &str) -> Result<ed25519::Pair, String> {
+        ed25519::Pair::from_string(s, None).map_err(|err| format!("{:?}", err))
     }
 }
 
