@@ -72,6 +72,7 @@ enum Command {
     ShowGenesisHash(ShowGenesisHash),
     Transfer(Transfer),
     ShowBalance(ShowBalance),
+    TransferProjectFunds(TransferProjectFunds),
 }
 
 #[async_std::main]
@@ -87,6 +88,7 @@ async fn main() {
         Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
         Command::Transfer(cmd) => cmd.run(&command_context).await,
         Command::ShowBalance(cmd) => cmd.run(&command_context).await,
+        Command::TransferProjectFunds(cmd) => cmd.run(&command_context).await,
     };
 
     match result {

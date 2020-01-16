@@ -215,6 +215,56 @@ impl CommandT for Transfer {
 }
 
 #[derive(StructOpt, Debug, Clone)]
+/// Transfer funds from a project to a recipient. The author needs to be the owner of the project
+pub struct TransferProjectFunds {
+    /// Name of the project in the .rad domain
+    #[structopt(value_name = "project")]
+    project_name: ProjectName,
+
+    /// Recipient Account in SS58 address format
+    #[structopt(parse(try_from_str = parse_account_id))]
+    recipient: AccountId,
+    funds: Balance,
+}
+
+#[async_trait::async_trait]
+impl CommandT for TransferProjectFunds {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+        let client = &command_context.client;
+        let transfer_fut = client
+            .sign_and_submit_message(
+                &command_context.author_key_pair,
+                message::TransferFromProject {
+                    project: (self.project_name.clone(), RAD_DOMAIN.clone()),
+                    recipient: self.recipient,
+                    value: self.funds,
+                },
+            )
+            .await
+            .unwrap();
+        println!("transferring funds...");
+        let project_registered = transfer_fut.await.unwrap();
+        match project_registered.result {
+            Ok(()) => {
+                println!(
+                    "transferred {} RAD from {}.{} to {} in block {}",
+                    self.funds,
+                    self.project_name,
+                    RAD_DOMAIN.clone(),
+                    self.recipient,
+                    project_registered.block,
+                );
+                Ok(())
+            }
+            Err(_) => {
+                println!("transaction failed in block {}", project_registered.block);
+                Err(())
+            }
+        }
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
 /// Show the balance of an account
 pub struct ShowBalance {
     #[structopt(
