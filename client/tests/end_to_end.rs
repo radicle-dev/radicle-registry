@@ -38,8 +38,6 @@ fn register_project() {
         .unwrap()
         .unwrap();
     assert_eq!(project.id, register_project_params.id.clone());
-    assert_eq!(project.description, register_project_params.description);
-    assert_eq!(project.img_url, register_project_params.img_url);
     assert_eq!(project.current_cp, register_project_params.checkpoint_id);
 
     assert_eq!(

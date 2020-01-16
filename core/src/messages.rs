@@ -17,8 +17,6 @@
 
 extern crate alloc;
 
-use alloc::prelude::v1::*;
-
 use crate::{AccountId, Balance, CheckpointId, ProjectId};
 use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
@@ -26,8 +24,6 @@ use sp_core::H256;
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProjectParams {
     pub id: ProjectId,
-    pub description: String,
-    pub img_url: String,
     pub checkpoint_id: CheckpointId,
 }
 

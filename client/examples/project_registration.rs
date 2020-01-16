@@ -45,8 +45,6 @@ async fn go() -> Result<(), Error> {
             &alice,
             RegisterProjectParams {
                 id: project_id.clone(),
-                description: String::default(),
-                img_url: String::default(),
                 checkpoint_id,
             },
         )

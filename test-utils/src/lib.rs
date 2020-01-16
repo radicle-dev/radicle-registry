@@ -71,21 +71,7 @@ pub fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterPr
         .collect::<String>();
     let id = (name.parse().unwrap(), domain.parse().unwrap());
 
-    let description = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(50)
-        .collect::<String>();
-    let img_url = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(50)
-        .collect::<String>();
-
-    RegisterProjectParams {
-        id,
-        description,
-        img_url,
-        checkpoint_id,
-    }
+    RegisterProjectParams { id, checkpoint_id }
 }
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
