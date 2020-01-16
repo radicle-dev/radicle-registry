@@ -2,7 +2,7 @@
 #
 # Includes
 #
-# * Rustup with `nightly-2019-09-05` toolchain (see RUST_VERSION)
+# * Rustup with `nightly-2020-01-16` toolchain (see RUST_VERSION)
 # * Additional rustup components and the wasm32 target
 # * wasm-gc
 # * sccache v0.2.12
@@ -13,11 +13,7 @@ SHELL ["/bin/bash", "-c"]
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=nightly-2019-11-17 \
-    SCCACHE_DIR=/cache/sccache \
-    RUSTC_WRAPPER=sccache \
-    CARGO_HOME=/usr/local/cargo
+    PATH=/usr/local/cargo/bin:$PATH
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -46,6 +42,7 @@ RUN set -euxo pipefail; \
 
 # Install rustup and default toolchain from RUST_VERSION. This is copied from
 # https://github.com/rust-lang/docker-rust/blob/8d0f25416858e2c1f59511a15c2bd0445b402caa/1.39.0/buster/slim/Dockerfile
+ENV RUST_VERSION=nightly-2020-01-16
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
@@ -71,6 +68,3 @@ RUN rustup component add rustfmt \
     && rustup component add clippy \
     && rustup target add wasm32-unknown-unknown \
     && cargo install --git https://github.com/alexcrichton/wasm-gc
-
-VOLUME /cache
-ENV CARGO_HOME=/cache/cargo

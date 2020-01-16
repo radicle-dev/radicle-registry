@@ -15,8 +15,9 @@
 
 //! The Substrate Node Template runtime. This can be compiled with `#[no_std]`, ready for Wasm.
 
-// The `impl_runtime_apis` macro produces code that clippy complains about.
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
+// We allow two clippy lints because the `impl_runtime_apis` and `construct_runtime` macros produce
+// code that would fail otherwise.
+#![allow(clippy::not_unsafe_ptr_arg_deref, clippy::string_lit_as_bytes)]
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
