@@ -17,6 +17,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
+- [Git Flow](#git-flow)
 
 <!-- tocstop -->
 
@@ -138,3 +139,28 @@ https://cloud.google.com/container-registry/docs/access-control.
 
 If all this fails, request assistance to someone that can grant these
 permissions.
+
+
+Git Flow
+--------
+
+TL;DR: This repository follows the Git rebase flow for the most part. Each feature branch must be reviewed and approved in a pull request.
+Once ready to merge, consider squashing the branch's commits when the separate commits don't add value, rebase it, force push with lease, and merge it via the Github UI.
+
+### Branches
+
+1. Create a separate branch for each issue your are working on
+2. Do your magic
+3. Keep your branch up to date by rebasing it from its base branch
+4. Delete the branch after its been both approved and merged. Github does this automatically for you.
+
+### Commits
+
+1. Make sure you author your commits with the right username and email
+2. Follow the git commit convention:
+  - Use the imperative mood in the subject line
+  - Limit the subject line to 50 chars
+  - Capitalise the subject line
+  - Wrap the description at 72 characters
+  - Have the description preferably explaining what and why instead of how
+  - Separate the subject from the body with an empty line
