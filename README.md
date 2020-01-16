@@ -1,6 +1,9 @@
 Radicle Registry
 ================
 
+[![Build status](https://badge.buildkite.com/dbdd1481a6275cb41c5de15e33b34c159b17a025be13116103.svg)](https://buildkite.com/monadic/radicle-registry)
+[![Download master](https://api.bintray.com/packages/oscoin/radicle-registry-files/radicle-registry/images/download.svg)][package-latest-master]
+
 Experimental Radicle Registry implementation with Substrate.
 
 See [`DEVELOPING.md`][dev-manual] for developer information.
@@ -21,12 +24,14 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 Getting the Node
 ----------------
 
-We build binaries of the node and docker images for every pushed commit.
+We build binaries of the node and docker images for every pushed commit. Node
+binaries are available for the `x86_64-unknown-linux-gnu` target triple.
 
-Node binaries are available for the `x86_64-unknown-linux-gnu` target triple.
-You can download them from
+You can get the latest master build [here][package-latest-master]
+
+You can directly download node binaries for every build from
 ```
-https://dl.bintray.com/oscoin/radicle-registry-files/git-<COMMIT_SHA>/x86_64-linux-gnu/radicle-registry-node
+https://dl.bintray.com/oscoin/radicle-registry-files/by-commit/$COMMIT_SHA/x86_64-linux-gnu/radicle-registry-node
 ```
 
 You can pull a docker image of the node with
@@ -36,6 +41,8 @@ docker pull gcr.io/opensourcecoin/radicle-registry/node:<commit-sha>
 In the image the node binary is located at `/usr/local/bin/radicle-registry-node`
 
 To build the node from source see [`DEVELOPING.md`][dev-manual].
+
+[package-latest-master]: https://bintray.com/oscoin/radicle-registry-files/radicle-registry/_latestVersion
 
 
 Running the node
