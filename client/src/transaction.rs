@@ -24,7 +24,7 @@ pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::ed25519;
 
-pub use crate::call::Call;
+pub use crate::message::Call;
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 #[derive(Clone, Debug)]

@@ -39,7 +39,7 @@ use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod backend;
-mod call;
+mod message;
 mod error;
 mod interface;
 mod transaction;

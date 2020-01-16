@@ -27,7 +27,7 @@ pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
-pub use crate::call::Call;
+pub use crate::message::Call;
 pub use crate::error::Error;
 pub use crate::transaction::{Transaction, TransactionExtra};
 
