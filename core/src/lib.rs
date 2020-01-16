@@ -73,8 +73,6 @@ pub struct Checkpoint {
 pub struct Project {
     pub id: ProjectId,
     pub account_id: AccountId,
-    pub description: String,
-    pub img_url: String,
     pub members: Vec<AccountId>,
     pub current_cp: CheckpointId,
 }

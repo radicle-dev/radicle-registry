@@ -129,8 +129,6 @@ impl CommandT for RegisterProject {
                 &command_context.author_key_pair,
                 RegisterProjectParams {
                     id: project_id,
-                    description: format!(""),
-                    img_url: format!(""),
                     checkpoint_id,
                 },
             )

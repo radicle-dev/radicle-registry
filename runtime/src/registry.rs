@@ -124,8 +124,6 @@ decl_module! {
             let project = Project {
                 id: project_id.clone(),
                 account_id: account_id,
-                description: params.description,
-                img_url: params.img_url,
                 members: vec![sender],
                 current_cp: params.checkpoint_id
             };

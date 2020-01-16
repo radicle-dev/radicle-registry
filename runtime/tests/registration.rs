@@ -33,8 +33,6 @@ fn register_project() {
         .unwrap()
         .unwrap();
     assert_eq!(project.id, params.clone().id);
-    assert_eq!(project.description, params.description);
-    assert_eq!(project.img_url, params.img_url);
     assert_eq!(project.current_cp, checkpoint_id);
 
     assert_eq!(
@@ -83,22 +81,14 @@ fn register_project_with_duplicate_id() {
     submit_ok(&client, &alice, params.clone());
 
     // Duplicate submission with different description and image URL.
-    let registration_2 = submit_ok(
-        &client,
-        &alice,
-        RegisterProjectParams {
-            description: "DESCRIPTION_2".to_string(),
-            img_url: "IMG_URL_2".to_string(),
-            ..params.clone()
-        },
-    );
+    let registration_2 = submit_ok(&client, &alice, RegisterProjectParams { ..params.clone() });
 
     assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 
-    let project = client.get_project(params.id).wait().unwrap().unwrap();
+    let _project = client.get_project(params.id).wait().unwrap().unwrap();
 
-    assert_eq!(params.description, project.description);
-    assert_eq!(params.img_url, project.img_url)
+    // TODO(nuno): assert that the project data is left untouched.
+    // This can be done again when the metadata field is added.
 }
 
 #[test]
