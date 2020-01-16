@@ -15,7 +15,6 @@
 
 //! Miscellaneous helpers used throughout Registry tests.
 
-use futures01::prelude::*;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
@@ -24,20 +23,20 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-pub fn submit_ok<Call_: Call>(
+pub async fn submit_ok<Call_: Call>(
     client: &Client,
     author: &ed25519::Pair,
     call: Call_,
 ) -> TransactionApplied<Call_> {
     client
         .sign_and_submit_call(&author, call)
-        .wait()
+        .await
         .unwrap()
-        .wait()
+        .await
         .unwrap()
 }
 
-pub fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
+pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
     let checkpoint_id = submit_ok(
         &client,
         &author,
@@ -46,14 +45,15 @@ pub fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -
             previous_checkpoint_id: None,
         },
     )
+    .await
     .result
     .unwrap();
 
     let params = random_register_project_params(checkpoint_id);
 
-    submit_ok(&client, &author, params.clone());
+    submit_ok(&client, &author, params.clone()).await;
 
-    client.get_project(params.id).wait().unwrap().unwrap()
+    client.get_project(params.id).await.unwrap().unwrap()
 }
 
 /// Create random parameters to register a project with.

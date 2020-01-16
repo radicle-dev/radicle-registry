@@ -15,7 +15,7 @@
 
 //! Provides [Emulator] backend to run the registry ledger in memory.
 
-use futures03::future::BoxFuture;
+use futures::future::BoxFuture;
 use std::sync::{Arc, Mutex};
 
 use sp_runtime::{traits::Hash as _, BuildStorage as _};
@@ -71,7 +71,7 @@ impl backend::Backend for Emulator {
                 .map(|event_record| event_record.event)
                 .collect::<Vec<Event>>()
         });
-        Ok(Box::pin(futures03::future::ready(Ok(
+        Ok(Box::pin(futures::future::ready(Ok(
             backend::TransactionApplied {
                 tx_hash,
                 block: Default::default(),

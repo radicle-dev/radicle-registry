@@ -3,13 +3,11 @@
 /// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
 ///
 /// The tests in this module concern checkpoint creation.
-use futures01::prelude::*;
-
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
-#[test]
-fn create_checkpoint() {
+#[async_std::test]
+async fn create_checkpoint() {
     let client = Client::new_emulator();
     let bob = key_pair_from_string("Bob");
 
@@ -22,6 +20,7 @@ fn create_checkpoint() {
             previous_checkpoint_id: None,
         },
     )
+    .await
     .result
     .unwrap();
 
@@ -34,6 +33,7 @@ fn create_checkpoint() {
             previous_checkpoint_id: Some(checkpoint_id1),
         },
     )
+    .await
     .result
     .unwrap();
 
@@ -43,7 +43,7 @@ fn create_checkpoint() {
     };
     let checkpoint1 = client
         .get_checkpoint(checkpoint_id1)
-        .wait()
+        .await
         .unwrap()
         .unwrap();
     assert_eq!(checkpoint1, checkpoint1_);
@@ -54,14 +54,14 @@ fn create_checkpoint() {
     };
     let checkpoint2 = client
         .get_checkpoint(checkpoint_id2)
-        .wait()
+        .await
         .unwrap()
         .unwrap();
     assert_eq!(checkpoint2, checkpoint2_);
 }
 
-#[test]
-fn create_checkpoint_without_parent() {
+#[async_std::test]
+async fn create_checkpoint_without_parent() {
     let client = Client::new_emulator();
     let bob = key_pair_from_string("Bob");
 
@@ -75,7 +75,8 @@ fn create_checkpoint_without_parent() {
             project_hash,
             previous_checkpoint_id,
         },
-    );
+    )
+    .await;
 
     assert_eq!(tx_applied.result, Err(DispatchError::Other("")))
 }

@@ -1,6 +1,6 @@
 //! Offline signing and creation of a `Transfer` transaction.
-use futures03::compat::{Compat, Future01CompatExt};
-use futures03::future::FutureExt;
+use futures::compat::Compat;
+use futures::future::FutureExt;
 
 use radicle_registry_client::{
     ed25519, Client, ClientT as _, CryptoPair as _, Error, Transaction, TransactionExtra,
@@ -17,10 +17,10 @@ async fn go() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
     let bob = ed25519::Pair::from_string("//Bob", None).unwrap();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create(node_host).compat().await?;
+    let client = Client::create(node_host).await?;
 
     // Construct `TransactionExtra` data that is required to validate a transaction.
-    let account_nonce = client.account_nonce(&alice.public()).compat().await?;
+    let account_nonce = client.account_nonce(&alice.public()).await?;
     let transaction_extra = TransactionExtra {
         nonce: account_nonce,
         genesis_hash: client.genesis_hash(),
@@ -36,11 +36,6 @@ async fn go() -> Result<(), Error> {
         transaction_extra,
     );
 
-    client
-        .submit_transaction(transfer_tx)
-        .compat()
-        .await?
-        .compat()
-        .await?;
+    client.submit_transaction(transfer_tx).await?.await?;
     Ok(())
 }

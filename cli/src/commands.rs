@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Defines [CommandT] trait, structs for all commands and their [CommandT] implementations.
-use futures01::prelude::*;
 use radicle_registry_client::*;
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -31,8 +30,9 @@ pub struct CommandContext {
 }
 
 /// Every CLI command must implement this trait.
+#[async_trait::async_trait]
 pub trait CommandT {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()>;
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()>;
 }
 
 #[derive(StructOpt, Debug, Clone)]
@@ -41,8 +41,9 @@ pub struct ShowProject {
     project_name: String,
 }
 
+#[async_trait::async_trait]
 impl CommandT for ShowProject {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let project_name: String32 = match self.project_name.parse() {
             Ok(project_name) => project_name,
             Err(error) => {
@@ -53,7 +54,7 @@ impl CommandT for ShowProject {
         let opt_project = command_context
             .client
             .get_project((project_name.clone(), RAD_DOMAIN.clone()))
-            .wait()
+            .await
             .unwrap();
 
         let project = match opt_project {
@@ -67,7 +68,7 @@ impl CommandT for ShowProject {
         let balance = command_context
             .client
             .free_balance(&project.account_id)
-            .wait()
+            .await
             .unwrap();
 
         println!("project: {}.{}", project.id.0, project.id.1);
@@ -82,9 +83,10 @@ impl CommandT for ShowProject {
 /// List all projects in the registry
 pub struct ListProjects {}
 
+#[async_trait::async_trait]
 impl CommandT for ListProjects {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
-        let project_ids = command_context.client.list_projects().wait().unwrap();
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+        let project_ids = command_context.client.list_projects().await.unwrap();
         println!("PROJECTS");
         for (name, domain) in project_ids {
             println!("{}.{}", name, domain)
@@ -102,8 +104,9 @@ pub struct RegisterProject {
     project_hash: Option<H256>,
 }
 
+#[async_trait::async_trait]
 impl CommandT for RegisterProject {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let client = &command_context.client;
 
         let create_checkpoint_fut = client
@@ -114,11 +117,11 @@ impl CommandT for RegisterProject {
                     previous_checkpoint_id: None,
                 },
             )
-            .wait()
+            .await
             .unwrap();
         println!("creating checkpoint...");
 
-        let checkpoint_created = create_checkpoint_fut.wait().unwrap();
+        let checkpoint_created = create_checkpoint_fut.await.unwrap();
         let checkpoint_id = checkpoint_created.result.unwrap();
         println!("checkpoint created in block {}", checkpoint_created.block,);
 
@@ -132,10 +135,10 @@ impl CommandT for RegisterProject {
                     checkpoint_id,
                 },
             )
-            .wait()
+            .await
             .unwrap();
         println!("registering project...");
-        let project_registered = register_project_fut.wait().unwrap();
+        let project_registered = register_project_fut.await.unwrap();
         match project_registered.result {
             Ok(()) => {
                 println!(
@@ -156,8 +159,9 @@ impl CommandT for RegisterProject {
 /// Show the genesis hash the node uses
 pub struct ShowGenesisHash {}
 
+#[async_trait::async_trait]
 impl CommandT for ShowGenesisHash {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let genesis_hash = command_context.client.genesis_hash();
         println!("Gensis block hash: 0x{}", hex::encode(genesis_hash));
         Ok(())
@@ -177,8 +181,9 @@ fn parse_account_id(data: &str) -> Result<AccountId, String> {
     sp_core::crypto::Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }
 
+#[async_trait::async_trait]
 impl CommandT for Transfer {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let client = &command_context.client;
 
         let transfer_fut = client
@@ -189,10 +194,10 @@ impl CommandT for Transfer {
                     balance: self.funds,
                 },
             )
-            .wait()
+            .await
             .unwrap();
         println!("transferring funds...");
-        let project_registered = transfer_fut.wait().unwrap();
+        let project_registered = transfer_fut.await.unwrap();
         match project_registered.result {
             Ok(()) => {
                 println!(
@@ -220,12 +225,13 @@ pub struct ShowBalance {
     account_id: AccountId,
 }
 
+#[async_trait::async_trait]
 impl CommandT for ShowBalance {
-    fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
         let balance = command_context
             .client
             .free_balance(&self.account_id)
-            .wait()
+            .await
             .unwrap();
         println!("{} RAD", balance);
         Ok(())

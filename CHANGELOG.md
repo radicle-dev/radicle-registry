@@ -26,6 +26,7 @@ Upcoming
   underscores e.g. `radicle_registry_node` becomes `radicle-registry-node`.
 * The error type in `get_dispatch_result` has changed from
   `Option<&'static str>` to `sp_runtime::DispatchError`.
+* The `Client` and `ClientT` methods are now `async`.
 
 ### Addition
 

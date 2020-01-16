@@ -3,13 +3,11 @@
 /// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
 ///
 /// The tests in this module concern project registration.
-use futures01::prelude::*;
-
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
-#[test]
-fn register_project() {
+#[async_std::test]
+async fn register_project() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
@@ -22,14 +20,15 @@ fn register_project() {
             previous_checkpoint_id: None,
         },
     )
+    .await
     .result
     .unwrap();
     let params = random_register_project_params(checkpoint_id);
-    let tx_applied = submit_ok(&client, &alice, params.clone());
+    let tx_applied = submit_ok(&client, &alice, params.clone()).await;
 
     let project = client
         .get_project(params.clone().id)
-        .wait()
+        .await
         .unwrap()
         .unwrap();
     assert_eq!(project.id, params.clone().id);
@@ -42,7 +41,7 @@ fn register_project() {
 
     let has_project = client
         .list_projects()
-        .wait()
+        .await
         .unwrap()
         .iter()
         .any(|id| *id == params.id);
@@ -52,16 +51,12 @@ fn register_project() {
         parent: None,
         hash: project_hash,
     };
-    let checkpoint = client
-        .get_checkpoint(checkpoint_id)
-        .wait()
-        .unwrap()
-        .unwrap();
+    let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
     assert_eq!(checkpoint, checkpoint_);
 }
 
-#[test]
-fn register_project_with_duplicate_id() {
+#[async_std::test]
+async fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
@@ -73,26 +68,28 @@ fn register_project_with_duplicate_id() {
             previous_checkpoint_id: None,
         },
     )
+    .await
     .result
     .unwrap();
 
     let params = random_register_project_params(checkpoint_id);
 
-    submit_ok(&client, &alice, params.clone());
+    submit_ok(&client, &alice, params.clone()).await;
 
     // Duplicate submission with different description and image URL.
-    let registration_2 = submit_ok(&client, &alice, RegisterProjectParams { ..params.clone() });
+    let registration_2 =
+        submit_ok(&client, &alice, RegisterProjectParams { ..params.clone() }).await;
 
     assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 
-    let _project = client.get_project(params.id).wait().unwrap().unwrap();
+    let _project = client.get_project(params.id).await.unwrap().unwrap();
 
     // TODO(nuno): assert that the project data is left untouched.
     // This can be done again when the metadata field is added.
 }
 
-#[test]
-fn register_project_with_bad_checkpoint() {
+#[async_std::test]
+async fn register_project_with_bad_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
@@ -100,11 +97,11 @@ fn register_project_with_bad_checkpoint() {
 
     let params = random_register_project_params(checkpoint_id);
 
-    let tx_applied = submit_ok(&client, &alice, params.clone());
+    let tx_applied = submit_ok(&client, &alice, params.clone()).await;
 
     assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
 
-    let no_project = client.get_project(params.id).wait().unwrap();
+    let no_project = client.get_project(params.id).await.unwrap();
 
     assert!(no_project.is_none())
 }

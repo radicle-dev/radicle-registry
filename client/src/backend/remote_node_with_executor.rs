@@ -14,9 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [RemoteNodeWithExecutor] backend
-use futures03::compat::Executor01CompatExt;
-use futures03::future::BoxFuture;
-use futures03::task::SpawnExt;
+use futures::compat::Executor01CompatExt;
+use futures::future::BoxFuture;
+use futures::task::SpawnExt;
 use std::sync::Arc;
 
 use crate::backend;
