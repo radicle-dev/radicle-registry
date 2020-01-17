@@ -102,18 +102,18 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = SimpleDispatchInfo::FreeNormal]
-        pub fn register_project(origin, params: messages::RegisterProject) -> DispatchResult {
+        pub fn register_project(origin, message: messages::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Checkpoints::get(params.checkpoint_id).is_none() {
+            if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(DispatchError::Other("The checkpoint provided to register the project does not exist."))
             }
-            match store::Projects::get(params.id.clone()) {
+            match store::Projects::get(message.id.clone()) {
                 None => {}
                 Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
             };
 
-            let project_id = params.id.clone();
+            let project_id = message.id.clone();
             match store::Projects::get(project_id.clone()) {
                 None => {}
                 Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
@@ -125,36 +125,36 @@ decl_module! {
                 id: project_id.clone(),
                 account_id: account_id,
                 members: vec![sender],
-                current_cp: params.checkpoint_id
+                current_cp: message.checkpoint_id
             };
 
             store::Projects::insert(project_id.clone(), project);
             store::ProjectIds::append_or_put(vec![project_id.clone()]);
-            store::InitialCheckpoints::insert(project_id.clone(), params.checkpoint_id);
+            store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
-        pub fn transfer_from_project(origin, params: messages::TransferFromProject) -> DispatchResult {
+        pub fn transfer_from_project(origin, message: messages::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let project = store::Projects::get(params.project).ok_or("Project does not exist")?;
+            let project = store::Projects::get(message.project).ok_or("Project does not exist")?;
             let is_member = project.members.contains(&sender);
             if !is_member {
                 return Err(DispatchError::Other("Sender is not a project member"))
             }
-            <crate::Balances as Currency<_>>::transfer(&project.account_id, &params.recipient, params.value, ExistenceRequirement::KeepAlive)
+            <crate::Balances as Currency<_>>::transfer(&project.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn create_checkpoint(
             origin,
-            params: messages::CreateCheckpoint,
+            message: messages::CreateCheckpoint,
         ) -> DispatchResult {
             ensure_signed(origin)?;
 
-            match params.previous_checkpoint_id {
+            match message.previous_checkpoint_id {
                 None => {}
                 Some(cp_id) => {
                     match store::Checkpoints::get(cp_id) {
@@ -165,8 +165,8 @@ decl_module! {
             };
 
             let checkpoint = Checkpoint {
-                parent: params.previous_checkpoint_id,
-                hash: params.project_hash,
+                parent: message.previous_checkpoint_id,
+                hash: message.project_hash,
             };
             let checkpoint_id = Hashing::hash_of(&checkpoint);
             store::Checkpoints::insert(checkpoint_id, checkpoint);
@@ -178,14 +178,14 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn set_checkpoint(
             origin,
-            params: messages::SetCheckpoint,
+            message: messages::SetCheckpoint,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Checkpoints::get(params.new_checkpoint_id).is_none() {
+            if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(DispatchError::Other("The provided checkpoint does not exist"))
             }
-            let opt_project = store::Projects::get(params.project_id.clone());
+            let opt_project = store::Projects::get(message.project_id.clone());
             let new_project = match opt_project {
                 None => return Err(DispatchError::Other("The provided project ID is not associated with any project.")),
                 Some(prj) => {
@@ -193,23 +193,23 @@ decl_module! {
                         return Err(DispatchError::Other("The `set_checkpoint` transaction sender is not a member of the project."))
                     }
                     Project {
-                        current_cp: params.new_checkpoint_id,
+                        current_cp: message.new_checkpoint_id,
                         ..prj
                     }
                 }
             };
 
-            let initial_cp = match store::InitialCheckpoints::get(params.project_id.clone()) {
+            let initial_cp = match store::InitialCheckpoints::get(message.project_id.clone()) {
                 None => return Err(DispatchError::Other("A registered project must necessarily have an initial checkpoint.")),
                 Some(cp) => cp,
             };
-            if !descends_from_initial_checkpoint(params.new_checkpoint_id, initial_cp) {
+            if !descends_from_initial_checkpoint(message.new_checkpoint_id, initial_cp) {
                 return Err(DispatchError::Other("The provided checkpoint ID is not a descendant of the project's initial checkpoint."))
             }
 
             store::Projects::insert(new_project.id.clone(), new_project.clone());
 
-            Self::deposit_event(Event::CheckpointSet(new_project.id, params.new_checkpoint_id));
+            Self::deposit_event(Event::CheckpointSet(new_project.id, message.new_checkpoint_id));
             Ok(())
         }
     }

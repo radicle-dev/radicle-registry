@@ -68,7 +68,7 @@ pub trait ClientT {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Response<Response<TransactionApplied<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
@@ -77,7 +77,7 @@ pub trait ClientT {
         &self,
         author: &ed25519::Pair,
         message: Message_,
-    ) -> Response<Response<TransactionApplied<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
     async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error>;

@@ -49,18 +49,18 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     .result
     .unwrap();
 
-    let params = random_register_project_params(checkpoint_id);
+    let message = random_register_project_message(checkpoint_id);
 
-    submit_ok(&client, &author, params.clone()).await;
+    submit_ok(&client, &author, message.clone()).await;
 
-    client.get_project(params.id).await.unwrap().unwrap()
+    client.get_project(message.id).await.unwrap().unwrap()
 }
 
 /// Create random parameters to register a project with.
 /// The project's name and domain will be alphanumeric strings with 32
 /// characters, and the description and image URL will be alphanumeric strings
 /// with 50 characters.
-pub fn random_register_project_params(checkpoint_id: CheckpointId) -> messages::RegisterProject {
+pub fn random_register_project_message(checkpoint_id: CheckpointId) -> messages::RegisterProject {
     let name = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(32)

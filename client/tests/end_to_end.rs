@@ -26,10 +26,10 @@ async fn register_project() {
     .result
     .unwrap();
 
-    let register_project_params = random_register_project_params(checkpoint_id);
+    let register_project_message = random_register_project_message(checkpoint_id);
 
-    let project_id = register_project_params.id.clone();
-    let tx_applied = submit_ok(&client, &alice, register_project_params.clone()).await;
+    let project_id = register_project_message.id.clone();
+    let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
 
     assert_eq!(tx_applied.result, Ok(()));
 
@@ -38,8 +38,8 @@ async fn register_project() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, register_project_params.id.clone());
-    assert_eq!(project.current_cp, register_project_params.checkpoint_id);
+    assert_eq!(project.id, register_project_message.id.clone());
+    assert_eq!(project.current_cp, register_project_message.checkpoint_id);
 
     assert_eq!(
         tx_applied.events[0],
