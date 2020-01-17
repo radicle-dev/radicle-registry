@@ -27,7 +27,7 @@ async fn go() -> Result<(), Error> {
     let checkpoint_id = client
         .sign_and_submit_message(
             &alice,
-            messages::CreateCheckpoint {
+            message::CreateCheckpoint {
                 project_hash,
                 previous_checkpoint_id: None,
             },
@@ -41,7 +41,7 @@ async fn go() -> Result<(), Error> {
     client
         .sign_and_submit_message(
             &alice,
-            messages::RegisterProject {
+            message::RegisterProject {
                 id: project_id.clone(),
                 checkpoint_id,
             },

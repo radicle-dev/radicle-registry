@@ -41,7 +41,7 @@ use radicle_registry_runtime::{balances, registry, Runtime};
 mod backend;
 mod error;
 mod interface;
-mod message;
+pub mod message;
 mod transaction;
 
 pub use crate::interface::*;

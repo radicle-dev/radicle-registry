@@ -18,7 +18,7 @@ async fn set_checkpoint() {
     let new_checkpoint_id = submit_ok(
         &client,
         &charles,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
         },
@@ -30,7 +30,7 @@ async fn set_checkpoint() {
     submit_ok(
         &client,
         &charles,
-        messages::SetCheckpoint {
+        message::SetCheckpoint {
             project_id: project.id.clone(),
             new_checkpoint_id,
         },
@@ -52,7 +52,7 @@ async fn set_checkpoint_without_permission() {
     let new_checkpoint_id = submit_ok(
         &client,
         &eve,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
         },
@@ -65,7 +65,7 @@ async fn set_checkpoint_without_permission() {
     let tx_applied = submit_ok(
         &client,
         &frank,
-        messages::SetCheckpoint {
+        message::SetCheckpoint {
             project_id: project.id.clone(),
             new_checkpoint_id,
         },
@@ -94,7 +94,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
     let tx_applied = submit_ok(
         &client,
         &david,
-        messages::SetCheckpoint {
+        message::SetCheckpoint {
             project_id: project.id.clone(),
             new_checkpoint_id: garbage,
         },
@@ -127,7 +127,7 @@ async fn set_fork_checkpoint() {
         let new_checkpoint_id = submit_ok(
             &client,
             &grace,
-            messages::CreateCheckpoint {
+            message::CreateCheckpoint {
                 project_hash: H256::random(),
                 previous_checkpoint_id: (Some(current_cp)),
             },
@@ -142,7 +142,7 @@ async fn set_fork_checkpoint() {
     let forked_checkpoint_id = submit_ok(
         &client,
         &grace,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: (Some(checkpoints[2])),
         },
@@ -154,7 +154,7 @@ async fn set_fork_checkpoint() {
     submit_ok(
         &client,
         &grace,
-        messages::SetCheckpoint {
+        message::SetCheckpoint {
             project_id: project.id.clone(),
             new_checkpoint_id: forked_checkpoint_id,
         },

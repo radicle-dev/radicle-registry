@@ -24,7 +24,7 @@ use alloc::prelude::v1::*;
 
 pub use frame_support::dispatch::DispatchError;
 use parity_scale_codec::{Decode, Encode};
-pub mod messages;
+pub mod message;
 
 mod string32;
 use sp_runtime::traits::BlakeTwo256;

@@ -15,7 +15,7 @@ async fn register_project() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
         },
@@ -63,7 +63,7 @@ async fn register_project_with_duplicate_id() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
         },
@@ -80,7 +80,7 @@ async fn register_project_with_duplicate_id() {
     let registration_2 = submit_ok(
         &client,
         &alice,
-        messages::RegisterProject { ..message.clone() },
+        message::RegisterProject { ..message.clone() },
     )
     .await;
 

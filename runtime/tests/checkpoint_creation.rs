@@ -15,7 +15,7 @@ async fn create_checkpoint() {
     let checkpoint_id1 = submit_ok(
         &client,
         &bob,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: project_hash1,
             previous_checkpoint_id: None,
         },
@@ -28,7 +28,7 @@ async fn create_checkpoint() {
     let checkpoint_id2 = submit_ok(
         &client,
         &bob,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(checkpoint_id1),
         },
@@ -71,7 +71,7 @@ async fn create_checkpoint_without_parent() {
     let tx_applied = submit_ok(
         &client,
         &bob,
-        messages::CreateCheckpoint {
+        message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id,
         },
