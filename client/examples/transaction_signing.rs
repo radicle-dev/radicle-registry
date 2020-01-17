@@ -3,7 +3,7 @@ use futures::compat::Compat;
 use futures::future::FutureExt;
 
 use radicle_registry_client::{
-    ed25519, messages::TransferParams, Client, ClientT as _, CryptoPair as _, Error, Transaction,
+    ed25519, messages::Transfer, Client, ClientT as _, CryptoPair as _, Error, Transaction,
     TransactionExtra,
 };
 
@@ -29,7 +29,7 @@ async fn go() -> Result<(), Error> {
     // Construct the transaction
     let transfer_tx = Transaction::new_signed(
         &alice,
-        TransferParams {
+        Transfer {
             recipient: bob.public(),
             balance: 1000,
         },

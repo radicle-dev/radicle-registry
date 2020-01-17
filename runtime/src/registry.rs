@@ -102,7 +102,7 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = SimpleDispatchInfo::FreeNormal]
-        pub fn register_project(origin, params: messages::RegisterProjectParams) -> DispatchResult {
+        pub fn register_project(origin, params: messages::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(params.checkpoint_id).is_none() {
@@ -137,7 +137,7 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
-        pub fn transfer_from_project(origin, params: messages::TransferFromProjectParams) -> DispatchResult {
+        pub fn transfer_from_project(origin, params: messages::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project = store::Projects::get(params.project).ok_or("Project does not exist")?;
             let is_member = project.members.contains(&sender);
@@ -150,7 +150,7 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn create_checkpoint(
             origin,
-            params: messages::CreateCheckpointParams,
+            params: messages::CreateCheckpoint,
         ) -> DispatchResult {
             ensure_signed(origin)?;
 
@@ -178,7 +178,7 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn set_checkpoint(
             origin,
-            params: messages::SetCheckpointParams,
+            params: messages::SetCheckpoint,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 

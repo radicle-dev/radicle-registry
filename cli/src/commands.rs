@@ -112,7 +112,7 @@ impl CommandT for RegisterProject {
         let create_checkpoint_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
-                messages::CreateCheckpointParams {
+                messages::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
                 },
@@ -130,7 +130,7 @@ impl CommandT for RegisterProject {
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
-                messages::RegisterProjectParams {
+                messages::RegisterProject {
                     id: project_id,
                     checkpoint_id,
                 },
@@ -189,7 +189,7 @@ impl CommandT for Transfer {
         let transfer_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
-                messages::TransferParams {
+                messages::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
                 },
