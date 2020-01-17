@@ -126,8 +126,8 @@ function upload_to_bintray () {
   echo
 
   echo "Adding file to download list"
+  # We ignore errors. This is not crucial for the build to pass
   curl \
-    --fail --show-error \
     -X PUT \
     --basic --user "$BINTRAY_API_KEY" \
     -H "content-type: application/json" \
