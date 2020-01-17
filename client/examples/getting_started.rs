@@ -51,7 +51,7 @@ async fn go() -> Result<(), Error> {
     let transfer_submitted = client
         .sign_and_submit_message(
             &alice,
-            TransferParams {
+            messages::TransferParams {
                 recipient: bob_public,
                 balance: 1,
             },

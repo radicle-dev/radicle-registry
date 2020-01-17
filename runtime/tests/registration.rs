@@ -15,7 +15,7 @@ async fn register_project() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        CreateCheckpointParams {
+        messages::CreateCheckpointParams {
             project_hash,
             previous_checkpoint_id: None,
         },
@@ -63,7 +63,7 @@ async fn register_project_with_duplicate_id() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        CreateCheckpointParams {
+        messages::CreateCheckpointParams {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
         },
@@ -77,8 +77,11 @@ async fn register_project_with_duplicate_id() {
     submit_ok(&client, &alice, params.clone()).await;
 
     // Duplicate submission with different description and image URL.
-    let registration_2 =
-        submit_ok(&client, &alice, RegisterProjectParams { ..params.clone() }).await;
+    let registration_2 = submit_ok(
+        &client,
+        &alice,
+        messages::RegisterProjectParams { ..params.clone() },
+    );
 
     assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 

@@ -39,7 +39,7 @@ pub trait Message: Send + 'static {
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
-impl Message for RegisterProjectParams {
+impl Message for messages::RegisterProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -60,7 +60,7 @@ impl Message for RegisterProjectParams {
     }
 }
 
-impl Message for CreateCheckpointParams {
+impl Message for messages::CreateCheckpointParams {
     type Result = Result<CheckpointId, DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -81,7 +81,7 @@ impl Message for CreateCheckpointParams {
     }
 }
 
-impl Message for SetCheckpointParams {
+impl Message for messages::SetCheckpointParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -102,7 +102,7 @@ impl Message for SetCheckpointParams {
     }
 }
 
-impl Message for TransferParams {
+impl Message for messages::TransferParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -114,7 +114,7 @@ impl Message for TransferParams {
     }
 }
 
-impl Message for TransferFromProjectParams {
+impl Message for messages::TransferFromProjectParams {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {

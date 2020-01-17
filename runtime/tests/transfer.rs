@@ -16,7 +16,7 @@ async fn transfer_fail() {
     let tx_applied = submit_ok(
         &client,
         &alice,
-        TransferParams {
+        messages::TransferParams {
             recipient: bob,
             balance: balance_alice + 1,
         },
@@ -38,7 +38,7 @@ async fn project_account_transfer() {
     submit_ok(
         &client,
         &alice,
-        TransferParams {
+        messages::TransferParams {
             recipient: project.account_id,
             balance: 2000,
         },
@@ -54,7 +54,7 @@ async fn project_account_transfer() {
     submit_ok(
         &client,
         &alice,
-        TransferFromProjectParams {
+        messages::TransferFromProjectParams {
             project: project.id.clone(),
             recipient: bob,
             value: 1000,
@@ -79,7 +79,7 @@ async fn project_account_transfer_non_member() {
     submit_ok(
         &client,
         &alice,
-        TransferParams {
+        messages::TransferParams {
             recipient: project.account_id,
             balance: 2000,
         },
@@ -93,7 +93,7 @@ async fn project_account_transfer_non_member() {
     submit_ok(
         &client,
         &bob,
-        TransferFromProjectParams {
+        messages::TransferFromProjectParams {
             project: project.id.clone(),
             recipient: bob.public(),
             value: 1000,

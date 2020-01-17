@@ -3,8 +3,8 @@ use futures::compat::Compat;
 use futures::future::FutureExt;
 
 use radicle_registry_client::{
-    ed25519, Client, ClientT as _, CryptoPair as _, Error, Transaction, TransactionExtra,
-    TransferParams,
+    ed25519, messages::TransferParams, Client, ClientT as _, CryptoPair as _, Error, Transaction,
+    TransactionExtra,
 };
 
 fn main() {

@@ -17,7 +17,7 @@ async fn register_project() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        CreateCheckpointParams {
+        messages::CreateCheckpointParams {
             project_hash,
             previous_checkpoint_id: None,
         },
@@ -72,7 +72,7 @@ async fn invalid_transaction() {
 
     let transfer_tx = Transaction::new_signed(
         &alice,
-        TransferParams {
+        messages::TransferParams {
             recipient: alice.public(),
             balance: 1000,
         },

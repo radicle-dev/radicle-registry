@@ -40,7 +40,7 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     let checkpoint_id = submit_ok(
         &client,
         &author,
-        CreateCheckpointParams {
+        messages::CreateCheckpointParams {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
         },
@@ -60,7 +60,9 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
 /// The project's name and domain will be alphanumeric strings with 32
 /// characters, and the description and image URL will be alphanumeric strings
 /// with 50 characters.
-pub fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterProjectParams {
+pub fn random_register_project_params(
+    checkpoint_id: CheckpointId,
+) -> messages::RegisterProjectParams {
     let name = rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(32)
@@ -71,7 +73,7 @@ pub fn random_register_project_params(checkpoint_id: CheckpointId) -> RegisterPr
         .collect::<String>();
     let id = (name.parse().unwrap(), domain.parse().unwrap());
 
-    RegisterProjectParams { id, checkpoint_id }
+    messages::RegisterProjectParams { id, checkpoint_id }
 }
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
