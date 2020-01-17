@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines [Message] trait and implementations for all transaction parameters.
+//! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
