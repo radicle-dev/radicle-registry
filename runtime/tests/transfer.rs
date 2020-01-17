@@ -3,18 +3,16 @@
 /// High-level runtime tests that only use [MemoryClient] and treat the runtime as a black box.
 ///
 /// The tests in this module concern transferring funds.
-use futures01::prelude::*;
-
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
-#[test]
-fn transfer_fail() {
+#[async_std::test]
+async fn transfer_fail() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
 
-    let balance_alice = client.free_balance(&alice.public()).wait().unwrap();
+    let balance_alice = client.free_balance(&alice.public()).await.unwrap();
     let tx_applied = submit_ok(
         &client,
         &alice,
@@ -22,20 +20,21 @@ fn transfer_fail() {
             recipient: bob,
             balance: balance_alice + 1,
         },
-    );
+    )
+    .await;
     assert!(tx_applied.result.is_err());
 }
 
 /// Test that we can transfer money to a project and that the project owner can transfer money from
 /// a project to another account.
-#[test]
-fn project_account_transfer() {
+#[async_std::test]
+async fn project_account_transfer() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
-    let project = create_project_with_checkpoint(&client, &alice);
+    let project = create_project_with_checkpoint(&client, &alice).await;
 
-    assert_eq!(client.free_balance(&project.account_id).wait().unwrap(), 0);
+    assert_eq!(client.free_balance(&project.account_id).await.unwrap(), 0);
     submit_ok(
         &client,
         &alice,
@@ -43,13 +42,14 @@ fn project_account_transfer() {
             recipient: project.account_id,
             balance: 2000,
         },
-    );
+    )
+    .await;
     assert_eq!(
-        client.free_balance(&project.account_id).wait().unwrap(),
+        client.free_balance(&project.account_id).await.unwrap(),
         2000
     );
 
-    assert_eq!(client.free_balance(&bob).wait().unwrap(), 0);
+    assert_eq!(client.free_balance(&bob).await.unwrap(), 0);
 
     submit_ok(
         &client,
@@ -59,21 +59,22 @@ fn project_account_transfer() {
             recipient: bob,
             value: 1000,
         },
-    );
-    assert_eq!(client.free_balance(&bob).wait().unwrap(), 1000);
+    )
+    .await;
+    assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
     assert_eq!(
-        client.free_balance(&project.account_id).wait().unwrap(),
+        client.free_balance(&project.account_id).await.unwrap(),
         1000
     );
 }
 
-#[test]
+#[async_std::test]
 /// Test that a transfer from a project account fails if the sender is not a project member.
-fn project_account_transfer_non_member() {
+async fn project_account_transfer_non_member() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob");
-    let project = create_project_with_checkpoint(&client, &alice);
+    let project = create_project_with_checkpoint(&client, &alice).await;
 
     submit_ok(
         &client,
@@ -82,9 +83,10 @@ fn project_account_transfer_non_member() {
             recipient: project.account_id,
             balance: 2000,
         },
-    );
+    )
+    .await;
     assert_eq!(
-        client.free_balance(&project.account_id).wait().unwrap(),
+        client.free_balance(&project.account_id).await.unwrap(),
         2000
     );
 
@@ -96,10 +98,11 @@ fn project_account_transfer_non_member() {
             recipient: bob.public(),
             value: 1000,
         },
-    );
+    )
+    .await;
 
     assert_eq!(
-        client.free_balance(&project.account_id).wait().unwrap(),
+        client.free_balance(&project.account_id).await.unwrap(),
         2000
     );
 }

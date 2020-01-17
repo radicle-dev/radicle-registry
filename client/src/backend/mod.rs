@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Define trait for client backends and provide emulator and remote node implementation
-use futures03::future::BoxFuture;
+use futures::future::BoxFuture;
 
 pub use radicle_registry_runtime::{Hash, UncheckedExtrinsic};
 

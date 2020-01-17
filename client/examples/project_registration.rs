@@ -1,22 +1,22 @@
 //! Register a project on the ledger
-use futures01::future::Future;
-use futures03::compat::{Compat, Future01CompatExt};
-use futures03::future::FutureExt;
+use futures::compat::{Compat, Future01CompatExt};
+use futures::future::FutureExt;
 
 use radicle_registry_client::*;
 
-fn main() {
+#[async_std::main]
+async fn main() {
     env_logger::init();
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(Compat::new(go().boxed())).unwrap();
-    runtime.shutdown_now().wait().unwrap();
+    runtime.shutdown_now().compat().await.unwrap();
 }
 
 async fn go() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create(node_host).compat().await?;
+    let client = Client::create(node_host).await?;
 
     let project_name = ProjectName::from_string("radicle-registry".to_string()).unwrap();
     let project_domain = ProjectDomain::from_string("rad".to_string()).unwrap();
@@ -32,9 +32,7 @@ async fn go() -> Result<(), Error> {
                 previous_checkpoint_id: None,
             },
         )
-        .compat()
         .await?
-        .compat()
         .await?
         .result
         .unwrap();
@@ -48,9 +46,7 @@ async fn go() -> Result<(), Error> {
                 checkpoint_id,
             },
         )
-        .compat()
         .await?
-        .compat()
         .await?
         .result
         .unwrap();

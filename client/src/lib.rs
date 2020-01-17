@@ -31,14 +31,6 @@
 //! using [ClientT::account_nonce] and [ClientT::genesis_hash]. See
 //! `./client/examples/transaction_signing.rs`.
 //!
-//! # Async executor
-//!
-//! If the client is created with [Client::create] the futures returned by the client must be
-//! spawned in a `tokio` v0.1.22 executor.
-//!
-use futures01::prelude::*;
-use futures03::compat::Future01CompatExt;
-use futures03::future::Future as Future03;
 use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
@@ -67,8 +59,9 @@ impl Client {
     /// Connects to a registry node running on the given host and returns a [Client].
     ///
     /// Fails if it cannot connect to a node. Uses websocket over port 9944.
-    pub fn create(host: url::Host) -> impl Future<Item = Self, Error = Error> {
-        future03_compat(backend::RemoteNode::create(host)).map(Self::new)
+    pub async fn create(host: url::Host) -> Result<Self, Error> {
+        let backend = backend::RemoteNode::create(host).await?;
+        Ok(Self::new(backend))
     }
 
     /// Same as [Client::create] but calls to the client spawn futures in an executor owned by the
@@ -76,8 +69,9 @@ impl Client {
     ///
     /// This makes it possible to call [Future::wait] on the client even if that function is called
     /// in an event loop of another executor.
-    pub fn create_with_executor(host: url::Host) -> impl Future<Item = Self, Error = Error> {
-        future03_compat(backend::RemoteNodeWithExecutor::create(host)).map(Self::new)
+    pub async fn create_with_executor(host: url::Host) -> Result<Self, Error> {
+        let backend = backend::RemoteNodeWithExecutor::create(host).await?;
+        Ok(Self::new(backend))
     }
 
     /// Create a new client that emulates the registry ledger in memory. See
@@ -98,26 +92,24 @@ impl Client {
     /// ```ignore
     /// client.fetch_value::<frame_balance::TotalIssuance<Runtime>, _>();
     /// ```
-    fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
+    async fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
         &self,
-    ) -> Response<S::Query, Error>
+    ) -> Result<S::Query, Error>
     where
         S::Query: Send + 'static,
     {
         let backend = self.backend.clone();
-        future03_compat(async move {
-            let maybe_data = backend
-                .fetch(S::storage_value_final_key().as_ref(), None)
-                .await?;
-            let value = match maybe_data {
-                Some(data) => {
-                    let value = Decode::decode(&mut &data[..])?;
-                    Some(value)
-                }
-                None => None,
-            };
-            Ok(S::from_optional_value_to_query(value))
-        })
+        let maybe_data = backend
+            .fetch(S::storage_value_final_key().as_ref(), None)
+            .await?;
+        let value = match maybe_data {
+            Some(data) => {
+                let value = Decode::decode(&mut &data[..])?;
+                Some(value)
+            }
+            None => None,
+        };
+        Ok(S::from_optional_value_to_query(value))
     }
 
     /// Fetch a value from a map in the state storage based on a [StorageMap] implementation
@@ -126,14 +118,14 @@ impl Client {
     /// ```ignore
     /// client.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(account_id);
     /// ```
-    fn fetch_map_value<
+    async fn fetch_map_value<
         S: StorageMap<Key, Value>,
         Key: FullCodec,
         Value: FullCodec + Send + 'static,
     >(
         &self,
         key: Key,
-    ) -> Response<S::Query, Error>
+    ) -> Result<S::Query, Error>
     where
         S::Query: Send + 'static,
     {
@@ -141,111 +133,110 @@ impl Client {
         // We cannot move this code into the async block. The compiler complains about a processing
         // cycle (E0391)
         let key = S::storage_map_final_key(key);
-        future03_compat(async move {
-            let maybe_data = backend.fetch(&key, None).await?;
-            let value = match maybe_data {
-                Some(data) => {
-                    let value = Decode::decode(&mut &data[..])?;
-                    Some(value)
-                }
-                None => None,
-            };
-            Ok(S::from_optional_value_to_query(value))
-        })
+        let maybe_data = backend.fetch(&key, None).await?;
+        let value = match maybe_data {
+            Some(data) => {
+                let value = Decode::decode(&mut &data[..])?;
+                Some(value)
+            }
+            None => None,
+        };
+        Ok(S::from_optional_value_to_query(value))
     }
 }
 
+#[async_trait::async_trait]
 impl ClientT for Client {
-    fn submit_transaction<Call_: Call>(
+    async fn submit_transaction<Call_: Call>(
         &self,
         transaction: Transaction<Call_>,
-    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error> {
+    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error> {
         let backend = self.backend.clone();
-        future03_compat(async move {
-            let tx_applied_future = backend.submit(transaction.extrinsic).await?;
-            Ok(future03_compat(async move {
-                let tx_applied = tx_applied_future.await?;
-                let events = tx_applied.events;
-                let tx_hash = tx_applied.tx_hash;
-                let block = tx_applied.block;
-                let result = Call_::result_from_events(events.clone())?;
-                Ok(TransactionApplied {
-                    tx_hash,
-                    block,
-                    events,
-                    result,
-                })
-            }))
-        })
+        let tx_applied_future = backend.submit(transaction.extrinsic).await?;
+        Ok(Box::pin(async move {
+            let tx_applied = tx_applied_future.await?;
+            let events = tx_applied.events;
+            let tx_hash = tx_applied.tx_hash;
+            let block = tx_applied.block;
+            let result = Call_::result_from_events(events.clone())?;
+            Ok(TransactionApplied {
+                tx_hash,
+                block,
+                events,
+                result,
+            })
+        }))
     }
 
-    fn sign_and_submit_call<Call_: Call>(
+    async fn sign_and_submit_call<Call_: Call>(
         &self,
         author: &ed25519::Pair,
         call: Call_,
-    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error> {
+    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();
         let client = self.clone();
-        future03_compat(async move {
-            let nonce = client.account_nonce(&account_id).compat().await?;
-            let transaction = Transaction::new_signed(
-                &key_pair,
-                call,
-                TransactionExtra {
-                    nonce,
-                    genesis_hash,
-                },
-            );
-            let tx_applied_fut = client.submit_transaction(transaction).compat().await?;
-            Ok(future03_compat(async move {
-                let tx_applied = tx_applied_fut.compat().await?;
-                let events = tx_applied.events;
-                let tx_hash = tx_applied.tx_hash;
-                let block = tx_applied.block;
-                let result = Call_::result_from_events(events.clone())?;
-                Ok(TransactionApplied {
-                    tx_hash,
-                    block,
-                    events,
-                    result,
-                })
-            }))
-        })
+        let nonce = client.account_nonce(&account_id).await?;
+        let transaction = Transaction::new_signed(
+            &key_pair,
+            call,
+            TransactionExtra {
+                nonce,
+                genesis_hash,
+            },
+        );
+        let tx_applied_fut = client.submit_transaction(transaction).await?;
+        Ok(Box::pin(async move {
+            let tx_applied = tx_applied_fut.await?;
+            let events = tx_applied.events;
+            let tx_hash = tx_applied.tx_hash;
+            let block = tx_applied.block;
+            let result = Call_::result_from_events(events.clone())?;
+            Ok(TransactionApplied {
+                tx_hash,
+                block,
+                events,
+                result,
+            })
+        }))
     }
 
     fn genesis_hash(&self) -> Hash {
         self.backend.get_genesis_hash()
     }
 
-    fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error> {
-        Box::new(self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id))
+    async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error> {
+        self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id)
+            .await
     }
 
-    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error> {
-        Box::new(self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone()))
+    async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error> {
+        self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone())
+            .await
     }
 
-    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error> {
-        Box::new(self.fetch_map_value::<registry::store::Projects, _, _>(id))
+    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
+        self.fetch_map_value::<registry::store::Projects, _, _>(id)
+            .await
     }
 
-    fn list_projects(&self) -> Response<Vec<ProjectId>, Error> {
-        Box::new(self.fetch_value::<registry::store::ProjectIds, _>())
+    async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
+        self.fetch_value::<registry::store::ProjectIds, _>().await
     }
 
-    fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error> {
-        Box::new(self.fetch_map_value::<registry::store::Checkpoints, _, _>(id))
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
+        self.fetch_map_value::<registry::store::Checkpoints, _, _>(id)
+            .await
     }
 }
 
-/// Turn a 0.3 future into a boxed 0.1 future trait object.
+/*/// Turn a 0.3 future into a boxed 0.1 future trait object.
 fn future03_compat<'a, Ok, Error>(
     f: impl Future03<Output = Result<Ok, Error>> + 'a + Send,
 ) -> Box<dyn Future<Item = Ok, Error = Error> + Send + 'a> {
-    Box::new(futures03::compat::Compat::new(Box::pin(f)))
-}
+    Box::new(futures::compat::Compat::new(Box::pin(f)))
+}*/
 
 #[cfg(test)]
 mod test {

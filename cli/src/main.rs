@@ -13,7 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use futures01::prelude::*;
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
@@ -50,9 +49,9 @@ struct Args {
 }
 
 impl Args {
-    fn command_context(&self) -> CommandContext {
+    async fn command_context(&self) -> CommandContext {
         let client = Client::create_with_executor(self.node_host.clone())
-            .wait()
+            .await
             .unwrap();
         CommandContext {
             author_key_pair: self.author_key.clone(),
@@ -75,18 +74,19 @@ enum Command {
     ShowBalance(ShowBalance),
 }
 
-fn main() {
+#[async_std::main]
+async fn main() {
     pretty_env_logger::init();
     let args = Args::from_args();
-    let command_context = args.command_context();
+    let command_context = args.command_context().await;
 
     let result = match args.command {
-        Command::RegisterProject(cmd) => cmd.run(&command_context),
-        Command::ListProjects(cmd) => cmd.run(&command_context),
-        Command::ShowProject(cmd) => cmd.run(&command_context),
-        Command::ShowGenesisHash(cmd) => cmd.run(&command_context),
-        Command::Transfer(cmd) => cmd.run(&command_context),
-        Command::ShowBalance(cmd) => cmd.run(&command_context),
+        Command::RegisterProject(cmd) => cmd.run(&command_context).await,
+        Command::ListProjects(cmd) => cmd.run(&command_context).await,
+        Command::ShowProject(cmd) => cmd.run(&command_context).await,
+        Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
+        Command::Transfer(cmd) => cmd.run(&command_context).await,
+        Command::ShowBalance(cmd) => cmd.run(&command_context).await,
     };
 
     match result {

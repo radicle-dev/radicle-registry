@@ -2,15 +2,15 @@
 //!
 //! Note that chain state is shared between the test runs.
 
-use futures01::future::Future as _;
+use async_std;
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
-#[test]
-fn register_project() {
+#[async_std::test]
+async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create_with_executor(node_host).wait().unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
@@ -22,19 +22,20 @@ fn register_project() {
             previous_checkpoint_id: None,
         },
     )
+    .await
     .result
     .unwrap();
 
     let register_project_params = random_register_project_params(checkpoint_id);
 
     let project_id = register_project_params.id.clone();
-    let tx_applied = submit_ok(&client, &alice, register_project_params.clone());
+    let tx_applied = submit_ok(&client, &alice, register_project_params.clone()).await;
 
     assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
         .get_project(project_id.clone())
-        .wait()
+        .await
         .unwrap()
         .unwrap();
     assert_eq!(project.id, register_project_params.id.clone());
@@ -45,11 +46,7 @@ fn register_project() {
         RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
     );
 
-    let checkpoint = client
-        .get_checkpoint(checkpoint_id)
-        .wait()
-        .unwrap()
-        .unwrap();
+    let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
     let checkpoint_ = Checkpoint {
         parent: None,
         hash: project_hash,
@@ -58,19 +55,19 @@ fn register_project() {
 
     let has_project = client
         .list_projects()
-        .wait()
+        .await
         .unwrap()
         .iter()
         .any(|id| *id == project_id.clone());
     assert!(has_project, "Registered project not found in project list")
 }
 
-#[test]
+#[async_std::test]
 /// Submit a transaction with an invalid genesis hash and expect an error.
-fn invalid_transaction() {
+async fn invalid_transaction() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create_with_executor(node_host).wait().unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let transfer_tx = Transaction::new_signed(
@@ -85,7 +82,7 @@ fn invalid_transaction() {
         },
     );
 
-    let response = client.submit_transaction(transfer_tx).wait();
+    let response = client.submit_transaction(transfer_tx).await;
     match response {
         Err(Error::Other(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),

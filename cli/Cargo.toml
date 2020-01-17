@@ -12,7 +12,9 @@ repository = "https://github.com/radicle-dev/radicle-registry"
 [dependencies]
 radicle-registry-client = { version = "0.0.0", path = "../client" }
 
-futures01 = { package = "futures", version = "0.1" }
+async-std = { version = "1.4", features = ["attributes"] }
+async-trait = "0.1"
+futures = "0.3"
 hex = "0.4.0"
 lazy_static = "1.4"
 pretty_env_logger = "0.3.1"

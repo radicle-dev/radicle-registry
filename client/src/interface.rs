@@ -17,7 +17,7 @@
 //!
 //! The [ClientT] trait defines one method for each transaction of the registry ledger as well as
 //! methods to get the ledger state.
-use futures01::prelude::*;
+use futures::future::BoxFuture;
 
 pub use radicle_registry_core::*;
 
@@ -56,39 +56,40 @@ pub struct TransactionApplied<Call_: Call> {
 }
 
 /// Return type for all [ClientT] methods.
-pub type Response<T, Error> = Box<dyn Future<Item = T, Error = Error> + Send>;
+pub type Response<T, Error> = BoxFuture<'static, Result<T, Error>>;
 
 /// Trait for ledger clients sending transactions and looking up state.
+#[async_trait::async_trait]
 pub trait ClientT {
     /// Submit a signed transaction.
     ///
     /// Succeeds if the transaction has been accepted by the node. The wrapped future that is
     /// returned can be used to wait for the transaction to be applied and included in a block.
-    fn submit_transaction<Call_: Call>(
+    async fn submit_transaction<Call_: Call>(
         &self,
         transaction: Transaction<Call_>,
-    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error>;
+    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error>;
 
     /// Sign and submit a ledger call as a transaction to the blockchain.
     ///
     /// Same as [ClientT::submit_transaction] but takes care of signing the call.
-    fn sign_and_submit_call<Call_: Call>(
+    async fn sign_and_submit_call<Call_: Call>(
         &self,
         author: &ed25519::Pair,
         call: Call_,
-    ) -> Response<Response<TransactionApplied<Call_>, Error>, Error>;
+    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
-    fn account_nonce(&self, account_id: &AccountId) -> Response<Index, Error>;
+    async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error>;
 
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;
 
-    fn free_balance(&self, account_id: &AccountId) -> Response<Balance, Error>;
+    async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
-    fn get_project(&self, id: ProjectId) -> Response<Option<Project>, Error>;
+    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error>;
 
-    fn list_projects(&self) -> Response<Vec<ProjectId>, Error>;
+    async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
-    fn get_checkpoint(&self, id: CheckpointId) -> Response<Option<Checkpoint>, Error>;
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error>;
 }

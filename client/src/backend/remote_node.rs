@@ -14,10 +14,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! [backend::Backend] implementation for a remote full node
+use futures::compat::{Future01CompatExt as _, Stream01CompatExt as _};
+use futures::future::BoxFuture;
+use futures::prelude::*;
 use futures01::stream::Stream as _;
-use futures03::compat::{Future01CompatExt as _, Stream01CompatExt as _};
-use futures03::future::BoxFuture;
-use futures03::prelude::*;
 use jsonrpc_core_client::RpcChannel;
 use lazy_static::lazy_static;
 use parity_scale_codec::{Decode, Encode as _};
