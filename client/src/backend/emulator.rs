@@ -130,6 +130,7 @@ fn init_runtime(test_ext: &mut sp_io::TestExternalities) -> Hash {
             &[0u8; 32].into(),
             &[0u8; 32].into(),
             &Default::default(),
+            frame_system::InitKind::Full,
         );
         // Now we can retrieve the block hash. But here the block number is zero-based.
         frame_system::Module::<Runtime>::block_hash(0)

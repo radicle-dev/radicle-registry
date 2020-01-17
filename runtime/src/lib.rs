@@ -33,7 +33,7 @@ use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use pallet_grandpa::fg_primitives;
 use pallet_grandpa::AuthorityList as GrandpaAuthorityList;
 use sp_core::{ed25519, OpaqueMetadata};
-use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto, NumberFor};
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
     ApplyExtrinsicResult, Perbill,
@@ -198,6 +198,8 @@ impl pallet_balances::Trait for Runtime {
     type Balance = Balance;
     /// What to do if an account's free balance gets zeroed.
     type OnFreeBalanceZero = ();
+    /// What to do if an account is fully reaped from the system.
+    type OnReapAccount = System;
     /// What to do if a new account is created.
     type OnNewAccount = ();
     /// The ubiquitous event type.
@@ -320,8 +322,8 @@ impl_runtime_apis! {
     }
 
     impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
-        fn offchain_worker(number: NumberFor<Block>) {
-            Executive::offchain_worker(number)
+        fn offchain_worker(header: &<Block as BlockT>::Header) {
+            Executive::offchain_worker(header)
         }
     }
 
