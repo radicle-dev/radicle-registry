@@ -19,6 +19,8 @@ use radicle_registry_core::*;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
 use sp_runtime::DispatchError;
 
+pub use radicle_registry_core::message::*;
+
 /// Indicates that parsing the events into the approriate message result failed.
 type EventParseError = String;
 
