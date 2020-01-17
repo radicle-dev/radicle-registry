@@ -13,14 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::prelude::v1::*;
 use alloc::vec;
 use frame_support::weights::SimpleDispatchInfo;
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::StorageMap as _,
-    storage::StorageValue as _,
     traits::{Currency, ExistenceRequirement, Randomness as _},
 };
 
@@ -45,14 +43,46 @@ pub mod store {
 
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
-            pub Projects: map ProjectId => Option<Project>;
+            // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
+            // key.
+            pub Projects: map hasher(blake2_128_concat) ProjectId => Option<Project>;
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
-            pub ProjectIds: Vec<ProjectId>;
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
             pub Checkpoints: map CheckpointId => Option<Checkpoint>;
+        }
+    }
+
+    #[cfg(feature = "std")]
+    impl Projects {
+        /// Get the project ID from the projects storage key.
+        ///
+        /// The following property holds.
+        /// ```
+        /// # use radicle_registry_core::*;
+        /// # use radicle_registry_runtime::registry::store;
+        /// # use frame_support::storage::generator::StorageMap;
+        /// # use std::str::FromStr;
+        /// let project_id = (
+        ///     String32::from_str("name").unwrap(),
+        ///     String32::from_str("domain").unwrap()
+        /// );
+        ///
+        /// let key = store::Projects::storage_map_final_key(project_id.clone());
+        /// let extracted_project_id = store::Projects::id_from_key(&key).unwrap();
+        /// assert_eq!(project_id, extracted_project_id)
+        /// ```
+        pub fn id_from_key(key: &[u8]) -> Result<ProjectId, parity_scale_codec::Error> {
+            use parity_scale_codec::Decode;
+
+            let project_prefix = Self::final_prefix();
+            // Length of BlakeTwo128 output
+            let key_hash_prefix_length = 16;
+            let key_prefix_length = project_prefix.len() + key_hash_prefix_length;
+            let mut project_id_bytes = &key[key_prefix_length..];
+            ProjectId::decode(&mut project_id_bytes)
         }
     }
 }
@@ -129,7 +159,6 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), project);
-            store::ProjectIds::append_or_put(vec![project_id.clone()]);
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id, account_id));

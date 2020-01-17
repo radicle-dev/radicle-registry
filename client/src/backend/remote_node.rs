@@ -191,6 +191,21 @@ impl backend::Backend for RemoteNode {
         Ok(maybe_data.map(|data| data.0))
     }
 
+    async fn fetch_keys(
+        &self,
+        prefix: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Vec<Vec<u8>>, Error> {
+        let prefix = StorageKey(Vec::from(prefix));
+        let keys = self
+            .rpc
+            .state
+            .storage_keys(prefix, block_hash)
+            .compat()
+            .await?;
+        Ok(keys.into_iter().map(|key| key.0).collect())
+    }
+
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
     }

@@ -72,6 +72,19 @@ impl backend::Backend for RemoteNodeWithExecutor {
         handle.await
     }
 
+    async fn fetch_keys(
+        &self,
+        prefix: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Vec<Vec<u8>>, Error> {
+        let backend = self.backend.clone();
+        let prefix = Vec::from(prefix);
+        let handle = Executor01CompatExt::compat(self.runtime.executor())
+            .spawn_with_handle(async move { backend.fetch_keys(&prefix, block_hash).await })
+            .unwrap();
+        handle.await
+    }
+
     fn get_genesis_hash(&self) -> Hash {
         self.backend.get_genesis_hash()
     }

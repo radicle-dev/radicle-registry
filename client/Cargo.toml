@@ -58,6 +58,10 @@ rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 git = "https://github.com/paritytech/substrate"
 rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 
+[dependencies.sp-state-machine]
+git = "https://github.com/paritytech/substrate"
+rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
+
 [dependencies.sp-transaction-pool]
 git = "https://github.com/paritytech/substrate"
 rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
