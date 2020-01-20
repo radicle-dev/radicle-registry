@@ -20,6 +20,9 @@ std = [
     "sp-runtime/std",
 ]
 
+[dependencies]
+rand = "0.7.2"
+
 [dependencies.parity-scale-codec]
 default-features = false
 features = ["derive", "full"]
