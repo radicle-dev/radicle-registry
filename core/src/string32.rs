@@ -32,8 +32,8 @@ impl String32 {
     pub fn from_string(s: String) -> Result<Self, String> {
         if s.len() > 32 {
             Err(format!(
-                "The provided string's length exceeded 32 characters: {:?}",
-                s
+                "The provided string's length is {} while String32 is limited to 32 characters.",
+                s.len()
             ))
         } else {
             Ok(String32(s))

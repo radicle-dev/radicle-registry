@@ -15,13 +15,14 @@ std = [
     "frame-support/std",
     "frame-system/std",
     "parity-scale-codec/std",
+    "rand",
     "sp-core/std",
     "sp-std/std",
     "sp-runtime/std",
 ]
 
 [dependencies]
-rand = "0.7.2"
+rand = { version = "0.7.2", optional = true }
 
 [dependencies.parity-scale-codec]
 default-features = false

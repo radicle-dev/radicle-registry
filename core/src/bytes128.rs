@@ -17,8 +17,7 @@
 use alloc::format;
 use alloc::prelude::v1::*;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
-
-use sp_std::fmt;
+use std::convert::TryFrom;
 
 /// This type is used to represent project metadata fields.
 ///
@@ -27,21 +26,39 @@ use sp_std::fmt;
 #[derive(Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Bytes128(Vec<u8>);
 
+/// TODO review
+/// 1. From and To vec traits
+
 impl Bytes128 {
     const MAXIMUM_SUPPORTED_LENGTH: usize = 128;
 
     pub fn from_vec(vector: Vec<u8>) -> Result<Self, String> {
         if vector.len() > Self::MAXIMUM_SUPPORTED_LENGTH {
             Err(format!(
-                "The provided vectors's length exceeded {:?} bytes: {:?}",
-                Self::MAXIMUM_SUPPORTED_LENGTH,
-                vector
+                "The provided vectors's length exceeded is {} bytes while Bytes128 is limited to {} bytes",
+                vector.len(),
+                Self::MAXIMUM_SUPPORTED_LENGTH
             ))
         } else {
             Ok(Bytes128(vector))
         }
     }
+}
 
+impl TryFrom<Vec<u8>> for Bytes128 {
+    type Error = &'static str;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Bytes128::from_vec(value)
+    }
+}
+
+/// Bytes128 random functions useful for unit testing.
+/// Note that since these fuctions make use of rand,
+/// we need to guard with the std feature to
+/// be able to compile it for wasm.
+#[cfg(feature = "std")]
+impl Bytes128 {
     pub fn random() -> Self {
         Self::from_vec(Self::random_vector(Self::MAXIMUM_SUPPORTED_LENGTH)).unwrap()
     }
@@ -55,18 +72,14 @@ impl Bytes128 {
     }
 }
 
-#[cfg(feature = "std")]
-impl fmt::Display for Bytes128 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.0)
-    }
-}
-
 impl Decode for Bytes128 {
     fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
         let decoded: Vec<u8> = Vec::decode(input)?;
-        Bytes128::from_vec(decoded)
-            .or_else(|_| Err(From::from("Bytes128 length was more than 128 characters.")))
+        Bytes128::from_vec(decoded).or_else(|_| {
+            Err(CodecError::from(
+                "Bytes128 length was more than 128 characters.",
+            ))
+        })
     }
 }
 
@@ -76,23 +89,22 @@ mod test {
 
     #[test]
     fn test_from_valid_sized_vectors() {
-        (0..Bytes128::MAXIMUM_SUPPORTED_LENGTH + 1)
-            .map(|size| random_vector(size))
-            .map(|random_vector| {
-                assert_eq!(
-                    Bytes128::from_vec(random_vector.clone()).unwrap(),
-                    Bytes128(random_vector.clone())
-                )
-            })
-            .collect()
+        for size in 0..=Bytes128::MAXIMUM_SUPPORTED_LENGTH {
+            let random_vector = random_vector(size);
+            assert_eq!(
+                Bytes128::from_vec(random_vector.clone()).unwrap(),
+                Bytes128(random_vector)
+            );
+        }
     }
 
     #[test]
     fn test_from_inordinate_vectors() {
-        (Bytes128::MAXIMUM_SUPPORTED_LENGTH + 1..Bytes128::MAXIMUM_SUPPORTED_LENGTH + 10)
-            .map(|size| random_vector(size))
-            .map(|random_vector| assert!(Bytes128::from_vec(random_vector.clone()).is_err()))
-            .collect()
+        for size in Bytes128::MAXIMUM_SUPPORTED_LENGTH + 1..Bytes128::MAXIMUM_SUPPORTED_LENGTH + 10
+        {
+            let random_vector = random_vector(size);
+            assert!(Bytes128::from_vec(random_vector).is_err())
+        }
     }
 
     #[test]
@@ -102,6 +114,17 @@ mod test {
         let decoded = <Bytes128>::decode(&mut &encoded[..]).unwrap();
 
         assert_eq!(bytes128, decoded)
+    }
+
+    #[test]
+    fn decode_inordinate_vector_fails() {
+        // Encode a malformed bytes128 and verify that it fails to decode.
+        // Note that we use Bytes128(vec) instead of Bytes128::from_vec().
+        let inordinate_bytes128 = Bytes128(random_vector(129));
+        let encoded = inordinate_bytes128.encode();
+        let decoding_result = <Bytes128>::decode(&mut &encoded[..]);
+
+        assert!(decoding_result.is_err())
     }
 
     fn random_vector(size: usize) -> Vec<u8> {
