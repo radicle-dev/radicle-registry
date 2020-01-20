@@ -66,12 +66,13 @@ impl Args {
 
 #[derive(StructOpt, Debug, Clone)]
 enum Command {
-    RegisterProject(RegisterProject),
     ListProjects(ListProjects),
-    ShowProject(ShowProject),
-    ShowGenesisHash(ShowGenesisHash),
-    Transfer(Transfer),
+    RegisterProject(RegisterProject),
     ShowBalance(ShowBalance),
+    ShowGenesisHash(ShowGenesisHash),
+    ShowProject(ShowProject),
+    Transfer(Transfer),
+    TransferProjectFunds(TransferProjectFunds),
 }
 
 #[async_std::main]
@@ -81,12 +82,13 @@ async fn main() {
     let command_context = args.command_context().await;
 
     let result = match args.command {
-        Command::RegisterProject(cmd) => cmd.run(&command_context).await,
         Command::ListProjects(cmd) => cmd.run(&command_context).await,
-        Command::ShowProject(cmd) => cmd.run(&command_context).await,
-        Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
-        Command::Transfer(cmd) => cmd.run(&command_context).await,
+        Command::RegisterProject(cmd) => cmd.run(&command_context).await,
         Command::ShowBalance(cmd) => cmd.run(&command_context).await,
+        Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
+        Command::ShowProject(cmd) => cmd.run(&command_context).await,
+        Command::Transfer(cmd) => cmd.run(&command_context).await,
+        Command::TransferProjectFunds(cmd) => cmd.run(&command_context).await,
     };
 
     match result {
