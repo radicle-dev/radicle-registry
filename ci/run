@@ -16,9 +16,13 @@ TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 
 declare -r target_cache="/cache/target"
 
+export CARGO_HOME=/cache/cargo
 # Incremental builds use timestamps of local code. Since we always
 # check it out fresh we can never use incremental builds.
 export CARGO_BUILD_INCREMENTAL=false
+
+export RUSTC_WRAPPER=sccache
+export SCCACHE_DIR=/cache/sccache
 # Most of the caching is done through caching ./target
 export SCCACHE_CACHE_SIZE="1G"
 
