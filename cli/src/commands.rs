@@ -133,7 +133,7 @@ impl CommandT for RegisterProject {
                 message::RegisterProject {
                     id: project_id,
                     checkpoint_id,
-                    metadata: Vec::new(),
+                    metadata: Bytes128::random(),
                 },
             )
             .await

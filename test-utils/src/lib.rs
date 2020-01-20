@@ -74,12 +74,8 @@ pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::
     message::RegisterProject {
         id,
         checkpoint_id,
-        metadata: random_metadata(),
+        metadata: Bytes128::random(),
     }
-}
-
-pub fn random_metadata() -> Vec<u8> {
-    (0..128).map(|_| rand::random::<u8>()).collect()
 }
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {

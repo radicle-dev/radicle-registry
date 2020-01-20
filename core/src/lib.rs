@@ -27,6 +27,8 @@ use parity_scale_codec::{Decode, Encode};
 pub mod message;
 
 mod bytes128;
+pub use bytes128::Bytes128;
+
 mod string32;
 use sp_runtime::traits::BlakeTwo256;
 pub use string32::String32;
@@ -76,5 +78,5 @@ pub struct Project {
     pub account_id: AccountId,
     pub members: Vec<AccountId>,
     pub current_cp: CheckpointId,
-    pub metadata: Vec<u8>,
+    pub metadata: Bytes128,
 }

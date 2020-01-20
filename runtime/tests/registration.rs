@@ -82,7 +82,7 @@ async fn register_project_with_duplicate_id() {
         &client,
         &alice,
         message::RegisterProject {
-            metadata: random_metadata(),
+            metadata: Bytes128::random(),
             ..message.clone()
         },
     )

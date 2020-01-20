@@ -42,14 +42,16 @@ impl Bytes128 {
         }
     }
 
-    //TODO(nuno): remove lint once used elsewhere besides the tests.
-    #[warn(dead_code)]
     pub fn random() -> Self {
-        Bytes128(
-            (0..Self::MAXIMUM_SUPPORTED_LENGTH)
-                .map(|_| rand::random::<u8>())
-                .collect(),
-        )
+        Self::from_vec(Self::random_vector(Self::MAXIMUM_SUPPORTED_LENGTH)).unwrap()
+    }
+
+    pub fn random_with_size(size: usize) -> Result<Self, String> {
+        Bytes128::from_vec(Self::random_vector(size))
+    }
+
+    fn random_vector(size: usize) -> Vec<u8> {
+        (0..size).map(|_| rand::random::<u8>()).collect()
     }
 }
 
