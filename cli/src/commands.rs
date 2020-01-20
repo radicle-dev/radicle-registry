@@ -110,9 +110,9 @@ impl CommandT for RegisterProject {
         let client = &command_context.client;
 
         let create_checkpoint_fut = client
-            .sign_and_submit_call(
+            .sign_and_submit_message(
                 &command_context.author_key_pair,
-                CreateCheckpointParams {
+                message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
                 },
@@ -128,9 +128,9 @@ impl CommandT for RegisterProject {
         let domain = String32::from_str("rad").expect("statically valid");
         let project_id = (self.name.clone(), domain.clone());
         let register_project_fut = client
-            .sign_and_submit_call(
+            .sign_and_submit_message(
                 &command_context.author_key_pair,
-                RegisterProjectParams {
+                message::RegisterProject {
                     id: project_id,
                     checkpoint_id,
                 },
@@ -187,9 +187,9 @@ impl CommandT for Transfer {
         let client = &command_context.client;
 
         let transfer_fut = client
-            .sign_and_submit_call(
+            .sign_and_submit_message(
                 &command_context.author_key_pair,
-                TransferParams {
+                message::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
                 },

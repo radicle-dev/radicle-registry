@@ -13,24 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines [Call] trait and implementations for all transaction parameters.
+//! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
 use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
 use sp_runtime::DispatchError;
 
-/// Indicates that parsing the events into the approriate call result failed.
+pub use radicle_registry_core::message::*;
+
+/// Indicates that parsing the events into the approriate message result failed.
 type EventParseError = String;
 
-/// Trait implemented for every runtime call.
+/// Trait implemented for every runtime message
 ///
-/// For every [RuntimeCall] that is exposed to the user we implement [Call] for the parameters
-/// struct of the runtime call.
-pub trait Call: Send + 'static {
-    /// Result of executing the call in the runtime that is presented to the client user.
+/// For every [RuntimeCall] that is exposed to the user we implement [Message] for the parameters
+/// struct of the runtime message.
+pub trait Message: Send + 'static {
+    /// Result of executing the message in the runtime that is presented to the client user.
     type Result: Send + 'static;
 
-    /// Parse all runtime events emitted by the call and return the appropriate call result.
+    /// Parse all runtime events emitted by the message and return the appropriate message result.
     ///
     /// Returns an error if the event list is not well formed. For example if an expected event is
     /// missing.
@@ -39,7 +41,7 @@ pub trait Call: Send + 'static {
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
-impl Call for RegisterProjectParams {
+impl Message for message::RegisterProject {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -60,7 +62,7 @@ impl Call for RegisterProjectParams {
     }
 }
 
-impl Call for CreateCheckpointParams {
+impl Message for message::CreateCheckpoint {
     type Result = Result<CheckpointId, DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -81,7 +83,7 @@ impl Call for CreateCheckpointParams {
     }
 }
 
-impl Call for SetCheckpointParams {
+impl Message for message::SetCheckpoint {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -102,7 +104,7 @@ impl Call for SetCheckpointParams {
     }
 }
 
-impl Call for TransferParams {
+impl Message for message::Transfer {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
@@ -114,7 +116,7 @@ impl Call for TransferParams {
     }
 }
 
-impl Call for TransferFromProjectParams {
+impl Message for message::TransferFromProject {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {

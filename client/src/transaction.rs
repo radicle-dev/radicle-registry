@@ -24,7 +24,7 @@ pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::ed25519;
 
-pub use crate::call::Call;
+pub use crate::message::Message;
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
 
 #[derive(Clone, Debug)]
@@ -32,27 +32,27 @@ pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra
 ///
 /// A transaction includes
 /// * the author
-/// * the runtime call
+/// * the runtime message
 /// * extra data to like the gensis hash and account nonce
 /// * a valid signature
 ///
-/// The transaction type is generic over the runtime call parameter which must implement [Call].
+/// The transaction type is generic over the runtime message parameter which must implement [Message].
 ///
 /// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
 /// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
-pub struct Transaction<Call_: Call> {
-    _phantom_data: PhantomData<Call_>,
+pub struct Transaction<Message_: Message> {
+    _phantom_data: PhantomData<Message_>,
     pub(crate) extrinsic: UncheckedExtrinsic,
 }
 
-impl<Call_: Call> Transaction<Call_> {
-    /// Create and sign a transaction for the given call.
+impl<Message_: Message> Transaction<Message_> {
+    /// Create and sign a transaction for the given message.
     pub fn new_signed(
         signer: &ed25519::Pair,
-        call: Call_,
+        message: Message_,
         transaction_extra: TransactionExtra,
     ) -> Self {
-        let extrinsic = signed_extrinsic(signer, call.into_runtime_call(), transaction_extra);
+        let extrinsic = signed_extrinsic(signer, message.into_runtime_call(), transaction_extra);
         Transaction {
             _phantom_data: PhantomData,
             extrinsic,

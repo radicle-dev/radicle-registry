@@ -39,9 +39,9 @@ use frame_support::storage::generator::{StorageMap, StorageValue};
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod backend;
-mod call;
 mod error;
 mod interface;
+pub mod message;
 mod transaction;
 
 pub use crate::interface::*;
@@ -147,10 +147,10 @@ impl Client {
 
 #[async_trait::async_trait]
 impl ClientT for Client {
-    async fn submit_transaction<Call_: Call>(
+    async fn submit_transaction<Message_: Message>(
         &self,
-        transaction: Transaction<Call_>,
-    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error> {
+        transaction: Transaction<Message_>,
+    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error> {
         let backend = self.backend.clone();
         let tx_applied_future = backend.submit(transaction.extrinsic).await?;
         Ok(Box::pin(async move {
@@ -158,7 +158,7 @@ impl ClientT for Client {
             let events = tx_applied.events;
             let tx_hash = tx_applied.tx_hash;
             let block = tx_applied.block;
-            let result = Call_::result_from_events(events.clone())?;
+            let result = Message_::result_from_events(events.clone())?;
             Ok(TransactionApplied {
                 tx_hash,
                 block,
@@ -168,11 +168,11 @@ impl ClientT for Client {
         }))
     }
 
-    async fn sign_and_submit_call<Call_: Call>(
+    async fn sign_and_submit_message<Message_: Message>(
         &self,
         author: &ed25519::Pair,
-        call: Call_,
-    ) -> Result<Response<TransactionApplied<Call_>, Error>, Error> {
+        message: Message_,
+    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();
@@ -180,7 +180,7 @@ impl ClientT for Client {
         let nonce = client.account_nonce(&account_id).await?;
         let transaction = Transaction::new_signed(
             &key_pair,
-            call,
+            message,
             TransactionExtra {
                 nonce,
                 genesis_hash,
@@ -192,7 +192,7 @@ impl ClientT for Client {
             let events = tx_applied.events;
             let tx_hash = tx_applied.tx_hash;
             let block = tx_applied.block;
-            let result = Call_::result_from_events(events.clone())?;
+            let result = Message_::result_from_events(events.clone())?;
             Ok(TransactionApplied {
                 tx_hash,
                 block,

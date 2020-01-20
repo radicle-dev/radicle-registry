@@ -15,7 +15,7 @@ async fn register_project() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        CreateCheckpointParams {
+        message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
         },
@@ -23,20 +23,20 @@ async fn register_project() {
     .await
     .result
     .unwrap();
-    let params = random_register_project_params(checkpoint_id);
-    let tx_applied = submit_ok(&client, &alice, params.clone()).await;
+    let message = random_register_project_message(checkpoint_id);
+    let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
-        .get_project(params.clone().id)
+        .get_project(message.clone().id)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, params.clone().id);
+    assert_eq!(project.id, message.clone().id);
     assert_eq!(project.current_cp, checkpoint_id);
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(params.clone().id, project.account_id).into()
+        RegistryEvent::ProjectRegistered(message.clone().id, project.account_id).into()
     );
 
     let has_project = client
@@ -44,7 +44,7 @@ async fn register_project() {
         .await
         .unwrap()
         .iter()
-        .any(|id| *id == params.id);
+        .any(|id| *id == message.id);
     assert!(has_project, "Registered project not found in project list");
 
     let checkpoint_ = Checkpoint {
@@ -63,7 +63,7 @@ async fn register_project_with_duplicate_id() {
     let checkpoint_id = submit_ok(
         &client,
         &alice,
-        CreateCheckpointParams {
+        message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
         },
@@ -72,17 +72,21 @@ async fn register_project_with_duplicate_id() {
     .result
     .unwrap();
 
-    let params = random_register_project_params(checkpoint_id);
+    let message = random_register_project_message(checkpoint_id);
 
-    submit_ok(&client, &alice, params.clone()).await;
+    submit_ok(&client, &alice, message.clone()).await;
 
     // Duplicate submission with different description and image URL.
-    let registration_2 =
-        submit_ok(&client, &alice, RegisterProjectParams { ..params.clone() }).await;
+    let registration_2 = submit_ok(
+        &client,
+        &alice,
+        message::RegisterProject { ..message.clone() },
+    )
+    .await;
 
     assert_eq!(registration_2.result, Err(DispatchError::Other("")));
 
-    let _project = client.get_project(params.id).await.unwrap().unwrap();
+    let _project = client.get_project(message.id).await.unwrap().unwrap();
 
     // TODO(nuno): assert that the project data is left untouched.
     // This can be done again when the metadata field is added.
@@ -95,13 +99,13 @@ async fn register_project_with_bad_checkpoint() {
 
     let checkpoint_id = H256::random();
 
-    let params = random_register_project_params(checkpoint_id);
+    let message = random_register_project_message(checkpoint_id);
 
-    let tx_applied = submit_ok(&client, &alice, params.clone()).await;
+    let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
 
-    let no_project = client.get_project(params.id).await.unwrap();
+    let no_project = client.get_project(message.id).await.unwrap();
 
     assert!(no_project.is_none())
 }

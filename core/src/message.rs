@@ -22,32 +22,32 @@ use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct RegisterProjectParams {
+pub struct RegisterProject {
     pub id: ProjectId,
     pub checkpoint_id: CheckpointId,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct CreateCheckpointParams {
+pub struct CreateCheckpoint {
     pub project_hash: H256,
     pub previous_checkpoint_id: Option<CheckpointId>,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct SetCheckpointParams {
+pub struct SetCheckpoint {
     pub project_id: ProjectId,
     pub new_checkpoint_id: CheckpointId,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct TransferFromProjectParams {
+pub struct TransferFromProject {
     pub project: ProjectId,
     pub recipient: AccountId,
     pub value: Balance,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct TransferParams {
+pub struct Transfer {
     pub recipient: AccountId,
     pub balance: Balance,
 }

@@ -25,9 +25,9 @@ async fn go() -> Result<(), Error> {
     // Choose some random project hash and create a checkpoint
     let project_hash = H256::random();
     let checkpoint_id = client
-        .sign_and_submit_call(
+        .sign_and_submit_message(
             &alice,
-            CreateCheckpointParams {
+            message::CreateCheckpoint {
                 project_hash,
                 previous_checkpoint_id: None,
             },
@@ -39,9 +39,9 @@ async fn go() -> Result<(), Error> {
 
     // Register the project
     client
-        .sign_and_submit_call(
+        .sign_and_submit_message(
             &alice,
-            RegisterProjectParams {
+            message::RegisterProject {
                 id: project_id.clone(),
                 checkpoint_id,
             },
