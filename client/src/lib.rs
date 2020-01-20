@@ -231,13 +231,6 @@ impl ClientT for Client {
     }
 }
 
-/*/// Turn a 0.3 future into a boxed 0.1 future trait object.
-fn future03_compat<'a, Ok, Error>(
-    f: impl Future03<Output = Result<Ok, Error>> + 'a + Send,
-) -> Box<dyn Future<Item = Ok, Error = Error> + Send + 'a> {
-    Box::new(futures::compat::Compat::new(Box::pin(f)))
-}*/
-
 #[cfg(test)]
 mod test {
     use super::*;
