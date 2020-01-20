@@ -169,7 +169,7 @@ impl CommandT for ShowGenesisHash {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Transfer some funds to recipient
+/// Transfer funds to recipient
 pub struct Transfer {
     #[structopt(parse(try_from_str = parse_account_id))]
     /// Recipient Account in SS58 address format
