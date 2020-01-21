@@ -16,22 +16,19 @@
 /// `Bytes128` type, and its validation tests.
 use alloc::format;
 use alloc::prelude::v1::*;
+use core::convert::TryFrom;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
-use std::convert::TryFrom;
 
-/// This type is used to represent project metadata fields.
-///
-/// Radicle limits the size of the project metadata field to 128 bytes.
-/// To guarantee that at the type-level, a smart constructor is provided to check validity.
+/// Byte vector that is limited to 128 bytes.
 #[derive(Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Bytes128(Vec<u8>);
-
-/// TODO review
-/// 1. From and To vec traits
 
 impl Bytes128 {
     const MAXIMUM_SUPPORTED_LENGTH: usize = 128;
 
+    /// Smart constructor that attempts to build a Bytes128
+    /// from a Vec<u8> with an arbitrary size. It fails if the
+    /// input vector is larger than Bytes128::MAXIMUM_SUPPORTED_LENGTH.
     pub fn from_vec(vector: Vec<u8>) -> Result<Self, String> {
         if vector.len() > Self::MAXIMUM_SUPPORTED_LENGTH {
             Err(format!(
@@ -46,27 +43,36 @@ impl Bytes128 {
 }
 
 impl TryFrom<Vec<u8>> for Bytes128 {
-    type Error = &'static str;
+    type Error = String;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         Bytes128::from_vec(value)
     }
 }
 
+impl From<Bytes128> for Vec<u8> {
+    fn from(value: Bytes128) -> Self {
+        value.0
+    }
+}
+
 /// Bytes128 random functions useful for unit testing.
-/// Note that since these fuctions make use of rand,
-/// we need to guard with the std feature to
-/// be able to compile it for wasm.
+///
+/// Note that since these fuctions make use of rand, we need to guard
+/// with the std feature to be able to compile it for wasm.
 #[cfg(feature = "std")]
 impl Bytes128 {
+    /// Generate a random Bytes128 vector with as many bytes as its limit.
     pub fn random() -> Self {
         Self::from_vec(Self::random_vector(Self::MAXIMUM_SUPPORTED_LENGTH)).unwrap()
     }
 
+    /// Generate a random Bytes128 vector with as many bytes as specified with 'size'.
     pub fn random_with_size(size: usize) -> Result<Self, String> {
         Bytes128::from_vec(Self::random_vector(size))
     }
 
+    /// Generate a random Vec<u8> with as many bytes as specified with 'size'.
     fn random_vector(size: usize) -> Vec<u8> {
         (0..size).map(|_| rand::random::<u8>()).collect()
     }
@@ -75,11 +81,8 @@ impl Bytes128 {
 impl Decode for Bytes128 {
     fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
         let decoded: Vec<u8> = Vec::decode(input)?;
-        Bytes128::from_vec(decoded).or_else(|_| {
-            Err(CodecError::from(
-                "Bytes128 length was more than 128 characters.",
-            ))
-        })
+        Bytes128::from_vec(decoded)
+            .or_else(|_| Err(CodecError::from("Failed to decode an inordinate Bytes128.")))
     }
 }
 
