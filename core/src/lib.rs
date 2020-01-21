@@ -39,6 +39,9 @@ pub use string32::String32;
 mod project_domain;
 pub use project_domain::ProjectDomain;
 
+mod error;
+pub use error::RegistryError;
+
 /// Index of a transaction in the chain.
 pub type Index = u32;
 

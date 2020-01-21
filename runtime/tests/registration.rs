@@ -88,7 +88,10 @@ async fn register_project_with_duplicate_id() {
     )
     .await;
 
-    assert_eq!(registration_2.result, Err(DispatchError::Other("")));
+    assert_eq!(
+        registration_2.result,
+        Err(RegistryError::DuplicateProjectId.into())
+    );
 
     let project = client.get_project(message.id).await.unwrap().unwrap();
 
@@ -108,7 +111,10 @@ async fn register_project_with_bad_checkpoint() {
 
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
-    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InexistentCheckpointId.into())
+    );
 
     let no_project = client.get_project(message.id).await.unwrap();
 

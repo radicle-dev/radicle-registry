@@ -135,14 +135,15 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
-                return Err(DispatchError::Other("The checkpoint provided to register the project does not exist."))
+                return Err(RegistryError::InexistentCheckpointId.into())
             }
 
             let project_id = message.id.clone();
             match store::Projects::get(project_id.clone()) {
                 None => {}
-                Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
+                Some (_) => return Err(RegistryError::DuplicateProjectId.into()),
             };
+
             let account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
@@ -164,10 +165,13 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let project = store::Projects::get(message.project).ok_or("Project does not exist")?;
+            let project = match store::Projects::get(message.project) {
+                None => return Err(RegistryError::InexistentProjectId.into()),
+                Some(p) => p,
+            };
             let is_member = project.members.contains(&sender);
             if !is_member {
-                return Err(DispatchError::Other("Sender is not a project member"))
+                return Err(RegistryError::InsufficientSenderPermissions.into())
             }
             <crate::Balances as Currency<_>>::transfer(&project.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
         }
@@ -183,7 +187,7 @@ decl_module! {
                 None => {}
                 Some(cp_id) => {
                     match store::Checkpoints::get(cp_id) {
-                        None => return Err(DispatchError::Other("Parent checkpoint does not exist")),
+                        None => return Err(RegistryError::InexistentCheckpointId.into()),
                         Some(_) => {}
                     }
                 }
@@ -208,14 +212,14 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
-                return Err(DispatchError::Other("The provided checkpoint does not exist"))
+                return Err(RegistryError::InexistentCheckpointId.into())
             }
             let opt_project = store::Projects::get(message.project_id.clone());
             let new_project = match opt_project {
-                None => return Err(DispatchError::Other("The provided project ID is not associated with any project.")),
+                None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(prj) => {
                     if !prj.members.contains(&sender) {
-                        return Err(DispatchError::Other("The `set_checkpoint` transaction sender is not a member of the project."))
+                        return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
                     Project {
                         current_cp: message.new_checkpoint_id,
@@ -225,11 +229,11 @@ decl_module! {
             };
 
             let initial_cp = match store::InitialCheckpoints::get(message.project_id.clone()) {
-                None => return Err(DispatchError::Other("A registered project must necessarily have an initial checkpoint.")),
+                None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
                 Some(cp) => cp,
             };
             if !descends_from_initial_checkpoint(message.new_checkpoint_id, initial_cp) {
-                return Err(DispatchError::Other("The provided checkpoint ID is not a descendant of the project's initial checkpoint."))
+                return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
             store::Projects::insert(new_project.id.clone(), new_project.clone());
