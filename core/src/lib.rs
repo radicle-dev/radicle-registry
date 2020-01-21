@@ -22,18 +22,19 @@ extern crate alloc;
 
 use alloc::prelude::v1::*;
 
-pub use frame_support::dispatch::DispatchError;
 use parity_scale_codec::{Decode, Encode};
+use sp_core::{ed25519, H256};
+use sp_runtime::traits::BlakeTwo256;
+
+pub use sp_runtime::DispatchError;
+
 pub mod message;
 
 mod bytes128;
 pub use bytes128::Bytes128;
 
 mod string32;
-use sp_runtime::traits::BlakeTwo256;
 pub use string32::String32;
-
-use sp_core::{ed25519, H256};
 
 /// Index of a transaction in the chain.
 pub type Index = u32;

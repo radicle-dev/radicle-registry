@@ -14,23 +14,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec;
-use frame_support::weights::SimpleDispatchInfo;
+
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::StorageMap as _,
     traits::{Currency, ExistenceRequirement, Randomness as _},
+    weights::SimpleDispatchInfo,
 };
-
-use sp_core::crypto::UncheckedFrom;
-
-use frame_system as system;
+use frame_system as system; // required for `decl_module!` to work
 use frame_system::ensure_signed;
-
-use crate::{AccountId, Hash, Hashing};
+use sp_core::crypto::UncheckedFrom;
 use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
+
+use crate::{AccountId, Hash, Hashing};
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>

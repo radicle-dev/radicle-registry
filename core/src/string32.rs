@@ -18,9 +18,6 @@ use alloc::format;
 use alloc::prelude::v1::*;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 
-use sp_std::fmt;
-use sp_std::str::FromStr;
-
 /// Type to represent project names and domains.
 ///
 /// Since their lengths are limited to 32 characters, a smart constructor is
@@ -41,7 +38,7 @@ impl String32 {
     }
 }
 
-impl FromStr for String32 {
+impl core::str::FromStr for String32 {
     type Err = String;
 
     /// This function only raises an error if the `String` it is passed is
@@ -52,8 +49,8 @@ impl FromStr for String32 {
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for String32 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl core::fmt::Display for String32 {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
