@@ -12,8 +12,9 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Build requirements](#build-requirements)
 - [Running development node](#running-development-node)
 - [Packages](#packages)
-- [Running tests](#running-tests)
+- [Running checks and tests](#running-checks-and-tests)
 - [Changelog](#changelog)
+- [Continuous Deployment](#continuous-deployment)
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
@@ -65,8 +66,23 @@ Packages
   it should probably go into `core`.
 
 
-Running tests
--------------
+Running checks and tests
+------------------------
+
+We check our code with clippy and `cargo fmt`
+```
+cargo clippy --workspace --all-targets -- -D clippy::all
+cargo fmt --workspace -- --check
+```
+
+To check the Wasm build of the runtime run
+```
+cargo clippy \
+  --manifest-path runtime/Cargo.toml \
+  --no-default-features \
+  --target wasm32-unknown-unknown \
+  -- -D clippy::all
+```
 
 You can run all tests with `cargo test --workspace --all-targets`. For the
 end-to-end tests you need to [build and run a dev
