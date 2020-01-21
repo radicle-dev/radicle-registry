@@ -138,10 +138,6 @@ decl_module! {
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(DispatchError::Other("The checkpoint provided to register the project does not exist."))
             }
-            match store::Projects::get(message.id.clone()) {
-                None => {}
-                Some (_) => return Err(DispatchError::Other("A project with the supplied ID already exists.")),
-            };
 
             let project_id = message.id.clone();
             match store::Projects::get(project_id.clone()) {
