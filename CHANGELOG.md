@@ -31,6 +31,7 @@ Upcoming
 
 ### Addition
 
+* Add Transaction::hash() function
 * Offline transaction signing with the following new APIs
   * `ClientT::account_nonce()`
   * `ClientT::genesis_hash()`

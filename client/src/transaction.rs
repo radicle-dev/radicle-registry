@@ -14,15 +14,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [Transaction] and [TransactionExtra].
+use crate::TxHash;
 use parity_scale_codec::Encode;
-use radicle_registry_runtime::UncheckedExtrinsic;
-use sp_runtime::generic::{Era, SignedPayload};
-use sp_runtime::traits::SignedExtension;
-use std::marker::PhantomData;
-
 pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
+use radicle_registry_runtime::Hashing;
+use radicle_registry_runtime::UncheckedExtrinsic;
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::ed25519;
+use sp_runtime::generic::{Era, SignedPayload};
+use sp_runtime::traits::Hash as _;
+use sp_runtime::traits::SignedExtension;
+use std::marker::PhantomData;
 
 pub use crate::message::Message;
 pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
@@ -57,6 +59,10 @@ impl<Message_: Message> Transaction<Message_> {
             _phantom_data: PhantomData,
             extrinsic,
         }
+    }
+
+    pub fn hash(self) -> TxHash {
+        Hashing::hash_of(&self.extrinsic)
     }
 }
 
