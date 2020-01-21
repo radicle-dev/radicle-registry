@@ -18,18 +18,23 @@ use alloc::format;
 use alloc::prelude::v1::*;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 
-/// Type to represent project names and domains.
+/// A [String] that is limited to 32 bytes in UTF-8 encoding.
 ///
-/// Since their lengths are limited to 32 characters, a smart constructor is
-/// provided to check validity.
+/// ```rust
+/// # use radicle_registry_core::String32;
+/// assert!(String32::from_string("a string".to_string()).is_ok());
+/// let long_string = "this string has more than 32 bytes".to_string();
+/// assert!(String32::from_string(long_string).is_err());
+/// ```
 #[derive(Encode, Clone, Debug, Eq, PartialEq)]
 pub struct String32(String);
 
 impl String32 {
+    /// Returns an error if [String::len] of the provided is greater than 32.
     pub fn from_string(s: String) -> Result<Self, String> {
         if s.len() > 32 {
             Err(format!(
-                "The provided string's length is {} while String32 is limited to 32 characters.",
+                "The provided string's length is {} while String32 is limited to 32 bytes",
                 s.len()
             ))
         } else {
@@ -41,8 +46,7 @@ impl String32 {
 impl core::str::FromStr for String32 {
     type Err = String;
 
-    /// This function only raises an error if the `String` it is passed is
-    /// longer than 32 characters.
+    /// Returns an error if [String::len] of the provided is greater than 32.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         String32::from_string(s.to_string())
     }
@@ -59,7 +63,7 @@ impl Decode for String32 {
     fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
         let decoded: String = String::decode(input)?;
         if decoded.len() > 32 {
-            Err(From::from("String32 length was more than 32 characters."))
+            Err(From::from("String32 length was more than 32 bytes."))
         } else {
             Ok(String32(decoded))
         }
