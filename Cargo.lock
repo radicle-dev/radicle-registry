@@ -3541,13 +3541,10 @@ dependencies = [
 name = "radicle-registry-core"
 version = "0.0.0"
 dependencies = [
- "frame-support",
- "frame-system",
  "parity-scale-codec",
  "rand 0.7.3",
  "sp-core",
  "sp-runtime",
- "sp-std",
 ]
 
 [[package]]

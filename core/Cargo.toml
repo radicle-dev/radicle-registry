@@ -12,12 +12,9 @@ repository = "https://github.com/radicle-dev/radicle-registry"
 [features]
 default = ["std"]
 std = [
-    "frame-support/std",
-    "frame-system/std",
     "parity-scale-codec/std",
     "rand",
     "sp-core/std",
-    "sp-std/std",
     "sp-runtime/std",
 ]
 
@@ -35,21 +32,6 @@ rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 default-features = false
 
 [dependencies.sp-runtime]
-git = "https://github.com/paritytech/substrate"
-rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
-default-features = false
-
-[dependencies.frame-support]
-git = "https://github.com/paritytech/substrate"
-rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
-default-features = false
-
-[dependencies.frame-system]
-git = "https://github.com/paritytech/substrate"
-rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
-default-features = false
-
-[dependencies.sp-std]
 git = "https://github.com/paritytech/substrate"
 rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 default-features = false
