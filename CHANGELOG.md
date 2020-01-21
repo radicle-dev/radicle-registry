@@ -5,6 +5,7 @@ Upcoming
 --------
 
 ### Breaking changes
+* Add `metadata` field to Project, a vector of at most 128 bytes.
 * Drop project fields `description` and `img_url`
 * Rename `Client::submit` to `Client::sign_and_submit_call`.
 * `Client::create` and `Client::create_with_executor` now require a `host`
