@@ -19,6 +19,7 @@ use futures::future::BoxFuture;
 use std::sync::{Arc, Mutex};
 
 use sp_runtime::{traits::Hash as _, BuildStorage as _};
+use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
 
@@ -92,6 +93,23 @@ impl backend::Backend for Emulator {
         let test_ext = &mut self.test_ext.lock().unwrap();
         let maybe_data = test_ext.execute_with(|| sp_io::storage::get(key));
         Ok(maybe_data)
+    }
+
+    async fn fetch_keys(
+        &self,
+        prefix: &[u8],
+        block_hash: Option<BlockHash>,
+    ) -> Result<Vec<Vec<u8>>, Error> {
+        if block_hash.is_some() {
+            panic!("Passing a block hash 'fetch_keys' for the client emulator is not supported")
+        }
+
+        let test_ext = &mut self.test_ext.lock().unwrap();
+        let backend = test_ext.commit_all();
+
+        let mut keys = Vec::new();
+        backend.for_keys_with_prefix(prefix, |key| keys.push(Vec::from(key)));
+        Ok(keys)
     }
 
     fn get_genesis_hash(&self) -> Hash {

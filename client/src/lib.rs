@@ -36,6 +36,7 @@ use std::sync::Arc;
 use parity_scale_codec::{Decode, FullCodec};
 
 use frame_support::storage::generator::{StorageMap, StorageValue};
+use frame_support::storage::StoragePrefixedMap;
 use radicle_registry_runtime::{balances, registry, Runtime};
 
 mod backend;
@@ -92,6 +93,7 @@ impl Client {
     /// ```ignore
     /// client.fetch_value::<frame_balance::TotalIssuance<Runtime>, _>();
     /// ```
+    #[allow(dead_code)]
     async fn fetch_value<S: StorageValue<Value>, Value: FullCodec + Send + 'static>(
         &self,
     ) -> Result<S::Query, Error>
@@ -222,7 +224,15 @@ impl ClientT for Client {
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
-        self.fetch_value::<registry::store::ProjectIds, _>().await
+        let project_prefix = registry::store::Projects::final_prefix();
+        let keys = self.backend.fetch_keys(&project_prefix, None).await?;
+        let mut project_ids = Vec::with_capacity(keys.len());
+        for key in keys {
+            let project_id = registry::store::Projects::id_from_key(&key)
+                .expect("Invalid runtime state key. Cannot extract project ID");
+            project_ids.push(project_id);
+        }
+        Ok(project_ids)
     }
 
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
