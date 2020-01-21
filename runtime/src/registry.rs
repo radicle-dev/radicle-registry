@@ -155,7 +155,8 @@ decl_module! {
                 id: project_id.clone(),
                 account_id: account_id,
                 members: vec![sender],
-                current_cp: message.checkpoint_id
+                current_cp: message.checkpoint_id,
+                metadata: message.metadata
             };
 
             store::Projects::insert(project_id.clone(), project);

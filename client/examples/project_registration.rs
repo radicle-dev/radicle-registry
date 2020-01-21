@@ -44,6 +44,7 @@ async fn go() -> Result<(), Error> {
             message::RegisterProject {
                 id: project_id.clone(),
                 checkpoint_id,
+                metadata: Bytes128::random(),
             },
         )
         .await?

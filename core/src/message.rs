@@ -17,7 +17,7 @@
 
 extern crate alloc;
 
-use crate::{AccountId, Balance, CheckpointId, ProjectId};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, ProjectId};
 use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
 
@@ -25,6 +25,7 @@ use sp_core::H256;
 pub struct RegisterProject {
     pub id: ProjectId,
     pub checkpoint_id: CheckpointId,
+    pub metadata: Bytes128,
 }
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]

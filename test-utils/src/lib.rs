@@ -71,7 +71,11 @@ pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::
         .collect::<String>();
     let id = (name.parse().unwrap(), domain.parse().unwrap());
 
-    message::RegisterProject { id, checkpoint_id }
+    message::RegisterProject {
+        id,
+        checkpoint_id,
+        metadata: Bytes128::random(),
+    }
 }
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {

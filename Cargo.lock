@@ -3544,6 +3544,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "parity-scale-codec",
+ "rand 0.7.3",
  "sp-core",
  "sp-runtime",
  "sp-std",
