@@ -141,7 +141,9 @@ fn transaction_extra_to_runtime_extra(
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::message;
     use radicle_registry_runtime::{GenesisConfig, Runtime};
+    use sp_core::H256;
     use sp_runtime::traits::{Checkable, IdentityLookup};
     use sp_runtime::BuildStorage as _;
 
@@ -182,5 +184,25 @@ mod test {
         test_ext
             .execute_with(move || xt.check(&IdentityLookup::default()))
             .unwrap();
+    }
+
+    #[test]
+    /// Check that a signed transaction's hash equals its extrinsic's hash.
+    fn check_transaction_hash() {
+        let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+        let signed_tx = Transaction::new_signed(
+            &alice,
+            message::Transfer {
+                recipient: alice.public(),
+                balance: 1000,
+            },
+            TransactionExtra {
+                nonce: 0,
+                genesis_hash: H256::random(),
+            },
+        );
+        let extrinsic_hash = Hashing::hash_of(&signed_tx.extrinsic);
+
+        assert_eq!(signed_tx.hash(), extrinsic_hash);
     }
 }
