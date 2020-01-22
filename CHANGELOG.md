@@ -5,6 +5,7 @@ Upcoming
 --------
 
 ### Breaking changes
+* Make `ProjectDomain` a wrapper of `String32` and only support the "rad" domain.
 * Add `metadata` field to Project, a vector of at most 128 bytes.
 * Drop project fields `description` and `img_url`
 * Rename `Client::submit` to `Client::sign_and_submit_call`.

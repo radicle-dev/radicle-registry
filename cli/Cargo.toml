@@ -16,7 +16,6 @@ async-std = { version = "1.4", features = ["attributes"] }
 async-trait = "0.1"
 futures = "0.3"
 hex = "0.4.0"
-lazy_static = "1.4"
 pretty_env_logger = "0.3.1"
 structopt = "0.3"
 url = "1.7"

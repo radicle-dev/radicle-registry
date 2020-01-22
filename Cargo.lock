@@ -3497,7 +3497,6 @@ dependencies = [
  "async-trait",
  "futures 0.3.1",
  "hex",
- "lazy_static",
  "pretty_env_logger",
  "radicle-registry-client",
  "sp-core",

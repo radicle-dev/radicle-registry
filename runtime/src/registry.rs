@@ -66,7 +66,7 @@ pub mod store {
         /// # use std::str::FromStr;
         /// let project_id = (
         ///     String32::from_str("name").unwrap(),
-        ///     String32::from_str("domain").unwrap()
+        ///     ProjectDomain::from_str("rad").unwrap()
         /// );
         ///
         /// let key = store::Projects::storage_map_final_key(project_id.clone());

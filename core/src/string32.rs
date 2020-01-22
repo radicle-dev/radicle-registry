@@ -16,6 +16,7 @@
 /// `String32` type, and its validation tests.
 use alloc::format;
 use alloc::prelude::v1::*;
+use core::convert::Into;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 
 /// A [String] that is limited to 32 bytes in UTF-8 encoding.
@@ -40,6 +41,12 @@ impl String32 {
         } else {
             Ok(String32(s))
         }
+    }
+}
+
+impl Into<String> for String32 {
+    fn into(self) -> String {
+        self.0
     }
 }
 
