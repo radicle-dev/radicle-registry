@@ -14,6 +14,7 @@ radicle-registry-client = { version = "0.0.0", path = "../client" }
 
 async-std = { version = "1.4", features = ["attributes"] }
 async-trait = "0.1"
+derive_more = "0.99"
 futures = "0.3"
 hex = "0.4.0"
 pretty_env_logger = "0.3.1"

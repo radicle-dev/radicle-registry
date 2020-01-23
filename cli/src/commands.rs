@@ -23,42 +23,85 @@ pub struct CommandContext {
     pub client: Client,
 }
 
+/// Error returned by [CommandT::run].
+///
+/// Implements [From] for client errors.
+#[derive(Debug, derive_more::From)]
+pub enum CommandError {
+    ClientError(Error),
+    FailedTransaction {
+        tx_hash: TxHash,
+        block_hash: BlockHash,
+    },
+    ProjectNotFound {
+        name: ProjectName,
+        domain: ProjectDomain,
+    },
+}
+
+impl core::fmt::Display for CommandError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            CommandError::ClientError(error) => write!(f, "Client error: {}", error),
+            CommandError::FailedTransaction {
+                tx_hash,
+                block_hash,
+            } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
+            CommandError::ProjectNotFound { name, domain } => {
+                write!(f, "Cannot find project {}.{}", name, domain)
+            }
+        }
+    }
+}
+
+/// Check that a transaction has been applied succesfully.
+///
+/// If the transaction failed, that is if `tx_applied.result` is `Err`, then we return a
+/// [CommandError]. Otherwise we return the `Ok` value of the transaction result.
+fn transaction_applied_ok<Message_, T, E>(
+    tx_applied: &TransactionApplied<Message_>,
+) -> Result<T, CommandError>
+where
+    Message_: Message<Result = Result<T, E>>,
+    T: Copy + Send + 'static,
+    E: Send + 'static,
+{
+    match tx_applied.result {
+        Ok(value) => Ok(value),
+        Err(_) => Err(CommandError::FailedTransaction {
+            tx_hash: tx_applied.tx_hash,
+            block_hash: tx_applied.block,
+        }),
+    }
+}
+
 /// Every CLI command must implement this trait.
 #[async_trait::async_trait]
 pub trait CommandT {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()>;
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError>;
 }
 
 #[derive(StructOpt, Debug, Clone)]
 /// Show information for a registered project in the .rad domain.
 pub struct ShowProject {
-    project_name: String,
+    project_name: String32,
 }
 
 #[async_trait::async_trait]
 impl CommandT for ShowProject {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
-        let project_name: String32 = match self.project_name.parse() {
-            Ok(project_name) => project_name,
-            Err(error) => {
-                println!("Invalid project name: {}", error);
-                return Err(());
-            }
-        };
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let project_domain = ProjectDomain::rad_domain();
         let opt_project = command_context
             .client
-            .get_project((project_name.clone(), ProjectDomain::rad_domain()))
-            .await
-            .unwrap();
+            .get_project((self.project_name.clone(), project_domain.clone()))
+            .await?;
 
         let project = match opt_project {
             None => {
-                println!(
-                    "Project {}.{} not found",
-                    project_name,
-                    ProjectDomain::rad_domain()
-                );
-                return Err(());
+                return Err(CommandError::ProjectNotFound {
+                    name: self.project_name.clone(),
+                    domain: project_domain,
+                });
             }
             Some(project) => project,
         };
@@ -66,8 +109,7 @@ impl CommandT for ShowProject {
         let balance = command_context
             .client
             .free_balance(&project.account_id)
-            .await
-            .unwrap();
+            .await?;
 
         println!("project: {}.{}", project.id.0, project.id.1);
         println!("account id: {}", project.account_id);
@@ -83,8 +125,8 @@ pub struct ListProjects {}
 
 #[async_trait::async_trait]
 impl CommandT for ListProjects {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
-        let project_ids = command_context.client.list_projects().await.unwrap();
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let project_ids = command_context.client.list_projects().await?;
         println!("PROJECTS");
         for (name, domain) in project_ids {
             println!("{}.{}", name, domain)
@@ -104,7 +146,7 @@ pub struct RegisterProject {
 
 #[async_trait::async_trait]
 impl CommandT for RegisterProject {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let client = &command_context.client;
 
         let create_checkpoint_fut = client
@@ -115,13 +157,12 @@ impl CommandT for RegisterProject {
                     previous_checkpoint_id: None,
                 },
             )
-            .await
-            .unwrap();
+            .await?;
         println!("creating checkpoint...");
 
-        let checkpoint_created = create_checkpoint_fut.await.unwrap();
-        let checkpoint_id = checkpoint_created.result.unwrap();
-        println!("checkpoint created in block {}", checkpoint_created.block,);
+        let checkpoint_created = create_checkpoint_fut.await?;
+        let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
+        println!("checkpoint created in block {}", checkpoint_created.block);
 
         let project_id: ProjectId = (self.name.clone(), ProjectDomain::rad_domain());
         let register_project_fut = client
@@ -133,25 +174,17 @@ impl CommandT for RegisterProject {
                     metadata: Bytes128::random(),
                 },
             )
-            .await
-            .unwrap();
+            .await?;
         println!("registering project...");
-        let project_registered = register_project_fut.await.unwrap();
-        match project_registered.result {
-            Ok(()) => {
-                println!(
-                    "project {}.{} registered in block {}",
-                    self.name,
-                    ProjectDomain::rad_domain(),
-                    project_registered.block,
-                );
-                Ok(())
-            }
-            Err(_) => {
-                println!("transaction failed in block {}", project_registered.block,);
-                Err(())
-            }
-        }
+        let project_registered = register_project_fut.await?;
+        transaction_applied_ok(&project_registered)?;
+        println!(
+            "project {}.{} registered in block {}",
+            self.name,
+            ProjectDomain::rad_domain(),
+            project_registered.block,
+        );
+        Ok(())
     }
 }
 
@@ -161,7 +194,7 @@ pub struct ShowGenesisHash {}
 
 #[async_trait::async_trait]
 impl CommandT for ShowGenesisHash {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let genesis_hash = command_context.client.genesis_hash();
         println!("Gensis block hash: 0x{}", hex::encode(genesis_hash));
         Ok(())
@@ -183,7 +216,7 @@ fn parse_account_id(data: &str) -> Result<AccountId, String> {
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let client = &command_context.client;
 
         let transfer_fut = client
@@ -194,23 +227,15 @@ impl CommandT for Transfer {
                     balance: self.funds,
                 },
             )
-            .await
-            .unwrap();
+            .await?;
         println!("transferring funds...");
-        let project_registered = transfer_fut.await.unwrap();
-        match project_registered.result {
-            Ok(()) => {
-                println!(
-                    "transferred {} RAD to {} in block {}",
-                    self.funds, self.recipient, project_registered.block,
-                );
-                Ok(())
-            }
-            Err(_) => {
-                println!("transaction failed in block {}", project_registered.block,);
-                Err(())
-            }
-        }
+        let transfered = transfer_fut.await?;
+        transaction_applied_ok(&transfered)?;
+        println!(
+            "transferred {} RAD to {} in block {}",
+            self.funds, self.recipient, transfered.block,
+        );
+        Ok(())
     }
 }
 
@@ -229,7 +254,7 @@ pub struct TransferProjectFunds {
 
 #[async_trait::async_trait]
 impl CommandT for TransferProjectFunds {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let client = &command_context.client;
         let transfer_fut = client
             .sign_and_submit_message(
@@ -240,27 +265,19 @@ impl CommandT for TransferProjectFunds {
                     value: self.funds,
                 },
             )
-            .await
-            .unwrap();
+            .await?;
         println!("transferring funds...");
-        let project_registered = transfer_fut.await.unwrap();
-        match project_registered.result {
-            Ok(()) => {
-                println!(
-                    "transferred {} RAD from {}.{} to {} in block {}",
-                    self.funds,
-                    self.project_name,
-                    ProjectDomain::rad_domain(),
-                    self.recipient,
-                    project_registered.block,
-                );
-                Ok(())
-            }
-            Err(_) => {
-                println!("transaction failed in block {}", project_registered.block);
-                Err(())
-            }
-        }
+        let transfered = transfer_fut.await?;
+        transaction_applied_ok(&transfered)?;
+        println!(
+            "transferred {} RAD from {}.{} to {} in block {}",
+            self.funds,
+            self.project_name,
+            ProjectDomain::rad_domain(),
+            self.recipient,
+            transfered.block,
+        );
+        Ok(())
     }
 }
 
@@ -277,12 +294,11 @@ pub struct ShowBalance {
 
 #[async_trait::async_trait]
 impl CommandT for ShowBalance {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), ()> {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let balance = command_context
             .client
             .free_balance(&self.account_id)
-            .await
-            .unwrap();
+            .await?;
         println!("{} RAD", balance);
         Ok(())
     }
