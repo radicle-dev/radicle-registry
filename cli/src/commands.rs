@@ -15,13 +15,7 @@
 
 //! Defines [CommandT] trait, structs for all commands and their [CommandT] implementations.
 use radicle_registry_client::*;
-use std::str::FromStr;
 use structopt::StructOpt;
-
-lazy_static::lazy_static! {
-    static ref RAD_DOMAIN: String32 =
-        String32::from_str("rad").expect("statically valid");
-}
 
 /// Contextual data for running commands. Created from command line options.
 pub struct CommandContext {
@@ -53,13 +47,17 @@ impl CommandT for ShowProject {
         };
         let opt_project = command_context
             .client
-            .get_project((project_name.clone(), RAD_DOMAIN.clone()))
+            .get_project((project_name.clone(), ProjectDomain::rad_domain()))
             .await
             .unwrap();
 
         let project = match opt_project {
             None => {
-                println!("Project {}.{} not found", project_name, RAD_DOMAIN.clone());
+                println!(
+                    "Project {}.{} not found",
+                    project_name,
+                    ProjectDomain::rad_domain()
+                );
                 return Err(());
             }
             Some(project) => project,
@@ -125,8 +123,7 @@ impl CommandT for RegisterProject {
         let checkpoint_id = checkpoint_created.result.unwrap();
         println!("checkpoint created in block {}", checkpoint_created.block,);
 
-        let domain = String32::from_str("rad").expect("statically valid");
-        let project_id = (self.name.clone(), domain.clone());
+        let project_id: ProjectId = (self.name.clone(), ProjectDomain::rad_domain());
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
@@ -144,7 +141,9 @@ impl CommandT for RegisterProject {
             Ok(()) => {
                 println!(
                     "project {}.{} registered in block {}",
-                    self.name, domain, project_registered.block,
+                    self.name,
+                    ProjectDomain::rad_domain(),
+                    project_registered.block,
                 );
                 Ok(())
             }
@@ -236,7 +235,7 @@ impl CommandT for TransferProjectFunds {
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::TransferFromProject {
-                    project: (self.project_name.clone(), RAD_DOMAIN.clone()),
+                    project: (self.project_name.clone(), ProjectDomain::rad_domain()),
                     recipient: self.recipient,
                     value: self.funds,
                 },
@@ -251,7 +250,7 @@ impl CommandT for TransferProjectFunds {
                     "transferred {} RAD from {}.{} to {} in block {}",
                     self.funds,
                     self.project_name,
-                    RAD_DOMAIN.clone(),
+                    ProjectDomain::rad_domain(),
                     self.recipient,
                     project_registered.block,
                 );

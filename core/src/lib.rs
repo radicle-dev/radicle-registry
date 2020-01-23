@@ -36,6 +36,9 @@ pub use bytes128::Bytes128;
 mod string32;
 pub use string32::String32;
 
+mod project_domain;
+pub use project_domain::ProjectDomain;
+
 /// Index of a transaction in the chain.
 pub type Index = u32;
 
@@ -53,12 +56,6 @@ pub type Balance = u128;
 
 /// The name a project is registered with.
 pub type ProjectName = String32;
-
-/// The domain under which the project's name is registered.
-///
-/// At present, the domain must be `rad`, alhtough others may be allowed in
-/// the future.
-pub type ProjectDomain = String32;
 
 pub type ProjectId = (ProjectName, ProjectDomain);
 

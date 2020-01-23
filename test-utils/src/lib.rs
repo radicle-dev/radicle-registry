@@ -61,15 +61,9 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
 /// characters, and the description and image URL will be alphanumeric strings
 /// with 50 characters.
 pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
-    let name = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .collect::<String>();
-    let domain = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .collect::<String>();
-    let id = (name.parse().unwrap(), domain.parse().unwrap());
+    let name = random_string(32);
+    let domain = ProjectDomain::rad_domain();
+    let id = (name.parse().unwrap(), domain);
 
     message::RegisterProject {
         id,
@@ -80,4 +74,11 @@ pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
+}
+
+pub fn random_string(size: usize) -> String {
+    rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(size)
+        .collect::<String>()
 }
