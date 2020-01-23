@@ -77,7 +77,10 @@ async fn set_checkpoint_without_permission() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InsufficientSenderPermissions.into())
+    );
     assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, new_checkpoint_id);
 }
@@ -101,7 +104,10 @@ async fn fail_to_set_nonexistent_checkpoint() {
     )
     .await;
 
-    assert_eq!(tx_applied.result, Err(DispatchError::Other("")));
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InexistentCheckpointId.into())
+    );
     let updated_project = client
         .get_project(project.id.clone())
         .await

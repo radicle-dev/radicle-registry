@@ -78,5 +78,8 @@ async fn create_checkpoint_without_parent() {
     )
     .await;
 
-    assert_eq!(tx_applied.result, Err(DispatchError::Other("")))
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InexistentCheckpointId.into())
+    )
 }

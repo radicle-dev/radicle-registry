@@ -109,7 +109,7 @@ impl RemoteNode {
             Some(tx_status) => match tx_status {
                 TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => (),
                 TxStatus::InBlock(_block_hash) => {
-                    return Err("Invalid tx status \"Finalized\"".into())
+                    return Err("Invalid tx status \"InBlock\"".into())
                 }
                 TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
                 TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
