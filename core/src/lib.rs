@@ -30,10 +30,10 @@ pub use sp_runtime::DispatchError;
 
 pub mod message;
 
-mod bytes128;
+pub mod bytes128;
 pub use bytes128::Bytes128;
 
-mod string32;
+pub mod string32;
 pub use string32::String32;
 
 mod project_domain;
