@@ -49,14 +49,12 @@ struct Args {
 }
 
 impl Args {
-    async fn command_context(&self) -> CommandContext {
-        let client = Client::create_with_executor(self.node_host.clone())
-            .await
-            .unwrap();
-        CommandContext {
+    async fn command_context(&self) -> Result<CommandContext, CommandError> {
+        let client = Client::create_with_executor(self.node_host.clone()).await?;
+        Ok(CommandContext {
             author_key_pair: self.author_key.clone(),
             client,
-        }
+        })
     }
 
     fn parse_author_key(s: &str) -> Result<ed25519::Pair, String> {
@@ -79,9 +77,20 @@ enum Command {
 async fn main() {
     pretty_env_logger::init();
     let args = Args::from_args();
-    let command_context = args.command_context().await;
+    let result = run(args).await;
+    match result {
+        Ok(_) => std::process::exit(0),
+        Err(error) => {
+            eprintln!("ERROR: {}", error);
+            std::process::exit(1);
+        }
+    }
+}
 
-    let result = match args.command {
+async fn run(args: Args) -> Result<(), CommandError> {
+    let command_context = args.command_context().await?;
+
+    match args.command {
         Command::ListProjects(cmd) => cmd.run(&command_context).await,
         Command::RegisterProject(cmd) => cmd.run(&command_context).await,
         Command::ShowBalance(cmd) => cmd.run(&command_context).await,
@@ -89,10 +98,5 @@ async fn main() {
         Command::ShowProject(cmd) => cmd.run(&command_context).await,
         Command::Transfer(cmd) => cmd.run(&command_context).await,
         Command::TransferProjectFunds(cmd) => cmd.run(&command_context).await,
-    };
-
-    match result {
-        Ok(_) => std::process::exit(0),
-        Err(_) => std::process::exit(1),
     }
 }
