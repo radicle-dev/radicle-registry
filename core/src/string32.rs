@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /// `String32` type, and its validation tests.
-use alloc::format;
 use alloc::prelude::v1::*;
 use core::convert::Into;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
@@ -31,13 +30,12 @@ use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 pub struct String32(String);
 
 impl String32 {
+    const MAXIMUM_SUPPORTED_LENGTH: usize = 32;
+
     /// Returns an error if [String::len] of the provided is greater than 32.
-    pub fn from_string(s: String) -> Result<Self, String> {
+    pub fn from_string(s: String) -> Result<Self, InordinateStringError> {
         if s.len() > 32 {
-            Err(format!(
-                "The provided string's length is {} while String32 is limited to 32 bytes",
-                s.len()
-            ))
+            Err(InordinateStringError())
         } else {
             Ok(String32(s))
         }
@@ -51,7 +49,7 @@ impl Into<String> for String32 {
 }
 
 impl core::str::FromStr for String32 {
-    type Err = String;
+    type Err = InordinateStringError;
 
     /// Returns an error if [String::len] of the provided is greater than 32.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -77,24 +75,37 @@ impl Decode for String32 {
     }
 }
 
+/// Error type for a failed attempt to build a String32 value from an inordinate String.
+#[derive(Encode, Clone, Debug, Eq, PartialEq)]
+pub struct InordinateStringError();
+
+#[cfg(feature = "std")]
+impl core::fmt::Display for InordinateStringError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "The provided string's length exceeds the String32 limit of {} bytes",
+            String32::MAXIMUM_SUPPORTED_LENGTH,
+        )
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn long_string32() {
-        fn long_string(n: usize) -> Result<String32, String> {
-            String32::from_string(std::iter::repeat("X").take(n).collect::<String>())
-        }
-        let wrong = long_string(33);
-        let right = long_string(32);
+    fn inordinate_string32() {
+        let random_inordinate = random_string(String32::MAXIMUM_SUPPORTED_LENGTH + 1);
+        let inordinate_string32 = String32::from_string(random_inordinate);
+        assert_eq!(inordinate_string32, Err(InordinateStringError()));
+    }
 
+    #[test]
+    fn valid_string32() {
+        let string32 = String32::from_string(random_string(String32::MAXIMUM_SUPPORTED_LENGTH));
         assert!(
-            wrong.is_err(),
-            "Error: excessively long string converted to String32"
-        );
-        assert!(
-            right.is_ok(),
+            string32.is_ok(),
             "Error: string with acceptable length failed conversion to String32."
         )
     }
@@ -108,5 +119,9 @@ mod test {
         let decoded = <String32>::decode(&mut &encoded[..]).unwrap();
 
         assert_eq!(string, decoded)
+    }
+
+    fn random_string(size: usize) -> String {
+        std::iter::repeat("X").take(size).collect::<String>()
     }
 }

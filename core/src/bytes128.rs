@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /// `Bytes128` type, and its validation tests.
-use alloc::format;
 use alloc::prelude::v1::*;
 use core::convert::TryFrom;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
@@ -29,13 +28,9 @@ impl Bytes128 {
     /// Smart constructor that attempts to build a Bytes128
     /// from a Vec<u8> with an arbitrary size. It fails if the
     /// input vector is larger than Bytes128::MAXIMUM_SUPPORTED_LENGTH.
-    pub fn from_vec(vector: Vec<u8>) -> Result<Self, String> {
+    pub fn from_vec(vector: Vec<u8>) -> Result<Self, InordinateVectorError> {
         if vector.len() > Self::MAXIMUM_SUPPORTED_LENGTH {
-            Err(format!(
-                "The provided vectors's length exceeded is {} bytes while Bytes128 is limited to {} bytes",
-                vector.len(),
-                Self::MAXIMUM_SUPPORTED_LENGTH
-            ))
+            Err(InordinateVectorError())
         } else {
             Ok(Bytes128(vector))
         }
@@ -43,7 +38,7 @@ impl Bytes128 {
 }
 
 impl TryFrom<Vec<u8>> for Bytes128 {
-    type Error = String;
+    type Error = InordinateVectorError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         Bytes128::from_vec(value)
@@ -68,7 +63,7 @@ impl Bytes128 {
     }
 
     /// Generate a random Bytes128 vector with as many bytes as specified with 'size'.
-    pub fn random_with_size(size: usize) -> Result<Self, String> {
+    pub fn random_with_size(size: usize) -> Result<Self, InordinateVectorError> {
         Bytes128::from_vec(Self::random_vector(size))
     }
 
@@ -83,6 +78,21 @@ impl Decode for Bytes128 {
         let decoded: Vec<u8> = Vec::decode(input)?;
         Bytes128::from_vec(decoded)
             .or_else(|_| Err(CodecError::from("Failed to decode an inordinate Bytes128.")))
+    }
+}
+
+/// Error type for a failed attempt to build a Bytes128 value from an inordinate Vec<u8>.
+#[derive(Encode, Clone, Debug, Eq, PartialEq)]
+pub struct InordinateVectorError();
+
+#[cfg(feature = "std")]
+impl core::fmt::Display for InordinateVectorError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "The provided vectors's length exceeds the Bytes128 limit of {} bytes",
+            Bytes128::MAXIMUM_SUPPORTED_LENGTH,
+        )
     }
 }
 
@@ -106,7 +116,10 @@ mod test {
         for size in Bytes128::MAXIMUM_SUPPORTED_LENGTH + 1..Bytes128::MAXIMUM_SUPPORTED_LENGTH + 10
         {
             let random_vector = random_vector(size);
-            assert!(Bytes128::from_vec(random_vector).is_err())
+            assert_eq!(
+                Bytes128::from_vec(random_vector),
+                Err(InordinateVectorError())
+            );
         }
     }
 

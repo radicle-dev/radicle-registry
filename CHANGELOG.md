@@ -5,6 +5,8 @@ Upcoming
 --------
 
 ### Breaking changes
+* `String32::from_string` now returns `Result<String32, InordinateStringError>`
+* `Bytes128::from_vec` now returns `Result<Bytes128, InordinateVectorError>`
 * Make `ProjectDomain` a wrapper of `String32` and only support the "rad" domain.
 * Add `metadata` field to Project, a vector of at most 128 bytes.
 * Drop project fields `description` and `img_url`
