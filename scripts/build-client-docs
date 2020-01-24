@@ -7,7 +7,9 @@ set -euo pipefail
 cargo doc \
   --no-deps \
   -p radicle-registry-client \
-  -p substrate-primitives \
-  -p sr-io \
-  -p sr-primitives \
+  -p radicle-registry-core \
+  -p sp-core \
+  -p sp-runtime \
+  -p frame-system \
+  -p frame-support \
   "$@"

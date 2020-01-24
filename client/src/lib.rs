@@ -68,8 +68,8 @@ impl Client {
     /// Same as [Client::create] but calls to the client spawn futures in an executor owned by the
     /// client.
     ///
-    /// This makes it possible to call [Future::wait] on the client even if that function is called
-    /// in an event loop of another executor.
+    /// This makes it possible to call block on future in the client even if that function is
+    /// called in an event loop of another executor.
     pub async fn create_with_executor(host: url::Host) -> Result<Self, Error> {
         let backend = backend::RemoteNodeWithExecutor::create(host).await?;
         Ok(Self::new(backend))
