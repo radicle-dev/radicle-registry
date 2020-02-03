@@ -48,7 +48,7 @@ async fn register_project() {
         .any(|id| *id == message.id);
     assert!(has_project, "Registered project not found in project list");
 
-    let checkpoint_ = Checkpoint {
+    let checkpoint_ = state::Checkpoint {
         parent: None,
         hash: project_hash,
     };

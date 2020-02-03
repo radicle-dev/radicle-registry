@@ -36,7 +36,10 @@ pub async fn submit_ok<Message_: Message>(
         .unwrap()
 }
 
-pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
+pub async fn create_project_with_checkpoint(
+    client: &Client,
+    author: &ed25519::Pair,
+) -> state::Project {
     let checkpoint_id = submit_ok(
         &client,
         &author,

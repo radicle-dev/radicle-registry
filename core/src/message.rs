@@ -18,19 +18,18 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, ProjectId};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, ProjectId, H256};
 use parity_scale_codec::{Decode, Encode};
-use sp_core::H256;
 
 /// Registers a project on the Radicle Registry with the given ID.
 ///
 /// # State changes
 ///
-/// If successful, a new [crate::Project] with the given properties is added to the state.
+/// If successful, a new [crate::state::Project] with the given properties is added to the state.
 ///
-/// [crate::Project::members] is initialized with the transaction author as the only member.
+/// [crate::state::Project::members] is initialized with the transaction author as the only member.
 ///
-/// [crate::Project::account_id] is generated randomly.
+/// [crate::state::Project::account_id] is generated randomly.
 ///
 /// # State-dependent validations
 ///
@@ -54,7 +53,7 @@ pub struct RegisterProject {
 ///
 /// # State changes
 ///
-/// If successful, adds a new [crate::Checkpoint] with the given parameters to the state.
+/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
 ///
 /// # State-dependent validations
 ///
@@ -65,11 +64,11 @@ pub struct CreateCheckpoint {
     pub previous_checkpoint_id: Option<CheckpointId>,
 }
 
-/// Updates [crate::Project::current_cp].
+/// Updates [crate::state::Project::current_cp].
 ///
 /// # State changes
 ///
-/// If successful, adds a new [crate::Checkpoint] with the given parameters to the state.
+/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
 ///
 /// # State-dependent validations
 ///
@@ -77,7 +76,7 @@ pub struct CreateCheckpoint {
 ///
 /// The checkpoint `new_checkpoint_id` must exist.
 ///
-/// The transaction author must be in [crate::Project::members] of the given project.
+/// The transaction author must be in [crate::state::Project::members] of the given project.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_id: ProjectId,
@@ -89,14 +88,14 @@ pub struct SetCheckpoint {
 /// # State changes
 ///
 /// If successful, `balance` is deducated from the project account and added to the the recipient
-/// account. The project account is given by [crate::Project::account_id] of the given project.
+/// account. The project account is given by [crate::state::Project::account_id] of the given project.
 ///
 /// If the recipient account did not exist before, it is created. The recipient account may be a
 /// user account or a project account.
 ///
 /// # State-dependent validations
 ///
-/// The author must be a member of [crate::Project::members].
+/// The author must be a member of [crate::state::Project::members].
 ///
 /// The project account must have a balance of at least `balance`.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
