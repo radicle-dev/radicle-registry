@@ -87,7 +87,7 @@ pub trait ClientT {
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error>;
+    async fn get_project(&self, id: ProjectId, org_id: OrgId) -> Result<Option<Project>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 

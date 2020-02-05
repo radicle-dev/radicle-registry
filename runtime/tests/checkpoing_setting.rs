@@ -37,7 +37,11 @@ async fn set_checkpoint() {
     )
     .await;
 
-    let new_project = client.get_project(project.id).await.unwrap().unwrap();
+    let new_project = client
+        .get_project(project.id, project.org_id)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp)
 }
 
@@ -73,7 +77,7 @@ async fn set_checkpoint_without_permission() {
     .await;
 
     let updated_project = client
-        .get_project(project.id.clone())
+        .get_project(project.id.clone(), project.org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -109,7 +113,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
         Err(RegistryError::InexistentCheckpointId.into())
     );
     let updated_project = client
-        .get_project(project.id.clone())
+        .get_project(project.id.clone(), project.org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -167,7 +171,13 @@ async fn set_fork_checkpoint() {
     )
     .await;
 
-    let project_1 = client.get_project(project.id).await.unwrap().unwrap();
+    let tmp_org_id = String32::from_string("TODO(nuno) use real org_id".into()).unwrap();
+
+    let project_1 = client
+        .get_project(project.id, tmp_org_id)
+        .await
+        .unwrap()
+        .unwrap();
 
     assert_eq!(project_1.current_cp, forked_checkpoint_id)
 }

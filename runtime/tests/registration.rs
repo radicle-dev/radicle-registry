@@ -6,6 +6,8 @@
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
+use core::str::FromStr;
+
 #[async_std::test]
 async fn register_project() {
     let client = Client::new_emulator();
@@ -26,8 +28,9 @@ async fn register_project() {
     let message = random_register_project_message(checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
+    let tmp_org_id = String32::from_string("TODO nuno".to_string()).unwrap();
     let project = client
-        .get_project(message.clone().id)
+        .get_project(message.clone().id, tmp_org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -37,7 +40,7 @@ async fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().id, project.account_id).into()
+        RegistryEvent::ProjectRegistered(message.clone().id, tmp_org_id).into()
     );
 
     let has_project = client
@@ -93,7 +96,13 @@ async fn register_project_with_duplicate_id() {
         Err(RegistryError::DuplicateProjectId.into())
     );
 
-    let project = client.get_project(message.id).await.unwrap().unwrap();
+    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
+
+    let project = client
+        .get_project(message.id, tmp_org_id)
+        .await
+        .unwrap()
+        .unwrap();
 
     // Assert that the project data was not altered during the
     // attempt to re-register the already existing project.
@@ -116,7 +125,9 @@ async fn register_project_with_bad_checkpoint() {
         Err(RegistryError::InexistentCheckpointId.into())
     );
 
-    let no_project = client.get_project(message.id).await.unwrap();
+    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
+
+    let no_project = client.get_project(message.id, tmp_org_id).await.unwrap();
 
     assert!(no_project.is_none())
 }

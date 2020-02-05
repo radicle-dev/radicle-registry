@@ -18,6 +18,8 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
+use core::str::FromStr;
+
 use radicle_registry_client::*;
 
 /// Submit a transaction and wait for it to be successfully applied.
@@ -52,8 +54,13 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     let message = random_register_project_message(checkpoint_id);
 
     submit_ok(&client, &author, message.clone()).await;
+    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
 
-    client.get_project(message.id).await.unwrap().unwrap()
+    client
+        .get_project(message.id, tmp_org_id)
+        .await
+        .unwrap()
+        .unwrap()
 }
 
 /// Create random parameters to register a project with.
@@ -61,9 +68,7 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
 /// characters, and the description and image URL will be alphanumeric strings
 /// with 50 characters.
 pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
-    let name = random_string(32);
-    let domain = ProjectDomain::rad_domain();
-    let id = (name.parse().unwrap(), domain);
+    let id = random_string(32).parse().unwrap();
 
     message::RegisterProject {
         id,

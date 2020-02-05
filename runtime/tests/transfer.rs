@@ -29,80 +29,83 @@ async fn transfer_fail() {
 /// a project to another account.
 #[async_std::test]
 async fn project_account_transfer() {
-    let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let bob = key_pair_from_string("Bob").public();
-    let project = create_project_with_checkpoint(&client, &alice).await;
+    //TODO(nuno) delete or reuse for orgs
+    // let client = Client::new_emulator();
+    // let alice = key_pair_from_string("Alice");
+    // let bob = key_pair_from_string("Bob").public();
+    // let project = create_project_with_checkpoint(&client, &alice).await;
 
-    assert_eq!(client.free_balance(&project.account_id).await.unwrap(), 0);
-    submit_ok(
-        &client,
-        &alice,
-        message::Transfer {
-            recipient: project.account_id,
-            balance: 2000,
-        },
-    )
-    .await;
-    assert_eq!(
-        client.free_balance(&project.account_id).await.unwrap(),
-        2000
-    );
+    // assert_eq!(client.free_balance(&project.account_id).await.unwrap(), 0);
+    // submit_ok(
+    //     &client,
+    //     &alice,
+    //     message::Transfer {
+    //         recipient: project.account_id,
+    //         balance: 2000,
+    //     },
+    // )
+    // .await;
+    // assert_eq!(
+    //     client.free_balance(&project.account_id).await.unwrap(),
+    //     2000
+    // );
 
-    assert_eq!(client.free_balance(&bob).await.unwrap(), 0);
+    // assert_eq!(client.free_balance(&bob).await.unwrap(), 0);
 
-    submit_ok(
-        &client,
-        &alice,
-        message::TransferFromProject {
-            project: project.id.clone(),
-            recipient: bob,
-            value: 1000,
-        },
-    )
-    .await;
-    assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
-    assert_eq!(
-        client.free_balance(&project.account_id).await.unwrap(),
-        1000
-    );
+    // submit_ok(
+    //     &client,
+    //     &alice,
+    //     message::TransferFromProject {
+    //         project: project.id.clone(),
+    //         recipient: bob,
+    //         value: 1000,
+    //     },
+    // )
+    // .await;
+    // assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
+    // assert_eq!(
+    //     client.free_balance(&project.account_id).await.unwrap(),
+    //     1000
+    // );
 }
 
 #[async_std::test]
 /// Test that a transfer from a project account fails if the sender is not a project member.
 async fn project_account_transfer_non_member() {
-    let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let bob = key_pair_from_string("Bob");
-    let project = create_project_with_checkpoint(&client, &alice).await;
+    //TODO(nuno) delete or reuse for orgs
 
-    submit_ok(
-        &client,
-        &alice,
-        message::Transfer {
-            recipient: project.account_id,
-            balance: 2000,
-        },
-    )
-    .await;
-    assert_eq!(
-        client.free_balance(&project.account_id).await.unwrap(),
-        2000
-    );
+    // let client = Client::new_emulator();
+    // let alice = key_pair_from_string("Alice");
+    // let bob = key_pair_from_string("Bob");
+    // let project = create_project_with_checkpoint(&client, &alice).await;
 
-    submit_ok(
-        &client,
-        &bob,
-        message::TransferFromProject {
-            project: project.id.clone(),
-            recipient: bob.public(),
-            value: 1000,
-        },
-    )
-    .await;
+    // submit_ok(
+    //     &client,
+    //     &alice,
+    //     message::Transfer {
+    //         recipient: project.account_id,
+    //         balance: 2000,
+    //     },
+    // )
+    // .await;
+    // assert_eq!(
+    //     client.free_balance(&project.account_id).await.unwrap(),
+    //     2000
+    // );
 
-    assert_eq!(
-        client.free_balance(&project.account_id).await.unwrap(),
-        2000
-    );
+    // submit_ok(
+    //     &client,
+    //     &bob,
+    //     message::TransferFromProject {
+    //         project: project.id.clone(),
+    //         recipient: bob.public(),
+    //         value: 1000,
+    //     },
+    // )
+    // .await;
+
+    // assert_eq!(
+    //     client.free_balance(&project.account_id).await.unwrap(),
+    //     2000
+    // );
 }

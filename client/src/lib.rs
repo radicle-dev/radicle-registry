@@ -218,7 +218,8 @@ impl ClientT for Client {
             .await
     }
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
+    async fn get_project(&self, id: ProjectId, org_id: OrgId) -> Result<Option<Project>, Error> {
+        //TODO(nuno): look up within org
         self.fetch_map_value::<registry::store::Projects, _, _>(id)
             .await
     }

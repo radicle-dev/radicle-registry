@@ -33,8 +33,9 @@ async fn register_project() {
 
     assert_eq!(tx_applied.result, Ok(()));
 
+    let tmp_org_id = String32::from_string("TODO nuno".to_string()).unwrap();
     let project = client
-        .get_project(project_id.clone())
+        .get_project(project_id.clone(), tmp_org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -44,7 +45,7 @@ async fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
+        RegistryEvent::ProjectRegistered(project_id.clone(), tmp_org_id).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();

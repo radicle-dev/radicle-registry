@@ -59,7 +59,7 @@ pub type Balance = u128;
 
 /// The name a project is registered with.
 /// Project names must be unique within their org.
-pub type ProjectName = String32;
+pub type ProjectId = String32;
 
 pub type CheckpointId = H256;
 
@@ -74,7 +74,7 @@ pub struct Checkpoint {
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
-    pub name: ProjectName,
+    pub id: ProjectId,
     pub org_id: OrgId,
     pub current_cp: CheckpointId,
     //TODO(nuno) add 'proof' field

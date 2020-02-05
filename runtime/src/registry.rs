@@ -13,8 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
@@ -30,6 +28,7 @@ use sp_runtime::traits::Hash as _;
 use radicle_registry_core::*;
 
 use crate::{AccountId, Hash, Hashing};
+use core::str::FromStr;
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
@@ -147,10 +146,12 @@ decl_module! {
             let account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
+            //TODO(nuno): use real org id from message
+            let tmp_org_id = String32::from_str("rad-org").unwrap();
+
             let project = Project {
                 id: project_id.clone(),
-                account_id: account_id,
-                members: vec![sender],
+                org_id: tmp_org_id.clone(),
                 current_cp: message.checkpoint_id,
                 metadata: message.metadata
             };
@@ -158,22 +159,28 @@ decl_module! {
             store::Projects::insert(project_id.clone(), project);
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
+            Self::deposit_event(Event::ProjectRegistered(project_id, tmp_org_id));
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
+        //TODO(nuno): delete this
         pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project = match store::Projects::get(message.project) {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(p) => p,
             };
-            let is_member = project.members.contains(&sender);
-            if !is_member {
+            // let is_member = project.members.contains(&sender);
+            // if !is_member {
                 return Err(RegistryError::InsufficientSenderPermissions.into())
-            }
-            <crate::Balances as Currency<_>>::transfer(&project.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
+            // }
+            // <crate::Balances as Currency<_>>::transfer(
+            //     &project.account_id,
+            //     &message.recipient,
+            //     message.value,
+            //     ExistenceRequirement::KeepAlive
+            // )
         }
 
         #[weight = SimpleDispatchInfo::FreeNormal]
@@ -218,7 +225,8 @@ decl_module! {
             let new_project = match opt_project {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(prj) => {
-                    if !prj.members.contains(&sender) {
+                    //TODO(nuno): Check whether the send is part of the project's org.
+                    if false { //if !prj.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
                     Project {
@@ -245,7 +253,7 @@ decl_module! {
 }
 decl_event!(
     pub enum Event {
-        ProjectRegistered(ProjectId, AccountId),
+        ProjectRegistered(ProjectId, OrgId),
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectId, CheckpointId),
     }
