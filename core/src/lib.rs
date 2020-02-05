@@ -36,9 +36,6 @@ pub use bytes128::Bytes128;
 pub mod string32;
 pub use string32::String32;
 
-mod project_domain;
-pub use project_domain::ProjectDomain;
-
 mod error;
 pub use error::RegistryError;
 
