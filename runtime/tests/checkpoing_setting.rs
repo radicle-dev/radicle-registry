@@ -32,6 +32,7 @@ async fn set_checkpoint() {
         &charles,
         message::SetCheckpoint {
             project_id: project.id.clone(),
+            project_org_id: project.org_id.clone(),
             new_checkpoint_id,
         },
     )
@@ -71,6 +72,7 @@ async fn set_checkpoint_without_permission() {
         &frank,
         message::SetCheckpoint {
             project_id: project.id.clone(),
+            project_org_id: project.org_id.clone(),
             new_checkpoint_id,
         },
     )
@@ -103,6 +105,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
         &david,
         message::SetCheckpoint {
             project_id: project.id.clone(),
+            project_org_id: project.org_id.clone(),
             new_checkpoint_id: garbage,
         },
     )
@@ -166,6 +169,7 @@ async fn set_fork_checkpoint() {
         &grace,
         message::SetCheckpoint {
             project_id: project.id.clone(),
+            project_org_id: project.org_id.clone(),
             new_checkpoint_id: forked_checkpoint_id,
         },
     )

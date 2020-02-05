@@ -83,6 +83,7 @@ pub struct CreateCheckpoint {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_id: ProjectId,
+    pub project_org_id: OrgId,
     pub new_checkpoint_id: CheckpointId,
 }
 
