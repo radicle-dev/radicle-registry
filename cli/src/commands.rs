@@ -173,7 +173,8 @@ impl CommandT for RegisterProject {
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::RegisterProject {
-                    id: self.project_org_id.clone(),
+                    id: self.project_id.clone(),
+                    org_id: self.project_org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },

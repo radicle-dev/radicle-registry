@@ -42,6 +42,7 @@ async fn go() -> Result<(), Error> {
             &alice,
             message::RegisterProject {
                 id: project_id.clone(),
+                org_id: project_org_id.clone(),
                 checkpoint_id,
                 metadata: Bytes128::random(),
             },

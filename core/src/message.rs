@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, ProjectId};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectId};
 use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
 
@@ -30,16 +30,18 @@ use sp_core::H256;
 ///
 /// [crate::Project::members] is initialized with the transaction author as the only member.
 ///
-/// [crate::Project::account_id] is generated randomly.
-///
 /// # State-dependent validations
 ///
-/// A project with the same ID must not yet exist.
+/// A project with the same ID must not yet exist within the same org.
 ///
 /// A checkpoint with the given ID must exist.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
+    // A unique project id within the org to be registered.
     pub id: ProjectId,
+
+    // The id of the Org under which to register this project.
+    pub org_id: OrgId,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,

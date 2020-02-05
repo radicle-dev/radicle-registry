@@ -68,10 +68,12 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
 /// characters, and the description and image URL will be alphanumeric strings
 /// with 50 characters.
 pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
-    let id = random_string(32).parse().unwrap();
+    let project_id = random_string(32).parse().unwrap();
+    let org_id = random_string(32).parse().unwrap();
 
     message::RegisterProject {
-        id,
+        id: project_id,
+        org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
     }
