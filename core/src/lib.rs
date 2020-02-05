@@ -81,3 +81,17 @@ pub struct Project {
     pub current_cp: CheckpointId,
     pub metadata: Bytes128,
 }
+
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct Org {
+    pub id: OrgId,
+    pub account_id: AccountId,
+    pub members: Vec<AccountId>,
+    pub projects: Vec<ProjectId>,
+    pub contract: Contract,
+}
+
+pub type OrgId = String32;
+
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct Contract {} //TODO(nuno)
