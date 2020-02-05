@@ -103,6 +103,7 @@ pub struct SetCheckpoint {
 ///
 /// The project account must have a balance of at least `balance`.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+//TODO(nuno) delete or move it to Org
 pub struct TransferFromProject {
     pub project: ProjectId,
     pub recipient: AccountId,

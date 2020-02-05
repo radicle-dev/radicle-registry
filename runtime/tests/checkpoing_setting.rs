@@ -175,10 +175,8 @@ async fn set_fork_checkpoint() {
     )
     .await;
 
-    let tmp_org_id = String32::from_string("TODO(nuno) use real org_id".into()).unwrap();
-
     let project_1 = client
-        .get_project(project.id, tmp_org_id)
+        .get_project(project.id, project.org_id)
         .await
         .unwrap()
         .unwrap();

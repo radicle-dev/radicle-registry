@@ -54,10 +54,9 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     let message = random_register_project_message(checkpoint_id);
 
     submit_ok(&client, &author, message.clone()).await;
-    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
 
     client
-        .get_project(message.id, tmp_org_id)
+        .get_project(message.id, message.org_id)
         .await
         .unwrap()
         .unwrap()

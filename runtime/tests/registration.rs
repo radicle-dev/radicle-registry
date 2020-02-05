@@ -28,19 +28,19 @@ async fn register_project() {
     let message = random_register_project_message(checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
-    let tmp_org_id = String32::from_string("TODO nuno".to_string()).unwrap();
     let project = client
-        .get_project(message.clone().id, tmp_org_id.clone())
+        .get_project(message.clone().id, message.clone().org_id)
         .await
         .unwrap()
         .unwrap();
     assert_eq!(project.id, message.clone().id);
+    assert_eq!(project.org_id, message.clone().org_id);
     assert_eq!(project.current_cp, checkpoint_id);
     assert_eq!(project.metadata, message.clone().metadata);
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().id, tmp_org_id).into()
+        RegistryEvent::ProjectRegistered(message.id.clone(), message.org_id.clone()).into()
     );
 
     let has_project = client
@@ -96,10 +96,8 @@ async fn register_project_with_duplicate_id() {
         Err(RegistryError::DuplicateProjectId.into())
     );
 
-    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
-
     let project = client
-        .get_project(message.id, tmp_org_id)
+        .get_project(message.id, message.org_id)
         .await
         .unwrap()
         .unwrap();
@@ -125,9 +123,10 @@ async fn register_project_with_bad_checkpoint() {
         Err(RegistryError::InexistentCheckpointId.into())
     );
 
-    let tmp_org_id = String32::from_str("TODO(nuno) use real org_id").unwrap();
-
-    let no_project = client.get_project(message.id, tmp_org_id).await.unwrap();
+    let no_project = client
+        .get_project(message.id, message.org_id)
+        .await
+        .unwrap();
 
     assert!(no_project.is_none())
 }

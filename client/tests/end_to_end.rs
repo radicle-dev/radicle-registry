@@ -29,13 +29,14 @@ async fn register_project() {
     let register_project_message = random_register_project_message(checkpoint_id);
 
     let project_id = register_project_message.id.clone();
+    let project_org_id = register_project_message.org_id.clone();
+
     let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
 
     assert_eq!(tx_applied.result, Ok(()));
 
-    let tmp_org_id = String32::from_string("TODO nuno".to_string()).unwrap();
     let project = client
-        .get_project(project_id.clone(), tmp_org_id.clone())
+        .get_project(project_id.clone(), project_org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -45,7 +46,7 @@ async fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), tmp_org_id).into()
+        RegistryEvent::ProjectRegistered(project_id.clone(), project_org_id.clone()).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();

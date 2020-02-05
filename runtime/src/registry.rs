@@ -143,15 +143,9 @@ decl_module! {
                 Some (_) => return Err(RegistryError::DuplicateProjectId.into()),
             };
 
-            let account_id = AccountId::unchecked_from(
-                pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
-            );
-            //TODO(nuno): use real org id from message
-            let tmp_org_id = String32::from_str("rad-org").unwrap();
-
             let project = Project {
                 id: project_id.clone(),
-                org_id: tmp_org_id.clone(),
+                org_id: message.org_id.clone(),
                 current_cp: message.checkpoint_id,
                 metadata: message.metadata
             };
@@ -159,7 +153,7 @@ decl_module! {
             store::Projects::insert(project_id.clone(), project);
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(project_id, tmp_org_id));
+            Self::deposit_event(Event::ProjectRegistered(project_id, message.org_id));
             Ok(())
         }
 
@@ -225,7 +219,7 @@ decl_module! {
             let new_project = match opt_project {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(prj) => {
-                    //TODO(nuno): Check whether the send is part of the project's org.
+                    //TODO(nuno): Check whether the sender is part of the project's org.
                     if false { //if !prj.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
