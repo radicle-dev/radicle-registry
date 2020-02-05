@@ -23,8 +23,6 @@ pub struct CommandContext {
     pub client: Client,
 }
 
-use core::str::FromStr;
-
 /// Error returned by [CommandT::run].
 ///
 /// Implements [From] for client errors.
@@ -86,24 +84,23 @@ pub trait CommandT {
 #[derive(StructOpt, Debug, Clone)]
 /// Show information for a registered project in the .rad domain.
 pub struct ShowProject {
-    project_name: String32,
+    project_id: ProjectId,
+    project_org_id: OrgId,
 }
 
 #[async_trait::async_trait]
 impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        //TODO(nuno): Get org_id from ShowProject command
-        let tmp_org_id = String32::from_str("tmp_org_id").unwrap();
         let opt_project = command_context
             .client
-            .get_project(self.project_name.clone(), tmp_org_id.clone())
+            .get_project(self.project_id.clone(), self.project_org_id.clone())
             .await?;
 
         let project = match opt_project {
             None => {
                 return Err(CommandError::ProjectNotFound {
-                    id: self.project_name.clone(),
-                    org_id: tmp_org_id,
+                    id: self.project_id.clone(),
+                    org_id: self.project_org_id.clone(),
                 });
             }
             Some(project) => project,
@@ -140,10 +137,14 @@ impl CommandT for ListProjects {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Register a project under the default "rad" domain.
+/// Register a project under the given org.
 pub struct RegisterProject {
-    /// Name of the project to register.
-    name: String32,
+    /// A unique project id.
+    project_id: ProjectId,
+
+    // The Org in which to register this project.
+    project_org_id: OrgId,
+
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
 }
@@ -168,13 +169,11 @@ impl CommandT for RegisterProject {
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
         println!("checkpoint created in block {}", checkpoint_created.block);
 
-        //TODO(nuno): read org_id from Command and pass it down.
-        let project_id: ProjectId = self.name.clone();
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::RegisterProject {
-                    id: project_id,
+                    id: self.project_org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
@@ -185,9 +184,7 @@ impl CommandT for RegisterProject {
         transaction_applied_ok(&project_registered)?;
         println!(
             "project {}.{} registered in block {}",
-            self.name,
-            ProjectDomain::rad_domain(),
-            project_registered.block,
+            self.project_id, self.project_org_id, project_registered.block,
         );
         Ok(())
     }
@@ -248,13 +245,19 @@ impl CommandT for Transfer {
 /// Transfer funds from a project to a recipient. The author needs to be the owner of the project
 /// TODO(nuno): Delete this command
 pub struct TransferProjectFunds {
-    /// Name of the project in the .rad domain
+    /// Id of the project
     #[structopt(value_name = "project")]
     project_id: ProjectId,
+
+    // The Org in which the project is registered
+    #[structopt(value_name = "org")]
+    project_org_id: OrgId,
 
     /// Recipient Account in SS58 address format
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
+
+    // The funds to be transferred
     funds: Balance,
 }
 
@@ -277,7 +280,7 @@ impl CommandT for TransferProjectFunds {
         transaction_applied_ok(&transfered)?;
         println!(
             "transferred {} RAD from {}.{} to {} in block {}",
-            self.funds, self.project_id, "TODO(nuno) real org_id", self.recipient, transfered.block,
+            self.funds, self.project_id, self.project_org_id, self.recipient, transfered.block,
         );
         Ok(())
     }
