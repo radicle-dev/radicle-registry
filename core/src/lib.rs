@@ -58,9 +58,8 @@ pub type Balance = u128;
 /// # Registry types
 
 /// The name a project is registered with.
+/// Project names must be unique within their org.
 pub type ProjectName = String32;
-
-pub type ProjectId = (ProjectName, ProjectDomain);
 
 pub type CheckpointId = H256;
 
@@ -75,10 +74,10 @@ pub struct Checkpoint {
 
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
-    pub id: ProjectId,
-    pub account_id: AccountId,
-    pub members: Vec<AccountId>,
+    pub name: ProjectName,
+    pub org_id: OrgId,
     pub current_cp: CheckpointId,
+    //TODO(nuno) add 'proof' field
     pub metadata: Bytes128,
 }
 
