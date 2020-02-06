@@ -48,7 +48,7 @@ async fn register_project() {
         .await
         .unwrap()
         .iter()
-        .any(|id| *id == message.id);
+        .any(|(id, _)| *id == message.id);
     assert!(has_project, "Registered project not found in project list");
 
     let checkpoint_ = Checkpoint {

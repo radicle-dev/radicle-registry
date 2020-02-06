@@ -89,7 +89,7 @@ pub trait ClientT {
 
     async fn get_project(&self, id: ProjectId, org_id: OrgId) -> Result<Option<Project>, Error>;
 
-    async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
+    async fn list_projects(&self) -> Result<Vec<(ProjectId, OrgId)>, Error>;
 
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error>;
 }

@@ -129,8 +129,8 @@ impl CommandT for ListProjects {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let project_ids = command_context.client.list_projects().await?;
         println!("PROJECTS");
-        for id in project_ids {
-            println!("{}.{}", id, "TODO(nuno): fetch org id")
+        for (project_id, org_id) in project_ids {
+            println!("{}.{}", project_id, org_id)
         }
         Ok(())
     }

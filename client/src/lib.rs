@@ -219,12 +219,11 @@ impl ClientT for Client {
     }
 
     async fn get_project(&self, id: ProjectId, org_id: OrgId) -> Result<Option<Project>, Error> {
-        //TODO(nuno): look up within org
-        self.fetch_map_value::<registry::store::Projects, _, _>(id)
+        self.fetch_map_value::<registry::store::Projects, _, _>((id, org_id))
             .await
     }
 
-    async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
+    async fn list_projects(&self) -> Result<Vec<(ProjectId, OrgId)>, Error> {
         let project_prefix = registry::store::Projects::final_prefix();
         let keys = self.backend.fetch_keys(&project_prefix, None).await?;
         let mut project_ids = Vec::with_capacity(keys.len());

@@ -61,7 +61,7 @@ async fn register_project() {
         .await
         .unwrap()
         .iter()
-        .any(|id| *id == project_id.clone());
+        .any(|(id, _)| *id == project_id.clone());
     assert!(has_project, "Registered project not found in project list")
 }
 

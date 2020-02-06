@@ -30,6 +30,8 @@ use radicle_registry_core::*;
 use crate::{AccountId, Hash, Hashing};
 use core::str::FromStr;
 
+type GlobalProjectId = (ProjectId, OrgId);
+
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
 {
@@ -41,9 +43,9 @@ pub mod store {
 
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
-            // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
+            // We use the blake2_128_concat hasher so that the GlobalProjectId can be extracted from the
             // key.
-            pub Projects: map hasher(blake2_128_concat) ProjectId => Option<Project>;
+            pub Projects: map hasher(blake2_128_concat) GlobalProjectId => Option<Project>;
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
@@ -72,7 +74,7 @@ pub mod store {
         /// let extracted_project_id = store::Projects::id_from_key(&key).unwrap();
         /// assert_eq!(project_id, extracted_project_id)
         /// ```
-        pub fn id_from_key(key: &[u8]) -> Result<ProjectId, parity_scale_codec::Error> {
+        pub fn id_from_key(key: &[u8]) -> Result<GlobalProjectId, parity_scale_codec::Error> {
             use parity_scale_codec::Decode;
 
             let project_prefix = Self::final_prefix();
@@ -80,7 +82,7 @@ pub mod store {
             let key_hash_prefix_length = 16;
             let key_prefix_length = project_prefix.len() + key_hash_prefix_length;
             let mut project_id_bytes = &key[key_prefix_length..];
-            ProjectId::decode(&mut project_id_bytes)
+            GlobalProjectId::decode(&mut project_id_bytes)
         }
     }
 }
@@ -138,7 +140,9 @@ decl_module! {
             }
 
             let project_id = message.id.clone();
-            match store::Projects::get(project_id.clone()) {
+            let global_project_id = (project_id.clone(), message.org_id.clone());
+
+            match store::Projects::get(global_project_id.clone()) {
                 None => {}
                 Some (_) => return Err(RegistryError::DuplicateProjectId.into()),
             };
@@ -150,7 +154,7 @@ decl_module! {
                 metadata: message.metadata
             };
 
-            store::Projects::insert(project_id.clone(), project);
+            store::Projects::insert(global_project_id, project);
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id, message.org_id));
@@ -161,12 +165,14 @@ decl_module! {
         //TODO(nuno): delete this
         pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let project = match store::Projects::get(message.project) {
+            let tmp_org_id = OrgId::from_str("tmp_org".into()).unwrap();
+            let global_project_id = (message.project.clone(), tmp_org_id.clone());
+            let project = match store::Projects::get(global_project_id) {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(p) => p,
             };
             // let is_member = project.members.contains(&sender);
-            // if !is_member {
+            // if !is_member {Ø
                 return Err(RegistryError::InsufficientSenderPermissions.into())
             // }
             // <crate::Balances as Currency<_>>::transfer(
@@ -215,7 +221,8 @@ decl_module! {
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
-            let opt_project = store::Projects::get(message.project_id.clone());
+            let global_project_id = (message.project_id.clone(), message.project_org_id.clone());
+            let opt_project = store::Projects::get(global_project_id.clone());
             let new_project = match opt_project {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(prj) => {
@@ -238,7 +245,7 @@ decl_module! {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
-            store::Projects::insert(new_project.id.clone(), new_project.clone());
+            store::Projects::insert(global_project_id.clone(), new_project.clone());
 
             Self::deposit_event(Event::CheckpointSet(new_project.id, message.new_checkpoint_id));
             Ok(())
