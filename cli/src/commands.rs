@@ -106,16 +106,7 @@ impl CommandT for ShowProject {
             Some(project) => project,
         };
 
-        let balance = 1234;
-        // TODO(nuno): fetch project's org balance?
-        // command_context
-        //     .client
-        //     .free_balance(&project.account_id)
-        //     .await?;
-
         println!("project: {}.{}", project.id, project.org_id);
-        println!("org id: {}", project.org_id);
-        println!("balance: {}", balance);
         println!("checkpoint: {}", project.current_cp);
         Ok(())
     }

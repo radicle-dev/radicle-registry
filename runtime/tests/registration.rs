@@ -6,8 +6,6 @@
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
-use core::str::FromStr;
-
 #[async_std::test]
 async fn register_project() {
     let client = Client::new_emulator();

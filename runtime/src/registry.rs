@@ -14,15 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use frame_support::{
-    decl_event, decl_module, decl_storage,
-    dispatch::DispatchResult,
-    storage::StorageMap as _,
-    traits::{Currency, ExistenceRequirement, Randomness as _},
+    decl_event, decl_module, decl_storage, dispatch::DispatchResult, storage::StorageMap as _,
     weights::SimpleDispatchInfo,
 };
 use frame_system as system; // required for `decl_module!` to work
 use frame_system::ensure_signed;
-use sp_core::crypto::UncheckedFrom;
 use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
@@ -133,7 +129,7 @@ decl_module! {
 
         #[weight = SimpleDispatchInfo::FreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
+            let _sender: AccountId = ensure_signed(origin)?;
 
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
@@ -164,16 +160,16 @@ decl_module! {
         #[weight = SimpleDispatchInfo::FreeNormal]
         //TODO(nuno): delete this
         pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
-            let tmp_org_id = OrgId::from_str("tmp_org".into()).unwrap();
-            let global_project_id = (message.project.clone(), tmp_org_id.clone());
-            let project = match store::Projects::get(global_project_id) {
+            let _sender = ensure_signed(origin)?;
+            let tmp_org_id = OrgId::from_str("tmp_org").unwrap();
+            let global_project_id = (message.project, tmp_org_id);
+            let _project = match store::Projects::get(global_project_id) {
                 None => return Err(RegistryError::InexistentProjectId.into()),
                 Some(p) => p,
             };
             // let is_member = project.members.contains(&sender);
             // if !is_member {Ø
-                return Err(RegistryError::InsufficientSenderPermissions.into())
+                Err(RegistryError::InsufficientSenderPermissions.into())
             // }
             // <crate::Balances as Currency<_>>::transfer(
             //     &project.account_id,
@@ -216,7 +212,7 @@ decl_module! {
             origin,
             message: message::SetCheckpoint,
         ) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
+            let _sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
@@ -245,7 +241,7 @@ decl_module! {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
-            store::Projects::insert(global_project_id.clone(), new_project.clone());
+            store::Projects::insert(global_project_id, new_project.clone());
 
             Self::deposit_event(Event::CheckpointSet(new_project.id, message.new_checkpoint_id));
             Ok(())

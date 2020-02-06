@@ -18,8 +18,6 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
-use core::str::FromStr;
-
 use radicle_registry_client::*;
 
 /// Submit a transaction and wait for it to be successfully applied.
