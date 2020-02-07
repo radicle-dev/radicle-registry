@@ -14,11 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Type definitions for all entities stored in the ledger state.
+
 use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::Hash;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectId, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectId, ProjectName, H256};
 
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
@@ -72,7 +73,7 @@ pub struct Project {
     /// ID of the project. The storage key is derived from this value.
     pub id: ProjectId,
 
-    /// Account ID that holds the projecs founds.
+    /// Account ID that holds the projecs funds.
     ///
     /// This is randomly generated and unlike for other accounts there is no private key that
     /// controls this account.
@@ -117,3 +118,40 @@ pub type AccountBalance = Balance;
 ///
 /// Indicies are stored as a map with a key derived from [crate::AccountId].
 pub type Index = u32;
+
+/// # Storage
+///
+/// This type is only used for storage. See [crate::Org] for the
+/// complete Org type to be used everywhere else.
+///
+/// Orgs are stored as a map with the key derived from [crate::Org::id].
+/// The org ID can be extracted from the storage key.
+///
+/// # Invariants
+///
+/// * `account_id` is immutable
+/// * `projects` is a set of all the projects owned by the Org.
+///
+/// # Relevant messages
+///
+/// * [crate::message::RegisterOrg]
+/// * [crate::message::UnregisterOrg]
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct Org {
+    /// Account ID that holds the org funds.
+    ///
+    /// It is randomly generated and, unlike for other accounts,
+    /// there is no private key that controls this account.
+    pub account_id: AccountId,
+
+    /// Set of members of the org. Members are allowed to manage
+    /// the org, its projects, and transfer funds.
+    ///
+    /// It is initialized with the author of the [crate::message::RegisterOrg]
+    /// transaction. It cannot be changed at the moment.
+    pub members: Vec<AccountId>,
+
+    /// Set of all projects owned by the org. Members are allowed to register
+    /// a project by sending a [crate::message::RegisterProject] transaction.
+    pub projects: Vec<ProjectName>,
+}

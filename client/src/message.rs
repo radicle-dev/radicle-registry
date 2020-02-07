@@ -62,6 +62,44 @@ impl Message for message::RegisterProject {
     }
 }
 
+impl Message for message::RegisterOrg {
+    type Result = Result<(), DispatchError>;
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+        match dispatch_result {
+            Ok(()) => find_event(&events, "OrgRegistered", |event| match event {
+                Event::registry(registry::Event::OrgRegistered(_)) => Some(Ok(())),
+                _ => None,
+            }),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
+        }
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::register_org(self).into()
+    }
+}
+
+impl Message for message::UnregisterOrg {
+    type Result = Result<(), DispatchError>;
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+        match dispatch_result {
+            Ok(()) => find_event(&events, "OrgUnregistered", |event| match event {
+                Event::registry(registry::Event::OrgUnregistered(_)) => Some(Ok(())),
+                _ => None,
+            }),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
+        }
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::unregister_org(self).into()
+    }
+}
+
 impl Message for message::CreateCheckpoint {
     type Result = Result<CheckpointId, DispatchError>;
 

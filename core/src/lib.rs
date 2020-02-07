@@ -20,6 +20,8 @@
 
 extern crate alloc;
 
+use alloc::vec::Vec;
+
 use sp_core::{ed25519, H256};
 use sp_runtime::traits::BlakeTwo256;
 
@@ -55,5 +57,38 @@ pub type Balance = u128;
 pub type ProjectName = String32;
 
 pub type ProjectId = (ProjectName, ProjectDomain);
+
+pub type OrgId = String32;
+
+/// Org
+///
+/// Different from [state::Org] in which this type gathers
+/// both the id and the other Org fields, respectively stored
+/// as an Org's storage key and data, into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Org {
+    // Id of an Org.
+    pub id: OrgId,
+
+    /// See [state::Org::account_id]
+    pub account_id: AccountId,
+
+    /// See [state::Org::members]
+    pub members: Vec<AccountId>,
+
+    /// See [state::Org::projects]
+    pub projects: Vec<ProjectName>,
+}
+
+impl Org {
+    pub fn from(id: OrgId, org: state::Org) -> Org {
+        Org {
+            id,
+            account_id: org.account_id,
+            members: org.members,
+            projects: org.projects,
+        }
+    }
+}
 
 pub type CheckpointId = H256;

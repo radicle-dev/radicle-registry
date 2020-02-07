@@ -68,6 +68,41 @@ async fn register_project() {
 
 #[async_std::test]
 #[serial]
+async fn register_org() {
+    let _ = env_logger::try_init();
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+
+    let register_org_message = random_register_org_message();
+
+    let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
+
+    assert_eq!(
+        tx_applied.events[0],
+        RegistryEvent::OrgRegistered(register_org_message.id.clone()).into()
+    );
+    assert_eq!(tx_applied.result, Ok(()));
+
+    let has_org = client
+        .list_orgs()
+        .await
+        .unwrap()
+        .iter()
+        .any(|id| *id == register_org_message.id);
+    assert!(has_org, "Registered org not found in orgs list");
+
+    let org: Org = client
+        .get_org(register_org_message.id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(org.id, register_org_message.id);
+    assert_eq!(org.members, vec![alice.public()]);
+    assert!(org.projects.is_empty());
+}
+
+#[async_std::test]
 /// Submit a transaction with an invalid genesis hash and expect an error.
 async fn invalid_transaction() {
     let _ = env_logger::try_init();

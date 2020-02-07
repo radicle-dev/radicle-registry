@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec;
+use alloc::vec::Vec;
 
 use frame_support::{
     decl_event, decl_module, decl_storage,
@@ -42,6 +43,11 @@ pub mod store {
 
     decl_storage! {
         pub trait Store for Module<T: Trait> as Counter {
+            // The storage for Orgs, indexed by OrgId.
+            // We use the blake2_128_concat hasher so that the OrgId
+            // can be extracted from the key.
+            pub Orgs: map hasher(blake2_128_concat) OrgId => Option<state::Org>;
+
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
             pub Projects: map hasher(blake2_128_concat) ProjectId => Option<state::Project>;
@@ -82,6 +88,33 @@ pub mod store {
             let key_prefix_length = project_prefix.len() + key_hash_prefix_length;
             let mut project_id_bytes = &key[key_prefix_length..];
             ProjectId::decode(&mut project_id_bytes)
+        }
+    }
+
+    #[cfg(feature = "std")]
+    impl Orgs {
+        /// Get the org ID from the orgs storage key.
+        ///
+        /// The following property holds.
+        /// ```
+        /// # use radicle_registry_core::*;
+        /// # use radicle_registry_runtime::registry::store;
+        /// # use frame_support::storage::generator::StorageMap;
+        /// # use std::str::FromStr;
+        /// let org_id = OrgId::from_str("org").unwrap();
+        /// let key = store::Orgs::storage_map_final_key(org_id.clone());
+        /// let extracted_org_id = store::Orgs::id_from_key(&key).unwrap();
+        /// assert_eq!(org_id, extracted_org_id)
+        /// ```
+        pub fn id_from_key(key: &[u8]) -> Result<OrgId, parity_scale_codec::Error> {
+            use parity_scale_codec::Decode;
+
+            let prefix = Self::final_prefix();
+            // Length of BlakeTwo128 output
+            let key_hash_prefix_length = 16;
+            let key_prefix_length = prefix.len() + key_hash_prefix_length;
+            let mut id_bytes = &key[key_prefix_length..];
+            OrgId::decode(&mut id_bytes)
         }
     }
 }
@@ -144,9 +177,9 @@ decl_module! {
                 Some (_) => return Err(RegistryError::DuplicateProjectId.into()),
             };
 
-            let account_id = AccountId::unchecked_from(
-                pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
-            );
+            let account_id = AccountId::unchecked_from(pallet_randomness_collective_flip::Module::<T>::random(
+                b"project-account-id",
+            ));
             let project = state::Project {
                 id: project_id.clone(),
                 account_id: account_id,
@@ -160,6 +193,54 @@ decl_module! {
 
             Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
             Ok(())
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+
+            match store::Orgs::get(message.id.clone()) {
+                None => {},
+                Some(_) => return Err(RegistryError::DuplicateOrgId.into()),
+            }
+
+            let random_account_id = AccountId::unchecked_from(
+                pallet_randomness_collective_flip::Module::<T>::random(
+                    b"org-account-id",
+                )
+            );
+
+            let new_org = state::Org {
+                account_id: random_account_id,
+                members: vec![sender],
+                projects: Vec::new(),
+            };
+            store::Orgs::insert(message.id.clone(), new_org);
+            Self::deposit_event(Event::OrgRegistered(message.id));
+            Ok(())
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
+            fn can_be_unregistered(org: state::Org, sender: AccountId) -> bool {
+                org.members == vec![sender] && org.projects.is_empty()
+            }
+
+            let sender = ensure_signed(origin)?;
+
+            match store::Orgs::get(message.id.clone()) {
+                None => Err(RegistryError::InexistentOrg.into()),
+                Some(org) => {
+                    if can_be_unregistered(org, sender) {
+                        store::Orgs::remove(message.id.clone());
+                        Self::deposit_event(Event::OrgUnregistered(message.id));
+                        Ok(())
+                    }
+                    else {
+                        Err(RegistryError::UnregisterableOrg.into())
+                    }
+                }
+            }
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
@@ -245,6 +326,8 @@ decl_module! {
 }
 decl_event!(
     pub enum Event {
+        OrgUnregistered(OrgId),
+        OrgRegistered(OrgId),
         ProjectRegistered(ProjectId, AccountId),
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectId, CheckpointId),

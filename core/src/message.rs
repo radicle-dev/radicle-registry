@@ -18,8 +18,43 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, ProjectId, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectId, H256};
 use parity_scale_codec::{Decode, Encode};
+
+/// Registers an org on the Radicle Registry with the given ID.
+///
+/// # State changes
+///
+/// If successful, a new [crate::state::Org] with the given properties is added to the state.
+///
+/// [crate::state::Org::members] is initialized with the transaction author as the only member.
+///
+/// [crate::state::Org::account_id] is generated randomly.
+///
+/// # State-dependent validations
+///
+/// An Org with the same ID must not yet exist.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct RegisterOrg {
+    pub id: OrgId,
+}
+
+/// Unregisters an org on the Radicle Registry with the given ID.
+///
+/// # State changes
+///
+/// If successful, the targeted Org is removed from the state.
+///
+/// # State-dependent validations
+///
+/// The targeted org must exist and have no projects and the
+/// the transaction origin must be its only member.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct UnregisterOrg {
+    pub id: OrgId,
+}
 
 /// Registers a project on the Radicle Registry with the given ID.
 ///

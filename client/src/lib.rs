@@ -220,6 +220,24 @@ impl ClientT for Client {
         Ok(account_data.free)
     }
 
+    async fn get_org(&self, id: OrgId) -> Result<Option<Org>, Error> {
+        self.fetch_map_value::<registry::store::Orgs, _, _>(id.clone())
+            .await
+            .map(|maybe_org: Option<state::Org>| maybe_org.map(|org| Org::from(id, org)))
+    }
+
+    async fn list_orgs(&self) -> Result<Vec<OrgId>, Error> {
+        let orgs_prefix = registry::store::Orgs::final_prefix();
+        let keys = self.backend.fetch_keys(&orgs_prefix, None).await?;
+        let mut org_ids: Vec<OrgId> = Vec::with_capacity(keys.len());
+        for key in keys {
+            let org_id = registry::store::Orgs::id_from_key(&key)
+                .expect("Invalid runtime state key. Cannot extract org ID");
+            org_ids.push(org_id)
+        }
+        Ok(org_ids)
+    }
+
     async fn get_project(&self, id: ProjectId) -> Result<Option<state::Project>, Error> {
         self.fetch_map_value::<registry::store::Projects, _, _>(id)
             .await
