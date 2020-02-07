@@ -23,4 +23,4 @@ url = "1.7"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
+rev = "18e6ea00188a50d6fc04de254923ab026228ed77"

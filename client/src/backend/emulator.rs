@@ -130,7 +130,6 @@ fn make_genesis_config() -> GenesisConfig {
                     .public(),
                 1 << 60,
             )],
-            vesting: vec![],
         }),
         pallet_sudo: None,
         pallet_grandpa: None,

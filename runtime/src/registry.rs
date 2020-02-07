@@ -47,10 +47,10 @@ pub mod store {
             pub Projects: map hasher(blake2_128_concat) ProjectId => Option<state::Project>;
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
-            pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
+            pub InitialCheckpoints: map hasher(blake2_256) ProjectId => Option<CheckpointId>;
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
-            pub Checkpoints: map CheckpointId => Option<state::Checkpoint>;
+            pub Checkpoints: map hasher(blake2_256) CheckpointId => Option<state::Checkpoint>;
         }
     }
 
@@ -130,7 +130,7 @@ decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         fn deposit_event() = default;
 
-        #[weight = SimpleDispatchInfo::FreeNormal]
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -162,7 +162,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::FreeNormal]
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let project = match store::Projects::get(message.project) {
@@ -176,7 +176,7 @@ decl_module! {
             <crate::Balances as Currency<_>>::transfer(&project.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
         }
 
-        #[weight = SimpleDispatchInfo::FreeNormal]
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn create_checkpoint(
             origin,
             message: message::CreateCheckpoint,
@@ -204,7 +204,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::FreeNormal]
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn set_checkpoint(
             origin,
             message: message::SetCheckpoint,

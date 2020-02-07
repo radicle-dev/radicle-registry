@@ -29,6 +29,16 @@ use sp_core::{Pair, Public};
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
 
+pub fn load_spec(id: &str) -> Result<Option<ChainSpec>, String> {
+    match from_id(id) {
+        Some(spec) => Ok(Some(spec)),
+        _ => Err(format!(
+            "Unknown chain spec \"{}\". You must run the node with --dev",
+            id
+        )),
+    }
+}
+
 pub fn from_id(id: &str) -> Option<ChainSpec> {
     if id == "dev" {
         Some(dev())
@@ -76,7 +86,6 @@ fn dev_genesis_config() -> GenesisConfig {
                 .cloned()
                 .map(|k| (k, 1 << 60))
                 .collect(),
-            vesting: vec![],
         }),
         pallet_sudo: Some(SudoConfig { key: root_key }),
         pallet_aura: Some(AuraConfig {
@@ -150,7 +159,6 @@ fn devnet_genesis_config() -> GenesisConfig {
                 .cloned()
                 .map(|k| (k, 1 << 60))
                 .collect(),
-            vesting: vec![],
         }),
         pallet_sudo: Some(SudoConfig { key: root_key }),
         pallet_aura: Some(AuraConfig {

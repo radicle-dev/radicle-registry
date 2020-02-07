@@ -1,4 +1,4 @@
-use substrate_wasm_builder_runner::{build_current_project_with_rustflags, WasmBuilderSource};
+use substrate_wasm_builder_runner::WasmBuilder;
 
 const DUMMY_WASM_BINARY_ENV: &str = "BUILD_DUMMY_WASM_BINARY";
 
@@ -11,11 +11,11 @@ fn main() {
             std::env::set_var(DUMMY_WASM_BINARY_ENV, "1");
         }
     }
-    build_current_project_with_rustflags(
-        "wasm_binary.rs",
-        WasmBuilderSource::Crates("1.0.7"),
-        // This instructs LLD to export __heap_base as a global variable, which is used by the
-        // external memory allocator.
-        "-Clink-arg=--export=__heap_base",
-    );
+
+    WasmBuilder::new()
+        .with_current_project()
+        .with_wasm_builder_from_crates("1.0.9")
+        .export_heap_base()
+        .import_memory()
+        .build()
 }
