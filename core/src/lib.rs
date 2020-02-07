@@ -20,15 +20,13 @@
 
 extern crate alloc;
 
-use alloc::prelude::v1::*;
-
-use parity_scale_codec::{Decode, Encode};
 use sp_core::{ed25519, H256};
 use sp_runtime::traits::BlakeTwo256;
 
 pub use sp_runtime::DispatchError;
 
 pub mod message;
+pub mod state;
 
 pub mod bytes128;
 pub use bytes128::Bytes128;
@@ -42,20 +40,16 @@ pub use project_domain::ProjectDomain;
 mod error;
 pub use error::RegistryError;
 
-/// Index of a transaction in the chain.
-pub type Index = u32;
-
 /// The hashing algorightm to use
 pub type Hashing = BlakeTwo256;
 
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
+/// Identifier for accounts, an Ed25519 public key.
+///
+/// Each account has an associated [message::AccountBalance] and [message::Index].
 pub type AccountId = ed25519::Public;
 
 /// Balance of an account.
 pub type Balance = u128;
-
-/// # Registry types
 
 /// The name a project is registered with.
 pub type ProjectName = String32;
@@ -63,21 +57,3 @@ pub type ProjectName = String32;
 pub type ProjectId = (ProjectName, ProjectDomain);
 
 pub type CheckpointId = H256;
-
-/// A project's version. Used in checkpointing.
-pub type Version = String;
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Checkpoint {
-    pub parent: Option<CheckpointId>,
-    pub hash: H256,
-}
-
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    pub id: ProjectId,
-    pub account_id: AccountId,
-    pub members: Vec<AccountId>,
-    pub current_cp: CheckpointId,
-    pub metadata: Bytes128,
-}

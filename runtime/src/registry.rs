@@ -44,13 +44,13 @@ pub mod store {
         pub trait Store for Module<T: Trait> as Counter {
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
-            pub Projects: map hasher(blake2_128_concat) ProjectId => Option<Project>;
+            pub Projects: map hasher(blake2_128_concat) ProjectId => Option<state::Project>;
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
             pub InitialCheckpoints: map ProjectId => Option<CheckpointId>;
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
-            pub Checkpoints: map CheckpointId => Option<Checkpoint>;
+            pub Checkpoints: map CheckpointId => Option<state::Checkpoint>;
         }
     }
 
@@ -147,7 +147,7 @@ decl_module! {
             let account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(b"project-account-id")
             );
-            let project = Project {
+            let project = state::Project {
                 id: project_id.clone(),
                 account_id: account_id,
                 members: vec![sender],
@@ -193,7 +193,7 @@ decl_module! {
                 }
             };
 
-            let checkpoint = Checkpoint {
+            let checkpoint = state::Checkpoint {
                 parent: message.previous_checkpoint_id,
                 hash: message.project_hash,
             };
@@ -221,7 +221,7 @@ decl_module! {
                     if !prj.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    Project {
+                    state::Project {
                         current_cp: message.new_checkpoint_id,
                         ..prj
                     }

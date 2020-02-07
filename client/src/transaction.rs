@@ -14,20 +14,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [Transaction] and [TransactionExtra].
-use crate::TxHash;
+use core::marker::PhantomData;
 use parity_scale_codec::Encode;
-pub use radicle_registry_core::{AccountId, Balance, Project, ProjectId};
-use radicle_registry_runtime::Hashing;
-use radicle_registry_runtime::UncheckedExtrinsic;
-pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
-pub use sp_core::ed25519;
 use sp_runtime::generic::{Era, SignedPayload};
-use sp_runtime::traits::Hash as _;
-use sp_runtime::traits::SignedExtension;
-use std::marker::PhantomData;
+use sp_runtime::traits::{Hash as _, SignedExtension};
 
-pub use crate::message::Message;
-pub use radicle_registry_runtime::{Call as RuntimeCall, Hash, Index, SignedExtra};
+use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
+use radicle_registry_core::state::Index;
+use radicle_registry_runtime::{
+    Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
+};
 
 #[derive(Clone, Debug)]
 /// Transaction the can be submitted to the blockchain.

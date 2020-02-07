@@ -5,6 +5,5 @@ members = [
   "core",
   "node",
   "runtime",
-  "registry-spec",
   "test-utils"
   ]

@@ -3616,10 +3616,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "radicle-registry-spec"
-version = "0.1.0"
-
-[[package]]
 name = "radicle-registry-test-utils"
 version = "0.0.0"
 dependencies = [

@@ -26,3 +26,21 @@ cover all edge cases. The documentation for a message has the following sections
   <dd>Describes the validations that are required for the message to be applied
   successfully and that depend on the current ledger state state.</dd>
 </dd>
+
+State
+-----
+
+All entities that are stored in the ledger state are defined in the `state`
+module.
+
+For each entity the documentation has the following sections
+
+<dl>
+  <dt>Storage</dt>
+  <dd>Describes how the entity is stored in the state and how the state storage
+  key is calculated.</dd>
+  <dt>Invariants</dt>
+  <dd>Describes the invariants of the data in the state entity that always hold.</dd>
+  <dt>Relevant messages</dt>
+  <dd>Links to message types that effect or use the entity.</dd>
+</dd>

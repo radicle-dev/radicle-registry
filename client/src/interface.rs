@@ -80,16 +80,16 @@ pub trait ClientT {
     ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
-    async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error>;
+    async fn account_nonce(&self, account_id: &AccountId) -> Result<state::Index, Error>;
 
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error>;
+    async fn get_project(&self, id: ProjectId) -> Result<Option<state::Project>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error>;
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error>;
 }

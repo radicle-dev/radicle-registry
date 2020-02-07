@@ -48,7 +48,7 @@ async fn register_project() {
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
-    let checkpoint_ = Checkpoint {
+    let checkpoint_ = state::Checkpoint {
         parent: None,
         hash: project_hash,
     };

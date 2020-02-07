@@ -208,17 +208,17 @@ impl ClientT for Client {
         self.backend.get_genesis_hash()
     }
 
-    async fn account_nonce(&self, account_id: &AccountId) -> Result<Index, Error> {
+    async fn account_nonce(&self, account_id: &AccountId) -> Result<state::Index, Error> {
         self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id)
             .await
     }
 
-    async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error> {
+    async fn free_balance(&self, account_id: &AccountId) -> Result<state::AccountBalance, Error> {
         self.fetch_map_value::<balances::FreeBalance<Runtime>, _, _>(account_id.clone())
             .await
     }
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
+    async fn get_project(&self, id: ProjectId) -> Result<Option<state::Project>, Error> {
         self.fetch_map_value::<registry::store::Projects, _, _>(id)
             .await
     }
@@ -235,7 +235,7 @@ impl ClientT for Client {
         Ok(project_ids)
     }
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error> {
         self.fetch_map_value::<registry::store::Checkpoints, _, _>(id)
             .await
     }
