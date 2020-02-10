@@ -3527,6 +3527,7 @@ dependencies = [
  "radicle-registry-test-utils",
  "rand 0.7.3",
  "sc-rpc-api",
+ "serial_test",
  "sp-core",
  "sp-io",
  "sp-rpc",
@@ -4728,6 +4729,28 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serial_test"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f74862f16557830c73deefde614c906f8af0157e064b64f156e32a0b12d7114c"
+dependencies = [
+ "lazy_static",
+ "parking_lot 0.9.0",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c188479c8b700998829c168d7a4c21032660b0dd2ed87a0b166c85811750740"
+dependencies = [
+ "proc-macro2 1.0.7",
+ "quote 1.0.2",
+ "syn 1.0.13",
 ]
 
 [[package]]

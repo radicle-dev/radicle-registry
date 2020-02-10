@@ -3,10 +3,13 @@
 //! Note that chain state is shared between the test runs.
 
 use async_std;
+use serial_test::serial;
+
 use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
+#[serial]
 async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
