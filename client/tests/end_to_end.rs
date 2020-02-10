@@ -67,6 +67,7 @@ async fn register_project() {
 }
 
 #[async_std::test]
+#[serial]
 /// Submit a transaction with an invalid genesis hash and expect an error.
 async fn invalid_transaction() {
     let _ = env_logger::try_init();
