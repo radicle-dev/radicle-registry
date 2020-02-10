@@ -92,7 +92,11 @@ Black-box tests for the runtime logic are implemented with the client emulator
 in `runtime/tests/main.rs`.
 
 End-to-end tests that run against a real node are implemented in
-`client/tests/end_to_end.rs`
+`client/tests/end_to_end.rs`.
+
+To run specific tests sequentially as opposed to the parallel default,
+we use the [serial-test](https://crates.io/crates/serial_test) crate, simply
+having to mark the targeted tests with `#[serial]`.
 
 
 Changelog

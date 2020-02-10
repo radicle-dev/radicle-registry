@@ -69,3 +69,4 @@ rev = "4c4ee3d5b91c4c825aef4fde2b096f014a89346a"
 [dev-dependencies]
 rand = "0.7.2"
 radicle-registry-test-utils = { path = "../test-utils"}
+serial_test = "0.3.2"
