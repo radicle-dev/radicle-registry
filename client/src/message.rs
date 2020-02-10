@@ -143,6 +143,7 @@ fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, Ev
             frame_system::Event::ExtrinsicFailed(ref dispatch_error, _) => {
                 Some(Err(*dispatch_error))
             }
+            _ => None,
         },
         _ => None,
     })

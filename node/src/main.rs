@@ -18,14 +18,15 @@
 #![warn(missing_docs)]
 #![warn(unused_extern_crates)]
 
-mod chain_spec;
 #[macro_use]
 mod service;
+mod chain_spec;
 mod cli;
+mod command;
 
-pub use sc_cli::{error, IntoExit, VersionInfo};
+pub use sc_cli::{error, VersionInfo};
 
-fn main() {
+fn main() -> Result<(), error::Error> {
     let version = VersionInfo {
         name: "Radicle Registry Node",
         commit: "<none>",
@@ -36,10 +37,8 @@ fn main() {
         author: "Monadic GmbH",
         description: "Radicle Registry Node",
         support_url: "support.anonymous.an",
+        copyright_start_year: 2019,
     };
 
-    if let Err(e) = cli::run(::std::env::args(), cli::Exit, version) {
-        eprintln!("Fatal error: {}\n\n{:?}", e, e);
-        std::process::exit(1)
-    }
+    command::run(version)
 }
