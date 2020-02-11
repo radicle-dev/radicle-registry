@@ -71,8 +71,8 @@ pub mod store {
         /// # use frame_support::storage::generator::StorageMap;
         /// # use std::str::FromStr;
         /// let project_id = (
-        ///     String32::from_str("name").unwrap(),
-        ///     ProjectDomain::from_str("rad").unwrap()
+        ///     OrgId::from_str("Monadic").unwrap(),
+        ///     ProjectName::from_str("radicle").unwrap()
         /// );
         ///
         /// let key = store::Projects::storage_map_final_key(project_id.clone());

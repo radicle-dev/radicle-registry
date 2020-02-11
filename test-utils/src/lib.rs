@@ -49,11 +49,18 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     .result
     .unwrap();
 
-    let message = random_register_project_message(checkpoint_id);
+    let register_project_message = random_register_project_message(checkpoint_id);
+    let register_org_message = message::RegisterOrg {
+        id: register_project_message.id.0.clone(),
+    };
+    submit_ok(&client, &author, register_org_message.clone()).await;
+    submit_ok(&client, &author, register_project_message.clone()).await;
 
-    submit_ok(&client, &author, message.clone()).await;
-
-    client.get_project(message.id).await.unwrap().unwrap()
+    client
+        .get_project(register_project_message.id)
+        .await
+        .unwrap()
+        .unwrap()
 }
 
 /// Create random parameters to register a project with.

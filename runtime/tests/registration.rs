@@ -24,6 +24,12 @@ async fn register_project() {
     .result
     .unwrap();
     let message = random_register_project_message(checkpoint_id);
+
+    let org_msg = message::RegisterOrg {
+        id: message.id.0.clone(),
+    };
+    submit_ok(&client, &alice, org_msg.clone()).await;
+
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
@@ -57,6 +63,30 @@ async fn register_project() {
 }
 
 #[async_std::test]
+async fn register_project_with_inexistent_org() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let project_hash = H256::random();
+    let checkpoint_id = submit_ok(
+        &client,
+        &alice,
+        message::CreateCheckpoint {
+            project_hash,
+            previous_checkpoint_id: None,
+        },
+    )
+    .await
+    .result
+    .unwrap();
+
+    let message = random_register_project_message(checkpoint_id);
+    let tx_applied = submit_ok(&client, &alice, message.clone()).await;
+
+    assert_eq!(tx_applied.result, Err(RegistryError::InexistentOrg.into()));
+}
+
+#[async_std::test]
 async fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
@@ -74,7 +104,10 @@ async fn register_project_with_duplicate_id() {
     .unwrap();
 
     let message = random_register_project_message(checkpoint_id);
-
+    let org_msg = message::RegisterOrg {
+        id: message.id.0.clone(),
+    };
+    submit_ok(&client, &alice, org_msg.clone()).await;
     submit_ok(&client, &alice, message.clone()).await;
 
     // Duplicate submission with different description and image URL.
@@ -110,6 +143,10 @@ async fn register_project_with_bad_checkpoint() {
     let message = random_register_project_message(checkpoint_id);
 
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
+    let org_msg = message::RegisterOrg {
+        id: message.id.0.clone(),
+    };
+    submit_ok(&client, &alice, org_msg.clone()).await;
 
     assert_eq!(
         tx_applied.result,
