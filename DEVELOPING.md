@@ -133,31 +133,33 @@ where `REV` is the new Git revision SHA.
 Updating Continuous Integration's base Docker image
 ---------------------------------------------------
 
-After performing the necessary changes to the Dockerfile located in
-`ci/base-image/Dockerfile`, move to the root of the `radicle-registry`
-repository and run the following:
+1. In `.buildkite/pipeline.yaml`, in value of `.test` -> `env` -> `DOCKER_IMAGE` replace image tag (last part after `:`) with a nonexistent tag (e.g. `does_not_exist`).
 
-```bash
-docker build ci/base-image --tag gcr.io/opensourcecoin/radicle-registry/ci-base
-docker push gcr.io/opensourcecoin/radicle-registry/ci-base
+Example:
+```
+DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:0d7ce69abca7dfe7dcbf26e319645405f31f4901
+```
+to
+```
+DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:does_not_exist
 ```
 
-The `docker push` command outputs the pushed image’s digest. To use the pushed
-image in Buildkite runs, update the `DOCKER_IMAGE` value in
-`.buildkite/pipeline.yaml` with the new digest.
+2. Push the commit to the repository and let the build agent finish all the work for this commit. **Make sure that this commit is preserved!** Do not amend, squash, rebase or delete it, it should be merged unmodified into master. This way it will be easy to look up the state of the project used by the build agent.
 
-Note that an account with permission to push to the Google Cloud Registry
-address at `gcr.io/opensourcecoin/radicle-registry` is required in order for
-these commands to work.
-Specifically, you'll need to run
-`gsutil iam ch user:<your_monadic_email_address>@monadic.xyz:objectViewer gs://artifacts.opensourcecoin.appspot.com`
+**What happens on the build agent:** no docker image can be found for the given tag. The agent will run the full pipeline and save the docker image under a tag same as the current commit ID.
 
-For more information on GCR permissions, consult
-https://cloud.google.com/container-registry/docs/access-control.
+3. Copy the current commit ID and set it as the previously edited image tag.
 
-If all this fails, request assistance to someone that can grant these
-permissions.
+Example:
+```
+DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:does_not_exist
+```
+to
+```
+DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:e8c699d4827ed893d8dcdab6e72de40732ad5f3c
+```
 
+**What happens on the build agent:** when any commit with this change is pushed, the build agent will find the image under the configured tag. It will reuse it instead of rebuilding and save time.
 
 Git Flow
 --------
