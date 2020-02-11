@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::Hash;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectId, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectName, H256};
 
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
@@ -93,7 +93,7 @@ pub struct Project {
 /// # Relevant messages
 ///
 /// * [crate::message::Transfer]
-/// * [crate::message::TransferFromProject]
+/// * [crate::message::TransferFromOrg]
 pub type AccountBalance = Balance;
 
 /// Next index (nonce) for a transaction of an account.

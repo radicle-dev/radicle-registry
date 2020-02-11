@@ -31,13 +31,13 @@ async fn register_project() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, message.clone().id);
-    assert_eq!(project.current_cp, checkpoint_id);
-    assert_eq!(project.metadata, message.clone().metadata);
+    assert_eq!(project.clone().id(), message.id.clone());
+    assert_eq!(project.current_cp.clone(), checkpoint_id);
+    assert_eq!(project.metadata.clone(), message.metadata.clone());
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().id, project.account_id).into()
+        RegistryEvent::ProjectRegistered(message.clone().id).into()
     );
 
     let has_project = client

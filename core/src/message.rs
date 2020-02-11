@@ -134,8 +134,8 @@ pub struct SetCheckpoint {
 ///
 /// The project account must have a balance of at least `balance`.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct TransferFromProject {
-    pub project: ProjectId,
+pub struct TransferFromOrg {
+    pub org_id: OrgId,
     pub recipient: AccountId,
     pub value: Balance,
 }

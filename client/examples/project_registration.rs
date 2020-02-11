@@ -18,9 +18,10 @@ async fn go() -> Result<(), Error> {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create(node_host).await?;
 
-    let project_name = ProjectName::from_string("radicle-registry".to_string()).unwrap();
-    let project_domain = ProjectDomain::from_string("rad".to_string()).unwrap();
-    let project_id = (project_name.clone(), project_domain.clone());
+    let project_id = (
+        OrgId::from_string("Monadic".to_string()).unwrap(),
+        ProjectName::from_string("radicle-registry".to_string()).unwrap(),
+    );
 
     // Choose some random project hash and create a checkpoint
     let project_hash = H256::random();
@@ -54,7 +55,7 @@ async fn go() -> Result<(), Error> {
 
     println!(
         "Successfully registered project {}.{}",
-        project_name, project_domain
+        project_id.0, project_id.1
     );
     Ok(())
 }

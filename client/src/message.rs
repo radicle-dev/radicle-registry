@@ -48,9 +48,7 @@ impl Message for message::RegisterProject {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(registry::Event::ProjectRegistered(_project_id, _account_id)) => {
-                    Some(Ok(()))
-                }
+                Event::registry(registry::Event::ProjectRegistered(_project_id)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -154,7 +152,7 @@ impl Message for message::Transfer {
     }
 }
 
-impl Message for message::TransferFromProject {
+impl Message for message::TransferFromOrg {
     type Result = Result<(), DispatchError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
