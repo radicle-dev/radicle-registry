@@ -34,6 +34,8 @@ Upcoming
 
 ### Addition
 
+* Add `Client::get_org` and `Client::list_orgs`
+* Add `RegisterOrg` and `UnregisterOrg` messages
 * Add Transaction::hash() function
 * Offline transaction signing with the following new APIs
   * `ClientT::account_nonce()`

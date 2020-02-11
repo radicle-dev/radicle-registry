@@ -19,18 +19,23 @@ use crate::DispatchError;
 /// Errors describing failed Registry transactions.
 pub enum RegistryError {
     InexistentCheckpointId = 0,
+    InexistentOrg,
+    DuplicateOrgId,
     DuplicateProjectId,
     InexistentProjectId,
     InsufficientSenderPermissions,
     InexistentParentCheckpoint,
     InexistentInitialProjectCheckpoint,
     InvalidCheckpointAncestry,
+    UnregisterableOrg,
 }
 
 impl From<RegistryError> for &'static str {
     fn from(error: RegistryError) -> &'static str {
         match error {
             RegistryError::InexistentCheckpointId => "The provided checkpoint does not exist",
+            RegistryError::InexistentOrg => "The provided org does not exist",
+            RegistryError::DuplicateOrgId => "An org with a similar ID already exists.",
             RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
             RegistryError::InexistentProjectId => "Project does not exist",
             RegistryError::InsufficientSenderPermissions => "Sender is not a project member",
@@ -40,6 +45,9 @@ impl From<RegistryError> for &'static str {
             }
             RegistryError::InvalidCheckpointAncestry => {
                 "The provided checkpoint is not a descendant of the project's initial checkpoint."
+            }
+            RegistryError::UnregisterableOrg => {
+                "The provided org is not elibile for unregistration."
             }
         }
     }

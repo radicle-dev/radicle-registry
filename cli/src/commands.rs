@@ -136,6 +136,64 @@ impl CommandT for ListProjects {
 }
 
 #[derive(StructOpt, Debug, Clone)]
+/// Register an org.
+pub struct RegisterOrg {
+    /// Id of the org to register.
+    id: OrgId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for RegisterOrg {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let client = &command_context.client;
+
+        let register_org_fut = client
+            .sign_and_submit_message(
+                &command_context.author_key_pair,
+                message::RegisterOrg {
+                    id: self.id.clone(),
+                },
+            )
+            .await?;
+        println!("Registering org...");
+
+        let org_registered = register_org_fut.await?;
+        transaction_applied_ok(&org_registered)?;
+        println!("Org {} is now registered.", self.id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Unregister an org.
+pub struct UnregisterOrg {
+    /// Id of the org to unregister.
+    id: OrgId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for UnregisterOrg {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let client = &command_context.client;
+
+        let register_org_fut = client
+            .sign_and_submit_message(
+                &command_context.author_key_pair,
+                message::UnregisterOrg {
+                    id: self.id.clone(),
+                },
+            )
+            .await?;
+        println!("Unregistering org...");
+
+        let org_unregistered = register_org_fut.await?;
+        transaction_applied_ok(&org_unregistered)?;
+        println!("Org {} is now unregistered.", self.id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
 /// Register a project under the default "rad" domain.
 pub struct RegisterProject {
     /// Name of the project to register.

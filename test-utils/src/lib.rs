@@ -75,8 +75,18 @@ pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::
     }
 }
 
+pub fn random_register_org_message() -> message::RegisterOrg {
+    message::RegisterOrg {
+        id: random_string32(),
+    }
+}
+
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
+}
+
+pub fn random_string32() -> String32 {
+    String32::from_string(random_string(32)).unwrap()
 }
 
 pub fn random_string(size: usize) -> String {
