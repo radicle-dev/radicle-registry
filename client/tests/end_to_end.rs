@@ -2,7 +2,6 @@
 //!
 //! Note that chain state is shared between the test runs.
 
-use async_std;
 use serial_test::serial;
 
 use radicle_registry_client::*;
