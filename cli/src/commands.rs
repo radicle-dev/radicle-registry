@@ -35,7 +35,7 @@ pub enum CommandError {
     },
     ProjectNotFound {
         name: ProjectName,
-        domain: ProjectDomain,
+        org_id: OrgId,
     },
 }
 
@@ -47,8 +47,8 @@ impl core::fmt::Display for CommandError {
                 tx_hash,
                 block_hash,
             } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
-            CommandError::ProjectNotFound { name, domain } => {
-                write!(f, "Cannot find project {}.{}", name, domain)
+            CommandError::ProjectNotFound { name, org_id } => {
+                write!(f, "Cannot find project {}.{}", name, org_id)
             }
         }
     }
@@ -82,40 +82,32 @@ pub trait CommandT {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Show information for a registered project in the .rad domain.
+/// Show information for a registered project.
 pub struct ShowProject {
     project_name: String32,
+    project_org_id: OrgId,
 }
 
 #[async_trait::async_trait]
 impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let project_domain = ProjectDomain::rad_domain();
         let opt_project = command_context
             .client
-            .get_project((self.project_name.clone(), project_domain.clone()))
+            .get_project((self.project_name.clone(), self.project_org_id.clone()))
             .await?;
 
         let project = match opt_project {
             None => {
                 return Err(CommandError::ProjectNotFound {
+                    org_id: self.project_org_id.clone(),
                     name: self.project_name.clone(),
-                    domain: project_domain,
                 });
             }
             Some(project) => project,
         };
 
-        let balance = command_context
-            .client
-            .free_balance(&project.account_id)
-            .await?;
-
-        println!("project: {}.{}", project.id.0, project.id.1);
-        println!("account id: {}", project.account_id);
-        println!("balance: {}", balance);
+        println!("project: {}.{}", project.name, project.org_id);
         println!("checkpoint: {}", project.current_cp);
-        println!("members: {:?}", project.members);
         Ok(())
     }
 }
@@ -128,8 +120,8 @@ impl CommandT for ListProjects {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let project_ids = command_context.client.list_projects().await?;
         println!("PROJECTS");
-        for (name, domain) in project_ids {
-            println!("{}.{}", name, domain)
+        for (name, org) in project_ids {
+            println!("{}.{}", name, org)
         }
         Ok(())
     }
@@ -194,10 +186,14 @@ impl CommandT for UnregisterOrg {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Register a project under the default "rad" domain.
+/// Register a project with the given name under the given org.
 pub struct RegisterProject {
     /// Name of the project to register.
     name: String32,
+
+    /// Org under which to register the project.
+    org_id: OrgId,
+
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
 }
@@ -222,7 +218,7 @@ impl CommandT for RegisterProject {
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
         println!("checkpoint created in block {}", checkpoint_created.block);
 
-        let project_id: ProjectId = (self.name.clone(), ProjectDomain::rad_domain());
+        let project_id: ProjectId = (self.org_id.clone(), self.name.clone());
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
@@ -238,9 +234,7 @@ impl CommandT for RegisterProject {
         transaction_applied_ok(&project_registered)?;
         println!(
             "project {}.{} registered in block {}",
-            self.name,
-            ProjectDomain::rad_domain(),
-            project_registered.block,
+            self.name, self.org_id, project_registered.block,
         );
         Ok(())
     }
@@ -263,8 +257,9 @@ impl CommandT for ShowGenesisHash {
 /// Transfer funds to recipient
 pub struct Transfer {
     #[structopt(parse(try_from_str = parse_account_id))]
-    /// Recipient Account in SS58 address format
+    /// The recipient account of this transfer
     recipient: AccountId,
+    // The amount to transfer
     funds: Balance,
 }
 
@@ -298,27 +293,30 @@ impl CommandT for Transfer {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Transfer funds from a project to a recipient. The author needs to be the owner of the project
-pub struct TransferProjectFunds {
-    /// Name of the project in the .rad domain
-    #[structopt(value_name = "project")]
-    project_name: ProjectName,
+/// Transfer funds from an org to a recipient.
+/// The author needs to be part of [crate::state::Org::members] of the org.
+pub struct TransferOrgFunds {
+    /// Id of the org.
+    #[structopt(value_name = "org")]
+    org_id: OrgId,
 
     /// Recipient Account in SS58 address format
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
+
+    // The balance to transfer from the org to the recipient.
     funds: Balance,
 }
 
 #[async_trait::async_trait]
-impl CommandT for TransferProjectFunds {
+impl CommandT for TransferOrgFunds {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let client = &command_context.client;
         let transfer_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
-                message::TransferFromProject {
-                    project: (self.project_name.clone(), ProjectDomain::rad_domain()),
+                message::TransferFromOrg {
+                    org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
                 },
@@ -328,12 +326,8 @@ impl CommandT for TransferProjectFunds {
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
-            "transferred {} RAD from {}.{} to {} in block {}",
-            self.funds,
-            self.project_name,
-            ProjectDomain::rad_domain(),
-            self.recipient,
-            transfered.block,
+            "transferred {} RAD from Org {} to Account {} in block {}",
+            self.funds, self.org_id, self.recipient, transfered.block,
         );
         Ok(())
     }

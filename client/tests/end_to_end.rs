@@ -29,10 +29,14 @@ async fn register_project() {
     .unwrap();
 
     let register_project_message = random_register_project_message(checkpoint_id);
-
+    let register_org_message = message::RegisterOrg {
+        id: register_project_message.id.0.clone(),
+    };
     let project_id = register_project_message.id.clone();
-    let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
+    let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
+    assert_eq!(org_registered_tx.result, Ok(()));
 
+    let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
     assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
@@ -40,13 +44,16 @@ async fn register_project() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, register_project_message.id.clone());
-    assert_eq!(project.current_cp, register_project_message.checkpoint_id);
-    assert_eq!(project.metadata, register_project_message.metadata);
+    assert_eq!(project.clone().id(), project_id.clone());
+    assert_eq!(
+        project.current_cp.clone(),
+        register_project_message.checkpoint_id
+    );
+    assert_eq!(project.metadata.clone(), register_project_message.metadata);
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
+        RegistryEvent::ProjectRegistered(project_id.clone()).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();

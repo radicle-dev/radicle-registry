@@ -71,8 +71,8 @@ pub mod store {
         /// # use frame_support::storage::generator::StorageMap;
         /// # use std::str::FromStr;
         /// let project_id = (
-        ///     String32::from_str("name").unwrap(),
-        ///     ProjectDomain::from_str("rad").unwrap()
+        ///     OrgId::from_str("Monadic").unwrap(),
+        ///     ProjectName::from_str("radicle").unwrap()
         /// );
         ///
         /// let key = store::Projects::storage_map_final_key(project_id.clone());
@@ -165,33 +165,36 @@ decl_module! {
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
+            let _sender = ensure_signed(origin)?;
 
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
+            let (org_id, project_name) = message.id.clone();
+
+            if store::Orgs::get(org_id.clone()).is_none() {
+                return Err(RegistryError::InexistentOrg.into());
+            }
+
             let project_id = message.id.clone();
-            match store::Projects::get(project_id.clone()) {
-                None => {}
-                Some (_) => return Err(RegistryError::DuplicateProjectId.into()),
+            if store::Projects::get(project_id.clone()).is_some() {
+                return Err(RegistryError::DuplicateProjectId.into());
             };
 
-            let account_id = AccountId::unchecked_from(pallet_randomness_collective_flip::Module::<T>::random(
-                b"project-account-id",
-            ));
-            let project = state::Project {
-                id: project_id.clone(),
-                account_id: account_id,
-                members: vec![sender],
+            let new_project = state::Project {
                 current_cp: message.checkpoint_id,
                 metadata: message.metadata
             };
 
-            store::Projects::insert(project_id.clone(), project);
+            store::Projects::insert(project_id.clone(), new_project);
+            store::Orgs::insert(
+                org_id.clone(),
+                store::Orgs::get(org_id).unwrap().add_project(project_name)
+            );
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(project_id, account_id));
+            Self::deposit_event(Event::ProjectRegistered(project_id));
             Ok(())
         }
 
@@ -244,17 +247,22 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn transfer_from_project(origin, message: message::TransferFromProject) -> DispatchResult {
+        pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let project = match store::Projects::get(message.project) {
-                None => return Err(RegistryError::InexistentProjectId.into()),
-                Some(p) => p,
+            let org = match store::Orgs::get(message.org_id) {
+                None => return Err(RegistryError::InexistentOrg.into()),
+                Some(o) => o,
             };
-            let is_member = project.members.contains(&sender);
-            if !is_member {
-                return Err(RegistryError::InsufficientSenderPermissions.into())
+            if org.members.contains(&sender) {
+                <crate::Balances as Currency<_>>::transfer(
+                    &org.account_id,
+                    &message.recipient,
+                    message.value, ExistenceRequirement::KeepAlive
+                )
             }
-            <crate::Balances as Currency<_>>::transfer(&project.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
+            else {
+                Err(RegistryError::InsufficientSenderPermissions.into())
+            }
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
@@ -295,11 +303,12 @@ decl_module! {
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
-            let opt_project = store::Projects::get(message.project_id.clone());
-            let new_project = match opt_project {
-                None => return Err(RegistryError::InexistentProjectId.into()),
-                Some(prj) => {
-                    if !prj.members.contains(&sender) {
+            let project_id = message.project_id.clone();
+            let opt_project = store::Projects::get(project_id.clone());
+            let opt_org = store::Orgs::get(project_id.0.clone());
+            let new_project = match (opt_project, opt_org) {
+                (Some(prj), Some(org)) => {
+                    if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
                     state::Project {
@@ -307,9 +316,11 @@ decl_module! {
                         ..prj
                     }
                 }
+                _ => return Err(RegistryError::InexistentProjectId.into()),
+
             };
 
-            let initial_cp = match store::InitialCheckpoints::get(message.project_id.clone()) {
+            let initial_cp = match store::InitialCheckpoints::get(project_id.clone()) {
                 None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
                 Some(cp) => cp,
             };
@@ -317,9 +328,9 @@ decl_module! {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
-            store::Projects::insert(new_project.id.clone(), new_project.clone());
+            store::Projects::insert(project_id.clone(), new_project);
 
-            Self::deposit_event(Event::CheckpointSet(new_project.id, message.new_checkpoint_id));
+            Self::deposit_event(Event::CheckpointSet(project_id, message.new_checkpoint_id));
             Ok(())
         }
     }
@@ -328,7 +339,7 @@ decl_event!(
     pub enum Event {
         OrgUnregistered(OrgId),
         OrgRegistered(OrgId),
-        ProjectRegistered(ProjectId, AccountId),
+        ProjectRegistered(ProjectId),
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectId, CheckpointId),
     }
