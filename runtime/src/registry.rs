@@ -171,9 +171,9 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            let (org_id, _project_name) = message.id.clone();
+            let (org_id, project_name) = message.id.clone();
 
-            if store::Orgs::get(org_id).is_none() {
+            if store::Orgs::get(org_id.clone()).is_none() {
                 return Err(RegistryError::InexistentOrg.into());
             }
 
@@ -188,6 +188,11 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), new_project);
+            // store::Orgs::mutate(org_id.clone(), |opt_org| opt_org.as_ref().map(|org| org.clone().add_project(project_name.clone())));
+            store::Orgs::insert(
+                org_id.clone(),
+                store::Orgs::get(org_id.clone()).unwrap().add_project(project_name.clone())
+            );
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id));
@@ -243,15 +248,18 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        //TODO(nuno): Rename fn and message
-        pub fn transfer_from_project(origin, message: message::TransferFromOrg) -> DispatchResult {
+        pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let org = match store::Orgs::get(message.org_id) {
                 None => return Err(RegistryError::InexistentOrg.into()),
                 Some(o) => o,
             };
             if org.members.contains(&sender) {
-                <crate::Balances as Currency<_>>::transfer(&org.account_id, &message.recipient, message.value, ExistenceRequirement::KeepAlive)
+                <crate::Balances as Currency<_>>::transfer(
+                    &org.account_id,
+                    &message.recipient,
+                    message.value, ExistenceRequirement::KeepAlive
+                )
             }
             else {
                 Err(RegistryError::InsufficientSenderPermissions.into())

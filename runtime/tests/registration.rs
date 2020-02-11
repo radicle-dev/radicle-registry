@@ -60,6 +60,14 @@ async fn register_project() {
     };
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
     assert_eq!(checkpoint, checkpoint_);
+
+    let org = client
+        .get_org(project.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(org.projects.len(), 1);
 }
 
 #[async_std::test]
@@ -127,6 +135,15 @@ async fn register_project_with_duplicate_id() {
     );
 
     let project = client.get_project(message.id).await.unwrap().unwrap();
+
+    let org = client
+        .get_org(project.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+
+    // Assert that the number of projects in the involved Org didn't change.
+    assert_eq!(org.projects.len(), 1);
 
     // Assert that the project data was not altered during the
     // attempt to re-register the already existing project.

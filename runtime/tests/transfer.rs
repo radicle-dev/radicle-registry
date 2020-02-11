@@ -25,20 +25,14 @@ async fn transfer_fail() {
     assert!(tx_applied.result.is_err());
 }
 
-/// Test that we can transfer money to a project and that the project owner can transfer money from
-/// a project to another account.
+/// Test that we can transfer money to an org account and that the
+/// org owner can transfer money from an org to another account.
 #[async_std::test]
-async fn project_account_transfer() {
+async fn org_account_transfer() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
-    //TODO(nuno) drop project from here
-    let project = create_project_with_checkpoint(&client, &alice).await;
-    let org = client
-        .get_org(project.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
+    let org = create_random_org(&client, &alice).await;
 
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 0);
     submit_ok(
@@ -70,16 +64,11 @@ async fn project_account_transfer() {
 
 #[async_std::test]
 /// Test that a transfer from an org account fails if the sender is not an org member.
-async fn project_account_transfer_non_member() {
+async fn org_account_transfer_non_member() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob");
-    let project = create_project_with_checkpoint(&client, &alice).await;
-    let org = client
-        .get_org(project.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
+    let org = create_random_org(&client, &alice).await;
 
     submit_ok(
         &client,

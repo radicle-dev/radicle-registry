@@ -63,6 +63,17 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
         .unwrap()
 }
 
+pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
+    let register_org_message = random_register_org_message();
+    submit_ok(&client, &author, register_org_message.clone()).await;
+
+    client
+        .get_org(register_org_message.id)
+        .await
+        .unwrap()
+        .unwrap()
+}
+
 /// Create random parameters to register a project with.
 /// The project's name and domain will be alphanumeric strings with 32
 /// characters, and the description and image URL will be alphanumeric strings

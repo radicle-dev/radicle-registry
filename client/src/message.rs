@@ -160,7 +160,7 @@ impl Message for message::TransferFromOrg {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::transfer_from_project(self).into()
+        registry::Call::transfer_from_org(self).into()
     }
 }
 
