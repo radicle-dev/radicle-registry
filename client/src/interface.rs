@@ -63,8 +63,33 @@ pub type Response<T, Error> = BoxFuture<'static, Result<T, Error>>;
 pub trait ClientT {
     /// Submit a signed transaction.
     ///
-    /// Succeeds if the transaction has been accepted by the node. The wrapped future that is
-    /// returned can be used to wait for the transaction to be applied and included in a block.
+    /// ```no_run
+    /// # use radicle_registry_client::*;
+    /// # async fn example<M: Message>(client: Client, tx: Transaction<M>) -> Result<(), Error> {
+    ///
+    /// // Submit the transaction to the node.
+    /// //
+    /// // If this is successful the transaction has been accepted by the node. The node will then
+    /// // dissemniate the transaction to the network.
+    /// //
+    /// // This call fails if the transaction is invalid or if the RPC communication with the node
+    /// // failed.
+    /// let applied_fut = client.submit_transaction(tx).await?;
+    ///
+    /// // We can now wait for the transaction to be included in a block.
+    /// //
+    /// // This will error if the transaction becomes invalid (for example due to the nonce) or if
+    /// // we fail to retrieve the transaction state from the node.
+    /// //
+    /// // This will not error if the transaction errored while applying. See
+    /// // TransactionApplied::result for that.
+    /// let transaction_applied = applied_fut.await?;
+    ///
+    /// Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See the `getting_started` example for more details.
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
