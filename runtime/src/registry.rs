@@ -191,7 +191,7 @@ decl_module! {
             // store::Orgs::mutate(org_id.clone(), |opt_org| opt_org.as_ref().map(|org| org.clone().add_project(project_name.clone())));
             store::Orgs::insert(
                 org_id.clone(),
-                store::Orgs::get(org_id.clone()).unwrap().add_project(project_name.clone())
+                store::Orgs::get(org_id).unwrap().add_project(project_name)
             );
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
