@@ -144,7 +144,6 @@ learn more run `cargo run -p radicle-registry-cli -- --help`.
 
 [dev-manual]: ./DEVELOPING.md
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
-[wasm-gc]: https://github.com/alexcrichton/wasm-gc
 
 
 License

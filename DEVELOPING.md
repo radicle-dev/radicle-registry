@@ -28,10 +28,8 @@ Build requirements
 1. Get [`rustup`][rustup-install]
 2. Run `./scripts/rustup-setup` to install all required `rustup` components and
    targets.
-3. Install [`wasm-gc`][wasm-gc] via `cargo install --git https://github.com/alexcrichton/wasm-gc`
 
 [rustup-install]: https://github.com/rust-lang/rustup.rs#installation
-[wasm-gc]: https://github.com/alexcrichton/wasm-gc
 
 
 Running development node
