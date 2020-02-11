@@ -55,14 +55,16 @@ impl Checkpoint {
 
 /// # Storage
 ///
-/// Projects are stored as a map with the key derived from [Project::id]. The project ID can be
-/// extracted from the storage key.
+/// This type is only used for storage. See [crate::Project] for the
+/// complete Project type to be used everywhere else.
+///
+/// Projects are stored as a map with the key derived from a given [crate::ProjectId].
+/// The project ID can be extracted from the storage key.
 ///
 /// # Invariants
 ///
 /// * `current_cp` is guaranteed to point to an existing [Checkpoint]
 /// * `metadata` is immutable
-/// * `account_id` is immutable
 ///
 /// # Relevant messages
 ///
@@ -70,21 +72,6 @@ impl Checkpoint {
 /// * [crate::message::RegisterProject]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
-    /// ID of the project. The storage key is derived from this value.
-    pub id: ProjectId,
-
-    /// Account ID that holds the projecs funds.
-    ///
-    /// This is randomly generated and unlike for other accounts there is no private key that
-    /// controls this account.
-    pub account_id: AccountId,
-
-    /// List of members that are allowed to modify the project and transfer funds.
-    ///
-    /// This is initialized with the author of the [crate::message::RegisterProject] transaction.
-    /// It cannot be changed at the moment.
-    pub members: Vec<AccountId>,
-
     /// Links to the checkpoint of project state.
     ///
     /// Updated with the [crate::message::SetCheckpoint] transaction.
