@@ -4,7 +4,6 @@
 #
 # * Rustup with `nightly-2020-02-05` toolchain (see RUST_VERSION)
 # * Additional rustup components and the wasm32 target
-# * wasm-gc
 # * sccache v0.2.12
 
 FROM debian:buster-slim
@@ -63,8 +62,7 @@ RUN set -eux; \
     cargo --version; \
     rustc --version;
 
-# Add components to toolchain install wasm-gc
+# Add components to toolchain
 RUN rustup component add rustfmt \
     && rustup component add clippy \
-    && rustup target add wasm32-unknown-unknown \
-    && cargo install --git https://github.com/alexcrichton/wasm-gc
+    && rustup target add wasm32-unknown-unknown
