@@ -37,7 +37,7 @@ use parity_scale_codec::{Decode, FullCodec};
 
 use frame_support::storage::generator::{StorageMap, StorageValue};
 use frame_support::storage::StoragePrefixedMap;
-use radicle_registry_runtime::{balances, registry, Runtime};
+use radicle_registry_runtime::{balances, registry, registry::DecodeKey, Runtime};
 
 mod backend;
 mod error;
@@ -231,7 +231,7 @@ impl ClientT for Client {
         let keys = self.backend.fetch_keys(&orgs_prefix, None).await?;
         let mut org_ids: Vec<OrgId> = Vec::with_capacity(keys.len());
         for key in keys {
-            let org_id = registry::store::Orgs::id_from_key(&key)
+            let org_id = registry::store::Orgs::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract org ID");
             org_ids.push(org_id)
         }
@@ -249,7 +249,7 @@ impl ClientT for Client {
         let keys = self.backend.fetch_keys(&project_prefix, None).await?;
         let mut project_ids = Vec::with_capacity(keys.len());
         for key in keys {
-            let project_id = registry::store::Projects::id_from_key(&key)
+            let project_id = registry::store::Projects::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract project ID");
             project_ids.push(project_id);
         }
