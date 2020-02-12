@@ -223,7 +223,7 @@ impl ClientT for Client {
     async fn get_org(&self, id: OrgId) -> Result<Option<Org>, Error> {
         self.fetch_map_value::<registry::store::Orgs, _, _>(id.clone())
             .await
-            .map(|maybe_org: Option<state::Org>| maybe_org.map(|org| Org::from(id, org)))
+            .map(|maybe_org: Option<state::Org>| maybe_org.map(|org| Org::new(id, org)))
     }
 
     async fn list_orgs(&self) -> Result<Vec<OrgId>, Error> {
@@ -238,9 +238,10 @@ impl ClientT for Client {
         Ok(org_ids)
     }
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<state::Project>, Error> {
-        self.fetch_map_value::<registry::store::Projects, _, _>(id)
+    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
+        self.fetch_map_value::<registry::store::Projects, _, _>(id.clone())
             .await
+            .map(|maybe_project| maybe_project.map(|project| Project::new(id.0, id.1, project)))
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {

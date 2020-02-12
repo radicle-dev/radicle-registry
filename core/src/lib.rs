@@ -36,9 +36,6 @@ pub use bytes128::Bytes128;
 pub mod string32;
 pub use string32::String32;
 
-mod project_domain;
-pub use project_domain::ProjectDomain;
-
 mod error;
 pub use error::RegistryError;
 
@@ -56,7 +53,7 @@ pub type Balance = u128;
 /// The name a project is registered with.
 pub type ProjectName = String32;
 
-pub type ProjectId = (ProjectName, ProjectDomain);
+pub type ProjectId = (OrgId, ProjectName);
 
 pub type OrgId = String32;
 
@@ -81,12 +78,43 @@ pub struct Org {
 }
 
 impl Org {
-    pub fn from(id: OrgId, org: state::Org) -> Org {
+    pub fn new(id: OrgId, org: state::Org) -> Org {
         Org {
             id,
             account_id: org.account_id,
             members: org.members,
             projects: org.projects,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Project {
+    /// The name of the project, unique within its org.
+    pub name: ProjectName,
+
+    /// The Org to which the project belongs to.
+    pub org_id: OrgId,
+
+    /// See [state::Project::current_cp]
+    pub current_cp: CheckpointId,
+
+    /// See [state::Project::metadata]
+    pub metadata: Bytes128,
+}
+
+impl Project {
+    pub fn id(self) -> ProjectId {
+        (self.org_id, self.name)
+    }
+
+    /// Build a [crate::Project] given all its properties obtained from storage.
+    pub fn new(org_id: OrgId, name: ProjectName, project: state::Project) -> Self {
+        Project {
+            name,
+            org_id,
+            current_cp: project.current_cp,
+            metadata: project.metadata,
         }
     }
 }

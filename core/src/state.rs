@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::Hash;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectId, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectName, H256};
 
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
@@ -55,14 +55,16 @@ impl Checkpoint {
 
 /// # Storage
 ///
-/// Projects are stored as a map with the key derived from [Project::id]. The project ID can be
-/// extracted from the storage key.
+/// This type is only used for storage. See [crate::Project] for the
+/// complete Project type to be used everywhere else.
+///
+/// Projects are stored as a map with the key derived from a given [crate::ProjectId].
+/// The project ID can be extracted from the storage key.
 ///
 /// # Invariants
 ///
 /// * `current_cp` is guaranteed to point to an existing [Checkpoint]
 /// * `metadata` is immutable
-/// * `account_id` is immutable
 ///
 /// # Relevant messages
 ///
@@ -70,21 +72,6 @@ impl Checkpoint {
 /// * [crate::message::RegisterProject]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Project {
-    /// ID of the project. The storage key is derived from this value.
-    pub id: ProjectId,
-
-    /// Account ID that holds the projecs funds.
-    ///
-    /// This is randomly generated and unlike for other accounts there is no private key that
-    /// controls this account.
-    pub account_id: AccountId,
-
-    /// List of members that are allowed to modify the project and transfer funds.
-    ///
-    /// This is initialized with the author of the [crate::message::RegisterProject] transaction.
-    /// It cannot be changed at the moment.
-    pub members: Vec<AccountId>,
-
     /// Links to the checkpoint of project state.
     ///
     /// Updated with the [crate::message::SetCheckpoint] transaction.
@@ -106,7 +93,7 @@ pub struct Project {
 /// # Relevant messages
 ///
 /// * [crate::message::Transfer]
-/// * [crate::message::TransferFromProject]
+/// * [crate::message::TransferFromOrg]
 pub type AccountBalance = Balance;
 
 /// Next index (nonce) for a transaction of an account.
@@ -154,4 +141,16 @@ pub struct Org {
     /// Set of all projects owned by the org. Members are allowed to register
     /// a project by sending a [crate::message::RegisterProject] transaction.
     pub projects: Vec<ProjectName>,
+}
+
+impl Org {
+    /// Add the given project to the list of [Org::projects].
+    /// Return a new Org with the new project included or the
+    /// same org if the org already contains that project.
+    pub fn add_project(mut self, project_name: ProjectName) -> Org {
+        if !self.projects.contains(&project_name) {
+            self.projects.push(project_name);
+        }
+        self
+    }
 }

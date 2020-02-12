@@ -5,6 +5,11 @@ Upcoming
 --------
 
 ### Breaking changes
+
+* Update `ProjectId`, now alias to `(OrgId, ProjectName)`
+* Drop `ProjectDomain`
+* Update `Project` to the latest spec containing different fields
+* Drop `TransferFromProject` message
 * `String32::from_string` now returns `Result<String32, InordinateStringError>`
 * `Bytes128::from_vec` now returns `Result<Bytes128, InordinateVectorError>`
 * Make `ProjectDomain` a wrapper of `String32` and only support the "rad" domain.
@@ -33,7 +38,7 @@ Upcoming
 * The `Client` and `ClientT` methods are now `async`.
 
 ### Addition
-
+* Add `TransferFromOrg` message
 * Add `Client::get_org` and `Client::list_orgs`
 * Add `RegisterOrg` and `UnregisterOrg` messages
 * Add Transaction::hash() function

@@ -28,11 +28,14 @@ async fn register_project() {
     .result
     .unwrap();
 
-    let register_project_message = random_register_project_message(checkpoint_id);
+    let org_id = random_string32();
+    let register_org_message = message::RegisterOrg { id: org_id.clone() };
+    let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
+    assert_eq!(org_registered_tx.result, Ok(()));
 
+    let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_id = register_project_message.id.clone();
     let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
-
     assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
@@ -40,13 +43,16 @@ async fn register_project() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.id, register_project_message.id.clone());
-    assert_eq!(project.current_cp, register_project_message.checkpoint_id);
-    assert_eq!(project.metadata, register_project_message.metadata);
+    assert_eq!(project.clone().id(), project_id.clone());
+    assert_eq!(
+        project.current_cp.clone(),
+        register_project_message.checkpoint_id
+    );
+    assert_eq!(project.metadata.clone(), register_project_message.metadata);
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone(), project.account_id).into()
+        RegistryEvent::ProjectRegistered(project_id.clone()).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
@@ -56,13 +62,25 @@ async fn register_project() {
     };
     assert_eq!(checkpoint, checkpoint_);
 
-    let has_project = client
-        .list_projects()
-        .await
-        .unwrap()
-        .iter()
-        .any(|id| *id == project_id.clone());
-    assert!(has_project, "Registered project not found in project list")
+    assert!(
+        client
+            .get_project(project_id.clone())
+            .await
+            .unwrap()
+            .is_some(),
+        "Registered project not found in project list"
+    );
+
+    let org: Org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    assert!(
+        org.projects.contains(&project_id.1),
+        format!(
+            "Expected project id {} in Org {} with projects {:?}",
+            project_id.1.clone(),
+            project_id.0.clone(),
+            org.projects
+        )
+    );
 }
 
 #[async_std::test]
@@ -74,7 +92,6 @@ async fn register_org() {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let register_org_message = random_register_org_message();
-
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
 
     assert_eq!(
@@ -83,19 +100,12 @@ async fn register_org() {
     );
     assert_eq!(tx_applied.result, Ok(()));
 
-    let has_org = client
-        .list_orgs()
-        .await
-        .unwrap()
-        .iter()
-        .any(|id| *id == register_org_message.id);
-    assert!(has_org, "Registered org not found in orgs list");
-
-    let org: Org = client
+    let opt_org = client
         .get_org(register_org_message.id.clone())
         .await
-        .unwrap()
         .unwrap();
+    assert!(opt_org.is_some(), "Registered org not found in orgs list");
+    let org = opt_org.unwrap();
     assert_eq!(org.id, register_org_message.id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());

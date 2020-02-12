@@ -37,9 +37,10 @@ pub async fn submit_ok<Message_: Message>(
 }
 
 pub async fn create_project_with_checkpoint(
+    org_id: OrgId,
     client: &Client,
     author: &ed25519::Pair,
-) -> state::Project {
+) -> Project {
     let checkpoint_id = submit_ok(
         &client,
         &author,
@@ -52,24 +53,39 @@ pub async fn create_project_with_checkpoint(
     .result
     .unwrap();
 
-    let message = random_register_project_message(checkpoint_id);
+    let register_org_message = message::RegisterOrg { id: org_id.clone() };
+    submit_ok(&client, &author, register_org_message.clone()).await;
 
-    submit_ok(&client, &author, message.clone()).await;
+    let register_project_message = random_register_project_message(org_id, checkpoint_id);
+    submit_ok(&client, &author, register_project_message.clone()).await;
 
-    client.get_project(message.id).await.unwrap().unwrap()
+    client
+        .get_project(register_project_message.id)
+        .await
+        .unwrap()
+        .unwrap()
 }
 
-/// Create random parameters to register a project with.
-/// The project's name and domain will be alphanumeric strings with 32
-/// characters, and the description and image URL will be alphanumeric strings
-/// with 50 characters.
-pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
-    let name = random_string(32);
-    let domain = ProjectDomain::rad_domain();
-    let id = (name.parse().unwrap(), domain);
+pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
+    let register_org_message = random_register_org_message();
+    submit_ok(&client, &author, register_org_message.clone()).await;
+
+    client
+        .get_org(register_org_message.id)
+        .await
+        .unwrap()
+        .unwrap()
+}
+
+/// Create a [core::message::RegisterProject] with random parameters to register a project with.
+pub fn random_register_project_message(
+    org_id: OrgId,
+    checkpoint_id: CheckpointId,
+) -> message::RegisterProject {
+    let name = random_string32();
 
     message::RegisterProject {
-        id,
+        id: (org_id, name),
         checkpoint_id,
         metadata: Bytes128::random(),
     }
