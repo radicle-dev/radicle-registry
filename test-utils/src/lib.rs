@@ -74,10 +74,7 @@ pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
         .unwrap()
 }
 
-/// Create random parameters to register a project with.
-/// The project's name and domain will be alphanumeric strings with 32
-/// characters, and the description and image URL will be alphanumeric strings
-/// with 50 characters.
+/// Create a [core::message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
     let org_id = random_string32();
     let name = random_string32();

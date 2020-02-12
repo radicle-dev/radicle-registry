@@ -82,7 +82,7 @@ pub trait CommandT {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Show information for a registered project in the .rad domain.
+/// Show information for a registered project.
 pub struct ShowProject {
     project_name: String32,
     project_org_id: OrgId,
@@ -120,8 +120,8 @@ impl CommandT for ListProjects {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let project_ids = command_context.client.list_projects().await?;
         println!("PROJECTS");
-        for (name, domain) in project_ids {
-            println!("{}.{}", name, domain)
+        for (name, org) in project_ids {
+            println!("{}.{}", name, org)
         }
         Ok(())
     }
@@ -186,7 +186,7 @@ impl CommandT for UnregisterOrg {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Register a project under the default "rad" domain.
+/// Register a project with the given name under the given org.
 pub struct RegisterProject {
     /// Name of the project to register.
     name: String32,
@@ -257,8 +257,9 @@ impl CommandT for ShowGenesisHash {
 /// Transfer funds to recipient
 pub struct Transfer {
     #[structopt(parse(try_from_str = parse_account_id))]
-    /// Recipient Account in SS58 address format
+    /// The recipient account of this transfer
     recipient: AccountId,
+    // The amount to transfer
     funds: Balance,
 }
 
@@ -292,7 +293,8 @@ impl CommandT for Transfer {
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Transfer funds from a project to a recipient. The author needs to be the owner of the project
+/// Transfer funds from an org to a recipient.
+/// The author needs to be part of [crate::state::Org::members] of the org.
 pub struct TransferOrgFunds {
     /// Id of the org.
     #[structopt(value_name = "org")]

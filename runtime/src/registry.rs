@@ -188,7 +188,6 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), new_project);
-            // store::Orgs::mutate(org_id.clone(), |opt_org| opt_org.as_ref().map(|org| org.clone().add_project(project_name.clone())));
             store::Orgs::insert(
                 org_id.clone(),
                 store::Orgs::get(org_id).unwrap().add_project(project_name)
