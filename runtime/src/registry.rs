@@ -165,16 +165,20 @@ decl_module! {
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
-            let _sender = ensure_signed(origin)?;
+            let sender = ensure_signed(origin)?;
+            let (org_id, project_name) = message.id.clone();
+
+            let org = match store::Orgs::get(org_id.clone()) {
+                None => return Err(RegistryError::InexistentOrg.into()),
+                Some(o) => o,
+            };
+
+            if !org.members.contains(&sender) {
+                return Err(RegistryError::InsufficientSenderPermissions.into());
+            }
 
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
-            }
-
-            let (org_id, project_name) = message.id.clone();
-
-            if store::Orgs::get(org_id.clone()).is_none() {
-                return Err(RegistryError::InexistentOrg.into());
             }
 
             let project_id = message.id.clone();
@@ -188,10 +192,7 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), new_project);
-            store::Orgs::insert(
-                org_id.clone(),
-                store::Orgs::get(org_id).unwrap().add_project(project_name)
-            );
+            store::Orgs::insert(org_id, org.add_project(project_name));
             store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(project_id));

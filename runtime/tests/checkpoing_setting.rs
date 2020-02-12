@@ -12,7 +12,8 @@ async fn set_checkpoint() {
     let client = Client::new_emulator();
     let charles = key_pair_from_string("Charles");
 
-    let project = create_project_with_checkpoint(&client, &charles).await;
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &charles).await;
     let project_id = project.clone().id();
 
     let project_hash2 = H256::random();
@@ -47,7 +48,8 @@ async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
     let eve = key_pair_from_string("Eve");
 
-    let project = create_project_with_checkpoint(&client, &eve).await;
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &eve).await;
     let project_id = project.clone().id();
 
     let project_hash2 = H256::random();
@@ -87,7 +89,9 @@ async fn set_checkpoint_without_permission() {
 async fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
     let david = key_pair_from_string("David");
-    let project = create_project_with_checkpoint(&client, &david).await;
+
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &david).await;
     let project_id = project.clone().id();
     let garbage = CheckpointId::random();
 
@@ -115,7 +119,8 @@ async fn set_fork_checkpoint() {
     let client = Client::new_emulator();
     let grace = key_pair_from_string("Grace");
 
-    let project = create_project_with_checkpoint(&client, &grace).await;
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &grace).await;
     let project_id = project.clone().id();
 
     let mut current_cp = project.current_cp;

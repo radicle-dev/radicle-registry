@@ -66,11 +66,13 @@ pub struct UnregisterOrg {
 ///
 /// # State-dependent validations
 ///
-/// A checkpoint with the given ID must exist.
-///
 /// The involved org must exit.
 ///
-/// A project with the same name must not yet exist in the same org.
+/// The author must be a member of the involved org.
+///
+/// A checkpoint with the given ID must exist.
+///
+/// A project with the same name must not yet exist in the org.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {

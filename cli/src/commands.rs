@@ -257,9 +257,9 @@ impl CommandT for ShowGenesisHash {
 /// Transfer funds to recipient
 pub struct Transfer {
     #[structopt(parse(try_from_str = parse_account_id))]
-    /// The recipient account of this transfer
+    /// Recipient Account in SS58 address format.
     recipient: AccountId,
-    // The amount to transfer
+    // The amount to transfer.
     funds: Balance,
 }
 
@@ -294,7 +294,7 @@ impl CommandT for Transfer {
 
 #[derive(StructOpt, Debug, Clone)]
 /// Transfer funds from an org to a recipient.
-/// The author needs to be part of [crate::state::Org::members] of the org.
+/// The author needs to be a member of the org.
 pub struct TransferOrgFunds {
     /// Id of the org.
     #[structopt(value_name = "org")]

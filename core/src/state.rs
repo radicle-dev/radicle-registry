@@ -147,14 +147,10 @@ impl Org {
     /// Add the given project to the list of [Org::projects].
     /// Return a new Org with the new project included or the
     /// same org if the org already contains that project.
-    pub fn add_project(self, project_name: ProjectName) -> Org {
-        if self.projects.contains(&project_name) {
-            self
-        } else {
-            Self {
-                projects: [&self.projects[..], &[project_name]].concat(),
-                ..self
-            }
+    pub fn add_project(mut self, project_name: ProjectName) -> Org {
+        if !self.projects.contains(&project_name) {
+            self.projects.push(project_name);
         }
+        self
     }
 }

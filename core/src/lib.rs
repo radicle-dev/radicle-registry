@@ -78,7 +78,7 @@ pub struct Org {
 }
 
 impl Org {
-    pub fn from(id: OrgId, org: state::Org) -> Org {
+    pub fn new(id: OrgId, org: state::Org) -> Org {
         Org {
             id,
             account_id: org.account_id,
@@ -109,7 +109,7 @@ impl Project {
     }
 
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn from(org_id: OrgId, name: ProjectName, project: state::Project) -> Self {
+    pub fn new(org_id: OrgId, name: ProjectName, project: state::Project) -> Self {
         Project {
             name,
             org_id,

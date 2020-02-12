@@ -23,13 +23,11 @@ async fn register_project() {
     .await
     .result
     .unwrap();
-    let message = random_register_project_message(checkpoint_id);
 
-    let org_msg = message::RegisterOrg {
-        id: message.id.0.clone(),
-    };
-    submit_ok(&client, &alice, org_msg.clone()).await;
+    let register_org = random_register_org_message();
+    submit_ok(&client, &alice, register_org.clone()).await;
 
+    let message = random_register_project_message(register_org.id.clone(), checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
@@ -61,13 +59,16 @@ async fn register_project() {
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
     assert_eq!(checkpoint, checkpoint_);
 
-    let org = client
-        .get_org(project.org_id.clone())
+    let org: Org = client
+        .get_org(register_org.id.clone())
         .await
         .unwrap()
         .unwrap();
-
     assert_eq!(org.projects.len(), 1);
+    assert!(
+        org.projects.contains(&project.name.clone()),
+        "Org does not contain the added project."
+    );
 }
 
 #[async_std::test]
@@ -88,7 +89,8 @@ async fn register_project_with_inexistent_org() {
     .result
     .unwrap();
 
-    let message = random_register_project_message(checkpoint_id);
+    let inexistent_org_id = random_string32();
+    let message = random_register_project_message(inexistent_org_id, checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     assert_eq!(tx_applied.result, Err(RegistryError::InexistentOrg.into()));
@@ -111,11 +113,11 @@ async fn register_project_with_duplicate_id() {
     .result
     .unwrap();
 
-    let message = random_register_project_message(checkpoint_id);
-    let org_msg = message::RegisterOrg {
-        id: message.id.0.clone(),
-    };
-    submit_ok(&client, &alice, org_msg.clone()).await;
+    let org_id = random_string32();
+    let register_org = message::RegisterOrg { id: org_id.clone() };
+    submit_ok(&client, &alice, register_org.clone()).await;
+
+    let message = random_register_project_message(org_id.clone(), checkpoint_id);
     submit_ok(&client, &alice, message.clone()).await;
 
     // Duplicate submission with different description and image URL.
@@ -135,19 +137,17 @@ async fn register_project_with_duplicate_id() {
     );
 
     let project = client.get_project(message.id).await.unwrap().unwrap();
-
-    let org = client
-        .get_org(project.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
-
-    // Assert that the number of projects in the involved Org didn't change.
-    assert_eq!(org.projects.len(), 1);
-
     // Assert that the project data was not altered during the
     // attempt to re-register the already existing project.
-    assert_eq!(message.metadata, project.metadata)
+    assert_eq!(message.metadata, project.metadata);
+
+    let org = client.get_org(org_id).await.unwrap().unwrap();
+    // Assert that the number of projects in the involved Org didn't change.
+    assert_eq!(org.projects.len(), 1);
+    assert!(
+        org.projects.contains(&project.name),
+        "Registered project not found in the org project list",
+    );
 }
 
 #[async_std::test]
@@ -157,20 +157,44 @@ async fn register_project_with_bad_checkpoint() {
 
     let checkpoint_id = H256::random();
 
-    let message = random_register_project_message(checkpoint_id);
-
-    let tx_applied = submit_ok(&client, &alice, message.clone()).await;
-    let org_msg = message::RegisterOrg {
-        id: message.id.0.clone(),
-    };
-    submit_ok(&client, &alice, org_msg.clone()).await;
+    let org_id = random_string32();
+    let register_project = random_register_project_message(org_id.clone(), checkpoint_id);
+    let register_org = message::RegisterOrg { id: org_id };
+    submit_ok(&client, &alice, register_org.clone()).await;
+    let tx_applied = submit_ok(&client, &alice, register_project.clone()).await;
 
     assert_eq!(
         tx_applied.result,
         Err(RegistryError::InexistentCheckpointId.into())
     );
 
-    let no_project = client.get_project(message.id).await.unwrap();
+    assert!(client
+        .get_project(register_project.id)
+        .await
+        .unwrap()
+        .is_none());
+}
 
-    assert!(no_project.is_none())
+#[async_std::test]
+async fn register_project_with_bad_actor() {
+    let client = Client::new_emulator();
+    let god_actor = key_pair_from_string("Alice");
+    let bad_actor = key_pair_from_string("BadActor");
+
+    let org_id = random_string32();
+    let register_project = random_register_project_message(org_id.clone(), H256::random());
+    let register_org = message::RegisterOrg { id: org_id };
+    submit_ok(&client, &god_actor, register_org.clone()).await;
+    let tx_applied = submit_ok(&client, &bad_actor, register_project.clone()).await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InsufficientSenderPermissions.into())
+    );
+
+    assert!(client
+        .get_project(register_project.id)
+        .await
+        .unwrap()
+        .is_none());
 }

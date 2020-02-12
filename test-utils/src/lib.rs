@@ -36,7 +36,11 @@ pub async fn submit_ok<Message_: Message>(
         .unwrap()
 }
 
-pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::Pair) -> Project {
+pub async fn create_project_with_checkpoint(
+    org_id: OrgId,
+    client: &Client,
+    author: &ed25519::Pair,
+) -> Project {
     let checkpoint_id = submit_ok(
         &client,
         &author,
@@ -49,11 +53,10 @@ pub async fn create_project_with_checkpoint(client: &Client, author: &ed25519::P
     .result
     .unwrap();
 
-    let register_project_message = random_register_project_message(checkpoint_id);
-    let register_org_message = message::RegisterOrg {
-        id: register_project_message.id.0.clone(),
-    };
+    let register_org_message = message::RegisterOrg { id: org_id.clone() };
     submit_ok(&client, &author, register_org_message.clone()).await;
+
+    let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
@@ -75,8 +78,10 @@ pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
 }
 
 /// Create a [core::message::RegisterProject] with random parameters to register a project with.
-pub fn random_register_project_message(checkpoint_id: CheckpointId) -> message::RegisterProject {
-    let org_id = random_string32();
+pub fn random_register_project_message(
+    org_id: OrgId,
+    checkpoint_id: CheckpointId,
+) -> message::RegisterProject {
     let name = random_string32();
 
     message::RegisterProject {
