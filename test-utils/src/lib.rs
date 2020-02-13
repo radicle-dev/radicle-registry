@@ -53,14 +53,16 @@ pub async fn create_project_with_checkpoint(
     .result
     .unwrap();
 
-    let register_org_message = message::RegisterOrg { id: org_id.clone() };
+    let register_org_message = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
     submit_ok(&client, &author, register_org_message.clone()).await;
 
     let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
-        .get_project(register_project_message.id)
+        .get_project(register_project_message.project_id)
         .await
         .unwrap()
         .unwrap()
@@ -71,7 +73,7 @@ pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
     submit_ok(&client, &author, register_org_message.clone()).await;
 
     client
-        .get_org(register_org_message.id)
+        .get_org(register_org_message.org_id)
         .await
         .unwrap()
         .unwrap()
@@ -85,7 +87,7 @@ pub fn random_register_project_message(
     let name = random_string32();
 
     message::RegisterProject {
-        id: (org_id, name),
+        project_id: (org_id, name),
         checkpoint_id,
         metadata: Bytes128::random(),
     }
@@ -93,7 +95,7 @@ pub fn random_register_project_message(
 
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
-        id: random_string32(),
+        org_id: random_string32(),
     }
 }
 

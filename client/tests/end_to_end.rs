@@ -29,12 +29,14 @@ async fn register_project() {
     .unwrap();
 
     let org_id = random_string32();
-    let register_org_message = message::RegisterOrg { id: org_id.clone() };
+    let register_org_message = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
-    let project_id = register_project_message.id.clone();
+    let project_id = register_project_message.project_id.clone();
     let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
     assert_eq!(tx_applied.result, Ok(()));
 
@@ -96,17 +98,17 @@ async fn register_org() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.id.clone()).into()
+        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
     );
     assert_eq!(tx_applied.result, Ok(()));
 
     let opt_org = client
-        .get_org(register_org_message.id.clone())
+        .get_org(register_org_message.org_id.clone())
         .await
         .unwrap();
     assert!(opt_org.is_some(), "Registered org not found in orgs list");
     let org = opt_org.unwrap();
-    assert_eq!(org.id, register_org_message.id);
+    assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
 }

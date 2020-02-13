@@ -16,21 +16,21 @@ async fn register_org() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.id.clone()).into()
+        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
     );
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
-        org_exists(&client, register_org_message.id.clone()).await,
+        org_exists(&client, register_org_message.org_id.clone()).await,
         "Org not found in orgs list"
     );
 
     let org: Org = client
-        .get_org(register_org_message.id.clone())
+        .get_org(register_org_message.org_id.clone())
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(org.id, register_org_message.id);
+    assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
 }
@@ -61,24 +61,24 @@ async fn unregister_org() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.id.clone()).into()
+        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
     );
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
-        org_exists(&client, register_org_message.id.clone()).await,
+        org_exists(&client, register_org_message.org_id.clone()).await,
         "Org not found in orgs list"
     );
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
-        id: register_org_message.id.clone(),
+        org_id: register_org_message.org_id.clone(),
     };
     let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
     assert_eq!(tx_unregister_applied.result, Ok(()));
 
     assert!(
-        !org_exists(&client, register_org_message.id.clone()).await,
+        !org_exists(&client, register_org_message.org_id.clone()).await,
         "The org was not expected to exist"
     );
 }
@@ -93,18 +93,18 @@ async fn unregister_org_bad_sender() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.id.clone()).into()
+        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
     );
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
-        org_exists(&client, register_org_message.id.clone()).await,
+        org_exists(&client, register_org_message.org_id.clone()).await,
         "Org not found in orgs list"
     );
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
-        id: register_org_message.id.clone(),
+        org_id: register_org_message.org_id.clone(),
     };
     let bad_actor = key_pair_from_string("BadActor");
     let tx_unregister_applied =
@@ -114,7 +114,7 @@ async fn unregister_org_bad_sender() {
         Err(RegistryError::UnregisterableOrg.into())
     );
     assert!(
-        org_exists(&client, register_org_message.id.clone()).await,
+        org_exists(&client, register_org_message.org_id.clone()).await,
         "Org not found in orgs list"
     );
 }
@@ -142,7 +142,7 @@ async fn unregister_org_with_projects() {
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
-        id: random_project.org_id.clone(),
+        org_id: random_project.org_id.clone(),
     };
     let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
 

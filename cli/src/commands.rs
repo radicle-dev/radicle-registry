@@ -34,7 +34,7 @@ pub enum CommandError {
         block_hash: BlockHash,
     },
     ProjectNotFound {
-        name: ProjectName,
+        project_name: ProjectName,
         org_id: OrgId,
     },
 }
@@ -47,9 +47,10 @@ impl core::fmt::Display for CommandError {
                 tx_hash,
                 block_hash,
             } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
-            CommandError::ProjectNotFound { name, org_id } => {
-                write!(f, "Cannot find project {}.{}", name, org_id)
-            }
+            CommandError::ProjectNotFound {
+                project_name,
+                org_id,
+            } => write!(f, "Cannot find project {}.{}", project_name, org_id),
         }
     }
 }
@@ -84,8 +85,10 @@ pub trait CommandT {
 #[derive(StructOpt, Debug, Clone)]
 /// Show information for a registered project.
 pub struct ShowProject {
+    /// The name of the project
     project_name: String32,
-    project_org_id: OrgId,
+    /// The org in which the project is registered.
+    org_id: OrgId,
 }
 
 #[async_trait::async_trait]
@@ -93,14 +96,14 @@ impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let opt_project = command_context
             .client
-            .get_project((self.project_name.clone(), self.project_org_id.clone()))
+            .get_project((self.org_id.clone(), self.project_name.clone()))
             .await?;
 
         let project = match opt_project {
             None => {
                 return Err(CommandError::ProjectNotFound {
-                    org_id: self.project_org_id.clone(),
-                    name: self.project_name.clone(),
+                    org_id: self.org_id.clone(),
+                    project_name: self.project_name.clone(),
                 });
             }
             Some(project) => project,
@@ -131,7 +134,7 @@ impl CommandT for ListProjects {
 /// Register an org.
 pub struct RegisterOrg {
     /// Id of the org to register.
-    id: OrgId,
+    org_id: OrgId,
 }
 
 #[async_trait::async_trait]
@@ -143,7 +146,7 @@ impl CommandT for RegisterOrg {
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::RegisterOrg {
-                    id: self.id.clone(),
+                    org_id: self.org_id.clone(),
                 },
             )
             .await?;
@@ -151,7 +154,7 @@ impl CommandT for RegisterOrg {
 
         let org_registered = register_org_fut.await?;
         transaction_applied_ok(&org_registered)?;
-        println!("Org {} is now registered.", self.id);
+        println!("Org {} is now registered.", self.org_id);
         Ok(())
     }
 }
@@ -160,7 +163,7 @@ impl CommandT for RegisterOrg {
 /// Unregister an org.
 pub struct UnregisterOrg {
     /// Id of the org to unregister.
-    id: OrgId,
+    org_id: OrgId,
 }
 
 #[async_trait::async_trait]
@@ -172,7 +175,7 @@ impl CommandT for UnregisterOrg {
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::UnregisterOrg {
-                    id: self.id.clone(),
+                    org_id: self.org_id.clone(),
                 },
             )
             .await?;
@@ -180,7 +183,7 @@ impl CommandT for UnregisterOrg {
 
         let org_unregistered = register_org_fut.await?;
         transaction_applied_ok(&org_unregistered)?;
-        println!("Org {} is now unregistered.", self.id);
+        println!("Org {} is now unregistered.", self.org_id);
         Ok(())
     }
 }
@@ -189,7 +192,7 @@ impl CommandT for UnregisterOrg {
 /// Register a project with the given name under the given org.
 pub struct RegisterProject {
     /// Name of the project to register.
-    name: String32,
+    project_name: String32,
 
     /// Org under which to register the project.
     org_id: OrgId,
@@ -218,12 +221,12 @@ impl CommandT for RegisterProject {
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
         println!("checkpoint created in block {}", checkpoint_created.block);
 
-        let project_id: ProjectId = (self.org_id.clone(), self.name.clone());
+        let project_id: ProjectId = (self.org_id.clone(), self.project_name.clone());
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::RegisterProject {
-                    id: project_id,
+                    project_id,
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
@@ -234,7 +237,7 @@ impl CommandT for RegisterProject {
         transaction_applied_ok(&project_registered)?;
         println!(
             "project {}.{} registered in block {}",
-            self.name, self.org_id, project_registered.block,
+            self.project_name, self.org_id, project_registered.block,
         );
         Ok(())
     }

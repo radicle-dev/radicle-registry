@@ -27,21 +27,21 @@ async fn register_project() {
     let register_org = random_register_org_message();
     submit_ok(&client, &alice, register_org.clone()).await;
 
-    let message = random_register_project_message(register_org.id.clone(), checkpoint_id);
+    let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
-        .get_project(message.clone().id)
+        .get_project(message.clone().project_id)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.clone().id(), message.id.clone());
+    assert_eq!(project.clone().id(), message.project_id.clone());
     assert_eq!(project.current_cp.clone(), checkpoint_id);
     assert_eq!(project.metadata.clone(), message.metadata.clone());
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().id).into()
+        RegistryEvent::ProjectRegistered(message.clone().project_id).into()
     );
 
     let has_project = client
@@ -49,7 +49,7 @@ async fn register_project() {
         .await
         .unwrap()
         .iter()
-        .any(|id| *id == message.id);
+        .any(|id| *id == message.project_id);
     assert!(has_project, "Registered project not found in project list");
 
     let checkpoint_ = state::Checkpoint {
@@ -60,7 +60,7 @@ async fn register_project() {
     assert_eq!(checkpoint, checkpoint_);
 
     let org: Org = client
-        .get_org(register_org.id.clone())
+        .get_org(register_org.org_id.clone())
         .await
         .unwrap()
         .unwrap();
@@ -114,7 +114,9 @@ async fn register_project_with_duplicate_id() {
     .unwrap();
 
     let org_id = random_string32();
-    let register_org = message::RegisterOrg { id: org_id.clone() };
+    let register_org = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
     submit_ok(&client, &alice, register_org.clone()).await;
 
     let message = random_register_project_message(org_id.clone(), checkpoint_id);
@@ -136,7 +138,11 @@ async fn register_project_with_duplicate_id() {
         Err(RegistryError::DuplicateProjectId.into())
     );
 
-    let project = client.get_project(message.id).await.unwrap().unwrap();
+    let project = client
+        .get_project(message.project_id)
+        .await
+        .unwrap()
+        .unwrap();
     // Assert that the project data was not altered during the
     // attempt to re-register the already existing project.
     assert_eq!(message.metadata, project.metadata);
@@ -159,7 +165,7 @@ async fn register_project_with_bad_checkpoint() {
 
     let org_id = random_string32();
     let register_project = random_register_project_message(org_id.clone(), checkpoint_id);
-    let register_org = message::RegisterOrg { id: org_id };
+    let register_org = message::RegisterOrg { org_id };
     submit_ok(&client, &alice, register_org.clone()).await;
     let tx_applied = submit_ok(&client, &alice, register_project.clone()).await;
 
@@ -169,7 +175,7 @@ async fn register_project_with_bad_checkpoint() {
     );
 
     assert!(client
-        .get_project(register_project.id)
+        .get_project(register_project.project_id)
         .await
         .unwrap()
         .is_none());
@@ -183,7 +189,7 @@ async fn register_project_with_bad_actor() {
 
     let org_id = random_string32();
     let register_project = random_register_project_message(org_id.clone(), H256::random());
-    let register_org = message::RegisterOrg { id: org_id };
+    let register_org = message::RegisterOrg { org_id };
     submit_ok(&client, &god_actor, register_org.clone()).await;
     let tx_applied = submit_ok(&client, &bad_actor, register_project.clone()).await;
 
@@ -193,7 +199,7 @@ async fn register_project_with_bad_actor() {
     );
 
     assert!(client
-        .get_project(register_project.id)
+        .get_project(register_project.project_id)
         .await
         .unwrap()
         .is_none());

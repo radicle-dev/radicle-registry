@@ -43,7 +43,7 @@ async fn go() -> Result<(), Error> {
         .sign_and_submit_message(
             &alice,
             message::RegisterProject {
-                id: project_id.clone(),
+                project_id: project_id.clone(),
                 checkpoint_id,
                 metadata: Bytes128::random(),
             },

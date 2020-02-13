@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* Normalize core::message and cli commands parameters
 * Update `ProjectId`, now alias to `(OrgId, ProjectName)`
 * Drop `ProjectDomain`
 * Update `Project` to the latest spec containing different fields
