@@ -456,7 +456,7 @@ impl<B: BlockT, Algorithm> Verifier<B> for PowVerifier<B, Algorithm> where
 			justification,
 			intermediates: HashMap::new(),
 			auxiliary: vec![],
-			fork_choice: None,
+			fork_choice: Some(sp_consensus::ForkChoiceStrategy::LongestChain),
 			allow_missing_state: false,
 			import_existing: false,
 		};
@@ -687,7 +687,7 @@ fn mine_loop<B: BlockT, C, Algorithm, E, SO, S, CAW>(
 			intermediates: HashMap::new(),
 			finalized: false,
 			auxiliary: vec![],
-			fork_choice: None,
+			fork_choice: Some(sp_consensus::ForkChoiceStrategy::LongestChain),
 			allow_missing_state: false,
 			import_existing: false,
 		};
