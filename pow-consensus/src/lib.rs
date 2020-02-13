@@ -454,11 +454,7 @@ impl<B: BlockT, Algorithm> Verifier<B> for PowVerifier<B, Algorithm> where
 			storage_changes: None,
 			finalized: false,
 			justification,
-			intermediates: {
-				let mut ret = HashMap::new();
-				ret.insert(Cow::from(INTERMEDIATE_KEY), Box::new(intermediate) as Box<dyn Any>);
-				ret
-			},
+			intermediates: HashMap::new(),
 			auxiliary: vec![],
 			fork_choice: None,
 			allow_missing_state: false,
@@ -681,11 +677,6 @@ fn mine_loop<B: BlockT, C, Algorithm, E, SO, S, CAW>(
 			(hash, seal)
 		};
 
-		let intermediate = PowIntermediate::<B, Algorithm::Difficulty> {
-			hash,
-			difficulty: Some(difficulty),
-		};
-
 		let import_block = BlockImportParams {
 			origin: BlockOrigin::Own,
 			header,
@@ -693,11 +684,7 @@ fn mine_loop<B: BlockT, C, Algorithm, E, SO, S, CAW>(
 			post_digests: vec![seal],
 			body: Some(body),
 			storage_changes: Some(proposal.storage_changes),
-			intermediates: {
-				let mut ret = HashMap::new();
-				ret.insert(Cow::from(INTERMEDIATE_KEY), Box::new(intermediate) as Box<dyn Any>);
-				ret
-			},
+			intermediates: HashMap::new(),
 			finalized: false,
 			auxiliary: vec![],
 			fork_choice: None,
