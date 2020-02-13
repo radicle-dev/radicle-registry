@@ -14,6 +14,7 @@ name = "radicle-registry-node"
 
 [dependencies]
 radicle-registry-runtime = { version = "0.0.0", path = "../runtime" }
+pow-consensus = { version = "0.0.0", path = "../pow-consensus" }
 
 derive_more = "0.15.0"
 exit-future = "0.1.4"
@@ -89,5 +90,13 @@ git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 
 [dependencies.sp-consensus]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-consensus-pow]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"

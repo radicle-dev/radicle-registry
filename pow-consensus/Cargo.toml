@@ -1,0 +1,55 @@
+[package]
+name = "pow-consensus"
+version = "0.0.0"
+authors = [
+  "Parity Technologies <admin@parity.io>"
+]
+description = "PoW consensus algorithm for substrate"
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+derive_more = "0.99.2"
+futures = { version = "0.3.1", features = ["compat"] }
+log = "0.4.8"
+codec = { package = "parity-scale-codec", version = "1.0.0", features = ["derive"] }
+
+[dependencies.sc-client-api]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-core]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-blockchain]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-runtime]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-api]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-block-builder]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-inherents]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-consensus-pow]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-consensus]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-timestamp]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"

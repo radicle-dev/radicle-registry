@@ -1,1 +1,4 @@
 edition = "2018"
+ignore = [
+    "pow-consensus/src"
+]
