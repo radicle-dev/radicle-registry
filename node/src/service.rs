@@ -16,7 +16,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use sc_client::LongestChain;
 use sc_executor::native_executor_instance;
@@ -47,7 +46,6 @@ construct_simple_protocol! {
 /// be able to perform chain operations.
 macro_rules! new_full_start {
     ($config:expr) => {{
-        let mut import_setup = None;
         let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
         let builder = sc_service::ServiceBuilder::new_full::<
@@ -61,41 +59,23 @@ macro_rules! new_full_start {
             let pool = sc_transaction_pool::BasicPool::new(config, std::sync::Arc::new(pool_api));
             Ok(pool)
         })?
-        .with_import_queue(|_config, client, mut select_chain, transaction_pool| {
-            let select_chain = select_chain
-                .take()
-                .ok_or_else(|| sc_service::Error::SelectChainRequired)?;
-
-            let (grandpa_block_import, grandpa_link) =
-                sc_finality_grandpa::block_import::<
-                    _,
-                    _,
-                    _,
-                    radicle_registry_runtime::RuntimeApi,
-                    _,
-                >(client.clone(), &*client, select_chain)?;
-
-            let aura_block_import = sc_consensus_aura::AuraBlockImport::<_, _, _, AuraPair>::new(
-                grandpa_block_import.clone(),
+        .with_import_queue(|_config, client, select_chain, _transaction_pool| {
+            let block_import = pow_consensus::PowBlockImport::new(
                 client.clone(),
-            );
-
-            let import_queue = sc_consensus_aura::import_queue::<_, _, _, AuraPair, _>(
-                sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
-                aura_block_import,
-                Some(Box::new(grandpa_block_import.clone())),
-                None,
                 client,
+                crate::dummy_pow::DummyPow,
+                0,
+                select_chain,
                 inherent_data_providers.clone(),
-                Some(transaction_pool),
+            );
+            let import_queue = pow_consensus::import_queue(
+                Box::new(block_import),
+                crate::dummy_pow::DummyPow,
+                inherent_data_providers.clone(),
             )?;
-
-            import_setup = Some((grandpa_block_import, grandpa_link));
-
             Ok(import_queue)
         })?;
-
-        (builder, import_setup, inherent_data_providers)
+        (builder, inherent_data_providers)
     }};
 }
 
@@ -103,21 +83,7 @@ macro_rules! new_full_start {
 pub fn new_full(
     config: Configuration<GenesisConfig>,
 ) -> Result<impl AbstractService, ServiceError> {
-    let is_authority = config.roles.is_authority();
-    let force_authoring = config.force_authoring;
-    let name = config.name.clone();
-    let disable_grandpa = config.disable_grandpa;
-
-    // sentry nodes announce themselves as authorities to the network
-    // and should run the same protocols authorities do, but it should
-    // never actively participate in any consensus process.
-    let participates_in_consensus = is_authority && !config.sentry_mode;
-
-    let (builder, mut import_setup, inherent_data_providers) = new_full_start!(config);
-
-    let (block_import, grandpa_link) = import_setup.take().expect(
-        "Link Half and Block Import are present for Full Services or setup failed before. qed",
-    );
+    let (builder, inherent_data_providers) = new_full_start!(config);
 
     let service = builder
         .with_network_protocol(|_| Ok(NodeProtocol::new()))?
@@ -126,97 +92,24 @@ pub fn new_full(
         })?
         .build()?;
 
-    if participates_in_consensus {
-        let proposer = sc_basic_authorship::ProposerFactory {
-            client: service.client(),
-            transaction_pool: service.transaction_pool(),
-        };
-
-        let client = service.client();
-        let select_chain = service
-            .select_chain()
-            .ok_or(ServiceError::SelectChainRequired)?;
-        let can_author_with =
-            sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
-
-        let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _>(
-            sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
-            client,
-            select_chain,
-            block_import,
-            proposer,
-            service.network(),
-            inherent_data_providers.clone(),
-            force_authoring,
-            service.keystore(),
-            can_author_with,
-        )?;
-
-        // the AURA authoring task is considered essential, i.e. if it
-        // fails we take down the service with it.
-        service.spawn_essential_task("aura", aura);
-    }
-
-    // if the node isn't actively participating in consensus then it doesn't
-    // need a keystore, regardless of which protocol we use below.
-    let keystore = if participates_in_consensus {
-        Some(service.keystore())
-    } else {
-        None
+    let proposer = sc_basic_authorship::ProposerFactory {
+        client: service.client(),
+        transaction_pool: service.transaction_pool(),
     };
 
-    let grandpa_config = sc_finality_grandpa::Config {
-        // FIXME #1578 make this available through chainspec
-        gossip_duration: Duration::from_millis(333),
-        justification_period: 512,
-        name: Some(name),
-        observer_enabled: true,
-        keystore,
-        is_authority,
-    };
-
-    match (is_authority, disable_grandpa) {
-        (false, false) => {
-            // start the lightweight GRANDPA observer
-            service.spawn_task(
-                "grandpa-observer",
-                sc_finality_grandpa::run_grandpa_observer(
-                    grandpa_config,
-                    grandpa_link,
-                    service.network(),
-                    service.on_exit(),
-                    service.spawn_task_handle(),
-                )?,
-            );
-        }
-        (true, false) => {
-            // start the full GRANDPA voter
-            let voter_config = sc_finality_grandpa::GrandpaParams {
-                config: grandpa_config,
-                link: grandpa_link,
-                network: service.network(),
-                inherent_data_providers,
-                on_exit: service.on_exit(),
-                telemetry_on_connect: Some(service.telemetry_on_connect_stream()),
-                voting_rule: sc_finality_grandpa::VotingRulesBuilder::default().build(),
-                executor: service.spawn_task_handle(),
-            };
-
-            // the GRANDPA voter task is considered infallible, i.e.
-            // if it fails we take down the service with it.
-            service.spawn_essential_task(
-                "grandpa",
-                sc_finality_grandpa::run_grandpa_voter(voter_config)?,
-            );
-        }
-        (_, true) => {
-            sc_finality_grandpa::setup_disabled_grandpa(
-                service.client(),
-                &inherent_data_providers,
-                service.network(),
-            )?;
-        }
-    }
+    pow_consensus::start_mine(
+        Box::new(service.client()),
+        service.client(),
+        crate::dummy_pow::DummyPow,
+        proposer,
+        None,
+        0,
+        service.network(),
+        std::time::Duration::new(2, 0),
+        service.select_chain(),
+        inherent_data_providers,
+        sp_consensus::AlwaysCanAuthor,
+    );
 
     Ok(service)
 }
