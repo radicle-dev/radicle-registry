@@ -238,10 +238,17 @@ impl ClientT for Client {
         Ok(org_ids)
     }
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error> {
-        self.fetch_map_value::<registry::store::Projects, _, _>(id.clone())
+    async fn get_project(
+        &self,
+        project_name: ProjectName,
+        org_id: OrgId,
+    ) -> Result<Option<Project>, Error> {
+        let project_id = (project_name.clone(), org_id.clone());
+        self.fetch_map_value::<registry::store::Projects, _, _>(project_id.clone())
             .await
-            .map(|maybe_project| maybe_project.map(|project| Project::new(id.0, id.1, project)))
+            .map(|maybe_project| {
+                maybe_project.map(|project| Project::new(project_name, org_id, project))
+            })
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {

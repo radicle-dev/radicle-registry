@@ -14,7 +14,7 @@ async fn set_checkpoint() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &charles).await;
-    let project_id = project.clone().id();
+    let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
@@ -33,13 +33,18 @@ async fn set_checkpoint() {
         &client,
         &charles,
         message::SetCheckpoint {
-            project_id: project.id(),
+            project_name: project.name,
+            org_id: project.org_id,
             new_checkpoint_id,
         },
     )
     .await;
 
-    let new_project = client.get_project(project_id).await.unwrap().unwrap();
+    let new_project = client
+        .get_project(project_name, org_id)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp)
 }
 
@@ -50,7 +55,7 @@ async fn set_checkpoint_without_permission() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &eve).await;
-    let project_id = project.clone().id();
+    let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
@@ -70,13 +75,18 @@ async fn set_checkpoint_without_permission() {
         &client,
         &frank,
         message::SetCheckpoint {
-            project_id: project_id.clone(),
+            project_name: project.name,
+            org_id: project.org_id,
             new_checkpoint_id,
         },
     )
     .await;
 
-    let updated_project = client.get_project(project_id).await.unwrap().unwrap();
+    let updated_project = client
+        .get_project(project_name, org_id)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(
         tx_applied.result,
         Err(RegistryError::InsufficientSenderPermissions.into())
@@ -92,14 +102,15 @@ async fn fail_to_set_nonexistent_checkpoint() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &david).await;
-    let project_id = project.clone().id();
+    let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
     let tx_applied = submit_ok(
         &client,
         &david,
         message::SetCheckpoint {
-            project_id: project_id.clone(),
+            project_name: project.name,
+            org_id: project.org_id,
             new_checkpoint_id: garbage,
         },
     )
@@ -109,7 +120,11 @@ async fn fail_to_set_nonexistent_checkpoint() {
         tx_applied.result,
         Err(RegistryError::InexistentCheckpointId.into())
     );
-    let updated_project = client.get_project(project_id).await.unwrap().unwrap();
+    let updated_project = client
+        .get_project(project_name, org_id)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, garbage);
 }
@@ -121,8 +136,7 @@ async fn set_fork_checkpoint() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &grace).await;
-    let project_id = project.clone().id();
-
+    let project_name = project.name.clone();
     let mut current_cp = project.current_cp;
 
     // How many checkpoints to create.
@@ -160,13 +174,18 @@ async fn set_fork_checkpoint() {
         &client,
         &grace,
         message::SetCheckpoint {
-            project_id: project_id.clone(),
+            project_name: project.name,
+            org_id: project.org_id,
             new_checkpoint_id: forked_checkpoint_id,
         },
     )
     .await;
 
-    let project_1 = client.get_project(project_id).await.unwrap().unwrap();
+    let project_1 = client
+        .get_project(project_name, org_id)
+        .await
+        .unwrap()
+        .unwrap();
 
     assert_eq!(project_1.current_cp, forked_checkpoint_id)
 }

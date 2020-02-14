@@ -108,9 +108,8 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let (org_id, project_name) = message.project_id.clone();
 
-            let org = match store::Orgs::get(org_id.clone()) {
+            let org = match store::Orgs::get(message.org_id.clone()) {
                 None => return Err(RegistryError::InexistentOrg.into()),
                 Some(o) => o,
             };
@@ -123,7 +122,8 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            let project_id = message.project_id.clone();
+            let project_id = (message.project_name.clone(), message.org_id.clone());
+
             if store::Projects::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
             };
@@ -134,10 +134,10 @@ decl_module! {
             };
 
             store::Projects::insert(project_id.clone(), new_project);
-            store::Orgs::insert(org_id, org.add_project(project_name));
-            store::InitialCheckpoints::insert(project_id.clone(), message.checkpoint_id);
+            store::Orgs::insert(message.org_id.clone(), org.add_project(message.project_name.clone()));
+            store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(project_id));
+            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.org_id));
             Ok(())
         }
 
@@ -246,9 +246,9 @@ decl_module! {
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
-            let project_id = message.project_id.clone();
+            let project_id = (message.project_name.clone(), message.org_id.clone());
             let opt_project = store::Projects::get(project_id.clone());
-            let opt_org = store::Orgs::get(project_id.0.clone());
+            let opt_org = store::Orgs::get(message.org_id.clone());
             let new_project = match (opt_project, opt_org) {
                 (Some(prj), Some(org)) => {
                     if !org.members.contains(&sender) {
@@ -271,9 +271,13 @@ decl_module! {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
-            store::Projects::insert(project_id.clone(), new_project);
+            store::Projects::insert(project_id, new_project);
 
-            Self::deposit_event(Event::CheckpointSet(project_id, message.new_checkpoint_id));
+            Self::deposit_event(Event::CheckpointSet(
+                message.project_name.clone(),
+                message.org_id.clone(),
+                message.new_checkpoint_id
+            ));
             Ok(())
         }
     }
@@ -282,9 +286,9 @@ decl_event!(
     pub enum Event {
         OrgUnregistered(OrgId),
         OrgRegistered(OrgId),
-        ProjectRegistered(ProjectId),
+        ProjectRegistered(ProjectName, OrgId),
         CheckpointCreated(CheckpointId),
-        CheckpointSet(ProjectId, CheckpointId),
+        CheckpointSet(ProjectName, OrgId, CheckpointId),
     }
 );
 

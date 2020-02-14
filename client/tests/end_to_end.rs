@@ -36,16 +36,18 @@ async fn register_project() {
     assert_eq!(org_registered_tx.result, Ok(()));
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
-    let project_id = register_project_message.project_id.clone();
+    let project_name = register_project_message.project_name.clone();
+    let org_id = register_project_message.org_id.clone();
     let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
     assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
-        .get_project(project_id.clone())
+        .get_project(project_name.clone(), org_id.clone())
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.clone().id(), project_id.clone());
+    assert_eq!(project.name.clone(), project_name.clone());
+    assert_eq!(project.org_id.clone(), org_id.clone());
     assert_eq!(
         project.current_cp.clone(),
         register_project_message.checkpoint_id
@@ -54,7 +56,7 @@ async fn register_project() {
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_id.clone()).into()
+        RegistryEvent::ProjectRegistered(project_name.clone(), org_id.clone()).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
@@ -66,7 +68,7 @@ async fn register_project() {
 
     assert!(
         client
-            .get_project(project_id.clone())
+            .get_project(project_name.clone(), org_id.clone())
             .await
             .unwrap()
             .is_some(),
@@ -75,12 +77,10 @@ async fn register_project() {
 
     let org: Org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     assert!(
-        org.projects.contains(&project_id.1),
+        org.projects.contains(&project_name),
         format!(
             "Expected project id {} in Org {} with projects {:?}",
-            project_id.1.clone(),
-            project_id.0.clone(),
-            org.projects
+            project_name, org_id, org.projects
         )
     );
 }

@@ -96,14 +96,14 @@ impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let opt_project = command_context
             .client
-            .get_project((self.org_id.clone(), self.project_name.clone()))
+            .get_project(self.project_name.clone(), self.org_id.clone())
             .await?;
 
         let project = match opt_project {
             None => {
                 return Err(CommandError::ProjectNotFound {
-                    org_id: self.org_id.clone(),
                     project_name: self.project_name.clone(),
+                    org_id: self.org_id.clone(),
                 });
             }
             Some(project) => project,
@@ -221,12 +221,12 @@ impl CommandT for RegisterProject {
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
         println!("checkpoint created in block {}", checkpoint_created.block);
 
-        let project_id: ProjectId = (self.org_id.clone(), self.project_name.clone());
         let register_project_fut = client
             .sign_and_submit_message(
                 &command_context.author_key_pair,
                 message::RegisterProject {
-                    project_id,
+                    project_name: self.project_name.clone(),
+                    org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },

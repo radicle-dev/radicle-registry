@@ -48,7 +48,7 @@ impl Message for message::RegisterProject {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(registry::Event::ProjectRegistered(_project_id)) => Some(Ok(())),
+                Event::registry(registry::Event::ProjectRegistered(_, _)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -126,9 +126,11 @@ impl Message for message::SetCheckpoint {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
-                Event::registry(registry::Event::CheckpointSet(_project_id, _checkpoint_id)) => {
-                    Some(Ok(()))
-                }
+                Event::registry(registry::Event::CheckpointSet(
+                    _project_name,
+                    _org_id,
+                    _checkpoint_id,
+                )) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),

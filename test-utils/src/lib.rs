@@ -62,7 +62,10 @@ pub async fn create_project_with_checkpoint(
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
-        .get_project(register_project_message.project_id)
+        .get_project(
+            register_project_message.project_name,
+            register_org_message.org_id,
+        )
         .await
         .unwrap()
         .unwrap()
@@ -84,10 +87,9 @@ pub fn random_register_project_message(
     org_id: OrgId,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
-    let name = random_string32();
-
     message::RegisterProject {
-        project_id: (org_id, name),
+        project_name: random_string32(),
+        org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
     }

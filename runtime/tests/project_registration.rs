@@ -31,17 +31,19 @@ async fn register_project() {
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
-        .get_project(message.clone().project_id)
+        .get_project(message.clone().project_name, message.clone().org_id)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.clone().id(), message.project_id.clone());
+    assert_eq!(project.name.clone(), message.project_name.clone());
+    assert_eq!(project.org_id.clone(), message.org_id.clone());
     assert_eq!(project.current_cp.clone(), checkpoint_id);
     assert_eq!(project.metadata.clone(), message.metadata.clone());
 
     assert_eq!(
         tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().project_id).into()
+        RegistryEvent::ProjectRegistered(message.clone().project_name, message.clone().org_id)
+            .into()
     );
 
     let has_project = client
@@ -49,7 +51,7 @@ async fn register_project() {
         .await
         .unwrap()
         .iter()
-        .any(|id| *id == message.project_id);
+        .any(|id| *id == (message.project_name.clone(), message.org_id.clone()));
     assert!(has_project, "Registered project not found in project list");
 
     let checkpoint_ = state::Checkpoint {
@@ -122,7 +124,7 @@ async fn register_project_with_duplicate_id() {
     let message = random_register_project_message(org_id.clone(), checkpoint_id);
     submit_ok(&client, &alice, message.clone()).await;
 
-    // Duplicate submission with different description and image URL.
+    // Duplicate submission with a different metadata.
     let registration_2 = submit_ok(
         &client,
         &alice,
@@ -139,7 +141,7 @@ async fn register_project_with_duplicate_id() {
     );
 
     let project = client
-        .get_project(message.project_id)
+        .get_project(message.project_name, message.org_id)
         .await
         .unwrap()
         .unwrap();
@@ -175,7 +177,7 @@ async fn register_project_with_bad_checkpoint() {
     );
 
     assert!(client
-        .get_project(register_project.project_id)
+        .get_project(register_project.project_name, register_project.org_id)
         .await
         .unwrap()
         .is_none());
@@ -199,7 +201,7 @@ async fn register_project_with_bad_actor() {
     );
 
     assert!(client
-        .get_project(register_project.project_id)
+        .get_project(register_project.project_name, register_project.org_id)
         .await
         .unwrap()
         .is_none());

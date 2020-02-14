@@ -50,10 +50,11 @@ pub type AccountId = ed25519::Public;
 /// Balance of an account.
 pub type Balance = u128;
 
+/// The id of a project. Used as storage key.
+pub type ProjectId = (ProjectName, OrgId);
+
 /// The name a project is registered with.
 pub type ProjectName = String32;
-
-pub type ProjectId = (OrgId, ProjectName);
 
 pub type OrgId = String32;
 
@@ -104,12 +105,8 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn id(self) -> ProjectId {
-        (self.org_id, self.name)
-    }
-
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(org_id: OrgId, name: ProjectName, project: state::Project) -> Self {
+    pub fn new(name: ProjectName, org_id: OrgId, project: state::Project) -> Self {
         Project {
             name,
             org_id,
