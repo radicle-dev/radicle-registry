@@ -105,7 +105,10 @@ pub trait ClientT {
     ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
-    async fn account_nonce(&self, account_id: &AccountId) -> Result<state::Index, Error>;
+    async fn account_nonce(
+        &self,
+        account_id: &AccountId,
+    ) -> Result<state::AccountTransactionIndex, Error>;
 
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;

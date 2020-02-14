@@ -20,7 +20,7 @@ use sp_runtime::generic::{Era, SignedPayload};
 use sp_runtime::traits::{Hash as _, SignedExtension};
 
 use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
-use radicle_registry_core::state::Index;
+use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
     Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
 };
@@ -66,7 +66,7 @@ impl<Message_: Message> Transaction<Message_> {
 /// The data that is required from the blockchain state to create a valid transaction.
 pub struct TransactionExtra {
     /// The nonce of the account that is the transaction author.
-    pub nonce: Index,
+    pub nonce: AccountTransactionIndex,
     pub genesis_hash: Hash,
 }
 
