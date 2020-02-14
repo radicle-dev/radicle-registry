@@ -108,7 +108,7 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let (org_id, project_name) = message.id.clone();
+            let (org_id, project_name) = message.project_id.clone();
 
             let org = match store::Orgs::get(org_id.clone()) {
                 None => return Err(RegistryError::InexistentOrg.into()),
@@ -123,7 +123,7 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            let project_id = message.id.clone();
+            let project_id = message.project_id.clone();
             if store::Projects::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
             };
@@ -145,7 +145,7 @@ decl_module! {
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.id.clone()) {
+            match store::Orgs::get(message.org_id.clone()) {
                 None => {},
                 Some(_) => return Err(RegistryError::DuplicateOrgId.into()),
             }
@@ -161,8 +161,8 @@ decl_module! {
                 members: vec![sender],
                 projects: Vec::new(),
             };
-            store::Orgs::insert(message.id.clone(), new_org);
-            Self::deposit_event(Event::OrgRegistered(message.id));
+            store::Orgs::insert(message.org_id.clone(), new_org);
+            Self::deposit_event(Event::OrgRegistered(message.org_id));
             Ok(())
         }
 
@@ -174,12 +174,12 @@ decl_module! {
 
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.id.clone()) {
+            match store::Orgs::get(message.org_id.clone()) {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org, sender) {
-                        store::Orgs::remove(message.id.clone());
-                        Self::deposit_event(Event::OrgUnregistered(message.id));
+                        store::Orgs::remove(message.org_id.clone());
+                        Self::deposit_event(Event::OrgUnregistered(message.org_id));
                         Ok(())
                     }
                     else {

@@ -37,7 +37,7 @@ use parity_scale_codec::{Decode, Encode};
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
-    pub id: OrgId,
+    pub org_id: OrgId,
 }
 
 /// Unregisters an org on the Radicle Registry with the given ID.
@@ -53,7 +53,7 @@ pub struct RegisterOrg {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
-    pub id: OrgId,
+    pub org_id: OrgId,
 }
 
 /// Register a project on the Radicle Registry with the given ID.
@@ -77,7 +77,7 @@ pub struct UnregisterOrg {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
     // The id of the project to register.
-    pub id: ProjectId,
+    pub project_id: ProjectId,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,

@@ -112,11 +112,11 @@ pub trait ClientT {
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
-    async fn get_org(&self, id: OrgId) -> Result<Option<Org>, Error>;
+    async fn get_org(&self, org_id: OrgId) -> Result<Option<Org>, Error>;
 
     async fn list_orgs(&self) -> Result<Vec<OrgId>, Error>;
 
-    async fn get_project(&self, id: ProjectId) -> Result<Option<Project>, Error>;
+    async fn get_project(&self, project_id: ProjectId) -> Result<Option<Project>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
