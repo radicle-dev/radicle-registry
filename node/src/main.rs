@@ -20,6 +20,8 @@
 
 mod dummy_pow;
 #[macro_use]
+mod service_customization;
+#[macro_use]
 mod service;
 mod chain_spec;
 mod cli;

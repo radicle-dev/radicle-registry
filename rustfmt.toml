@@ -1,1 +1,6 @@
 edition = "2018"
+ignore = [
+    # This file comes from another project with manual adjustments.
+    # It should be changed as little as possible to stay diffable with the original.
+    "node/src/service.rs"
+]
