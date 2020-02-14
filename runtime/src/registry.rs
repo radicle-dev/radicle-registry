@@ -59,64 +59,6 @@ pub mod store {
             pub Checkpoints: map hasher(blake2_256) CheckpointId => Option<state::Checkpoint>;
         }
     }
-
-    #[cfg(feature = "std")]
-    impl Projects {
-        /// Get the project ID from the projects storage key.
-        ///
-        /// The following property holds.
-        /// ```
-        /// # use radicle_registry_core::*;
-        /// # use radicle_registry_runtime::registry::store;
-        /// # use frame_support::storage::generator::StorageMap;
-        /// # use std::str::FromStr;
-        /// let project_id = (
-        ///     OrgId::from_str("Monadic").unwrap(),
-        ///     ProjectName::from_str("radicle").unwrap()
-        /// );
-        ///
-        /// let key = store::Projects::storage_map_final_key(project_id.clone());
-        /// let extracted_project_id = store::Projects::id_from_key(&key).unwrap();
-        /// assert_eq!(project_id, extracted_project_id)
-        /// ```
-        pub fn id_from_key(key: &[u8]) -> Result<ProjectId, parity_scale_codec::Error> {
-            use parity_scale_codec::Decode;
-
-            let project_prefix = Self::final_prefix();
-            // Length of BlakeTwo128 output
-            let key_hash_prefix_length = 16;
-            let key_prefix_length = project_prefix.len() + key_hash_prefix_length;
-            let mut project_id_bytes = &key[key_prefix_length..];
-            ProjectId::decode(&mut project_id_bytes)
-        }
-    }
-
-    #[cfg(feature = "std")]
-    impl Orgs {
-        /// Get the org ID from the orgs storage key.
-        ///
-        /// The following property holds.
-        /// ```
-        /// # use radicle_registry_core::*;
-        /// # use radicle_registry_runtime::registry::store;
-        /// # use frame_support::storage::generator::StorageMap;
-        /// # use std::str::FromStr;
-        /// let org_id = OrgId::from_str("org").unwrap();
-        /// let key = store::Orgs::storage_map_final_key(org_id.clone());
-        /// let extracted_org_id = store::Orgs::id_from_key(&key).unwrap();
-        /// assert_eq!(org_id, extracted_org_id)
-        /// ```
-        pub fn id_from_key(key: &[u8]) -> Result<OrgId, parity_scale_codec::Error> {
-            use parity_scale_codec::Decode;
-
-            let prefix = Self::final_prefix();
-            // Length of BlakeTwo128 output
-            let key_hash_prefix_length = 16;
-            let key_prefix_length = prefix.len() + key_hash_prefix_length;
-            let mut id_bytes = &key[key_prefix_length..];
-            OrgId::decode(&mut id_bytes)
-        }
-    }
 }
 
 pub use store::Store;
@@ -345,3 +287,78 @@ decl_event!(
         CheckpointSet(ProjectId, CheckpointId),
     }
 );
+
+/// DecodeKey trait
+///
+/// A DecodeKey type must implement the decode_key function and
+/// it is free to choose what decoding algorithm it prefers.
+///
+/// DecodedKey::Key is the expected decoded key type
+///
+pub trait DecodeKey {
+    type Key: parity_scale_codec::Decode;
+
+    /// Decode the given raw storage map `key`. It's the inverse of
+    /// [frame_support::generator::StorageMap::storage_map_final_key],
+    /// so applying `decode_key` after `storage_map_final_key` must
+    /// yield identity as to the original input key.
+    fn decode_key(key: &[u8]) -> Result<Self::Key, parity_scale_codec::Error>;
+}
+
+impl DecodeKey for store::Orgs {
+    type Key = OrgId;
+
+    fn decode_key(key: &[u8]) -> Result<OrgId, parity_scale_codec::Error> {
+        decode_blake_two128_concat_key(key)
+    }
+}
+
+impl DecodeKey for store::Projects {
+    type Key = ProjectId;
+
+    fn decode_key(key: &[u8]) -> Result<ProjectId, parity_scale_codec::Error> {
+        decode_blake_two128_concat_key(key)
+    }
+}
+
+/// Decode a blake_two128_concat hashed key to the inferred type K.
+///
+/// The key consists of the concatenation of the module prefix hash (16 bytes),
+/// the storage prefix hash (16 bytes), the key hash (16 bytes), and
+/// finally the raw key. See the actual implementation of this key concatenation at
+/// [frame_support::storage::generator::StorageMap::storage_map_final_key].
+pub fn decode_blake_two128_concat_key<K: parity_scale_codec::Decode>(
+    key: &[u8],
+) -> Result<K, parity_scale_codec::Error> {
+    let final_storage_key_prefix_length = 48;
+    let mut id_bytes = &key[final_storage_key_prefix_length..];
+    K::decode(&mut id_bytes)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use frame_support::storage::generator::StorageMap;
+
+    #[test]
+    /// Test that store::Orgs::decode_key after store::Orgs::storage_map_final_key
+    /// is identify as to the original input id.
+    fn orgs_decode_key_identity() {
+        let org_id = OrgId::from_string("Monadic".into()).unwrap();
+        let hashed_key = store::Orgs::storage_map_final_key(org_id.clone());
+        let decoded_key = store::Orgs::decode_key(&hashed_key).unwrap();
+        assert_eq!(decoded_key, org_id);
+    }
+
+    #[test]
+    /// Test that store::Projects::decode_key after store::Projects::storage_map_final_key
+    /// is identify as to the original input id.
+    fn projects_decode_key_identity() {
+        let org_id = OrgId::from_string("Monadic".into()).unwrap();
+        let project_name = ProjectName::from_string("Radicle".into()).unwrap();
+        let project_id: ProjectId = (org_id, project_name);
+        let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
+        let decoded_key = store::Projects::decode_key(&hashed_key).unwrap();
+        assert_eq!(decoded_key, project_id);
+    }
+}
