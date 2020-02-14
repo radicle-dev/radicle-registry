@@ -11,13 +11,12 @@ if [[ "$NODE_NAME" = "alice" ]]; then
 fi
 
 exec /usr/local/bin/radicle-registry-node \
-  --keystore-path "/keystore/$NODE_NAME" \
   --base-path /data \
   --name "$NODE_NAME" \
   --validator \
   --chain local-devnet \
-  --ws-external \
-  --rpc-external \
+  --unsafe-ws-external \
+  --unsafe-rpc-external \
   --rpc-cors all \
   --bootnodes /dns4/alice/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR \
   "${extra_args[@]}"

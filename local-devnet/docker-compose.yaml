@@ -6,8 +6,6 @@ x-node: &node
   volumes:
   - ../target/release/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
   - ./start-node.sh:/usr/local/bin/start-node.sh:ro
-  # Used by the --keystore-path option
-  - ./keystore:/keystore:ro
   # Used by the --base-path option
   - /data
   command:
