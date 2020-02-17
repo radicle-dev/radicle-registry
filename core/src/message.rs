@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectId, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectName, H256};
 use parity_scale_codec::{Decode, Encode};
 
 /// Registers an org on the Radicle Registry with the given ID.
@@ -76,8 +76,11 @@ pub struct UnregisterOrg {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
-    // The id of the project to register.
-    pub project_id: ProjectId,
+    // The name of the project to register, unique in the org.
+    pub project_name: ProjectName,
+
+    /// The org in which to register the project.
+    pub org_id: OrgId,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,
@@ -116,7 +119,8 @@ pub struct CreateCheckpoint {
 /// The transaction author must be part of the [crate::state::Org::members] of the given project.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
-    pub project_id: ProjectId,
+    pub project_name: ProjectName,
+    pub org_id: OrgId,
     pub new_checkpoint_id: CheckpointId,
 }
 
