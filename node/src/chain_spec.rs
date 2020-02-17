@@ -17,13 +17,10 @@
 //!
 //! Available chain specs
 //! * [dev] for runnning a single node locally and develop against it.
-//! * [local_devnet] for runnning a cluster of three nodes locally using Aura consensus.
+//! * [local_devnet] for runnning a cluster of three nodes locally.
 use radicle_registry_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-    WASM_BINARY,
+    AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
-use sc_finality_grandpa::AuthorityId as GrandpaId;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{Pair, Public};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -72,8 +69,6 @@ fn dev_genesis_config() -> GenesisConfig {
         get_from_seed::<AccountId>("Alice//stash"),
         get_from_seed::<AccountId>("Bob//stash"),
     ];
-    let aura_authorities = vec![get_from_seed::<AuraId>("Alice")];
-    let grandpa_authorities = vec![(get_from_seed::<GrandpaId>("Alice"), 1)];
     let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
@@ -88,12 +83,6 @@ fn dev_genesis_config() -> GenesisConfig {
                 .collect(),
         }),
         pallet_sudo: Some(SudoConfig { key: root_key }),
-        pallet_aura: Some(AuraConfig {
-            authorities: aura_authorities,
-        }),
-        pallet_grandpa: Some(GrandpaConfig {
-            authorities: grandpa_authorities,
-        }),
     }
 }
 
@@ -137,16 +126,6 @@ fn devnet_genesis_config() -> GenesisConfig {
         get_from_seed::<AccountId>("Alice//stash"),
         get_from_seed::<AccountId>("Bob//stash"),
     ];
-    let aura_authorities = vec![
-        get_from_seed::<AuraId>("Alice"),
-        get_from_seed::<AuraId>("Bob"),
-        get_from_seed::<AuraId>("Charlie"),
-    ];
-    let grandpa_authorities = vec![
-        (get_from_seed::<GrandpaId>("Alice"), 1),
-        (get_from_seed::<GrandpaId>("Bob"), 1),
-        (get_from_seed::<GrandpaId>("Charlie"), 1),
-    ];
     let root_key = get_from_seed::<AccountId>("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
@@ -161,12 +140,6 @@ fn devnet_genesis_config() -> GenesisConfig {
                 .collect(),
         }),
         pallet_sudo: Some(SudoConfig { key: root_key }),
-        pallet_aura: Some(AuraConfig {
-            authorities: aura_authorities,
-        }),
-        pallet_grandpa: Some(GrandpaConfig {
-            authorities: grandpa_authorities,
-        }),
     }
 }
 

@@ -31,18 +31,15 @@ extern crate alloc;
 
 use frame_support::weights::Weight;
 use frame_support::{construct_runtime, parameter_types, traits::Randomness};
-use pallet_grandpa::fg_primitives;
-use pallet_grandpa::AuthorityList as GrandpaAuthorityList;
 use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
 use sp_runtime::{
-    create_runtime_str, generic, impl_opaque_keys, transaction_validity::TransactionValidity,
-    ApplyExtrinsicResult, Perbill,
+    create_runtime_str, generic, transaction_validity::TransactionValidity, ApplyExtrinsicResult,
+    Perbill,
 };
 use sp_std::prelude::*;
 
 use sp_api::impl_runtime_apis;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -85,13 +82,6 @@ pub mod opaque {
     pub type Block = generic::Block<Header, UncheckedExtrinsic>;
     /// Opaque block identifier type.
     pub type BlockId = generic::BlockId<Block>;
-
-    impl_opaque_keys! {
-        pub struct SessionKeys {
-            pub aura: Aura,
-            pub grandpa: Grandpa,
-        }
-    }
 }
 
 /// This runtime version.
@@ -157,14 +147,6 @@ impl frame_system::Trait for Runtime {
     type ModuleToIndex = ModuleToIndex;
 }
 
-impl pallet_aura::Trait for Runtime {
-    type AuthorityId = AuraId;
-}
-
-impl pallet_grandpa::Trait for Runtime {
-    type Event = Event;
-}
-
 parameter_types! {
     /// Minimum time between blocks in milliseconds
     pub const MinimumPeriod: u64 = 300;
@@ -173,7 +155,7 @@ parameter_types! {
 impl pallet_timestamp::Trait for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
-    type OnTimestampSet = Aura;
+    type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
 }
 
@@ -225,8 +207,6 @@ construct_runtime!(
                 System: system::{Module, Call, Storage, Config, Event},
                 Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
                 RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Storage},
-                Aura: pallet_aura::{Module, Config<T>, Inherent(Timestamp)},
-                Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event},
                 Balances: pallet_balances,
                 Sudo: pallet_sudo,
                 Registry: registry::{Module, Call, Storage, Event},
@@ -321,31 +301,19 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
-        fn slot_duration() -> u64 {
-            Aura::slot_duration()
-        }
-
-        fn authorities() -> Vec<AuraId> {
-            Aura::authorities()
-        }
-    }
-
+    // An implementation for the `SessionKeys` runtime API is required by the types
+    // of [sc_service::ServiceBuilder]. However, the implementation is otherwise unused
+    // and has no effect on the behavior of the runtime. Hence we implement a dummy
+    // version.
     impl sp_session::SessionKeys<Block> for Runtime {
-        fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
-            opaque::SessionKeys::generate(seed)
+        fn generate_session_keys(_seed: Option<Vec<u8>>) -> Vec<u8> {
+            Default::default()
         }
 
         fn decode_session_keys(
-            encoded: Vec<u8>,
+            _encoded: Vec<u8>,
         ) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
-            opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
-        }
-    }
-
-    impl fg_primitives::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> GrandpaAuthorityList {
-            Grandpa::grandpa_authorities()
+            None
         }
     }
 }

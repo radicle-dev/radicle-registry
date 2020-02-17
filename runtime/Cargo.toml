@@ -15,9 +15,7 @@ std = [
     "frame-executive/std",
     "frame-support/std",
     "frame-system/std",
-    "pallet-aura/std",
     "pallet-balances/std",
-    "pallet-grandpa/std",
     "pallet-sudo/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
@@ -26,7 +24,6 @@ std = [
     "serde",
     "sp-api/std",
     "sp-block-builder/std",
-    "sp-consensus-aura/std",
     "sp-core/std",
     "sp-io/std",
     "sp-offchain/std",
@@ -51,16 +48,6 @@ version = "1.0.0"
 features = ["derive"]
 optional = true
 version = "1.0.101"
-
-[dependencies.pallet-aura]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-default-features = false
-
-[dependencies.sp-consensus-aura]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-default-features = false
 
 [dependencies.pallet-balances]
 git = "https://github.com/paritytech/substrate"
@@ -153,11 +140,6 @@ rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 default_features = false
 
 [dependencies.sp-version]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-default_features = false
-
-[dependencies.pallet-grandpa]
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 default_features = false

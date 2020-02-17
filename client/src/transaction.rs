@@ -147,11 +147,9 @@ mod test {
     /// Assert that extrinsics created with [create_and_sign] are validated by the runtime.
     fn check_extrinsic() {
         let genesis_config = GenesisConfig {
-            pallet_aura: None,
             pallet_balances: None,
             pallet_sudo: None,
             system: None,
-            pallet_grandpa: None,
         };
         let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let (key_pair, _) = ed25519::Pair::generate();
