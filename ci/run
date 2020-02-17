@@ -115,7 +115,9 @@ function upload_to_bintray () {
     -H "X-Bintray-Override: 1" \
     -H "X-Checksum-Sha2: $file_checksum" \
     "$api_url/content/$subject/$repo/$remote_file" \
-    --data-binary @$local_file
+    --data-binary @$local_file \
+    # We ignore failures until the issue with the storage limit is resolved
+    || true
   # Response from curl does not end with new line
   echo
 
@@ -129,7 +131,9 @@ function upload_to_bintray () {
     --basic --user "$BINTRAY_API_KEY" \
     -H "content-type: application/json" \
     "$api_url/content/$subject/$repo/$package/$version/publish" \
-    --data-binary '{ "publish_wait_for_secs": -1 }'
+    --data-binary '{ "publish_wait_for_secs": -1 }' \
+    # We ignore failures until the issue with the storage limit is resolved
+    || true
   # Response from curl does not end with new line
   echo
 
@@ -140,14 +144,14 @@ function upload_to_bintray () {
     --basic --user "$BINTRAY_API_KEY" \
     -H "content-type: application/json" \
     "$api_url/file_metadata/$subject/$repo/$remote_file" \
-    --data-binary '{ "list_in_downloads": true }'
+    --data-binary '{ "list_in_downloads": true }' \
+    # We ignore failures until the issue with the storage limit is resolved
+    || true
   # Response from curl does not end with new line
   echo
 }
 
 if [[ -n "${BINTRAY_API_KEY:-}" ]]; then
   echo "--- Upload bintray artifacts"
-  # We make this optional until the issue with the storage limit is
-  # resolved.
-  upload_to_bintray || true
+  upload_to_bintray
 fi
