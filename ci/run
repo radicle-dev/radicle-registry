@@ -147,5 +147,7 @@ function upload_to_bintray () {
 
 if [[ -n "${BINTRAY_API_KEY:-}" ]]; then
   echo "--- Upload bintray artifacts"
-  upload_to_bintray
+  # We make this optional until the issue with the storage limit is
+  # resolved.
+  upload_to_bintray || true
 fi
