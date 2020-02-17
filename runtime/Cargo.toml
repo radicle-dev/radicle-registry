@@ -163,7 +163,7 @@ rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 default_features = false
 
 [build-dependencies]
-substrate-wasm-builder-runner = "1.0.2"
+substrate-wasm-builder-runner = "1.0.5"
 
 [dev-dependencies]
 async-std = { version = "1.4", features = ["attributes"] }
