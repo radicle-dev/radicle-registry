@@ -54,8 +54,7 @@ For more information use the `--help` flag.
 
 ### Dev Mode
 
-In development mode the node runs an isolated network with only the node as an
-Aura validator and block producer.
+In development mode the node runs an isolated network with only the node as a block miner
 
 ~~~
 radicle-registry-node --dev

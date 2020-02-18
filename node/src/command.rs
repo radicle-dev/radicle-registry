@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use sc_cli::{error, VersionInfo};
-use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 
 use crate::chain_spec;
 use crate::cli::Cli;

@@ -122,7 +122,6 @@ impl backend::Backend for Emulator {
 /// Initializes the balance of the `//Alice` account with `2^60` tokens.
 fn make_genesis_config() -> GenesisConfig {
     GenesisConfig {
-        pallet_aura: None,
         pallet_balances: Some(BalancesConfig {
             balances: vec![(
                 ed25519::Pair::from_string("//Alice", None)
@@ -132,7 +131,6 @@ fn make_genesis_config() -> GenesisConfig {
             )],
         }),
         pallet_sudo: None,
-        pallet_grandpa: None,
         system: None,
     }
 }

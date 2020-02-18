@@ -20,6 +20,7 @@ exit-future = "0.1.4"
 futures = "0.3.1"
 log = "0.4.8"
 parking_lot = "0.9.0"
+rand = "0.7.3"
 structopt = "0.3"
 tokio = { version = "0.2", features = ["rt-threaded"] }
 trie-root = "0.15.2"
@@ -27,14 +28,6 @@ trie-root = "0.15.2"
 [dependencies.ctrlc]
 features = ["termination"]
 version = "3.1.3"
-
-[dependencies.sc-consensus-aura]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-
-[dependencies.sp-consensus-aura]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 
 [dependencies.sc-basic-authorship]
 git = "https://github.com/paritytech/substrate"
@@ -64,6 +57,10 @@ rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 
+[dependencies.sc-consensus-pow]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
 [dependencies.sc-executor]
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
@@ -80,14 +77,14 @@ rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 
-[dependencies.sc-finality-grandpa]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-
-[dependencies.sp-finality-grandpa]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-
 [dependencies.sp-consensus]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-consensus-pow]
+git = "https://github.com/paritytech/substrate"
+rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
+
+[dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
