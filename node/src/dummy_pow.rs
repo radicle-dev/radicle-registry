@@ -26,8 +26,18 @@ use sp_runtime::generic::BlockId;
 /// a random length sleep and successful returning of a 0-byte nonce.
 ///
 /// It accepts all seals. Verification is always successful.
+///
+/// The mining behavior is controlled by [MINE_DURATION] and [MINE_SUCCESS_PROBABILITY]. The
+/// average block time is
+///
+///     (MINE_DURATION / n) * (1 / MINE_SUCCESS_PROBABILITY)
+///
+/// where `n` is the number of miners.
 #[derive(Clone)]
 pub struct DummyPow;
+
+const MINE_DURATION: std::time::Duration = std::time::Duration::from_millis(10);
+const MINE_SUCCESS_PROBABILITY: f32 = 0.005;
 
 impl PowAlgorithm<Block> for DummyPow {
     type Difficulty = u128;
@@ -53,8 +63,8 @@ impl PowAlgorithm<Block> for DummyPow {
         _difficulty: Self::Difficulty,
         _round: u32,
     ) -> Result<Option<Seal>, Error<Block>> {
-        std::thread::sleep(std::time::Duration::from_millis(10));
-        if rand::random::<f32>() < 0.005 {
+        std::thread::sleep(MINE_DURATION);
+        if rand::random::<f32>() < MINE_SUCCESS_PROBABILITY {
             Ok(Some(vec![]))
         } else {
             Ok(None)
