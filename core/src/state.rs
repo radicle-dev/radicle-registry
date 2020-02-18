@@ -104,7 +104,7 @@ pub type AccountBalance = Balance;
 /// # Storage
 ///
 /// Indicies are stored as a map with a key derived from [crate::AccountId].
-pub type Index = u32;
+pub type AccountTransactionIndex = u32;
 
 /// # Storage
 ///

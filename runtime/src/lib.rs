@@ -52,10 +52,6 @@ pub type BlockNumber = u32;
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = ed25519::Signature;
 
-/// The type for looking up accounts. We don't expect more than 4 billion of them, but you
-/// never know...
-pub type AccountIndex = u32;
-
 /// A hash of some data used by the chain.
 ///
 /// Same as [Hashing::Output].
@@ -119,7 +115,7 @@ impl frame_system::Trait for Runtime {
     /// The lookup mechanism to get account ID from whatever is passed in dispatchers.
     type Lookup = sp_runtime::traits::IdentityLookup<AccountId>;
     /// The index type for storing how many extrinsics an account has signed.
-    type Index = state::Index;
+    type Index = state::AccountTransactionIndex;
     /// The index type for blocks.
     type BlockNumber = BlockNumber;
     /// The type for hashing blocks and tries.

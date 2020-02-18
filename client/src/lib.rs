@@ -208,7 +208,10 @@ impl ClientT for Client {
         self.backend.get_genesis_hash()
     }
 
-    async fn account_nonce(&self, account_id: &AccountId) -> Result<state::Index, Error> {
+    async fn account_nonce(
+        &self,
+        account_id: &AccountId,
+    ) -> Result<state::AccountTransactionIndex, Error> {
         self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id)
             .await
     }
