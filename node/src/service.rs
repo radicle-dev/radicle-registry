@@ -73,10 +73,10 @@ macro_rules! new_full_start {
             let pool = sc_transaction_pool::BasicPool::new(config, std::sync::Arc::new(pool_api));
             Ok(pool)
         })?
-        .with_import_queue(|_config, client, select_chain, _transaction_pool| {
+        .with_import_queue(|config, client, select_chain, _transaction_pool| {
             // [TEMPLATE DIFF] The whole closure is replaced
             let (block_import, import_queue) =
-                node_import_queue!(client, select_chain, inherent_data_providers.clone());
+                node_import_queue!(config, client, select_chain, inherent_data_providers.clone());
             import_setup = Some(block_import);
             Ok(import_queue)
         })?;
@@ -113,10 +113,10 @@ pub fn new_light(config: Configuration<GenesisConfig>)
             Ok(pool)
         })?
         // [TEMPLATE DIFF] Change FPRB queue to regular one
-        .with_import_queue(|_config, client, select_chain, _transaction_pool| {
+        .with_import_queue(|config, client, select_chain, _transaction_pool| {
                 // [TEMPLATE DIFF] The whole closure is replaced
                 let (_, import_queue) =
-                    node_import_queue!(client, select_chain, inherent_data_providers.clone());
+                    node_import_queue!(config, client, select_chain, inherent_data_providers.clone());
                 Ok(import_queue)
             }
         )?
