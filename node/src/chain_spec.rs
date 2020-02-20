@@ -18,10 +18,12 @@
 //! Available chain specs
 //! * [dev] for runnning a single node locally and develop against it.
 //! * [local_devnet] for runnning a cluster of three nodes locally.
+use crate::pow_alg_config::PowAlgConfig;
 use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
 use sp_core::{Pair, Public};
+use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
@@ -57,7 +59,7 @@ pub fn dev() -> ChainSpec {
         None,   // telemetry endpoints
         // protocol_id
         Some("dev"),
-        None, // no properties
+        Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
         None, // no extensions
     )
 }
@@ -100,7 +102,7 @@ pub fn devnet() -> ChainSpec {
         None, // telemetry endpoints
         // protocol_id
         Some("devnet"),
-        None, // no properties
+        Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
         None, // no extensions
     )
 }
@@ -114,7 +116,7 @@ pub fn local_devnet() -> ChainSpec {
         None,   // telemetry endpoints
         // protocol_id
         Some("local-devnet"),
-        None, // no properties
+        Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
         None, // no extensions
     )
 }
