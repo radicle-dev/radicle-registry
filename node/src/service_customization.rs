@@ -18,7 +18,7 @@
 /// The new_full node import building function body
 macro_rules! new_full {
     ($config:expr) => {{
-        use crate::pow_alg_config::PowAlgConfig;
+        use crate::pow::config::Config as PowAlgConfig;
         use std::convert::TryFrom;
 
         let pow_alg = PowAlgConfig::try_from(&$config)?;
@@ -40,7 +40,14 @@ macro_rules! new_full {
                 service,
                 proposer,
                 inherent_data_providers,
-                crate::dummy_pow::DummyPow
+                crate::pow::dummy_pow::DummyPow
+            ),
+            PowAlgConfig::Blake3 => start_mine!(
+                block_import,
+                service,
+                proposer,
+                inherent_data_providers,
+                crate::pow::blake3_pow::Blake3Pow::new()
             ),
         }
         Ok(service)
@@ -69,7 +76,7 @@ macro_rules! start_mine {
 /// The node with_import_queue closure body
 macro_rules! node_import_queue {
     ($config:expr, $client:expr, $select_chain:expr, $inherent_data_providers:expr) => {{
-        use crate::pow_alg_config::PowAlgConfig;
+        use crate::pow::config::Config as PowAlgConfig;
         use std::convert::TryFrom;
 
         match PowAlgConfig::try_from($config)? {
@@ -77,7 +84,13 @@ macro_rules! node_import_queue {
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                crate::dummy_pow::DummyPow
+                crate::pow::dummy_pow::DummyPow
+            ),
+            PowAlgConfig::Blake3 => node_import_queue_for_pow_alg!(
+                $client,
+                $select_chain,
+                $inherent_data_providers,
+                crate::pow::blake3_pow::Blake3Pow::new()
             ),
         }
     }};
@@ -94,12 +107,13 @@ macro_rules! node_import_queue_for_pow_alg {
             $select_chain,
             $inherent_data_providers,
         );
-        let block_import = Box::new(pow_block_import);
+        let block_import_box = Box::new(pow_block_import);
         let import_queue = sc_consensus_pow::import_queue(
-            block_import.clone(),
+            block_import_box.clone(),
             $pow_alg,
             $inherent_data_providers,
         )?;
+        let block_import = block_import_box as sp_consensus::import_queue::BoxBlockImport<_, _>;
         (block_import, import_queue)
     }};
 }

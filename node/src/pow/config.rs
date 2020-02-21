@@ -18,15 +18,16 @@ use std::convert::{TryFrom, TryInto};
 
 /// Configuration of PoW algorithm, can be stored as chain spec property
 #[derive(serde::Deserialize, serde::Serialize)]
-pub enum PowAlgConfig {
+pub enum Config {
     Dummy,
+    Blake3,
 }
 
-impl PowAlgConfig {
+impl Config {
     const PROPERTY_KEY: &'static str = "pow_alg";
 }
 
-impl<'a, T> TryFrom<&'a Configuration<T>> for PowAlgConfig {
+impl<'a, T> TryFrom<&'a Configuration<T>> for Config {
     type Error = &'static str;
 
     fn try_from(config: &'a Configuration<T>) -> Result<Self, Self::Error> {
@@ -39,22 +40,22 @@ impl<'a, T> TryFrom<&'a Configuration<T>> for PowAlgConfig {
     }
 }
 
-impl TryFrom<Properties> for PowAlgConfig {
+impl TryFrom<Properties> for Config {
     type Error = &'static str;
 
     fn try_from(mut properties: Properties) -> Result<Self, Self::Error> {
         let pow_alg_str = properties
-            .remove(PowAlgConfig::PROPERTY_KEY)
+            .remove(Config::PROPERTY_KEY)
             .ok_or("properies do not contain PoW algorithm")?;
         serde_json::from_value(pow_alg_str).map_err(|_| "PoW algorithm property malformed")
     }
 }
 
-impl TryFrom<PowAlgConfig> for Properties {
+impl TryFrom<Config> for Properties {
     type Error = &'static str;
 
-    fn try_from(config: PowAlgConfig) -> Result<Self, Self::Error> {
-        let key = PowAlgConfig::PROPERTY_KEY.to_string();
+    fn try_from(config: Config) -> Result<Self, Self::Error> {
+        let key = Config::PROPERTY_KEY.to_string();
         let value = serde_json::to_value(config)
             .map_err(|_| "failed to serialize PoW algorithm into a property")?;
         let mut map = Properties::with_capacity(1);

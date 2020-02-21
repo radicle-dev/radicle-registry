@@ -15,6 +15,7 @@ name = "radicle-registry-node"
 [dependencies]
 radicle-registry-runtime = { version = "0.0.0", path = "../runtime" }
 
+blake3 = "0.2.1"
 derive_more = "0.15.0"
 exit-future = "0.1.4"
 futures = "0.3.1"

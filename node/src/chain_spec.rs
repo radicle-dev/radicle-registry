@@ -18,7 +18,7 @@
 //! Available chain specs
 //! * [dev] for runnning a single node locally and develop against it.
 //! * [local_devnet] for runnning a cluster of three nodes locally.
-use crate::pow_alg_config::PowAlgConfig;
+use crate::pow::config::Config as PowAlgConfig;
 use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
@@ -102,7 +102,7 @@ pub fn devnet() -> ChainSpec {
         None, // telemetry endpoints
         // protocol_id
         Some("devnet"),
-        Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
+        Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
     )
 }
@@ -116,7 +116,7 @@ pub fn local_devnet() -> ChainSpec {
         None,   // telemetry endpoints
         // protocol_id
         Some("local-devnet"),
-        Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
+        Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
     )
 }

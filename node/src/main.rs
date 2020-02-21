@@ -18,7 +18,6 @@
 #![warn(missing_docs)]
 #![warn(unused_extern_crates)]
 
-mod dummy_pow;
 #[macro_use]
 mod service_customization;
 #[macro_use]
@@ -26,7 +25,7 @@ mod service;
 mod chain_spec;
 mod cli;
 mod command;
-mod pow_alg_config;
+mod pow;
 
 pub use sc_cli::{error, VersionInfo};
 
