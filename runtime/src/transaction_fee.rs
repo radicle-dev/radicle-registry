@@ -13,18 +13,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::Balance;
+use crate::{AccountId, Balance};
 
-use frame_support::traits::WithdrawReason;
+use frame_support::traits::{Currency, ExistenceRequirement, WithdrawReason};
 
 
 /// This module models our Transaction Fee setup.
 /// TODO(nuno): enrich these module docs.
 
-
+pub fn charge_fee(fee: TransactionFee, payee: &AccountId) {
+    let result = <crate::Balances as Currency<_>>::withdraw(
+        payee,
+        fee.balance(),
+        fee.to_withdraw_reason().into(),
+        ExistenceRequirement::KeepAlive
+    );
+}
 
 /// TransactionFee
-enum TransactionFee {
+pub enum TransactionFee {
     /// BaseFee is a fee paid is essentially an entry fee
     /// for the transaction into the network.
     BaseFee,
@@ -35,17 +42,17 @@ enum TransactionFee {
 }
 
 impl TransactionFee {
-    fn to_withdraw_reason(self) -> WithdrawReason {
+    fn to_withdraw_reason(&self) -> WithdrawReason {
         match self {
             TransactionFee::BaseFee => WithdrawReason::TransactionPayment,
             TransactionFee::Tip(_) => WithdrawReason::Tip,
         }
     }
 
-    fn balance(self) -> Balance {
+    fn balance(&self) -> Balance {
         match self {
             TransactionFee::BaseFee => 1,
-            TransactionFee::Tip(tip) => tip
+            TransactionFee::Tip(tip) => *tip
         }
     }
 }
