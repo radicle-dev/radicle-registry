@@ -42,9 +42,10 @@ async fn set_checkpoint() {
     )
     .await;
 
+    // Test that the base fee (1 RAD) + Tip of 123 were withdrew.
     assert_eq!(
         initial_balance - client.free_balance(&author.public()).await.unwrap(),
-        3
+        124
     );
 
     let new_project = client

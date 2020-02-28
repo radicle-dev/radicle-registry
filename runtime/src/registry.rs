@@ -20,7 +20,7 @@ use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::StorageMap as _,
-    traits::{Currency, ExistenceRequirement, WithdrawReason, Randomness as _},
+    traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::SimpleDispatchInfo,
 };
 use frame_system as system; // required for `decl_module!` to work
@@ -30,7 +30,7 @@ use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{AccountId, Hash, Hashing};
+use crate::{AccountId, Hash, Hashing, transaction_fee::{charge_fee, TransactionFee}};
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
@@ -242,6 +242,7 @@ decl_module! {
             message: message::SetCheckpoint,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
+            charge_fee(TransactionFee::BaseFee, &sender);
 
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
@@ -254,21 +255,7 @@ decl_module! {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    // here
-                    let base_fee_result = <crate::Balances as Currency<_>>::withdraw(
-                        &sender,
-                        3,
-                        WithdrawReason::TransactionPayment.into(),
-                        ExistenceRequirement::KeepAlive
-                    );
-
-                    match base_fee_result {
-                        Ok(_) => println!("Charged tx sender"),
-                        Err(_) => { 
-                            println!("Failed to charge fee"); 
-                            return Err(RegistryError::InexistentCheckpointId.into());
-                        } 
-                    }
+                    charge_fee(TransactionFee::Tip(123), &sender);
 
                     state::Project {
                         current_cp: message.new_checkpoint_id,
