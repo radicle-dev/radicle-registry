@@ -10,16 +10,18 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn set_checkpoint() {
     let client = Client::new_emulator();
-    let charles = key_pair_from_string("Charles");
+    let author = key_pair_from_string("Alice");
 
     let org_id = random_string32();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &charles).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
     let project_name = project.clone().name;
+
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &charles,
+        &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -31,7 +33,7 @@ async fn set_checkpoint() {
 
     submit_ok(
         &client,
-        &charles,
+        &author,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -39,6 +41,11 @@ async fn set_checkpoint() {
         },
     )
     .await;
+
+    assert_eq!(
+        initial_balance - client.free_balance(&author.public()).await.unwrap(),
+        3
+    );
 
     let new_project = client
         .get_project(project_name, org_id)
@@ -51,7 +58,7 @@ async fn set_checkpoint() {
 #[async_std::test]
 async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
-    let eve = key_pair_from_string("Eve");
+    let eve = key_pair_from_string("Alice");
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &eve).await;

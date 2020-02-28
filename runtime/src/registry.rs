@@ -20,7 +20,7 @@ use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::StorageMap as _,
-    traits::{Currency, ExistenceRequirement, Randomness as _},
+    traits::{Currency, ExistenceRequirement, WithdrawReason, Randomness as _},
     weights::SimpleDispatchInfo,
 };
 use frame_system as system; // required for `decl_module!` to work
@@ -213,7 +213,7 @@ decl_module! {
             origin,
             message: message::CreateCheckpoint,
         ) -> DispatchResult {
-            ensure_signed(origin)?;
+            let sender = ensure_signed(origin)?;
 
             match message.previous_checkpoint_id {
                 None => {}
@@ -254,6 +254,22 @@ decl_module! {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
+                    // here
+                    let base_fee_result = <crate::Balances as Currency<_>>::withdraw(
+                        &sender,
+                        3,
+                        WithdrawReason::TransactionPayment.into(),
+                        ExistenceRequirement::KeepAlive
+                    );
+
+                    match base_fee_result {
+                        Ok(_) => println!("Charged tx sender"),
+                        Err(_) => { 
+                            println!("Failed to charge fee"); 
+                            return Err(RegistryError::InexistentCheckpointId.into());
+                        } 
+                    }
+
                     state::Project {
                         current_cp: message.new_checkpoint_id,
                         ..prj
