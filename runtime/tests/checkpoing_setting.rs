@@ -38,14 +38,15 @@ async fn set_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
+            bid: 300
         },
     )
     .await;
 
-    // Test that the base fee (1 RAD) + Tip of 123 were withdrew.
+    // Test that the `bid` provided above was withdrew.
     assert_eq!(
         initial_balance - client.free_balance(&author.public()).await.unwrap(),
-        124
+        300
     );
 
     let new_project = client
@@ -86,6 +87,7 @@ async fn set_checkpoint_without_permission() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
+            bid: 10,
         },
     )
     .await;
@@ -120,6 +122,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id: garbage,
+            bid: 10,
         },
     )
     .await;
@@ -185,6 +188,7 @@ async fn set_fork_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id: forked_checkpoint_id,
+            bid: 10,
         },
     )
     .await;
