@@ -47,3 +47,29 @@ impl Fee for Tip {
         WithdrawReason::Tip
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use rand::Rng;
+
+
+    #[test]
+    fn withdraw_reason() {
+        assert_eq!(BaseFee{}.withdraw_reason(), WithdrawReason::TransactionPayment);
+        assert_eq!(Tip(123).withdraw_reason(), WithdrawReason::Tip);
+    }
+
+    #[test]
+    fn base_fee_value() {
+        assert_eq!(BaseFee{}.value(), 1);
+    }
+
+    #[test]
+    fn tip_value() {
+        for _ in 0 .. 50 {
+            let random_tip: Balance = rand::thread_rng().gen();
+            assert_eq!(Tip(random_tip).value(), random_tip);
+        }
+    }
+}
