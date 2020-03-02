@@ -17,10 +17,11 @@ use crate::Balance;
 use frame_support::traits::WithdrawReason;
 
 mod bid;
+mod payment;
 
 pub trait Fee {
     fn value(&self) -> Balance;
-    fn withdraw_reason() -> WithdrawReason;
+    fn withdraw_reason(&self) -> WithdrawReason;
 }
 
 #[derive(Clone, Debug)]
@@ -30,7 +31,7 @@ impl Fee for BaseFee {
         1
     }
 
-    fn withdraw_reason() -> WithdrawReason {
+    fn withdraw_reason(&self) -> WithdrawReason {
         WithdrawReason::TransactionPayment
     }
 }
@@ -42,7 +43,7 @@ impl Fee for Tip {
         self.0
     }
 
-    fn withdraw_reason() -> WithdrawReason {
+    fn withdraw_reason(&self) -> WithdrawReason {
         WithdrawReason::Tip
     }
 }
