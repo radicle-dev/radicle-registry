@@ -23,6 +23,7 @@ pub enum RegistryError {
     DuplicateOrgId,
     DuplicateProjectId,
     InexistentProjectId,
+    InsufficientBid,
     InsufficientSenderPermissions,
     InexistentParentCheckpoint,
     InexistentInitialProjectCheckpoint,
@@ -38,6 +39,9 @@ impl From<RegistryError> for &'static str {
             RegistryError::DuplicateOrgId => "An org with a similar ID already exists.",
             RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
             RegistryError::InexistentProjectId => "Project does not exist",
+            RegistryError::InsufficientBid => {
+                "The provided bid is insufficient to cover all mandatory fees."
+            }
             RegistryError::InsufficientSenderPermissions => "Sender is not a project member",
             RegistryError::InexistentParentCheckpoint => "Parent checkpoint does not exist",
             RegistryError::InexistentInitialProjectCheckpoint => {

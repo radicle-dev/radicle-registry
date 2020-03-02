@@ -13,18 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//! Fee module
+//!
+//! This crate defines all things fees:
+//! * the types of fees supported by the registry
+//! * the [crate::fees::bid] module that abstracts the concept of bid.
+//! * the [crate::fees::payment] module where the withdrawing of fees takes place.
+
 use crate::Balance;
 use frame_support::traits::WithdrawReason;
 
-mod bid;
-mod payment;
+pub mod bid;
+pub mod payment;
 
 pub trait Fee {
+    /// The associated [crate::Balance].
     fn value(&self) -> Balance;
+
+    /// The associated [frame_support::traits::WithdrawReason].
     fn withdraw_reason(&self) -> WithdrawReason;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BaseFee;
 impl Fee for BaseFee {
     fn value(&self) -> Balance {
@@ -36,7 +46,7 @@ impl Fee for BaseFee {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Tip(Balance);
 impl Fee for Tip {
     fn value(&self) -> Balance {
@@ -51,25 +61,18 @@ impl Fee for Tip {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::Rng;
-
 
     #[test]
     fn withdraw_reason() {
-        assert_eq!(BaseFee{}.withdraw_reason(), WithdrawReason::TransactionPayment);
+        assert_eq!(
+            BaseFee.withdraw_reason(),
+            WithdrawReason::TransactionPayment
+        );
         assert_eq!(Tip(123).withdraw_reason(), WithdrawReason::Tip);
     }
 
     #[test]
     fn base_fee_value() {
-        assert_eq!(BaseFee{}.value(), 1);
-    }
-
-    #[test]
-    fn tip_value() {
-        for _ in 0 .. 50 {
-            let random_tip: Balance = rand::thread_rng().gen();
-            assert_eq!(Tip(random_tip).value(), random_tip);
-        }
+        assert_eq!(BaseFee.value(), 1);
     }
 }

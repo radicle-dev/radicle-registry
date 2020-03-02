@@ -47,7 +47,9 @@ pub type Hashing = BlakeTwo256;
 /// Each account has an associated [message::AccountBalance] and [message::Index].
 pub type AccountId = ed25519::Public;
 
-/// Balance of an account.
+/// The non-negative balance of anything storing the amount of currency.
+/// It can be used to represent the value of anything describing an amount,
+/// e.g. an account balance, the value of a fee, etc.
 pub type Balance = u128;
 
 /// The id of a project. Used as storage key.
