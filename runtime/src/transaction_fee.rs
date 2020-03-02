@@ -49,7 +49,7 @@ impl TransactionFee {
         }
     }
 
-    fn balance(&self) -> Balance {
+    pub fn balance(&self) -> Balance {
         match self {
             TransactionFee::BaseFee => 1,
             TransactionFee::Tip(tip) => *tip

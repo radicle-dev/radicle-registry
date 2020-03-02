@@ -255,7 +255,7 @@ decl_module! {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    charge_fee(TransactionFee::Tip(123), &sender);
+                    charge_fee(TransactionFee::Tip(message.bid - TransactionFee::BaseFee.balance()), &sender);
 
                     state::Project {
                         current_cp: message.new_checkpoint_id,
