@@ -105,6 +105,24 @@ pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
 }
 
+pub async fn grant_funds(
+    client: &Client,
+    donator: &ed25519::Pair,
+    recipient: AccountId,
+    value: Balance,
+) {
+    let tx_applied = submit_ok(
+        &client,
+        &donator,
+        message::Transfer {
+            recipient,
+            balance: value,
+        },
+    )
+    .await;
+    assert_eq!(tx_applied.result, Ok(()));
+}
+
 pub fn random_string32() -> String32 {
     String32::from_string(random_string(32)).unwrap()
 }
