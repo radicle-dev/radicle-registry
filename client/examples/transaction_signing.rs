@@ -32,6 +32,7 @@ async fn go() -> Result<(), Error> {
         Transfer {
             recipient: bob.public(),
             balance: 1000,
+            bid: 10,
         },
         transaction_extra,
     );

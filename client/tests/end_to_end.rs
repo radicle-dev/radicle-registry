@@ -128,6 +128,7 @@ async fn invalid_transaction() {
         message::Transfer {
             recipient: alice.public(),
             balance: 1000,
+            bid: 10,
         },
         TransactionExtra {
             nonce: 0,

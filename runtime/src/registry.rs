@@ -201,6 +201,21 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
+            pay_fee(bid.base_fee, &sender)?;
+            pay_fee(bid.tip, &sender)?;
+
+            <crate::Balances as Currency<_>>::transfer(
+                &sender,
+                &message.recipient,
+                message.balance,
+                ExistenceRequirement::KeepAlive
+            )
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let org = match store::Orgs::get(message.org_id) {
@@ -211,7 +226,8 @@ decl_module! {
                 <crate::Balances as Currency<_>>::transfer(
                     &org.account_id,
                     &message.recipient,
-                    message.value, ExistenceRequirement::KeepAlive
+                    message.value,
+                    ExistenceRequirement::KeepAlive
                 )
             }
             else {

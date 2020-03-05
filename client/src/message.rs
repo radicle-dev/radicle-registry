@@ -16,7 +16,7 @@
 //! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
-use radicle_registry_runtime::{balances, registry, Call as RuntimeCall, Event};
+use radicle_registry_runtime::{registry, Call as RuntimeCall, Event};
 use sp_runtime::DispatchError;
 
 pub use radicle_registry_core::message::*;
@@ -150,7 +150,7 @@ impl Message for message::Transfer {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        balances::Call::transfer(self.recipient, self.balance).into()
+        registry::Call::transfer(self).into()
     }
 }
 

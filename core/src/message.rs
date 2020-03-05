@@ -172,4 +172,5 @@ pub struct TransferFromOrg {
 pub struct Transfer {
     pub recipient: AccountId,
     pub balance: Balance,
+    pub bid: Balance,
 }

@@ -287,6 +287,8 @@ impl CommandT for Transfer {
                 message::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
+                    //TODO(nuno): pass real bid here
+                    bid: 10,
                 },
             )
             .await?;

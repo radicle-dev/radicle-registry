@@ -11,6 +11,7 @@ async fn transfer_fail() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
+    let bid = 10;
 
     let balance_alice = client.free_balance(&alice.public()).await.unwrap();
     let tx_applied = submit_ok(
@@ -18,7 +19,8 @@ async fn transfer_fail() {
         &alice,
         message::Transfer {
             recipient: bob,
-            balance: balance_alice + 1,
+            balance: (balance_alice - bid) + 1,
+            bid,
         },
     )
     .await;
@@ -41,6 +43,7 @@ async fn org_account_transfer() {
         message::Transfer {
             recipient: org.account_id,
             balance: 2000,
+            bid: 10,
         },
     )
     .await;
@@ -76,6 +79,7 @@ async fn org_account_transfer_non_member() {
         message::Transfer {
             recipient: org.account_id,
             balance: 2000,
+            bid: 10,
         },
     )
     .await;

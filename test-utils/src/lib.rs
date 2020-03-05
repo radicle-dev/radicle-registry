@@ -120,6 +120,7 @@ pub async fn grant_funds(
         message::Transfer {
             recipient,
             balance: value,
+            bid: 10,
         },
     )
     .await;
