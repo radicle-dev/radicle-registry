@@ -10,16 +10,16 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn set_checkpoint() {
     let client = Client::new_emulator();
-    let charles = key_pair_from_string("Charles");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_string32();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &charles).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &charles,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -31,7 +31,7 @@ async fn set_checkpoint() {
 
     submit_ok(
         &client,
-        &charles,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -51,16 +51,16 @@ async fn set_checkpoint() {
 #[async_std::test]
 async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
-    let eve = key_pair_from_string("Eve");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_string32();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &eve).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &eve,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -98,16 +98,16 @@ async fn set_checkpoint_without_permission() {
 #[async_std::test]
 async fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
-    let david = key_pair_from_string("David");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_string32();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &david).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
     let tx_applied = submit_ok(
         &client,
-        &david,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -132,10 +132,10 @@ async fn fail_to_set_nonexistent_checkpoint() {
 #[async_std::test]
 async fn set_fork_checkpoint() {
     let client = Client::new_emulator();
-    let grace = key_pair_from_string("Grace");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_string32();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &grace).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
     let mut current_cp = project.current_cp;
 
@@ -145,7 +145,7 @@ async fn set_fork_checkpoint() {
     for _ in 0..n {
         let new_checkpoint_id = submit_ok(
             &client,
-            &grace,
+            &alice,
             message::CreateCheckpoint {
                 project_hash: H256::random(),
                 previous_checkpoint_id: (Some(current_cp)),
@@ -160,7 +160,7 @@ async fn set_fork_checkpoint() {
 
     let forked_checkpoint_id = submit_ok(
         &client,
-        &grace,
+        &alice,
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: (Some(checkpoints[2])),
@@ -172,7 +172,7 @@ async fn set_fork_checkpoint() {
 
     submit_ok(
         &client,
-        &grace,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,

@@ -31,6 +31,7 @@ async fn register_project() {
     let org_id = random_string32();
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
+        bid: 10,
     };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));

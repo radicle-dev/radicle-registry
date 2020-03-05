@@ -147,6 +147,8 @@ impl CommandT for RegisterOrg {
                 &command_context.author_key_pair,
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
+                    //TODO(nuno) pass real bid here
+                    bid: 10,
                 },
             )
             .await?;

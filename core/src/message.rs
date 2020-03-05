@@ -38,6 +38,7 @@ use parity_scale_codec::{Decode, Encode};
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
     pub org_id: OrgId,
+    pub bid: Balance,
 }
 
 /// Unregisters an org on the Radicle Registry with the given ID.

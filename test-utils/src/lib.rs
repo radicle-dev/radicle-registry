@@ -55,6 +55,7 @@ pub async fn create_project_with_checkpoint(
 
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
+        bid: 10,
     };
     submit_ok(&client, &author, register_org_message.clone()).await;
 
@@ -98,6 +99,7 @@ pub fn random_register_project_message(
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
         org_id: random_string32(),
+        bid: 10,
     }
 }
 
