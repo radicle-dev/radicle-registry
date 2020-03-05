@@ -61,6 +61,8 @@ pub type EventRecord = frame_system::EventRecord<Event, Hash>;
 
 pub mod registry;
 
+pub mod fees;
+
 pub use pallet_balances as balances;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
