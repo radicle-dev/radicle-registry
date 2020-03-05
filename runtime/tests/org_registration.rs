@@ -71,14 +71,22 @@ async fn unregister_org() {
     );
 
     // Unregister
+    let org = client
+        .get_org(register_org_message.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    grant_funds(&client, &alice, org.account_id, 1000).await;
+
     let unregister_org_message = message::UnregisterOrg {
-        org_id: register_org_message.org_id.clone(),
+        org_id: org.id.clone(),
+        bid: 100,
     };
     let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
     assert_eq!(tx_unregister_applied.result, Ok(()));
 
     assert!(
-        !org_exists(&client, register_org_message.org_id.clone()).await,
+        !org_exists(&client, org.id.clone()).await,
         "The org was not expected to exist"
     );
 }
@@ -87,6 +95,8 @@ async fn unregister_org() {
 async fn unregister_org_bad_sender() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
+    let bad_actor = key_pair_from_string("BadActor");
+    grant_funds(&client, &alice, bad_actor.public(), 1000).await;
     let register_org_message = random_register_org_message();
 
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
@@ -105,8 +115,9 @@ async fn unregister_org_bad_sender() {
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
         org_id: register_org_message.org_id.clone(),
+        bid: 100,
     };
-    let bad_actor = key_pair_from_string("BadActor");
+
     let tx_unregister_applied =
         submit_ok(&client, &bad_actor, unregister_org_message.clone()).await;
     assert_eq!(
@@ -143,6 +154,7 @@ async fn unregister_org_with_projects() {
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
         org_id: random_project.org_id.clone(),
+        bid: 100,
     };
     let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
 

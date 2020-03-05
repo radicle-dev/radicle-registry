@@ -51,9 +51,13 @@ pub struct RegisterOrg {
 /// The targeted org must exist and have no projects and the
 /// the transaction origin must be its only member.
 ///
+/// The provided bid must suffice the mandatory transaction
+/// fees.
+///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
     pub org_id: OrgId,
+    pub bid: Balance,
 }
 
 /// Register a project on the Radicle Registry with the given ID.

@@ -30,7 +30,10 @@ use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{AccountId, Hash, Hashing};
+use crate::{
+    fees::{bid::Bid, payment::pay_fee},
+    AccountId, Hash, Hashing,
+};
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
@@ -173,11 +176,16 @@ decl_module! {
             }
 
             let sender = ensure_signed(origin)?;
+            //TODO(nuno): clean this
+            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
+            pay_fee(bid.base_fee, &sender)?;
 
             match store::Orgs::get(message.org_id.clone()) {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
-                    if can_be_unregistered(org, sender) {
+                    if can_be_unregistered(org.clone(), sender) {
+                        //TODO(nuno): pay tip here
+                        pay_fee(bid.tip, &org.account_id)?;
                         store::Orgs::remove(message.org_id.clone());
                         Self::deposit_event(Event::OrgUnregistered(message.org_id));
                         Ok(())

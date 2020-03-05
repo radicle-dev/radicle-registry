@@ -176,6 +176,8 @@ impl CommandT for UnregisterOrg {
                 &command_context.author_key_pair,
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
+                    //TODO(nuno): receive real fee
+                    bid: 100,
                 },
             )
             .await?;
