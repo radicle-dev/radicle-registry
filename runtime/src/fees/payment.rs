@@ -13,20 +13,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{fees::Fee, AccountId};
+use crate::{fees::Fee, AccountId, DispatchError};
+use radicle_registry_core::*;
+
 use frame_support::traits::{Currency, ExistenceRequirement};
+
 
 /// Pay a given fee by withdrawing it from the `payee` account
 /// and transfering it, with a small burn, to the block author.
-pub fn pay_fee(fee: impl Fee, payee: &AccountId) {
+pub fn pay_fee(fee: impl Fee, payee: &AccountId) -> Result<(), DispatchError> {
     // 1. Withdraw from payee
-    let _negative_imbalance = <crate::Balances as Currency<_>>::withdraw(
+    let withdraw_result = <crate::Balances as Currency<_>>::withdraw(
         payee,
         fee.value(),
         fee.withdraw_reason().into(),
         ExistenceRequirement::KeepAlive,
     );
-    // 2. TODO(nuno) Transfer to the block author. Will be done in a following PR.
+    let _negative_imbalance = match withdraw_result {
+        Ok(x) => x,
+        Err(_e) => return Err(RegistryError::FailedFeePayment.into()),
+    };
+
+    Ok(())
+    // 2. Transfer to ??? TODO(nuno)
 }
 
 /// The burn associated with the payment of a fee.

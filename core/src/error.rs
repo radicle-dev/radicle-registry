@@ -22,6 +22,7 @@ pub enum RegistryError {
     InexistentOrg,
     DuplicateOrgId,
     DuplicateProjectId,
+    FailedFeePayment,
     InexistentProjectId,
     InsufficientBid,
     InsufficientSenderPermissions,
@@ -38,6 +39,7 @@ impl From<RegistryError> for &'static str {
             RegistryError::InexistentOrg => "The provided org does not exist",
             RegistryError::DuplicateOrgId => "An org with a similar ID already exists.",
             RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
+            RegistryError::FailedFeePayment => "A fee failed to be payed.",
             RegistryError::InexistentProjectId => "Project does not exist",
             RegistryError::InsufficientBid => {
                 "The provided bid is insufficient to cover all mandatory fees."
