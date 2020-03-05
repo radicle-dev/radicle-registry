@@ -107,6 +107,7 @@ pub struct RegisterProject {
 pub struct CreateCheckpoint {
     pub project_hash: H256,
     pub previous_checkpoint_id: Option<CheckpointId>,
+    pub bid: Balance,
 }
 
 /// Updates [crate::state::Project::current_cp].

@@ -23,6 +23,7 @@ async fn set_checkpoint() {
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
+            bid: 10,
         },
     )
     .await
@@ -64,6 +65,7 @@ async fn set_checkpoint_without_permission() {
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
+            bid: 10,
         },
     )
     .await
@@ -149,6 +151,7 @@ async fn set_fork_checkpoint() {
             message::CreateCheckpoint {
                 project_hash: H256::random(),
                 previous_checkpoint_id: (Some(current_cp)),
+                bid: 10,
             },
         )
         .await
@@ -164,6 +167,7 @@ async fn set_fork_checkpoint() {
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: (Some(checkpoints[2])),
+            bid: 10,
         },
     )
     .await

@@ -18,6 +18,7 @@ async fn register_project() {
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
+            bid: 10,
         },
     )
     .await
@@ -85,6 +86,7 @@ async fn register_project_with_inexistent_org() {
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
+            bid: 10,
         },
     )
     .await
@@ -109,6 +111,7 @@ async fn register_project_with_duplicate_id() {
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
+            bid: 10,
         },
     )
     .await

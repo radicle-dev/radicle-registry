@@ -29,6 +29,7 @@ async fn go() -> Result<(), Error> {
             message::CreateCheckpoint {
                 project_hash,
                 previous_checkpoint_id: None,
+                bid: 10,
             },
         )
         .await?

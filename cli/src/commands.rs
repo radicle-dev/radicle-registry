@@ -216,6 +216,8 @@ impl CommandT for RegisterProject {
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
+                    //TODO(nuno): pass real bid here
+                    bid: 10,
                 },
             )
             .await?;

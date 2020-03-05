@@ -47,6 +47,7 @@ pub async fn create_project_with_checkpoint(
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
+            bid: 10,
         },
     )
     .await
