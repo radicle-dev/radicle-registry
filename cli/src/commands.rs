@@ -330,6 +330,8 @@ impl CommandT for TransferOrgFunds {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
+                    //TODO(nuno) Pass real bid here
+                    bid: 10,
                 },
             )
             .await?;

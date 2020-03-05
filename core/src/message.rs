@@ -152,6 +152,7 @@ pub struct TransferFromOrg {
     pub org_id: OrgId,
     pub recipient: AccountId,
     pub value: Balance,
+    pub bid: Balance,
 }
 
 /// Transfer funds from one account to another.

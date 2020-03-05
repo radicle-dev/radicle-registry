@@ -218,11 +218,14 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let org = match store::Orgs::get(message.org_id) {
-                None => return Err(RegistryError::InexistentOrg.into()),
-                Some(o) => o,
-            };
+            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
+            pay_fee(bid.base_fee, &sender)?;
+
+            let org = store::Orgs::get(message.org_id)
+                .ok_or(RegistryError::InexistentOrg)?;
+
             if org.members.contains(&sender) {
+                pay_fee(bid.tip, &org.account_id)?;
                 <crate::Balances as Currency<_>>::transfer(
                     &org.account_id,
                     &message.recipient,
