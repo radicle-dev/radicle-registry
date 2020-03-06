@@ -281,11 +281,7 @@ decl_module! {
             let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
 
             pay_fee(bid.base_fee, &sender)?;
-            pay_fee(bid.tip, &sender)?;
 
-            if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
-                return Err(RegistryError::InexistentCheckpointId.into())
-            }
             let project_id = (message.project_name.clone(), message.org_id.clone());
             let opt_project = store::Projects::get(project_id.clone());
             let opt_org = store::Orgs::get(message.org_id.clone());
@@ -294,6 +290,7 @@ decl_module! {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
+                    pay_fee(bid.tip, &org.account_id)?;
                     state::Project {
                         current_cp: message.new_checkpoint_id,
                         ..prj
@@ -302,6 +299,10 @@ decl_module! {
                 _ => return Err(RegistryError::InexistentProjectId.into()),
 
             };
+
+            if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
+                return Err(RegistryError::InexistentCheckpointId.into())
+            }
 
             let initial_cp = match store::InitialCheckpoints::get(project_id.clone()) {
                 None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),

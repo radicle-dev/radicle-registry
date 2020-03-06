@@ -10,34 +10,50 @@ use radicle_registry_test_utils::*;
 async fn create_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
 
     let project_hash1 = H256::random();
+    let bid = random_balance();
     let checkpoint_id1 = submit_ok(
         &client,
         &alice,
         message::CreateCheckpoint {
             project_hash: project_hash1,
             previous_checkpoint_id: None,
-            bid: 10,
+            bid,
         },
     )
     .await
     .result
     .unwrap();
 
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - bid,
+        "Tx author should have paid for all fees"
+    );
+
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
     let project_hash2 = H256::random();
+    let bid = random_balance();
     let checkpoint_id2 = submit_ok(
         &client,
         &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(checkpoint_id1),
-            bid: 10,
+            bid,
         },
     )
     .await
     .result
     .unwrap();
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - bid,
+        "Tx author should have paid for all fees"
+    );
 
     let checkpoint1_ = state::Checkpoint {
         parent: None,
@@ -66,17 +82,18 @@ async fn create_checkpoint() {
 async fn create_checkpoint_without_parent() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
 
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
-
+    let bid = random_balance();
     let tx_applied = submit_ok(
         &client,
         &alice,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id,
-            bid: 10,
+            bid,
         },
     )
     .await;
@@ -84,5 +101,43 @@ async fn create_checkpoint_without_parent() {
     assert_eq!(
         tx_applied.result,
         Err(RegistryError::InexistentCheckpointId.into())
+    );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - bid,
+        "Tx author should have paid for all fees"
+    );
+}
+
+#[async_std::test]
+async fn create_checkpoint_insufficient_funds() {
+    let client = Client::new_emulator();
+    let poor_actor = key_pair_from_string("Poor");
+    let poor_actor_balance_before = client.free_balance(&poor_actor.public()).await.unwrap();
+    assert_eq!(poor_actor_balance_before, 0);
+
+    let project_hash1 = H256::random();
+    let bid = random_balance();
+    let tx_applied = submit_ok(
+        &client,
+        &poor_actor,
+        message::CreateCheckpoint {
+            project_hash: project_hash1,
+            previous_checkpoint_id: None,
+            bid,
+        },
     )
+    .await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::FailedFeePayment.into())
+    );
+
+    assert_eq!(
+        client.free_balance(&poor_actor.public()).await.unwrap(),
+        0,
+        "Tx author should have had no funds to run the tx."
+    );
 }

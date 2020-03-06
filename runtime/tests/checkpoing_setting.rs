@@ -5,6 +5,7 @@
 /// The tests in this module concern checkpoint creation and setting project
 /// checkpoints.
 use radicle_registry_client::*;
+use radicle_registry_runtime::fees::{BaseFee, Fee};
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
@@ -15,7 +16,13 @@ async fn set_checkpoint() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
-    // Alice should have paid
+    let org = client
+        .get_org(project.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    // The org needs funds to pay for the fees involving it.
+    grant_funds(&client, &alice, org.account_id, 1000).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
@@ -32,8 +39,10 @@ async fn set_checkpoint() {
     .result
     .unwrap();
 
-    // Alice should have paid for this all
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
+    let org_balance_before = client.free_balance(&org.account_id).await.unwrap();
 
+    let bid = random_balance();
     submit_ok(
         &client,
         &alice,
@@ -41,7 +50,7 @@ async fn set_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
-            bid: 10,
+            bid,
         },
     )
     .await;
@@ -51,7 +60,18 @@ async fn set_checkpoint() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(new_checkpoint_id, new_project.current_cp)
+    assert_eq!(new_checkpoint_id, new_project.current_cp);
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - BaseFee.value(),
+        "Tx author should have paid for all fees"
+    );
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        org_balance_before - (bid - BaseFee.value()),
+        "The org should have paid for the tip"
+    );
 }
 
 #[async_std::test]
@@ -77,17 +97,20 @@ async fn set_checkpoint_without_permission() {
     .result
     .unwrap();
 
-    let frank = key_pair_from_string("Frank");
-    // Frank needs some balance to run transactions.
-    grant_funds(&client, &alice, frank.public(), 1000).await;
+    let bad_actor = key_pair_from_string("BadActor");
+    // The bad actor needs some balance to run transactions.
+    grant_funds(&client, &alice, bad_actor.public(), 1000).await;
+    let bad_actor_balance_before = client.free_balance(&bad_actor.public()).await.unwrap();
+
+    let bid = random_balance();
     let tx_applied = submit_ok(
         &client,
-        &frank,
+        &bad_actor,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
-            bid: 10,
+            bid,
         },
     )
     .await;
@@ -103,6 +126,12 @@ async fn set_checkpoint_without_permission() {
     );
     assert_eq!(updated_project.current_cp, project.current_cp.clone());
     assert_ne!(updated_project.current_cp, new_checkpoint_id);
+
+    assert_eq!(
+        client.free_balance(&bad_actor.public()).await.unwrap(),
+        bad_actor_balance_before - BaseFee.value(),
+        "Tx author should have (only) paid for the base fee"
+    );
 }
 
 #[async_std::test]
@@ -112,9 +141,18 @@ async fn fail_to_set_nonexistent_checkpoint() {
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let org = client
+        .get_org(project.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
     let project_name = project.name.clone();
-    let garbage = CheckpointId::random();
 
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
+    let org_balance_before = client.free_balance(&org.account_id).await.unwrap();
+
+    let garbage = CheckpointId::random();
+    let bid = random_balance();
     let tx_applied = submit_ok(
         &client,
         &alice,
@@ -122,7 +160,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id: garbage,
-            bid: 10,
+            bid,
         },
     )
     .await;
@@ -138,6 +176,17 @@ async fn fail_to_set_nonexistent_checkpoint() {
         .unwrap();
     assert_eq!(updated_project.current_cp, project.current_cp);
     assert_ne!(updated_project.current_cp, garbage);
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - BaseFee.value(),
+        "Tx author should have (only) paid the base fee"
+    );
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        org_balance_before - (bid - BaseFee.value()),
+        "The org should have (only) paid for the tip"
+    )
 }
 
 #[async_std::test]
@@ -202,4 +251,38 @@ async fn set_fork_checkpoint() {
         .unwrap();
 
     assert_eq!(project_1.current_cp, forked_checkpoint_id)
+}
+
+#[async_std::test]
+async fn set_checkpoint_insufficient_funds() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+
+    let poor_actor = key_pair_from_string("Poor");
+    assert_eq!(client.free_balance(&poor_actor.public()).await.unwrap(), 0);
+
+    let bid = random_balance();
+    let tx_applied = submit_ok(
+        &client,
+        &poor_actor,
+        message::SetCheckpoint {
+            project_name: project.name,
+            org_id: project.org_id,
+            new_checkpoint_id: H256::random(),
+            bid,
+        },
+    )
+    .await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::FailedFeePayment.into())
+    );
+    assert_eq!(
+        client.free_balance(&poor_actor.public()).await.unwrap(),
+        0,
+        "The tx author should have had no funds to run the tx"
+    );
 }
