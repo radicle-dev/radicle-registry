@@ -35,6 +35,9 @@ use parity_scale_codec::{Decode, Encode};
 ///
 /// An Org with the same ID must not yet exist.
 ///
+/// # Transaction Fees
+///
+/// All the tx fees are paid by the tx author.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
     pub org_id: OrgId,
@@ -55,6 +58,10 @@ pub struct RegisterOrg {
 /// The provided bid must suffice the mandatory transaction
 /// fees.
 ///
+/// # Transaction Fees
+///
+/// The base fee is paid by the tx author.
+/// The tip is paid by the org being unregistered.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
     pub org_id: OrgId,
@@ -79,6 +86,10 @@ pub struct UnregisterOrg {
 ///
 /// A project with the same name must not yet exist in the org.
 ///
+/// # Transaction Fees
+///
+/// The base fee is paid by the tx author.
+/// The tip is paid by the org in which the project is registered.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
     // The name of the project to register, unique in the org.
@@ -106,6 +117,10 @@ pub struct RegisterProject {
 /// # State-dependent validations
 ///
 /// If `previous_checkpoint_id` is provided a checkpoint with the given ID must exist in the state.
+///
+/// # Transaction Fees
+///
+/// All the tx fees are paid by the tx author.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct CreateCheckpoint {
     pub project_hash: H256,
@@ -126,6 +141,11 @@ pub struct CreateCheckpoint {
 /// The checkpoint `new_checkpoint_id` must exist.
 ///
 /// The transaction author must be part of the [crate::state::Org::members] of the given project.
+///
+/// # Transaction Fees
+///
+/// The base fee is paid by the tx author.
+/// The tip is paid by the involved org.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_name: ProjectName,
@@ -151,6 +171,10 @@ pub struct SetCheckpoint {
 ///
 /// The org account must have a balance of at least `value`.
 ///
+/// # Transaction Fees
+///
+/// The base fee is paid by the tx author.
+/// The tip is paid by the org from which funds are transfered.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct TransferFromOrg {
     pub org_id: OrgId,
@@ -173,6 +197,9 @@ pub struct TransferFromOrg {
 ///
 /// The author account must have a balance of at least `balance`.
 ///
+/// # Transaction Fees
+///
+/// All tx fees are paid by the tx author.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Transfer {
     pub recipient: AccountId,

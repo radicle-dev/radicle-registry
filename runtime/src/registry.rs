@@ -189,7 +189,6 @@ decl_module! {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org.clone(), sender) {
-                        //TODO(nuno): pay tip here
                         pay_fee(bid.tip, &org.account_id)?;
                         store::Orgs::remove(message.org_id.clone());
                         Self::deposit_event(Event::OrgUnregistered(message.org_id));
