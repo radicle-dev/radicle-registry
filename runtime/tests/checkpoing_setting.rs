@@ -37,6 +37,7 @@ async fn set_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
+            bid: 10,
         },
     )
     .await;
@@ -73,6 +74,8 @@ async fn set_checkpoint_without_permission() {
     .unwrap();
 
     let frank = key_pair_from_string("Frank");
+    // Frank needs some balance to run transactions.
+    grant_funds(&client, &alice, frank.public(), 1000).await;
     let tx_applied = submit_ok(
         &client,
         &frank,
@@ -80,6 +83,7 @@ async fn set_checkpoint_without_permission() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
+            bid: 10,
         },
     )
     .await;
@@ -114,6 +118,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id: garbage,
+            bid: 10,
         },
     )
     .await;
@@ -181,6 +186,7 @@ async fn set_fork_checkpoint() {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id: forked_checkpoint_id,
+            bid: 10,
         },
     )
     .await;

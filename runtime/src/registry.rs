@@ -278,6 +278,10 @@ decl_module! {
             message: message::SetCheckpoint,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
+            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
+
+            pay_fee(bid.base_fee, &sender)?;
+            pay_fee(bid.tip, &sender)?;
 
             if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())

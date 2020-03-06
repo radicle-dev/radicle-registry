@@ -131,6 +131,7 @@ pub struct SetCheckpoint {
     pub project_name: ProjectName,
     pub org_id: OrgId,
     pub new_checkpoint_id: CheckpointId,
+    pub bid: Balance,
 }
 
 /// Transfer funds from an org account to an account.
