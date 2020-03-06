@@ -27,7 +27,11 @@ async fn register_project() {
 
     let register_org = random_register_org_message();
     submit_ok(&client, &alice, register_org.clone()).await;
-    let org = client.get_org(register_org.org_id.clone()).await.unwrap().unwrap();
+    let org = client
+        .get_org(register_org.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
     // The org needs some funds in order to register a project.
     grant_funds(&client, &alice, org.account_id, 1000).await;
 
@@ -127,7 +131,11 @@ async fn register_project_with_duplicate_id() {
         bid: 10,
     };
     submit_ok(&client, &alice, register_org.clone()).await;
-    let org = client.get_org(register_org.org_id.clone()).await.unwrap().unwrap();
+    let org = client
+        .get_org(register_org.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
     // The org needs some funds in order to register a project.
     grant_funds(&client, &alice, org.account_id, 1000).await;
 

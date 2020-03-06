@@ -18,7 +18,6 @@ use radicle_registry_core::*;
 
 use frame_support::traits::{Currency, ExistenceRequirement};
 
-
 /// Pay a given fee by withdrawing it from the `payee` account
 /// and transfering it, with a small burn, to the block author.
 pub fn pay_fee(fee: impl Fee, payee: &AccountId) -> Result<(), DispatchError> {

@@ -4,8 +4,8 @@
 ///
 /// The tests in this module concern transferring funds.
 use radicle_registry_client::*;
+use radicle_registry_runtime::fees::{BaseFee, Fee};
 use radicle_registry_test_utils::*;
-use radicle_registry_runtime::fees::{Fee, BaseFee};
 
 #[async_std::test]
 async fn transfer_fail() {
@@ -67,7 +67,10 @@ async fn org_account_transfer() {
     )
     .await;
     assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 1000 - tip);
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        1000 - tip
+    );
 }
 
 #[async_std::test]

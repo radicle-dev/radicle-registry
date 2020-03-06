@@ -127,7 +127,11 @@ pub async fn grant_funds(
         },
     )
     .await;
-    assert_eq!(tx_applied.result, Ok(()), "Failed to grant funds to the recipient account.");
+    assert_eq!(
+        tx_applied.result,
+        Ok(()),
+        "Failed to grant funds to the recipient account."
+    );
 }
 
 pub fn random_string32() -> String32 {
