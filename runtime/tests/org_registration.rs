@@ -39,7 +39,7 @@ async fn register_org() {
     let balance_after_registration = client.free_balance(&alice.public()).await.unwrap();
     assert_eq!(
         balance_after_registration,
-        initial_balance - register_org_message.bid.clone(),
+        initial_balance - register_org_message.bid,
         "The tx fees are not being correctly charged from the tx author"
     );
 }
@@ -63,7 +63,7 @@ async fn register_with_duplicated_org_id() {
     let balance_after_registration = client.free_balance(&alice.public()).await.unwrap();
     assert_eq!(
         balance_after_registration,
-        initial_balance - 2 * register_org_message.bid.clone(),
+        initial_balance - 2 * register_org_message.bid,
         "The tx fees are not being correctly charged from the tx author"
     );
 }

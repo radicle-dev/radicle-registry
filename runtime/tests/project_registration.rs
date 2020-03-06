@@ -223,7 +223,7 @@ async fn register_project_with_bad_checkpoint() {
     let register_org = message::RegisterOrg { org_id, bid: 10 };
     submit_ok(&client, &alice, register_org.clone()).await;
     let org = client.get_org(register_org.org_id).await.unwrap().unwrap();
-    grant_funds(&client, &alice, org.account_id.clone(), 1000).await;
+    grant_funds(&client, &alice, org.account_id, 1000).await;
 
     let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
     let org_balance_before = client.free_balance(&org.account_id).await.unwrap();
