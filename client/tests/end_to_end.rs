@@ -36,6 +36,9 @@ async fn register_project() {
     };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    // The org needs some balance to run transactions.
+    grant_funds(&client, &alice, org.account_id, 1000).await;
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_name = register_project_message.project_name.clone();
