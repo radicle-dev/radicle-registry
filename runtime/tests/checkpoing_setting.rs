@@ -8,12 +8,14 @@ use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
+/// Test the SetCheckpoint and that the tx fees are correctly withdrawn.
 async fn set_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
     let org_id = random_string32();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    // Alice should have paid
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
@@ -29,6 +31,8 @@ async fn set_checkpoint() {
     .await
     .result
     .unwrap();
+
+    // Alice should have paid for this all
 
     submit_ok(
         &client,

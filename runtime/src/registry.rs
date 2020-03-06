@@ -121,11 +121,12 @@ decl_module! {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
 
+            pay_fee(bid.tip, &org.account_id)?;
+
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            pay_fee(bid.tip, &org.account_id)?;
 
             let project_id = (message.project_name.clone(), message.org_id.clone());
 

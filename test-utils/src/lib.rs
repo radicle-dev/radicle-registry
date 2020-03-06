@@ -96,14 +96,14 @@ pub fn random_register_project_message(
         org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
-        bid: 10,
+        bid: random_balance(),
     }
 }
 
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
         org_id: random_string32(),
-        bid: 10,
+        bid: random_balance(),
     }
 }
 
@@ -136,6 +136,10 @@ pub async fn grant_funds(
 
 pub fn random_string32() -> String32 {
     String32::from_string(random_string(32)).unwrap()
+}
+
+pub fn random_balance() -> Balance {
+    rand::thread_rng().gen_range(5, 50)
 }
 
 pub fn random_string(size: usize) -> String {
