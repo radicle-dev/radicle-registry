@@ -59,6 +59,8 @@ pub async fn create_project_with_checkpoint(
         bid: 10,
     };
     submit_ok(&client, &author, register_org_message.clone()).await;
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    grant_funds(&client, &author, org.account_id, 1000).await;
 
     let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
@@ -94,6 +96,7 @@ pub fn random_register_project_message(
         org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
+        bid: 10,
     }
 }
 
@@ -124,7 +127,7 @@ pub async fn grant_funds(
         },
     )
     .await;
-    assert_eq!(tx_applied.result, Ok(()));
+    assert_eq!(tx_applied.result, Ok(()), "Failed to grant funds to the recipient account.");
 }
 
 pub fn random_string32() -> String32 {

@@ -111,11 +111,11 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
+            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
+            pay_fee(bid.base_fee, &sender)?;
 
-            let org = match store::Orgs::get(message.org_id.clone()) {
-                None => return Err(RegistryError::InexistentOrg.into()),
-                Some(o) => o,
-            };
+            let org = store::Orgs::get(message.org_id.clone())
+                .ok_or(RegistryError::InexistentOrg)?;
 
             if !org.members.contains(&sender) {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
@@ -124,6 +124,8 @@ decl_module! {
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
+
+            pay_fee(bid.tip, &org.account_id)?;
 
             let project_id = (message.project_name.clone(), message.org_id.clone());
 

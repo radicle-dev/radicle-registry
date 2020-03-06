@@ -235,6 +235,8 @@ impl CommandT for RegisterProject {
                     org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
+                    //TODO(nuno): pass real bid here
+                    bid: 10,
                 },
             )
             .await?;

@@ -27,8 +27,11 @@ async fn register_project() {
 
     let register_org = random_register_org_message();
     submit_ok(&client, &alice, register_org.clone()).await;
+    let org = client.get_org(register_org.org_id.clone()).await.unwrap().unwrap();
+    // The org needs some funds in order to register a project.
+    grant_funds(&client, &alice, org.account_id, 1000).await;
 
-    let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
+    let message = random_register_project_message(org.id.clone(), checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
     let project = client
@@ -124,6 +127,9 @@ async fn register_project_with_duplicate_id() {
         bid: 10,
     };
     submit_ok(&client, &alice, register_org.clone()).await;
+    let org = client.get_org(register_org.org_id.clone()).await.unwrap().unwrap();
+    // The org needs some funds in order to register a project.
+    grant_funds(&client, &alice, org.account_id, 1000).await;
 
     let message = random_register_project_message(org_id.clone(), checkpoint_id);
     submit_ok(&client, &alice, message.clone()).await;
@@ -192,6 +198,8 @@ async fn register_project_with_bad_actor() {
     let client = Client::new_emulator();
     let god_actor = key_pair_from_string("Alice");
     let bad_actor = key_pair_from_string("BadActor");
+    // The bad actor needs some funds in order to run transactions.
+    grant_funds(&client, &god_actor, bad_actor.public(), 1000).await;
 
     let org_id = random_string32();
     let register_project = random_register_project_message(org_id.clone(), H256::random());

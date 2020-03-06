@@ -46,6 +46,7 @@ async fn go() -> Result<(), Error> {
                 org_id: org_id.clone(),
                 checkpoint_id,
                 metadata: Bytes128::random(),
+                bid: 10,
             },
         )
         .await?

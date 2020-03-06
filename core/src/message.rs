@@ -92,6 +92,9 @@ pub struct RegisterProject {
 
     /// Opaque and imutable metadata, used by the application.
     pub metadata: Bytes128,
+
+    // A bid to the network to process this message
+    pub bid: Balance,
 }
 
 /// Add a new checkpoint to the state.
