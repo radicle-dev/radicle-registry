@@ -296,7 +296,7 @@ async fn unregister_org_with_projects() {
     assert_eq!(
         client.free_balance(&org.account_id).await.unwrap(),
         org_balance_before,
-        "The org shouldn't have paid for any fees" //TODO(nuno): should it be like this?
+        "The org shouldn't have paid for any fees"
     );
 }
 

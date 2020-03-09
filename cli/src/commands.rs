@@ -135,6 +135,8 @@ impl CommandT for ListProjects {
 pub struct RegisterOrg {
     /// Id of the org to register.
     org_id: OrgId,
+    // The bid to cover the tx fees and gain priority.
+    bid: Balance,
 }
 
 #[async_trait::async_trait]
@@ -147,8 +149,7 @@ impl CommandT for RegisterOrg {
                 &command_context.author_key_pair,
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
-                    //TODO(nuno) pass real bid here
-                    bid: 10,
+                    bid: self.bid,
                 },
             )
             .await?;
@@ -166,6 +167,8 @@ impl CommandT for RegisterOrg {
 pub struct UnregisterOrg {
     /// Id of the org to unregister.
     org_id: OrgId,
+    // The bid to cover the tx fees and gain priority.
+    bid: Balance,
 }
 
 #[async_trait::async_trait]
@@ -178,8 +181,7 @@ impl CommandT for UnregisterOrg {
                 &command_context.author_key_pair,
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
-                    //TODO(nuno): receive real fee
-                    bid: 100,
+                    bid: self.bid,
                 },
             )
             .await?;
@@ -203,6 +205,10 @@ pub struct RegisterProject {
 
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
+
+    // The bid to cover the tx fees and gain priority.
+    // Charged once to create the checkpoint and then a second time to register the project.
+    bid: Balance,
 }
 
 #[async_trait::async_trait]
@@ -216,8 +222,7 @@ impl CommandT for RegisterProject {
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
-                    //TODO(nuno): pass real bid here
-                    bid: 10,
+                    bid: self.bid.clone(),
                 },
             )
             .await?;
@@ -235,8 +240,7 @@ impl CommandT for RegisterProject {
                     org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
-                    //TODO(nuno): pass real bid here
-                    bid: 10,
+                    bid: self.bid,
                 },
             )
             .await?;
@@ -272,6 +276,8 @@ pub struct Transfer {
     recipient: AccountId,
     // The amount to transfer.
     funds: Balance,
+    // The bid to cover the tx fees and gain priority.
+    bid: Balance,
 }
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
@@ -289,8 +295,7 @@ impl CommandT for Transfer {
                 message::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
-                    //TODO(nuno): pass real bid here
-                    bid: 10,
+                    bid: self.bid,
                 },
             )
             .await?;
@@ -319,6 +324,9 @@ pub struct TransferOrgFunds {
 
     // The balance to transfer from the org to the recipient.
     funds: Balance,
+
+    // The bid to cover the tx fees and gain priority.
+    bid: Balance,
 }
 
 #[async_trait::async_trait]
@@ -332,8 +340,7 @@ impl CommandT for TransferOrgFunds {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
-                    //TODO(nuno) Pass real bid here
-                    bid: 10,
+                    bid: self.bid,
                 },
             )
             .await?;
