@@ -91,7 +91,7 @@ async fn register_project_with_inexistent_org() {
     .result
     .unwrap();
 
-    let inexistent_org_id = random_string32();
+    let inexistent_org_id = random_org_id();
     let message = random_register_project_message(inexistent_org_id, checkpoint_id);
     let tx_applied = submit_ok(&client, &alice, message.clone()).await;
 
@@ -115,7 +115,7 @@ async fn register_project_with_duplicate_id() {
     .result
     .unwrap();
 
-    let org_id = random_string32();
+    let org_id = random_org_id();
     let register_org = message::RegisterOrg {
         org_id: org_id.clone(),
     };
@@ -165,7 +165,7 @@ async fn register_project_with_bad_checkpoint() {
 
     let checkpoint_id = H256::random();
 
-    let org_id = random_string32();
+    let org_id = random_org_id();
     let register_project = random_register_project_message(org_id.clone(), checkpoint_id);
     let register_org = message::RegisterOrg { org_id };
     submit_ok(&client, &alice, register_org.clone()).await;
@@ -189,7 +189,7 @@ async fn register_project_with_bad_actor() {
     let god_actor = key_pair_from_string("Alice");
     let bad_actor = key_pair_from_string("BadActor");
 
-    let org_id = random_string32();
+    let org_id = random_org_id();
     let register_project = random_register_project_message(org_id.clone(), H256::random());
     let register_org = message::RegisterOrg { org_id };
     submit_ok(&client, &god_actor, register_org.clone()).await;

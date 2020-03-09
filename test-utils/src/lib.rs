@@ -15,6 +15,8 @@
 
 //! Miscellaneous helpers used throughout Registry tests.
 
+use std::convert::TryFrom;
+
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
@@ -82,6 +84,11 @@ pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
         .unwrap()
 }
 
+pub fn random_org_id() -> OrgId {
+    let size = rand::thread_rng().gen_range(1, 33);
+    OrgId::try_from(random_string(size).to_lowercase()).unwrap()
+}
+
 /// Create a [core::message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
     org_id: OrgId,
@@ -97,7 +104,7 @@ pub fn random_register_project_message(
 
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
-        org_id: random_string32(),
+        org_id: random_org_id(),
     }
 }
 
