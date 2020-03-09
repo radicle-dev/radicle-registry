@@ -65,7 +65,7 @@ async fn set_checkpoint() {
     assert_eq!(
         client.free_balance(&alice.public()).await.unwrap(),
         alice_balance_before - BaseFee.value(),
-        "Tx author should have paid for all fees"
+        "Tx author should have (only) pay for the base fee"
     );
     assert_eq!(
         client.free_balance(&org.account_id).await.unwrap(),
@@ -254,7 +254,7 @@ async fn set_fork_checkpoint() {
 }
 
 #[async_std::test]
-async fn set_checkpoint_insufficient_funds() {
+async fn set_checkpoint_insufficient_funds_author() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let org_id = random_string32();
@@ -283,6 +283,133 @@ async fn set_checkpoint_insufficient_funds() {
     assert_eq!(
         client.free_balance(&poor_actor.public()).await.unwrap(),
         0,
+        "The tx author should have had no funds to run the tx"
+    );
+}
+
+#[async_std::test]
+/// Test the SetCheckpoint and that the tx fees are correctly withdrawn.
+async fn set_checkpoint_insufficient_funds_org() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let org = client
+        .get_org(project.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+
+    let project_hash2 = H256::random();
+    let new_checkpoint_id = submit_ok(
+        &client,
+        &alice,
+        message::CreateCheckpoint {
+            project_hash: project_hash2,
+            previous_checkpoint_id: Some(project.current_cp),
+            bid: 10,
+        },
+    )
+    .await
+    .result
+    .unwrap();
+
+    let alice_balance_before = client.free_balance(&alice.public()).await.unwrap();
+    let org_balance_before = client.free_balance(&org.account_id).await.unwrap();
+
+    // Bid more than what the org can pay for
+    let bid = org_balance_before * 2;
+    let tx_applied = submit_ok(
+        &client,
+        &alice,
+        message::SetCheckpoint {
+            project_name: project.name,
+            org_id: project.org_id,
+            new_checkpoint_id,
+            bid,
+        },
+    )
+    .await;
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::FailedFeePayment.into())
+    );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_balance_before - BaseFee.value(),
+        "Tx author should have paid for the base fee"
+    );
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        org_balance_before,
+        "The org should have any funds to pay for the tip"
+    );
+}
+
+// Test that the tx author is charged for the base fee only even
+// when referencing an inexistent org.
+#[async_std::test]
+async fn set_checkpoint_inexistent_org() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+    let org_id = random_string32();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+
+    let bid = random_balance();
+    let tx_applied = submit_ok(
+        &client,
+        &alice,
+        message::SetCheckpoint {
+            project_name: project.name,
+            org_id: random_string32(), // pass some other random org id
+            new_checkpoint_id: H256::random(),
+            bid,
+        },
+    )
+    .await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InexistentProjectId.into())
+    );
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - BaseFee.value(),
+        "The tx author should have had no funds to run the tx"
+    );
+}
+
+// Test that the tx author is charged for the base fee only even
+// when referencing an inexistent project.
+#[async_std::test]
+async fn set_checkpoint_inexistent_project() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+
+    let bid = random_balance();
+    let tx_applied = submit_ok(
+        &client,
+        &alice,
+        message::SetCheckpoint {
+            project_name: random_string32(),
+            org_id: random_string32(),
+            new_checkpoint_id: H256::random(),
+            bid,
+        },
+    )
+    .await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::InexistentProjectId.into())
+    );
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - BaseFee.value(),
         "The tx author should have had no funds to run the tx"
     );
 }
