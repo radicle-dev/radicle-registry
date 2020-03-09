@@ -5,6 +5,7 @@
 use serial_test::serial;
 
 use radicle_registry_client::*;
+use radicle_registry_runtime::fees::{BaseFee, Fee};
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
@@ -13,8 +14,10 @@ async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
 
+    let create_checkpoint_bid = random_balance();
     let project_hash = H256::random();
     let checkpoint_id = submit_ok(
         &client,
@@ -22,23 +25,41 @@ async fn register_project() {
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
-            bid: 10,
+            bid: create_checkpoint_bid,
         },
     )
     .await
     .result
     .unwrap();
 
+    let after_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    assert_eq!(
+        after_balance_alice,
+        initial_balance_alice - create_checkpoint_bid,
+        "The tx author should have paid for all tx fees."
+    );
+
+    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    let register_org_bid = random_balance();
     let org_id = random_string32();
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
-        bid: 10,
+        bid: register_org_bid,
     };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
+    let after_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    assert_eq!(
+        after_balance_alice,
+        initial_balance_alice - create_checkpoint_bid,
+        "The tx author should have paid for all tx fees."
+    );
+
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     // The org needs some balance to run transactions.
-    grant_funds(&client, &alice, org.account_id, 1000).await;
+    grant_funds(&client, &alice, org.account_id.clone(), 1000).await;
+    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    let initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_name = register_project_message.project_name.clone();
@@ -88,6 +109,17 @@ async fn register_project() {
             project_name, org_id, org.projects
         )
     );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance_alice - BaseFee.value(),
+        "The tx author should have (only) paid for the base fee."
+    );
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance_org - (register_project_message.bid - BaseFee.value()),
+        "The org should have (only) paid for the tip."
+    );
 }
 
 #[async_std::test]
@@ -96,7 +128,8 @@ async fn register_org() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
 
     let register_org_message = random_register_org_message();
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
@@ -116,6 +149,12 @@ async fn register_org() {
     assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance_alice - register_org_message.bid,
+        "The tx author should have paid for all tx fees."
+    );
 }
 
 #[async_std::test]
@@ -124,14 +163,16 @@ async fn invalid_transaction() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
 
+    let bid = random_balance();
     let transfer_tx = Transaction::new_signed(
         &alice,
         message::Transfer {
             recipient: alice.public(),
             balance: 1000,
-            bid: 10,
+            bid,
         },
         TransactionExtra {
             nonce: 0,
@@ -140,6 +181,12 @@ async fn invalid_transaction() {
     );
 
     let response = client.submit_transaction(transfer_tx).await;
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance_alice - bid,
+        "The tx author should have paid for all tx fees."
+    );
     match response {
         Err(Error::Other(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),
