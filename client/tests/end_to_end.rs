@@ -16,6 +16,7 @@ async fn register_project() {
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = key_pair_from_string("Alice");
     let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    println!("Alice balance before {}", initial_balance_alice);
 
     let create_checkpoint_bid = random_balance();
     let project_hash = H256::random();
@@ -39,7 +40,9 @@ async fn register_project() {
         "The tx author should have paid for all tx fees."
     );
 
-    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    let initial_balance_alice = after_balance_alice;
+    println!("Alice balance before {}", initial_balance_alice);
+
     let register_org_bid = random_balance();
     let org_id = random_string32();
     let register_org_message = message::RegisterOrg {
@@ -51,7 +54,7 @@ async fn register_project() {
     let after_balance_alice = client.free_balance(&alice.public()).await.unwrap();
     assert_eq!(
         after_balance_alice,
-        initial_balance_alice - create_checkpoint_bid,
+        initial_balance_alice - register_org_bid,
         "The tx author should have paid for all tx fees."
     );
 
@@ -130,6 +133,7 @@ async fn register_org() {
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = key_pair_from_string("Alice");
     let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    println!("Alice balance before {}", initial_balance_alice);
 
     let register_org_message = random_register_org_message();
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
@@ -165,6 +169,7 @@ async fn invalid_transaction() {
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = key_pair_from_string("Alice");
     let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    println!("Alice balance before {}", initial_balance_alice);
 
     let bid = random_balance();
     let transfer_tx = Transaction::new_signed(
@@ -184,8 +189,8 @@ async fn invalid_transaction() {
 
     assert_eq!(
         client.free_balance(&alice.public()).await.unwrap(),
-        initial_balance_alice - bid,
-        "The tx author should have paid for all tx fees."
+        initial_balance_alice,
+        "The tx author shouldn't have been charged."
     );
     match response {
         Err(Error::Other(_)) => (),

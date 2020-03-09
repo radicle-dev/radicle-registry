@@ -259,7 +259,7 @@ pub struct ShowGenesisHash {}
 impl CommandT for ShowGenesisHash {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let genesis_hash = command_context.client.genesis_hash();
-        println!("Gensis block hash: 0x{}", hex::encode(genesis_hash));
+        println!("Genesis block hash: 0x{}", hex::encode(genesis_hash));
         Ok(())
     }
 }
