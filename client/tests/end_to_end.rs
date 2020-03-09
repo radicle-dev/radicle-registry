@@ -57,7 +57,7 @@ async fn register_project() {
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     // The org needs some balance to run transactions.
-    grant_funds(&client, &alice, org.account_id.clone(), 1000).await;
+    grant_funds(&client, &alice, org.account_id, 1000).await;
     let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
     let initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
 
