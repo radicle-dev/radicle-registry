@@ -124,7 +124,7 @@ async fn unregister_org_with_projects() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_string32();
+    let org_id = random_org_id();
     let random_project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
 
     assert!(

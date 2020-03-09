@@ -1,6 +1,7 @@
 //! Register a project on the ledger
 use futures::compat::{Compat, Future01CompatExt};
 use futures::future::FutureExt;
+use std::convert::TryFrom;
 
 use radicle_registry_client::*;
 
@@ -19,7 +20,7 @@ async fn go() -> Result<(), Error> {
     let client = Client::create(node_host).await?;
 
     let project_name = ProjectName::from_string("radicle-registry".to_string()).unwrap();
-    let org_id = OrgId::from_string("Monadic".to_string()).unwrap();
+    let org_id = OrgId::try_from("monadic").unwrap();
 
     // Choose some random project hash and create a checkpoint
     let project_hash = H256::random();

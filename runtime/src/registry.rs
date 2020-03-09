@@ -341,14 +341,16 @@ pub fn decode_blake_two128_concat_key<K: parity_scale_codec::Decode>(
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use core::convert::TryFrom;
     use frame_support::storage::generator::StorageMap;
+
+    use super::*;
 
     #[test]
     /// Test that store::Orgs::decode_key after store::Orgs::storage_map_final_key
     /// is identify as to the original input id.
     fn orgs_decode_key_identity() {
-        let org_id = OrgId::from_string("Monadic".into()).unwrap();
+        let org_id = OrgId::try_from("monadic").unwrap();
         let hashed_key = store::Orgs::storage_map_final_key(org_id.clone());
         let decoded_key = store::Orgs::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, org_id);
@@ -358,9 +360,9 @@ mod test {
     /// Test that store::Projects::decode_key after store::Projects::storage_map_final_key
     /// is identify as to the original input id.
     fn projects_decode_key_identity() {
-        let org_id = OrgId::from_string("Monadic".into()).unwrap();
+        let org_id = OrgId::try_from("monadic").unwrap();
         let project_name = ProjectName::from_string("Radicle".into()).unwrap();
-        let project_id: ProjectId = (org_id, project_name);
+        let project_id: ProjectId = (project_name, org_id);
         let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
         let decoded_key = store::Projects::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, project_id);

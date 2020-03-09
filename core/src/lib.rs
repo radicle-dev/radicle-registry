@@ -36,6 +36,9 @@ pub use bytes128::Bytes128;
 pub mod string32;
 pub use string32::String32;
 
+mod org_id;
+pub use org_id::OrgId;
+
 mod error;
 pub use error::RegistryError;
 
@@ -58,16 +61,14 @@ pub type ProjectId = (ProjectName, OrgId);
 /// The name a project is registered with.
 pub type ProjectName = String32;
 
-pub type OrgId = String32;
-
 /// Org
 ///
 /// Different from [state::Org] in which this type gathers
-/// both the id and the other Org fields, respectively stored
+/// both the [`OrgId`] and the other [`Org`] fields, respectively stored
 /// as an Org's storage key and data, into one complete type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Org {
-    // Id of an Org.
+    // Unique id of an Org.
     pub id: OrgId,
 
     /// See [state::Org::account_id]
