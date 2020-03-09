@@ -222,7 +222,7 @@ impl CommandT for RegisterProject {
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
-                    bid: self.bid.clone(),
+                    bid: self.bid,
                 },
             )
             .await?;
