@@ -13,12 +13,10 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Running development node](#running-development-node)
 - [Packages](#packages)
 - [Running checks and tests](#running-checks-and-tests)
-- [Changelog](#changelog)
 - [Continuous Deployment](#continuous-deployment)
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
-- [Git Flow](#git-flow)
 
 <!-- tocstop -->
 
@@ -96,16 +94,6 @@ To run specific tests sequentially as opposed to the parallel default,
 we use the [serial-test](https://crates.io/crates/serial_test) crate, simply
 having to mark the targeted tests with `#[serial]`.
 
-
-Changelog
----------
-
-We use `./CHANGELOG.md` to record all changes visible to users of the client.
-Changes are added to the “Upcoming” section of the change log as part of commit
-that makes the change. That is they are included in every pull request. For
-breaking changes a migration path must be provided.
-
-
 Continuous Deployment
 ---------------------
 
@@ -160,27 +148,3 @@ DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:e8c699d4827ed893d8d
 ```
 
 **What happens on the build agent:** when any commit with this change is pushed, the build agent will find the image under the configured tag. It will reuse it instead of rebuilding and save time.
-
-Git Flow
---------
-
-TL;DR: This repository follows the Git rebase flow for the most part. Each feature branch must be reviewed and approved in a pull request.
-Once ready to merge, consider squashing the branch's commits when the separate commits don't add value, rebase it, force push with lease, and merge it via the Github UI.
-
-### Branches
-
-1. Create a separate branch for each issue your are working on
-2. Do your magic
-3. Keep your branch up to date by rebasing it from its base branch
-4. Delete the branch after its been both approved and merged. Github does this automatically for you.
-
-### Commits
-
-1. Make sure you author your commits with the right username and email
-2. Follow the git commit convention:
-  - Use the imperative mood in the subject line
-  - Limit the subject line to 50 chars
-  - Capitalise the subject line
-  - Wrap the description at 72 characters
-  - Have the description preferably explaining what and why instead of how
-  - Separate the subject from the body with an empty line
