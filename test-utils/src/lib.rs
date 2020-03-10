@@ -89,13 +89,18 @@ pub fn random_org_id() -> OrgId {
     OrgId::try_from(random_string(size).to_lowercase()).unwrap()
 }
 
+pub fn random_project_name() -> ProjectName {
+    let size = rand::thread_rng().gen_range(1, 33);
+    ProjectName::try_from(random_string(size).to_lowercase()).unwrap()
+}
+
 /// Create a [core::message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
     org_id: OrgId,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
     message::RegisterProject {
-        project_name: random_string32(),
+        project_name: random_project_name(),
         org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
