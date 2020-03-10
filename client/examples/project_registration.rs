@@ -19,7 +19,7 @@ async fn go() -> Result<(), Error> {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create(node_host).await?;
 
-    let project_name = ProjectName::from_string("radicle-registry".to_string()).unwrap();
+    let project_name = ProjectName::try_from("radicle-registry").unwrap();
     let org_id = OrgId::try_from("monadic").unwrap();
 
     // Choose some random project hash and create a checkpoint

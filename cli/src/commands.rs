@@ -86,7 +86,7 @@ pub trait CommandT {
 /// Show information for a registered project.
 pub struct ShowProject {
     /// The name of the project
-    project_name: String32,
+    project_name: ProjectName,
     /// The org in which the project is registered.
     org_id: OrgId,
 }
@@ -192,7 +192,7 @@ impl CommandT for UnregisterOrg {
 /// Register a project with the given name under the given org.
 pub struct RegisterProject {
     /// Name of the project to register.
-    project_name: String32,
+    project_name: ProjectName,
 
     /// Org under which to register the project.
     org_id: OrgId,

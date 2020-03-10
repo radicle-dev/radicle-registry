@@ -39,6 +39,9 @@ pub use string32::String32;
 mod org_id;
 pub use org_id::OrgId;
 
+mod project_name;
+pub use project_name::ProjectName;
+
 mod error;
 pub use error::RegistryError;
 
@@ -57,9 +60,6 @@ pub type Balance = u128;
 
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, OrgId);
-
-/// The name a project is registered with.
-pub type ProjectName = String32;
 
 /// Org
 ///

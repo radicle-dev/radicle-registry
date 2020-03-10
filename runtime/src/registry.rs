@@ -361,7 +361,7 @@ mod test {
     /// is identify as to the original input id.
     fn projects_decode_key_identity() {
         let org_id = OrgId::try_from("monadic").unwrap();
-        let project_name = ProjectName::from_string("Radicle".into()).unwrap();
+        let project_name = ProjectName::try_from("radicle".to_string()).unwrap();
         let project_id: ProjectId = (project_name, org_id);
         let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
         let decoded_key = store::Projects::decode_key(&hashed_key).unwrap();
