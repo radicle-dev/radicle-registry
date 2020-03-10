@@ -101,7 +101,6 @@ fn transaction_extra_to_runtime_extra(
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
     let check_weight = frame_system::CheckWeight::new();
-    let charge_transaction_payment = pallet_transaction_payment::ChargeTransactionPayment::from(0);
 
     let additional_signed = (
         check_version
@@ -117,9 +116,6 @@ fn transaction_extra_to_runtime_extra(
         check_weight
             .additional_signed()
             .expect("statically returns Ok"),
-        charge_transaction_payment
-            .additional_signed()
-            .expect("statically returns Ok"),
     );
 
     let extra = (
@@ -128,7 +124,6 @@ fn transaction_extra_to_runtime_extra(
         check_era,
         check_nonce,
         check_weight,
-        charge_transaction_payment,
     );
 
     (extra, additional_signed)
