@@ -196,6 +196,43 @@ impl registry::Trait for Runtime {
 
 use frame_system as system;
 
+use sp_runtime::traits::{SignedExtension};
+use parity_scale_codec::{Decode, Encode};
+
+
+use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityError};
+
+
+/// Check that the tx author can pay the bid they defined for their tx.
+#[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
+pub struct CheckBid;
+
+impl SignedExtension for CheckBid {
+    const IDENTIFIER: &'static str = "";
+
+    type AccountId = AccountId;
+    type Call = Call;
+    type AdditionalSigned = ();
+    type DispatchInfo = frame_support::dispatch::DispatchInfo;
+    type Pre = ();
+
+    fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
+        Ok(())
+    }
+
+    fn validate(
+        &self,
+        _who: &Self::AccountId,
+        _call: &Self::Call,
+        _info: Self::DispatchInfo,
+        _len: usize,
+    ) -> TransactionValidity {
+        Err(TransactionValidityError::Invalid(
+            InvalidTransaction::Payment,
+        ))
+    }
+}
+
 construct_runtime!(
         pub enum Runtime where
                 Block = Block,
@@ -226,6 +263,7 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
+    CheckBid,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;

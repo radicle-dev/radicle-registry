@@ -23,6 +23,7 @@ use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
     Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
+    CheckBid,
 };
 
 #[derive(Clone, Debug)]
@@ -101,6 +102,7 @@ fn transaction_extra_to_runtime_extra(
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
     let check_weight = frame_system::CheckWeight::new();
+    let check_bid = CheckBid;
 
     let additional_signed = (
         check_version
@@ -116,6 +118,9 @@ fn transaction_extra_to_runtime_extra(
         check_weight
             .additional_signed()
             .expect("statically returns Ok"),
+        check_bid
+            .additional_signed()
+            .expect("statically returns Ok"),
     );
 
     let extra = (
@@ -124,6 +129,7 @@ fn transaction_extra_to_runtime_extra(
         check_era,
         check_nonce,
         check_weight,
+        check_bid,
     );
 
     (extra, additional_signed)
