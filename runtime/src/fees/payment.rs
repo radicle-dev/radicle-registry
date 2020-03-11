@@ -43,7 +43,6 @@ pub fn pay_fee(fee: impl Fee, payee: &AccountId) -> Result<(), DispatchError> {
 /// currency. We will burn this percentage and then floor to go back to Balance.
 const _FEE_PAYMENT_BURN: f64 = 0.01;
 
-
 pub fn can_pay(bid: Balance, payee: &AccountId) -> Result<(), DispatchError> {
     // <crate::Balances as Currency<_>>::ensure_can_withdraw(
     //     payee,

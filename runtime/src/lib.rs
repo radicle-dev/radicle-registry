@@ -34,8 +34,9 @@ use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
 use sp_runtime::{
-    create_runtime_str, generic, transaction_validity::{TransactionValidity, ValidTransaction}, ApplyExtrinsicResult,
-    Perbill,
+    create_runtime_str, generic,
+    transaction_validity::{TransactionValidity, ValidTransaction},
+    ApplyExtrinsicResult, Perbill,
 };
 use sp_std::prelude::*;
 
@@ -198,17 +199,23 @@ impl registry::Trait for Runtime {
 
 use frame_system as system;
 
-use sp_runtime::traits::{SignedExtension};
+use frame_support::storage::StorageMap as _;
 use parity_scale_codec::{Decode, Encode};
-
+use sp_runtime::traits::SignedExtension;
 
 use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityError};
 
-/// Check that the tx author can pay the bid they defined for their tx.
+/// Pay the transaction fees with the given `bid`.
+/// The bid is meant to cover all mandatory fees and have the remainder
+/// used as a tip to increase the priority of the transaction in the network.
 #[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
-pub struct CheckBid;
+pub struct PayTxFee {
+    pub bid: Balance,
+}
 
-impl SignedExtension for CheckBid {
+use registry::*;
+
+impl SignedExtension for PayTxFee {
     const IDENTIFIER: &'static str = "";
 
     type AccountId = AccountId;
@@ -223,24 +230,65 @@ impl SignedExtension for CheckBid {
 
     fn validate(
         &self,
-        _who: &Self::AccountId,
-        _call: &Self::Call,
+        author: &Self::AccountId,
+        call: &Self::Call,
         _info: Self::DispatchInfo,
         _len: usize,
     ) -> TransactionValidity {
+        let _bid = self.bid;
+
+        // store::Orgs::get(String32::from_string("h".to_string()).unwrap());
         //TODO(nuno): look up the message, figure who pays the fees, authorize, and withdraw.
-        match _call {
-            Call::Registry(registry::Call::set_checkpoint(m)) => {
-                match can_pay(m.bid, _who) {
+        match call {
+            Call::Registry(registry_message) => {
+                let payee = Self::decide_payee(*author, registry_message.clone());
+                match can_pay(_bid, &payee) {
                     Ok(()) => Ok(ValidTransaction::default()),
-                    Err(_) => Err(TransactionValidityError::Invalid(InvalidTransaction::Payment)),
+                    Err(_) => Err(TransactionValidityError::Invalid(
+                        InvalidTransaction::Payment,
+                    )),
                 }
-            },
-            _ =>  Err(TransactionValidityError::Invalid(
+            }
+            _ => Err(TransactionValidityError::Invalid(
                 InvalidTransaction::Future,
             )),
         }
     }
+}
+
+type RegistryCall = registry::Call<Runtime>;
+
+impl PayTxFee {
+    fn decide_payee(author: AccountId, registry_call: RegistryCall) -> AccountId {
+        match Self::who_should_pay(registry_call) {
+            TxFeePayee::Org(org_id) => match store::Orgs::get(org_id) {
+                Some(org) => {
+                    if org.members.contains(&author) {
+                        org.account_id
+                    } else {
+                        author
+                    }
+                }
+                None => author,
+            },
+            TxFeePayee::TxAuthor => author,
+        }
+    }
+
+    fn who_should_pay(registry_call: RegistryCall) -> TxFeePayee {
+        match registry_call {
+            RegistryCall::register_project(m) => TxFeePayee::Org(m.org_id),
+            RegistryCall::unregister_org(m) => TxFeePayee::Org(m.org_id),
+            RegistryCall::transfer_from_org(m) => TxFeePayee::Org(m.org_id),
+            RegistryCall::set_checkpoint(m) => TxFeePayee::Org(m.org_id),
+            _ => TxFeePayee::TxAuthor,
+        }
+    }
+}
+
+pub enum TxFeePayee {
+    Org(OrgId),
+    TxAuthor,
 }
 
 construct_runtime!(
@@ -273,7 +321,7 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
-    CheckBid,
+    PayTxFee,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;

@@ -19,11 +19,10 @@ use parity_scale_codec::Encode;
 use sp_runtime::generic::{Era, SignedPayload};
 use sp_runtime::traits::{Hash as _, SignedExtension};
 
-use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
+use crate::{ed25519, message::Message, Balance, CryptoPair as _, TxHash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
-    Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
-    CheckBid,
+    Call as RuntimeCall, Hash, Hashing, PayTxFee, SignedExtra, UncheckedExtrinsic,
 };
 
 /// Transaction that can be submitted to the blockchain.
@@ -104,7 +103,8 @@ fn transaction_extra_to_runtime_extra(
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
     let check_weight = frame_system::CheckWeight::new();
-    let check_bid = CheckBid;
+    // TODO(nuno): pass real bid here
+    let pay_tx_fee = PayTxFee { bid: 123 };
 
     let additional_signed = (
         check_version
@@ -120,7 +120,7 @@ fn transaction_extra_to_runtime_extra(
         check_weight
             .additional_signed()
             .expect("statically returns Ok"),
-        check_bid
+        pay_tx_fee
             .additional_signed()
             .expect("statically returns Ok"),
     );
@@ -131,7 +131,7 @@ fn transaction_extra_to_runtime_extra(
         check_era,
         check_nonce,
         check_weight,
-        check_bid,
+        pay_tx_fee,
     );
 
     (extra, additional_signed)
