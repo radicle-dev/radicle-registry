@@ -16,9 +16,9 @@
 //! PoW algorithm implementation based on Blake3 hashing
 //!
 //! The difficulty is an average number of hashes that need to be checked in order mine a block.
-//! It must be capped at `2^192 - 1`. This limit guarantees that Substrate can calculate a sum
+//! It's capped at `2^192 - 1`. This limit guarantees that Substrate can calculate a sum
 //! of difficulties of blocks in a chain of up to `2^64` height and not overflow. This cap
-//! should be impossible to break with current technology due to constraints of the universe.
+//! should never affect the difficulty with current technology due to constraints of the universe.
 //!
 //! In order to check if the data hash passes the difficulty test, it must be interpreted as
 //! a big-endian 256-bit number. If it's smaller than or equal to the threshold, it passes.
@@ -26,38 +26,50 @@
 //!
 //! There's no difficulty adjustment algorithm yet.
 
-use radicle_registry_runtime::opaque::Block;
+use crate::pow::harmonic_mean::HarmonicMean;
+use radicle_registry_runtime::opaque::{Block, Header};
 use radicle_registry_runtime::Hash;
-use sc_consensus_pow::{Error, PowAlgorithm};
-use sp_consensus_pow::Seal;
-use sp_core::uint::U256;
-use sp_runtime::generic::BlockId;
+use sc_client::light::blockchain::{AuxStore, BlockchainHeaderBackend};
+use sc_consensus_pow::{Error, PowAlgorithm, PowAux};
+use sp_api::ProvideRuntimeApi;
+use sp_consensus_pow::{Seal, TimestampApi};
+use sp_core::{H256, U256};
+use sp_runtime::traits::Header as _;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
+type BlockId = sp_runtime::generic::BlockId<Block>;
+type Result<T> = std::result::Result<T, Error<Block>>;
 type Difficulty = U256;
 type Threshold = U256;
 
 const NONCES_PER_MINING_ROUND: usize = 10_000_000;
+const INITIAL_DIFFICULTY: u64 = 1_000_000;
+const ADJUST_DIFFICULTY_DAMPING: u32 = 3;
+const ADJUST_DIFFICULTY_CLAMPING: u32 = 2;
+const ADJUST_DIFFICULTY_WINDOW_SIZE: u64 = 12;
+const TARGET_BLOCK_TIME_MS: u64 = 60_000;
+const TARGET_WINDOW_TIME_MS: u64 = ADJUST_DIFFICULTY_WINDOW_SIZE * TARGET_BLOCK_TIME_MS;
 
 /// An implementation of the Blake3 PoW algorithm.
 ///
 /// For more information about this PoW algorithm see the [module](index.html) documentation.
-#[derive(Clone)]
-pub struct Blake3Pow {
+#[derive(Clone, Debug)]
+pub struct Blake3Pow<C> {
+    client: C,
     next_nonce: Arc<AtomicU64>,
 }
 
-impl Blake3Pow {
+impl<C> Blake3Pow<C> {
     /// Creates Blake3Pow with a random seed for generating nonces
-    pub fn new() -> Self {
-        Self::new_with_seed(rand::random())
+    pub fn new(client: C) -> Self {
+        Self::new_with_seed(client, rand::random())
     }
 
     /// Creates Blake3Pow with the specific seed for generating nonces
-    pub fn new_with_seed(nonce_seed: u64) -> Self {
+    pub fn new_with_seed(client: C, nonce_seed: u64) -> Self {
         let next_nonce = Arc::new(AtomicU64::new(nonce_seed));
-        Blake3Pow { next_nonce }
+        Blake3Pow { client, next_nonce }
     }
 
     fn nonces_for_mining_round(&self) -> impl Iterator<Item = [u8; 8]> {
@@ -73,32 +85,50 @@ impl Blake3Pow {
     }
 }
 
-impl PowAlgorithm<Block> for Blake3Pow {
+impl<C> PowAlgorithm<Block> for Blake3Pow<Arc<C>>
+where
+    C: ProvideRuntimeApi<Block>,
+    C: AuxStore,
+    C: BlockchainHeaderBackend<Block>,
+    C::Api: TimestampApi<Block, u64> + sp_api::ApiErrorExt<Error = sp_blockchain::Error>,
+{
     type Difficulty = Difficulty;
 
-    fn difficulty(&self, _parent: &BlockId<Block>) -> Result<Self::Difficulty, Error<Block>> {
-        // To be enforced: only 192 lower bits can be set, see module docs
-        Ok(Difficulty::from(10_000_000))
+    fn difficulty(&self, parent: &BlockId) -> Result<Self::Difficulty> {
+        let mut prev_header = self.header(*parent)?;
+        if (*prev_header.number() as u64) <= ADJUST_DIFFICULTY_WINDOW_SIZE {
+            return Ok(Difficulty::from(INITIAL_DIFFICULTY));
+        }
+        let mut difficulty_mean = HarmonicMean::new();
+        for _ in 0..ADJUST_DIFFICULTY_WINDOW_SIZE {
+            let difficulty = self.block_difficulty(prev_header.hash())?;
+            difficulty_mean.push(difficulty);
+            prev_header = self.header(BlockId::hash(*prev_header.parent_hash()))?;
+        }
+        let avg_difficulty = difficulty_mean.calculate();
+        let time_observed =
+            self.window_mining_time_ms(BlockId::hash(prev_header.hash()), *parent)?;
+        Ok(next_difficulty(avg_difficulty, time_observed))
     }
 
     fn verify(
         &self,
-        _parent: &BlockId<Block>,
+        _parent: &BlockId,
         pre_hash: &Hash,
         seal: &Seal,
         difficulty: Self::Difficulty,
-    ) -> Result<bool, Error<Block>> {
+    ) -> Result<bool> {
         let mut verifier = NonceVerifier::new(pre_hash, difficulty);
         Ok(verifier.is_nonce_valid(&seal))
     }
 
     fn mine(
         &self,
-        _parent: &BlockId<Block>,
+        _parent: &BlockId,
         pre_hash: &Hash,
         difficulty: Self::Difficulty,
         _round: u32,
-    ) -> Result<Option<Seal>, Error<Block>> {
+    ) -> Result<Option<Seal>> {
         let mut verifier = NonceVerifier::new(pre_hash, difficulty);
         for nonce in self.nonces_for_mining_round() {
             if verifier.is_nonce_valid(&nonce) {
@@ -106,6 +136,54 @@ impl PowAlgorithm<Block> for Blake3Pow {
             }
         }
         Ok(None)
+    }
+}
+
+impl<C> Blake3Pow<Arc<C>>
+where
+    C: ProvideRuntimeApi<Block>,
+    C: AuxStore,
+    C: BlockchainHeaderBackend<Block>,
+    C::Api: TimestampApi<Block, u64> + sp_api::ApiErrorExt<Error = sp_blockchain::Error>,
+{
+    fn header(&self, block_id: BlockId) -> Result<Header> {
+        self.client
+            .header(block_id)
+            .and_then(|num_opt| {
+                num_opt.ok_or_else(|| {
+                    sp_blockchain::Error::UnknownBlock(format!(
+                        "Can't find a block for the ID {}",
+                        block_id
+                    ))
+                })
+            })
+            .map_err(Error::Client)
+    }
+
+    fn block_difficulty(&self, block_hash: H256) -> Result<Difficulty> {
+        PowAux::read(&*self.client, &block_hash).map(|difficulty| difficulty.difficulty)
+    }
+
+    /// Calculates time it took to mine the blocks in the window.
+    ///
+    /// It accepts the last block in the window and the **parent** of the first block.
+    /// This is necessary, because in order to obtain a block mining time one must calculate
+    /// the difference between timestamps of the block and it's parent.
+    fn window_mining_time_ms(
+        &self,
+        first_block_parent_hash: BlockId,
+        last_block_id: BlockId,
+    ) -> Result<u64> {
+        let start = self.block_timestamp_ms(first_block_parent_hash)?;
+        let end = self.block_timestamp_ms(last_block_id)?;
+        Ok(end - start)
+    }
+
+    fn block_timestamp_ms(&self, block_id: BlockId) -> Result<u64> {
+        self.client
+            .runtime_api()
+            .timestamp(&block_id)
+            .map_err(Error::Client)
     }
 }
 
@@ -138,4 +216,63 @@ fn difficulty_to_threshold(difficulty: Difficulty) -> Threshold {
 fn hash_passes_threshold_test(hash: blake3::Hash, threshold: Threshold) -> bool {
     let hash_value = Threshold::from_big_endian(hash.as_bytes());
     hash_value <= threshold
+}
+
+/// Calculates the difficulty for the next block based on the window of the previous blocks
+///
+/// `avg` - the average difficulty of the blocks in the window
+/// `time_observed` - the total time it took to create the blocks in the window
+fn next_difficulty(avg: Difficulty, time_observed: u64) -> Difficulty {
+    // This won't overflow, because difficulty is capped at using only its low 192 bits
+    let new_raw = avg * TARGET_WINDOW_TIME_MS / time_observed.max(1);
+    if new_raw > avg {
+        let delta = new_raw - avg;
+        let damped_delta = delta / ADJUST_DIFFICULTY_DAMPING;
+        let new_damped = avg + damped_delta;
+        let new_max = avg * ADJUST_DIFFICULTY_CLAMPING;
+        new_damped.min(new_max).min(max_difficulty())
+    } else {
+        let delta = avg - new_raw;
+        let damped_delta = delta / ADJUST_DIFFICULTY_DAMPING;
+        let new_damped = avg - damped_delta;
+        // Clamping matters only when ADJUST_DIFFICULTY_CLAMPING > ADJUST_DIFFICULTY_DAMPING
+        let new_min = avg / ADJUST_DIFFICULTY_CLAMPING;
+        new_damped.max(new_min)
+    }
+}
+
+// This should be a constant when it becomes possible
+fn max_difficulty() -> U256 {
+    U256::MAX >> 64
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn next_difficulty_tests() {
+        assert_next_difficulty(200, 0);
+        assert_next_difficulty(200, 1);
+        assert_next_difficulty(200, 25);
+        assert_next_difficulty(194, 26);
+        assert_next_difficulty(133, 50);
+        assert_next_difficulty(100, 100);
+        assert_next_difficulty(84, 200);
+        assert_next_difficulty(68, 5000);
+        assert_next_difficulty(67, 5001);
+        assert_next_difficulty(67, 10000);
+    }
+
+    // assume that the average window difficulty is 100 and the target window time is 100
+    fn assert_next_difficulty(expected: u64, time_observed: u64) {
+        let adjusted_time_observed = TARGET_WINDOW_TIME_MS * time_observed / 100;
+        let actual = next_difficulty(U256::from(100), adjusted_time_observed);
+        assert_eq!(
+            U256::from(expected),
+            actual,
+            "Failed for time_observed {}",
+            time_observed
+        );
+    }
 }

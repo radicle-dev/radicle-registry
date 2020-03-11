@@ -97,7 +97,7 @@ macro_rules! node_import_queue {
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                crate::pow::blake3_pow::Blake3Pow::new()
+                crate::pow::blake3_pow::Blake3Pow::new($client.clone())
             ),
         }
     }};
@@ -108,7 +108,7 @@ macro_rules! node_import_queue_for_pow_alg {
     ($client:expr, $select_chain:expr, $inherent_data_providers:expr, $pow_alg:expr) => {{
         let pow_block_import = sc_consensus_pow::PowBlockImport::new(
             $client.clone(),
-            $client,
+            $client.clone(),
             $pow_alg,
             0,
             $select_chain,
@@ -153,7 +153,7 @@ pub fn new_full(
             service,
             proposer,
             inherent_data_providers,
-            crate::pow::blake3_pow::Blake3Pow::new()
+            crate::pow::blake3_pow::Blake3Pow::new(service.client())
         ),
     }
     Ok(service)
