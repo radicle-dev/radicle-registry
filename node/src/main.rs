@@ -25,6 +25,7 @@ mod service;
 mod chain_spec;
 mod cli;
 mod command;
+mod logger;
 mod pow;
 
 pub use sc_cli::{error, VersionInfo};

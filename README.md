@@ -52,6 +52,19 @@ only the `devnet` chain is available.
 
 For more information use the `--help` flag.
 
+### Logging
+
+The node prints logs to stdout in the following format
+
+~~~
+<local time> <level> <target> <msg>
+~~~
+
+You can adjust the global log level and the log level for specific targets with
+the [`RUST_LOG` environment variable][rust-log-docs].
+
+[rust-log-docs]: https://docs.rs/env_logger/0.7.1/env_logger/#enabling-logging
+
 ### Dev Mode
 
 In development mode the node runs an isolated network with only the node as a block miner
