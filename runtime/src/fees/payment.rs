@@ -42,3 +42,21 @@ pub fn pay_fee(fee: impl Fee, payee: &AccountId) -> Result<(), DispatchError> {
 /// We apply a small burn on that transfer to increase the value of our
 /// currency. We will burn this percentage and then floor to go back to Balance.
 const _FEE_PAYMENT_BURN: f64 = 0.01;
+
+
+pub fn can_pay(bid: Balance, payee: &AccountId) -> Result<(), DispatchError> {
+    // <crate::Balances as Currency<_>>::ensure_can_withdraw(
+    //     payee,
+    //     bid,
+    //     frame_support::traits::WithdrawReason::TransactionPayment.into(),
+    // )
+
+    // fn ensure_can_withdraw(
+    //     who: &AccountId,
+    //     _amount: Self::Balance,
+    //     reasons: WithdrawReasons,
+    //     new_balance: Self::Balance
+    // ) -> DispatchResult
+
+    Ok(())
+}

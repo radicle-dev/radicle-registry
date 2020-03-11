@@ -34,10 +34,12 @@ use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
 use sp_runtime::{
-    create_runtime_str, generic, transaction_validity::TransactionValidity, ApplyExtrinsicResult,
+    create_runtime_str, generic, transaction_validity::{TransactionValidity, ValidTransaction}, ApplyExtrinsicResult,
     Perbill,
 };
 use sp_std::prelude::*;
+
+use fees::payment::can_pay;
 
 use sp_api::impl_runtime_apis;
 #[cfg(feature = "std")]
@@ -227,9 +229,18 @@ impl SignedExtension for CheckBid {
         _info: Self::DispatchInfo,
         _len: usize,
     ) -> TransactionValidity {
-        Err(TransactionValidityError::Invalid(
-            InvalidTransaction::Payment,
-        ))
+        //TODO(nuno): look up the message, figure who pays the fees, authorize, and withdraw.
+        match _call {
+            Call::Registry(registry::Call::set_checkpoint(m)) => {
+                match can_pay(m.bid, _who) {
+                    Ok(()) => Ok(ValidTransaction::default()),
+                    Err(_) => Err(TransactionValidityError::Invalid(InvalidTransaction::Payment)),
+                }
+            },
+            _ =>  Err(TransactionValidityError::Invalid(
+                InvalidTransaction::Future,
+            )),
+        }
     }
 }
 
