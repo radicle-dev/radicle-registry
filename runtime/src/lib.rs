@@ -204,7 +204,6 @@ use parity_scale_codec::{Decode, Encode};
 
 use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityError};
 
-
 /// Check that the tx author can pay the bid they defined for their tx.
 #[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
 pub struct CheckBid;

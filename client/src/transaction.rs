@@ -26,19 +26,21 @@ use radicle_registry_runtime::{
     CheckBid,
 };
 
-#[derive(Clone, Debug)]
-/// Transaction the can be submitted to the blockchain.
+/// Transaction that can be submitted to the blockchain.
 ///
-/// A transaction includes
+/// A transaction includes:
 /// * the author
 /// * the runtime message
-/// * extra data to like the gensis hash and account nonce
+/// * extra data such as the genesis hash and the account nonce
 /// * a valid signature
 ///
-/// The transaction type is generic over the runtime message parameter which must implement [Message].
+/// The transaction type is generic over the runtime message parameter
+/// which must implement [Message].
 ///
-/// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
-/// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
+/// A transaction can be created with [Transaction::new_signed]. The
+/// necessary transaction data must be obtained from the client with
+/// [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
+#[derive(Clone, Debug)]
 pub struct Transaction<Message_: Message> {
     _phantom_data: PhantomData<Message_>,
     pub(crate) extrinsic: UncheckedExtrinsic,
