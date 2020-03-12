@@ -22,7 +22,7 @@ use sp_runtime::traits::{Hash as _, SignedExtension};
 use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
-    Call as RuntimeCall, Hash, Hashing, PayTxFee, SignedExtra, UncheckedExtrinsic,
+    fees::PayTxFee, Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
 };
 
 /// Transaction that can be submitted to the blockchain.

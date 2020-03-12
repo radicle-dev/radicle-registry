@@ -29,15 +29,14 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 extern crate alloc;
 
-use crate::fees::{bid::Bid, payment::new_pay_fee};
+use crate::fees::PayTxFee;
 use frame_support::weights::Weight;
 use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
 use sp_runtime::{
-    create_runtime_str, generic,
-    transaction_validity::{TransactionValidity, ValidTransaction},
-    ApplyExtrinsicResult, Perbill,
+    create_runtime_str, generic, transaction_validity::TransactionValidity, ApplyExtrinsicResult,
+    Perbill,
 };
 use sp_std::prelude::*;
 
@@ -197,54 +196,6 @@ impl registry::Trait for Runtime {
 }
 
 use frame_system as system;
-
-use parity_scale_codec::{Decode, Encode};
-use sp_runtime::traits::SignedExtension;
-
-use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityError};
-
-/// Pay the transaction fees with the given `bid`.
-/// The bid is meant to cover all mandatory fees and have the remainder
-/// used as a tip to increase the priority of the transaction in the network.
-#[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
-pub struct PayTxFee {
-    pub bid: Balance,
-}
-
-impl SignedExtension for PayTxFee {
-    const IDENTIFIER: &'static str = "PayTxFee";
-
-    type AccountId = AccountId;
-    type Call = Call;
-    type AdditionalSigned = ();
-    type DispatchInfo = frame_support::dispatch::DispatchInfo;
-    type Pre = ();
-
-    fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
-        Ok(())
-    }
-
-    fn validate(
-        &self,
-        author: &Self::AccountId,
-        call: &Self::Call,
-        _info: Self::DispatchInfo,
-        _len: usize,
-    ) -> TransactionValidity {
-        let error = TransactionValidityError::Invalid(InvalidTransaction::Payment);
-        let bid = Bid::new(self.bid).ok_or(error)?;
-        match call {
-            Call::Registry(registry_call) => {
-                new_pay_fee(*author, bid, registry_call.clone()).map_err(|_| error)?;
-
-                let mut valid_tx = ValidTransaction::default();
-                valid_tx.priority = 123; //TODO(nuno): convert bid.tip.value() to u64
-                Ok(valid_tx)
-            }
-            _ => Ok(ValidTransaction::default()),
-        }
-    }
-}
 
 type RegistryCall = registry::Call<Runtime>;
 
