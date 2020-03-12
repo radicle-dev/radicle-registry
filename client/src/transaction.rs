@@ -19,7 +19,7 @@ use parity_scale_codec::Encode;
 use sp_runtime::generic::{Era, SignedPayload};
 use sp_runtime::traits::{Hash as _, SignedExtension};
 
-use crate::{ed25519, message::Message, Balance, CryptoPair as _, TxHash};
+use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
     Call as RuntimeCall, Hash, Hashing, PayTxFee, SignedExtra, UncheckedExtrinsic,

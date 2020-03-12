@@ -40,8 +40,6 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
-use fees::payment::can_pay;
-
 use sp_api::impl_runtime_apis;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -199,7 +197,6 @@ impl registry::Trait for Runtime {
 
 use frame_system as system;
 
-use frame_support::storage::StorageMap as _;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::SignedExtension;
 
@@ -212,8 +209,6 @@ use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityEr
 pub struct PayTxFee {
     pub bid: Balance,
 }
-
-use registry::*;
 
 impl SignedExtension for PayTxFee {
     const IDENTIFIER: &'static str = "";
@@ -230,66 +225,44 @@ impl SignedExtension for PayTxFee {
 
     fn validate(
         &self,
-        author: &Self::AccountId,
+        _author: &Self::AccountId,
         call: &Self::Call,
         _info: Self::DispatchInfo,
         _len: usize,
     ) -> TransactionValidity {
-        let _bid = self.bid;
+        let _bid = fees::bid::Bid::new(self.bid).ok_or(TransactionValidityError::Invalid(
+            InvalidTransaction::Payment,
+        ))?;
 
         // store::Orgs::get(String32::from_string("h".to_string()).unwrap());
-        //TODO(nuno): look up the message, figure who pays the fees, authorize, and withdraw.
         match call {
-            Call::Registry(registry_message) => {
-                let payee = Self::decide_payee(*author, registry_message.clone());
-                match can_pay(_bid, &payee) {
-                    Ok(()) => Ok(ValidTransaction::default()),
-                    Err(_) => Err(TransactionValidityError::Invalid(
-                        InvalidTransaction::Payment,
-                    )),
-                }
+            Call::Registry(_registry_call) => {
+                // new_pay_fee()
+                // // This is all logic of "How do we pay fees for a given message"
+                // let payee = Self::decide_payee(*author, registry_call.clone());
+                // // Try to charge. Either it works and we get a negative_imbalance,
+                // // or an error we need to translate to TransactionValidityError.
+                // // When successful, we need to set the priority, which is based on the tip,
+                // // so we need to use Bid. That might fail if the bid is too low. Should be done earlier.
+
+                // let _ni = withdraw_fee(bid.base_fee, &payee)
+                //     // .and_then(|ni| ) TODO(nuno): pay the block author
+                //     .or_else(|_| {
+                //         Err(TransactionValidityError::Invalid(
+                //             InvalidTransaction::Payment,
+                //         ))
+                //     })?;
+
+                let mut x = ValidTransaction::default();
+                x.priority = 123; //TODO(nuno): convert bid.tip.value() to u64
+                Ok(x)
             }
-            _ => Err(TransactionValidityError::Invalid(
-                InvalidTransaction::Future,
-            )),
+            _ => Ok(ValidTransaction::default()),
         }
     }
 }
 
 type RegistryCall = registry::Call<Runtime>;
-
-impl PayTxFee {
-    fn decide_payee(author: AccountId, registry_call: RegistryCall) -> AccountId {
-        match Self::who_should_pay(registry_call) {
-            TxFeePayee::Org(org_id) => match store::Orgs::get(org_id) {
-                Some(org) => {
-                    if org.members.contains(&author) {
-                        org.account_id
-                    } else {
-                        author
-                    }
-                }
-                None => author,
-            },
-            TxFeePayee::TxAuthor => author,
-        }
-    }
-
-    fn who_should_pay(registry_call: RegistryCall) -> TxFeePayee {
-        match registry_call {
-            RegistryCall::register_project(m) => TxFeePayee::Org(m.org_id),
-            RegistryCall::unregister_org(m) => TxFeePayee::Org(m.org_id),
-            RegistryCall::transfer_from_org(m) => TxFeePayee::Org(m.org_id),
-            RegistryCall::set_checkpoint(m) => TxFeePayee::Org(m.org_id),
-            _ => TxFeePayee::TxAuthor,
-        }
-    }
-}
-
-pub enum TxFeePayee {
-    Org(OrgId),
-    TxAuthor,
-}
 
 construct_runtime!(
         pub enum Runtime where

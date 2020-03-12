@@ -42,6 +42,16 @@ impl Bid {
     }
 }
 
+impl Fee for Bid {
+    fn value(&self) -> Balance {
+        self.base_fee.value() + self.tip.value()
+    }
+
+    fn withdraw_reasons(&self) -> frame_support::traits::WithdrawReasons {
+        self.base_fee.withdraw_reasons() | self.tip.withdraw_reasons()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

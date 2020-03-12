@@ -21,7 +21,7 @@
 //! * the [crate::fees::payment] module where the withdrawing of fees takes place.
 
 use crate::Balance;
-use frame_support::traits::WithdrawReason;
+use frame_support::traits::{WithdrawReason, WithdrawReasons};
 
 pub mod bid;
 pub mod payment;
@@ -30,8 +30,8 @@ pub trait Fee {
     /// The associated [crate::Balance].
     fn value(&self) -> Balance;
 
-    /// The associated [frame_support::traits::WithdrawReason].
-    fn withdraw_reason(&self) -> WithdrawReason;
+    /// The associated [frame_support::traits::WithdrawReasosn].
+    fn withdraw_reasons(&self) -> WithdrawReasons;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -41,8 +41,8 @@ impl Fee for BaseFee {
         1
     }
 
-    fn withdraw_reason(&self) -> WithdrawReason {
-        WithdrawReason::TransactionPayment
+    fn withdraw_reasons(&self) -> WithdrawReasons {
+        WithdrawReason::TransactionPayment.into()
     }
 }
 
@@ -53,8 +53,8 @@ impl Fee for Tip {
         self.0
     }
 
-    fn withdraw_reason(&self) -> WithdrawReason {
-        WithdrawReason::Tip
+    fn withdraw_reasons(&self) -> WithdrawReasons {
+        WithdrawReason::Tip.into()
     }
 }
 
@@ -63,12 +63,12 @@ mod test {
     use super::*;
 
     #[test]
-    fn withdraw_reason() {
+    fn withdraw_reasons() {
         assert_eq!(
-            BaseFee.withdraw_reason(),
-            WithdrawReason::TransactionPayment
+            BaseFee.withdraw_reasons(),
+            WithdrawReason::TransactionPayment.into()
         );
-        assert_eq!(Tip(123).withdraw_reason(), WithdrawReason::Tip);
+        assert_eq!(Tip(123).withdraw_reasons(), WithdrawReason::Tip.into());
     }
 
     #[test]
