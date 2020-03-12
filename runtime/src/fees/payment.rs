@@ -33,23 +33,23 @@ pub fn new_pay_fee(
     bid: Bid,
     registry_call: RegistryCall,
 ) -> Result<(), DispatchError> {
-    let payee = decide_payee(author, registry_call);
-    let withdrawn_fee = withdraw_fee(bid, &payee)?;
-    let reward = burn(with_drawn_fee);
-    pay_block_author(reward);
+    let payer = decide_payer(author, registry_call);
+    let withdrawn_fee = withdraw_fee(bid, &payer)?;
+    let reward = burn(withdrawn_fee);
+    pay_block_author(reward)?;
     Ok(())
 }
 
-pub fn withdraw_fee(fee: impl Fee, payee: &AccountId) -> Result<NegativeImbalance, DispatchError> {
+pub fn withdraw_fee(fee: impl Fee, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
     <crate::Balances as Currency<_>>::withdraw(
-        payee,
+        payer,
         fee.value(),
         fee.withdraw_reasons(),
         ExistenceRequirement::KeepAlive,
     )
 }
 
-/// Burn a small amount from the NegativeImbalance withdrawn from tx fee payee account.
+/// Burn a small amount from the NegativeImbalance withdrawn from tx fee payer account.
 /// TODO(nuno)
 fn burn(x: NegativeImbalance) -> NegativeImbalance {
     x
@@ -64,9 +64,9 @@ fn pay_block_author(_x: NegativeImbalance) -> Result<(), DispatchError> {
 /// For some `RegistryCall`s it should be the involved org, unless
 /// the `author` is not a member and thus not authorized. In such case,
 /// and for all other `RegistryCall`s, the tx author will be charged.
-fn decide_payee(author: AccountId, registry_call: RegistryCall) -> AccountId {
+fn decide_payer(author: AccountId, registry_call: RegistryCall) -> AccountId {
     match who_should_pay(registry_call) {
-        TxFeePayee::Org(org_id) => match store::Orgs::get(org_id) {
+        TxFeePayer::Org(org_id) => match store::Orgs::get(org_id) {
             Some(org) => {
                 if org.members.contains(&author) {
                     org.account_id
@@ -76,23 +76,23 @@ fn decide_payee(author: AccountId, registry_call: RegistryCall) -> AccountId {
             }
             None => author,
         },
-        TxFeePayee::TxAuthor => author,
+        TxFeePayer::TxAuthor => author,
     }
 }
 
 /// Check who should pay for a given `RegistryCall`, that being
 /// either the tx author or an involved Org. This function does
-/// not determine whether the resolved [TxFeePayee] _must_ pay,
+/// not determine whether the resolved [TxFeePayer] _must_ pay,
 /// given that mal intended `RegistryCall`s might be issued that
 /// need to be authorized or else bad actors would be bankrupting
 /// innocent accounts.
-fn who_should_pay(registry_call: RegistryCall) -> TxFeePayee {
+fn who_should_pay(registry_call: RegistryCall) -> TxFeePayer {
     match registry_call {
-        RegistryCall::register_project(m) => TxFeePayee::Org(m.org_id),
-        RegistryCall::unregister_org(m) => TxFeePayee::Org(m.org_id),
-        RegistryCall::transfer_from_org(m) => TxFeePayee::Org(m.org_id),
-        RegistryCall::set_checkpoint(m) => TxFeePayee::Org(m.org_id),
-        _ => TxFeePayee::TxAuthor,
+        RegistryCall::register_project(m) => TxFeePayer::Org(m.org_id),
+        RegistryCall::unregister_org(m) => TxFeePayer::Org(m.org_id),
+        RegistryCall::transfer_from_org(m) => TxFeePayer::Org(m.org_id),
+        RegistryCall::set_checkpoint(m) => TxFeePayer::Org(m.org_id),
+        _ => TxFeePayer::TxAuthor,
     }
 }
 
@@ -111,12 +111,12 @@ enum TxFeePayer {
 const _FEE_PAYMENT_BURN: f64 = 0.01;
 
 //TODO(nuno): Deprecate
-/// Pay a given fee by withdrawing it from the `payee` account
+/// Pay a given fee by withdrawing it from the `payer` account
 /// and transfering it, with a small burn, to the block author.
-pub fn pay_fee(fee: impl Fee, payee: &AccountId) -> Result<(), DispatchError> {
-    // 1. Withdraw from payee
+pub fn pay_fee(fee: impl Fee, payer: &AccountId) -> Result<(), DispatchError> {
+    // 1. Withdraw from payer
     let withdraw_result = <crate::Balances as Currency<_>>::withdraw(
-        payee,
+        payer,
         fee.value(),
         fee.withdraw_reasons(),
         ExistenceRequirement::KeepAlive,
