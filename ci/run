@@ -57,8 +57,8 @@ cargo build --workspace --all-targets --release
 echo "--- cargo test"
 echo "Starting radicle-registry-node"
 RUST_LOG=error ./target/release/radicle-registry-node \
-  --dev \
-  --base-path /tmp/radicle-registry \
+  --chain dev \
+  --data-path /tmp/radicle-registry \
   &
 registry_node_pid=$!
 # We build tests in release mode so that we can reuse the artifacts
