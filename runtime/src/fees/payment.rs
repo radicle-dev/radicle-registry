@@ -61,31 +61,19 @@ fn pay_block_author(_x: NegativeImbalance) -> Result<(), DispatchError> {
 }
 
 /// Decide which account will pay the tx fees for running `registry_call`.
-/// For some `RegistryCall`s it should be the involved org, unless
-/// the `author` is not a member and thus not authorized. In such case,
-/// and for all other `RegistryCall`s, the tx author will be charged.
 fn decide_payer(author: AccountId, registry_call: RegistryCall) -> AccountId {
     match who_should_pay(registry_call) {
-        TxFeePayer::Org(org_id) => match store::Orgs::get(org_id) {
-            Some(org) => {
-                if org.members.contains(&author) {
-                    org.account_id
-                } else {
-                    author
-                }
+        TxFeePayer::Org(org_id) => {
+            match store::Orgs::get(org_id) {
+                Some(org) => if org.members.contains(&author) { org.account_id } else { author },
+                None => author
             }
-            None => author,
         },
-        TxFeePayer::TxAuthor => author,
+        TxFeePayer::Author => author,
     }
 }
 
-/// Check who should pay for a given `RegistryCall`, that being
-/// either the tx author or an involved Org. This function does
-/// not determine whether the resolved [TxFeePayer] _must_ pay,
-/// given that mal intended `RegistryCall`s might be issued that
-/// need to be authorized or else bad actors would be bankrupting
-/// innocent accounts.
+/// Check who should pay for a given `RegistryCall`.
 fn who_should_pay(registry_call: RegistryCall) -> TxFeePayer {
     match registry_call {
         // Transactions payed by the org
@@ -95,21 +83,21 @@ fn who_should_pay(registry_call: RegistryCall) -> TxFeePayer {
         RegistryCall::set_checkpoint(m) => TxFeePayer::Org(m.org_id),
 
         // Transactions paid by the author
-        RegistryCall::create_checkpoint(_) => TxFeePayer::TxAuthor,
-        RegistryCall::register_org(_) => TxFeePayer::TxAuthor,
-        RegistryCall::transfer(_) => TxFeePayer::TxAuthor,
+        RegistryCall::create_checkpoint(_) => TxFeePayer::Author,
+        RegistryCall::register_org(_) => TxFeePayer::Author,
+        RegistryCall::transfer(_) => TxFeePayer::Author,
 
         // Match arm required by the compiler.
-        crate::registry::Call::__PhantomItem(_, _) => TxFeePayer::TxAuthor,
+        crate::registry::Call::__PhantomItem(_, _) => TxFeePayer::Author,
     }
 }
 
-/// The payer of a transaction fee if the transaction is authorized
+/// The payer of a transaction fee if the transaction is authorized.
 enum TxFeePayer {
     /// The given org pays for the fees
     Org(OrgId),
     /// Represents that it should be the tx author paying for the tx fees.
-    TxAuthor,
+    Author,
 }
 
 /// The burn associated with the payment of a fee.
