@@ -22,7 +22,7 @@ use sp_runtime::traits::{Hash as _, SignedExtension};
 use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
-    Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
+    fees::PayTxFee, Balance, Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
 };
 
 #[derive(Clone, Debug)]
@@ -68,6 +68,8 @@ pub struct TransactionExtra {
     /// The nonce of the account that is the transaction author.
     pub nonce: AccountTransactionIndex,
     pub genesis_hash: Hash,
+    /// The fee to cover the transaction fees and gain priority.
+    pub fee: Balance,
 }
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
@@ -101,7 +103,7 @@ fn transaction_extra_to_runtime_extra(
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
     let check_weight = frame_system::CheckWeight::new();
-    let charge_transaction_payment = pallet_transaction_payment::ChargeTransactionPayment::from(0);
+    let pay_tx_fee = PayTxFee { fee: extra.fee };
 
     let additional_signed = (
         check_version
@@ -117,7 +119,7 @@ fn transaction_extra_to_runtime_extra(
         check_weight
             .additional_signed()
             .expect("statically returns Ok"),
-        charge_transaction_payment
+        pay_tx_fee
             .additional_signed()
             .expect("statically returns Ok"),
     );
@@ -128,7 +130,7 @@ fn transaction_extra_to_runtime_extra(
         check_era,
         check_nonce,
         check_weight,
-        charge_transaction_payment,
+        pay_tx_fee,
     );
 
     (extra, additional_signed)
@@ -172,6 +174,7 @@ mod test {
             TransactionExtra {
                 nonce: 0,
                 genesis_hash,
+                fee: 3,
             },
         );
 
@@ -193,6 +196,7 @@ mod test {
             TransactionExtra {
                 nonce: 0,
                 genesis_hash: H256::random(),
+                fee: 9,
             },
         );
         let extrinsic_hash = Hashing::hash_of(&signed_tx.extrinsic);

@@ -9,12 +9,12 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn create_checkpoint() {
     let client = Client::new_emulator();
-    let bob = key_pair_from_string("Bob");
+    let alice = key_pair_from_string("Alice");
 
     let project_hash1 = H256::random();
     let checkpoint_id1 = submit_ok(
         &client,
-        &bob,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash1,
             previous_checkpoint_id: None,
@@ -27,7 +27,7 @@ async fn create_checkpoint() {
     let project_hash2 = H256::random();
     let checkpoint_id2 = submit_ok(
         &client,
-        &bob,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(checkpoint_id1),
@@ -63,14 +63,14 @@ async fn create_checkpoint() {
 #[async_std::test]
 async fn create_checkpoint_without_parent() {
     let client = Client::new_emulator();
-    let bob = key_pair_from_string("Bob");
+    let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
 
     let tx_applied = submit_ok(
         &client,
-        &bob,
+        &alice,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id,

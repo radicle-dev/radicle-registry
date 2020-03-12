@@ -23,7 +23,7 @@ pub use radicle_registry_core::*;
 
 pub use radicle_registry_runtime::Hash;
 
-pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Event};
+pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
@@ -102,6 +102,7 @@ pub trait ClientT {
         &self,
         author: &ed25519::Pair,
         message: Message_,
+        fee: Balance,
     ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state

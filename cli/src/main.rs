@@ -35,6 +35,11 @@ struct Args {
     )]
     author_key: ed25519::Pair,
 
+    /// Fee that will be charged fo the transaction.
+    /// The higher the fee, the higher the priority of a transaction.
+    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
+    fee: Balance,
+
     #[structopt(subcommand)]
     command: Command,
 
@@ -54,6 +59,7 @@ impl Args {
         Ok(CommandContext {
             author_key_pair: self.author_key.clone(),
             client,
+            fee: self.fee,
         })
     }
 

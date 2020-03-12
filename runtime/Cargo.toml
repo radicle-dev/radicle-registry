@@ -18,7 +18,6 @@ std = [
     "pallet-balances/std",
     "pallet-sudo/std",
     "pallet-timestamp/std",
-    "pallet-transaction-payment/std",
     "parity-scale-codec/std",
     "radicle-registry-core/std",
     "serde",
@@ -130,11 +129,6 @@ rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 default_features = false
 
 [dependencies.pallet-timestamp]
-git = "https://github.com/paritytech/substrate"
-rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
-default_features = false
-
-[dependencies.pallet-transaction-payment]
 git = "https://github.com/paritytech/substrate"
 rev = "09abd3b436ea568a47ec4fc47f933728d8cf466b"
 default_features = false

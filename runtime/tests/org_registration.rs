@@ -10,9 +10,12 @@ use radicle_registry_test_utils::*;
 async fn register_org() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
-    let register_org_message = random_register_org_message();
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let random_fee = random_balance();
 
-    let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let register_org_message = random_register_org_message();
+    let tx_applied =
+        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
 
     assert_eq!(
         tx_applied.events[0],
@@ -33,6 +36,12 @@ async fn register_org() {
     assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]
@@ -71,20 +80,37 @@ async fn unregister_org() {
     );
 
     // Unregister
+    let initial_balance = 1000;
+    let org = client
+        .get_org(register_org_message.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    // The org needs funds to submit transactions.
+    transfer(&client, &alice, org.account_id, initial_balance).await;
+
     let unregister_org_message = message::UnregisterOrg {
         org_id: register_org_message.org_id.clone(),
     };
-    let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
+    let random_fee = random_balance();
+    let tx_unregister_applied =
+        submit_ok_with_fee(&client, &alice, unregister_org_message.clone(), random_fee).await;
     assert_eq!(tx_unregister_applied.result, Ok(()));
 
     assert!(
         !org_exists(&client, register_org_message.org_id.clone()).await,
         "The org was not expected to exist"
     );
+
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]
-async fn unregister_org_bad_sender() {
+async fn unregister_org_bad_actor() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let register_org_message = random_register_org_message();
@@ -107,8 +133,19 @@ async fn unregister_org_bad_sender() {
         org_id: register_org_message.org_id.clone(),
     };
     let bad_actor = key_pair_from_string("BadActor");
-    let tx_unregister_applied =
-        submit_ok(&client, &bad_actor, unregister_org_message.clone()).await;
+    let initial_balance = 1000;
+    // The bad actor needs funds to submit transactions.
+    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
+
+    let random_fee = random_balance();
+    let tx_unregister_applied = submit_ok_with_fee(
+        &client,
+        &bad_actor,
+        unregister_org_message.clone(),
+        random_fee,
+    )
+    .await;
+
     assert_eq!(
         tx_unregister_applied.result,
         Err(RegistryError::UnregisterableOrg.into())
@@ -116,6 +153,11 @@ async fn unregister_org_bad_sender() {
     assert!(
         org_exists(&client, register_org_message.org_id.clone()).await,
         "Org not found in orgs list"
+    );
+    assert_eq!(
+        client.free_balance(&bad_actor.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
     );
 }
 

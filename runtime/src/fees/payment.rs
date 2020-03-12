@@ -13,24 +13,72 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{fees::Fee, AccountId};
-use frame_support::traits::{Currency, ExistenceRequirement};
+use crate::registry::store;
+use crate::{AccountId, Call, DispatchError, RegistryCall};
+use radicle_registry_core::*;
 
-/// Pay a given fee by withdrawing it from the `payee` account
-/// and transfering it, with a small burn, to the block author.
-pub fn pay_fee(fee: impl Fee, payee: &AccountId) {
-    // 1. Withdraw from payee
-    let _negative_imbalance = <crate::Balances as Currency<_>>::withdraw(
-        payee,
-        fee.value(),
-        fee.withdraw_reason().into(),
-        ExistenceRequirement::KeepAlive,
-    );
-    // 2. TODO(nuno) Transfer to the block author. Will be done in a following PR.
+use frame_support::storage::StorageMap as _;
+use frame_support::traits::{Currency, ExistenceRequirement, WithdrawReason};
+
+type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
+
+/// Pay Fees
+/// Given a tx author, their fee, and a RegistryCall they are submitting,
+/// charge the tx fees to the right account, which depends on the `registry_call`.
+pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
+    let payer = payer_account(author, call);
+    let _withdrawn_fee = withdraw(fee, &payer)?;
+    Ok(())
 }
 
-/// The burn associated with the payment of a fee.
-/// When a tx fee is withdrew, it is then transfered to the block author.
-/// We apply a small burn on that transfer to increase the value of our
-/// currency. We will burn this percentage and then floor to go back to Balance.
-const _FEE_PAYMENT_BURN: f64 = 0.01;
+pub fn withdraw(fee: Balance, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
+    <crate::Balances as Currency<_>>::withdraw(
+        payer,
+        fee,
+        WithdrawReason::TransactionPayment | WithdrawReason::Tip,
+        ExistenceRequirement::KeepAlive,
+    )
+}
+
+/// Find which account should pay for a given runtime call.
+/// Authorize calls that involve another paying entity than the tx author.
+/// The tx author pays for all unauthorized calls.
+fn payer_account(author: AccountId, call: &Call) -> AccountId {
+    match call {
+        Call::Registry(registry_call) => match registry_call {
+            // Transactions payed by the org
+            RegistryCall::register_project(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::set_checkpoint(m) => org_payer_account(author, &m.org_id),
+
+            // Transactions paid by the author
+            RegistryCall::create_checkpoint(_)
+            | RegistryCall::register_org(_)
+            | RegistryCall::transfer(_)
+            | RegistryCall::register_user(_)
+            | RegistryCall::unregister_user(_) => author,
+
+            crate::registry::Call::__PhantomItem(_, _) => {
+                unreachable!("__PhantomItem should never be used.")
+            }
+        },
+        _ => author,
+    }
+}
+
+/// Find which account should pay for an org-related call.
+/// When `author` is a member of the org identified by `org_id`,
+/// return that org's account, otherwise the author's.
+fn org_payer_account(author: AccountId, org_id: &OrgId) -> AccountId {
+    match store::Orgs::get(org_id) {
+        Some(org) => {
+            if org.members.contains(&author) {
+                org.account_id
+            } else {
+                author
+            }
+        }
+        None => author,
+    }
+}

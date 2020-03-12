@@ -55,6 +55,7 @@ async fn go() -> Result<(), Error> {
                 recipient: bob_public,
                 balance: 1,
             },
+            777,
         )
         .await?;
     println!("done");

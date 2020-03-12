@@ -46,6 +46,7 @@ pub mod message;
 mod transaction;
 
 pub use crate::interface::*;
+pub use radicle_registry_core::Balance;
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
@@ -174,6 +175,7 @@ impl ClientT for Client {
         &self,
         author: &ed25519::Pair,
         message: Message_,
+        fee: Balance,
     ) -> Result<Response<TransactionApplied<Message_>, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
@@ -186,6 +188,7 @@ impl ClientT for Client {
             TransactionExtra {
                 nonce,
                 genesis_hash,
+                fee,
             },
         );
         let tx_applied_fut = client.submit_transaction(transaction).await?;

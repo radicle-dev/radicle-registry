@@ -24,6 +24,7 @@ async fn go() -> Result<(), Error> {
     let transaction_extra = TransactionExtra {
         nonce: account_nonce,
         genesis_hash: client.genesis_hash(),
+        fee: 10,
     };
 
     // Construct the transaction
