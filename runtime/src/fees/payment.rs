@@ -34,9 +34,9 @@ pub fn new_pay_fee(
     registry_call: RegistryCall,
 ) -> Result<(), DispatchError> {
     let payee = decide_payee(author, registry_call);
-    withdraw_fee(bid, &payee)
-        .map(burn)
-        .and_then(pay_block_author)?;
+    let withdrawn_fee = withdraw_fee(bid, &payee)?;
+    let reward = burn(with_drawn_fee);
+    pay_block_author(reward);
     Ok(())
 }
 
