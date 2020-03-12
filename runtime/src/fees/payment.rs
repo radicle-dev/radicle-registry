@@ -88,11 +88,19 @@ fn decide_payer(author: AccountId, registry_call: RegistryCall) -> AccountId {
 /// innocent accounts.
 fn who_should_pay(registry_call: RegistryCall) -> TxFeePayer {
     match registry_call {
+        // Transactions payed by the org
         RegistryCall::register_project(m) => TxFeePayer::Org(m.org_id),
         RegistryCall::unregister_org(m) => TxFeePayer::Org(m.org_id),
         RegistryCall::transfer_from_org(m) => TxFeePayer::Org(m.org_id),
         RegistryCall::set_checkpoint(m) => TxFeePayer::Org(m.org_id),
-        _ => TxFeePayer::TxAuthor,
+
+        // Transactions paid by the author
+        RegistryCall::create_checkpoint(_) => TxFeePayer::TxAuthor,
+        RegistryCall::register_org(_) => TxFeePayer::TxAuthor,
+        RegistryCall::transfer(_) => TxFeePayer::TxAuthor,
+
+        // Match arm required by the compiler.
+        crate::registry::Call::__PhantomItem(_, _) => TxFeePayer::TxAuthor,
     }
 }
 
