@@ -41,7 +41,6 @@ use parity_scale_codec::{Decode, Encode};
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
     pub org_id: OrgId,
-    pub bid: Balance,
 }
 
 /// Unregisters an org on the Radicle Registry with the given ID.
@@ -65,7 +64,6 @@ pub struct RegisterOrg {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
     pub org_id: OrgId,
-    pub bid: Balance,
 }
 
 /// Register a project on the Radicle Registry with the given ID.
@@ -103,9 +101,7 @@ pub struct RegisterProject {
 
     /// Opaque and imutable metadata, used by the application.
     pub metadata: Bytes128,
-
     // A bid to the network to process this message
-    pub bid: Balance,
 }
 
 /// Add a new checkpoint to the state.
@@ -125,7 +121,6 @@ pub struct RegisterProject {
 pub struct CreateCheckpoint {
     pub project_hash: H256,
     pub previous_checkpoint_id: Option<CheckpointId>,
-    pub bid: Balance,
 }
 
 /// Updates [crate::state::Project::current_cp].
@@ -151,7 +146,6 @@ pub struct SetCheckpoint {
     pub project_name: ProjectName,
     pub org_id: OrgId,
     pub new_checkpoint_id: CheckpointId,
-    pub bid: Balance,
 }
 
 /// Transfer funds from an org account to an account.
@@ -180,7 +174,6 @@ pub struct TransferFromOrg {
     pub org_id: OrgId,
     pub recipient: AccountId,
     pub value: Balance,
-    pub bid: Balance,
 }
 
 /// Transfer funds from one account to another.
@@ -204,5 +197,4 @@ pub struct TransferFromOrg {
 pub struct Transfer {
     pub recipient: AccountId,
     pub balance: Balance,
-    pub bid: Balance,
 }

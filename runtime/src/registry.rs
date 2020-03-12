@@ -30,10 +30,7 @@ use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{
-    fees::{bid::Bid, payment::pay_fee},
-    AccountId, Hash, Hashing,
-};
+use crate::{AccountId, Hash, Hashing};
 
 pub trait Trait:
     frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
@@ -111,9 +108,6 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-            pay_fee(bid.base_fee, &sender)?;
-
             let org = store::Orgs::get(message.org_id.clone())
                 .ok_or(RegistryError::InexistentOrg)?;
 
@@ -121,7 +115,7 @@ decl_module! {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
 
-            pay_fee(bid.tip, &org.account_id)?;
+
 
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
@@ -150,10 +144,6 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-
-            pay_fee(bid.base_fee, &sender)?;
-            pay_fee(bid.tip, &sender)?;
 
             match store::Orgs::get(message.org_id.clone()) {
                 None => {},
@@ -183,14 +173,11 @@ decl_module! {
             }
 
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-            pay_fee(bid.base_fee, &sender)?;
-
             match store::Orgs::get(message.org_id.clone()) {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
-                    if can_be_unregistered(org.clone(), sender) {
-                        pay_fee(bid.tip, &org.account_id)?;
+                    if can_be_unregistered(org, sender) {
+
                         store::Orgs::remove(message.org_id.clone());
                         Self::deposit_event(Event::OrgUnregistered(message.org_id));
                         Ok(())
@@ -205,9 +192,6 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-            pay_fee(bid.base_fee, &sender)?;
-            pay_fee(bid.tip, &sender)?;
 
             <crate::Balances as Currency<_>>::transfer(
                 &sender,
@@ -220,14 +204,11 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-            pay_fee(bid.base_fee, &sender)?;
-
             let org = store::Orgs::get(message.org_id)
                 .ok_or(RegistryError::InexistentOrg)?;
 
             if org.members.contains(&sender) {
-                pay_fee(bid.tip, &org.account_id)?;
+
                 <crate::Balances as Currency<_>>::transfer(
                     &org.account_id,
                     &message.recipient,
@@ -245,11 +226,7 @@ decl_module! {
             origin,
             message: message::CreateCheckpoint,
         ) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-
-            pay_fee(bid.base_fee, &sender)?;
-            pay_fee(bid.tip, &sender)?;
+            let _sender = ensure_signed(origin)?;
 
             match message.previous_checkpoint_id {
                 None => {}
@@ -278,9 +255,6 @@ decl_module! {
             message: message::SetCheckpoint,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let bid: Bid = Bid::new(message.bid).ok_or(RegistryError::InsufficientBid)?;
-
-            pay_fee(bid.base_fee, &sender)?;
 
             let project_id = (message.project_name.clone(), message.org_id.clone());
             let opt_project = store::Projects::get(project_id.clone());
@@ -290,7 +264,7 @@ decl_module! {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    pay_fee(bid.tip, &org.account_id)?;
+
                     state::Project {
                         current_cp: message.new_checkpoint_id,
                         ..prj

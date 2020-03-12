@@ -47,7 +47,6 @@ pub async fn create_project_with_checkpoint(
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
-            bid: 10,
         },
     )
     .await
@@ -56,7 +55,6 @@ pub async fn create_project_with_checkpoint(
 
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
-        bid: 10,
     };
     submit_ok(&client, &author, register_org_message.clone()).await;
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
@@ -96,14 +94,12 @@ pub fn random_register_project_message(
         org_id,
         checkpoint_id,
         metadata: Bytes128::random(),
-        bid: random_balance(),
     }
 }
 
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
         org_id: random_string32(),
-        bid: random_balance(),
     }
 }
 
@@ -123,7 +119,6 @@ pub async fn grant_funds(
         message::Transfer {
             recipient,
             balance: value,
-            bid: 10,
         },
     )
     .await;

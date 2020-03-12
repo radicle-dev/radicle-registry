@@ -54,7 +54,6 @@ async fn go() -> Result<(), Error> {
             message::Transfer {
                 recipient: bob_public,
                 balance: 1,
-                bid: 10,
             },
         )
         .await?;

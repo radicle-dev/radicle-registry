@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::fees::{BaseFee, Fee, Tip};
-use crate::Balance;
+use crate::{fees::BASE_FEE, Balance};
+
+use frame_support::traits::WithdrawReason;
 
 /// Bid
 ///
@@ -24,31 +25,24 @@ use crate::Balance;
 /// mandatory fees is used as a tip, which will grant priority
 /// to the transaction in question accordingly to its value.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Bid {
-    pub base_fee: BaseFee,
-    pub tip: Tip,
-}
+pub struct Bid(Balance);
 
 impl Bid {
     /// Create a Bid with the given `bid`.
-    /// Fail when `bid` is insufficient to cover all the
-    /// mandatory fees, now being the `base_fee` alone.
+    /// Fail if `bid` is insufficient to cover the mandatory fees.
     pub fn new(bid: Balance) -> Option<Self> {
-        let base_fee = BaseFee;
-        bid.checked_sub(base_fee.value()).map(|remainder| Self {
-            base_fee,
-            tip: Tip(remainder),
-        })
-    }
-}
-
-impl Fee for Bid {
-    fn value(&self) -> Balance {
-        self.base_fee.value() + self.tip.value()
+        if bid < BASE_FEE {
+            return None;
+        }
+        Some(Self(bid))
     }
 
-    fn withdraw_reasons(&self) -> frame_support::traits::WithdrawReasons {
-        self.base_fee.withdraw_reasons() | self.tip.withdraw_reasons()
+    pub fn value(&self) -> Balance {
+        self.0
+    }
+
+    pub fn withdraw_reasons(&self) -> frame_support::traits::WithdrawReasons {
+        WithdrawReason::TransactionPayment | WithdrawReason::Tip
     }
 }
 
@@ -59,17 +53,18 @@ mod test {
 
     #[test]
     fn invalid_bid_insufficient() {
-        // The bid is insufficient to cover all mandatory fees.
-        assert_eq!(Bid::new(0), None);
+        assert!(
+            Bid::new(0).is_none(),
+            "An empty bid should not be enough to cover the mandatory fees."
+        );
     }
 
     #[test]
     fn valid_bid_just_enough() {
-        // The bid is just enough to cover the mandatory base fee,
-        // leaving a tip of 0 left.
-        let bid = Bid::new(BaseFee.value()).unwrap();
-        assert_eq!(bid.base_fee.value(), 1);
-        assert_eq!(bid.tip.value(), 0);
+        assert!(
+            Bid::new(BASE_FEE).is_some(),
+            "Bidding the base fee should have been enough."
+        );
     }
 
     #[test]
@@ -78,8 +73,11 @@ mod test {
             // Generate a random bid between 1 and 9999.
             let random_bid: Balance = rand::thread_rng().gen_range(1, 10000);
             let bid = Bid::new(random_bid).unwrap();
-            assert_eq!(bid.base_fee.value(), 1);
-            assert_eq!(bid.tip.value(), random_bid - BaseFee.value())
+            assert_eq!(bid.value(), random_bid);
+            assert_eq!(
+                bid.withdraw_reasons(),
+                WithdrawReason::TransactionPayment | WithdrawReason::Tip
+            );
         }
     }
 }

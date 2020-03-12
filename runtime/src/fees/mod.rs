@@ -20,59 +20,63 @@
 //! * the [crate::fees::bid] module that abstracts the concept of bid.
 //! * the [crate::fees::payment] module where the withdrawing of fees takes place.
 
-use crate::Balance;
-use frame_support::traits::{WithdrawReason, WithdrawReasons};
+use crate::{AccountId, Balance, Call};
+
+use parity_scale_codec::{Decode, Encode};
+use sp_runtime::traits::SignedExtension;
+use sp_runtime::transaction_validity::{TransactionValidity, ValidTransaction};
 
 pub mod bid;
 pub mod payment;
 
-pub trait Fee {
-    /// The associated [crate::Balance].
-    fn value(&self) -> Balance;
+use crate::fees::bid::Bid;
+use crate::fees::payment::new_pay_fee;
 
-    /// The associated [frame_support::traits::WithdrawReasosn].
-    fn withdraw_reasons(&self) -> WithdrawReasons;
+/// The base fee serves as a disincentive to stop bad actors
+/// from spamming the network in a DoS attack.
+const BASE_FEE: Balance = 1;
+
+use sp_runtime::transaction_validity::{InvalidTransaction, TransactionValidityError};
+
+/// Pay the transaction fees with the given `bid`.
+/// The bid is meant to cover all mandatory fees and have the remainder
+/// used as a tip to increase the priority of the transaction in the network.
+#[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
+pub struct PayTxFee {
+    pub bid: Balance,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct BaseFee;
-impl Fee for BaseFee {
-    fn value(&self) -> Balance {
-        1
+impl SignedExtension for PayTxFee {
+    const IDENTIFIER: &'static str = "PayTxFee";
+
+    type AccountId = AccountId;
+    type Call = Call;
+    type AdditionalSigned = ();
+    type DispatchInfo = frame_support::dispatch::DispatchInfo;
+    type Pre = ();
+
+    fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
+        Ok(())
     }
 
-    fn withdraw_reasons(&self) -> WithdrawReasons {
-        WithdrawReason::TransactionPayment.into()
-    }
-}
+    fn validate(
+        &self,
+        author: &Self::AccountId,
+        call: &Self::Call,
+        _info: Self::DispatchInfo,
+        _len: usize,
+    ) -> TransactionValidity {
+        let error = TransactionValidityError::Invalid(InvalidTransaction::Payment);
+        let bid = Bid::new(self.bid).ok_or(error)?;
+        match call {
+            Call::Registry(registry_call) => {
+                new_pay_fee(*author, bid, registry_call.clone()).map_err(|_| error)?;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Tip(Balance);
-impl Fee for Tip {
-    fn value(&self) -> Balance {
-        self.0
-    }
-
-    fn withdraw_reasons(&self) -> WithdrawReasons {
-        WithdrawReason::Tip.into()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn withdraw_reasons() {
-        assert_eq!(
-            BaseFee.withdraw_reasons(),
-            WithdrawReason::TransactionPayment.into()
-        );
-        assert_eq!(Tip(123).withdraw_reasons(), WithdrawReason::Tip.into());
-    }
-
-    #[test]
-    fn base_fee_value() {
-        assert_eq!(BaseFee.value(), 1);
+                let mut valid_tx = ValidTransaction::default();
+                valid_tx.priority = 123; //TODO(nuno): convert bid.tip.value() to u64
+                Ok(valid_tx)
+            }
+            _ => Ok(ValidTransaction::default()),
+        }
     }
 }

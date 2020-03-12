@@ -5,7 +5,6 @@
 use serial_test::serial;
 
 use radicle_registry_client::*;
-use radicle_registry_runtime::fees::{BaseFee, Fee};
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
@@ -26,7 +25,6 @@ async fn register_project() {
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
-            bid: create_checkpoint_bid,
         },
     )
     .await
@@ -47,7 +45,6 @@ async fn register_project() {
     let org_id = random_string32();
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
-        bid: register_org_bid,
     };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
@@ -61,8 +58,8 @@ async fn register_project() {
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     // The org needs some balance to run transactions.
     grant_funds(&client, &alice, org.account_id, 1000).await;
-    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
-    let initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
+    let _initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
+    let _initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_name = register_project_message.project_name.clone();
@@ -112,17 +109,6 @@ async fn register_project() {
             project_name, org_id, org.projects
         )
     );
-
-    assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
-        initial_balance_alice - BaseFee.value(),
-        "The tx author should have (only) paid for the base fee."
-    );
-    assert_eq!(
-        client.free_balance(&org.account_id).await.unwrap(),
-        initial_balance_org - (register_project_message.bid - BaseFee.value()),
-        "The org should have (only) paid for the tip."
-    );
 }
 
 #[async_std::test]
@@ -132,8 +118,6 @@ async fn register_org() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = key_pair_from_string("Alice");
-    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
-    println!("Alice balance before {}", initial_balance_alice);
 
     let register_org_message = random_register_org_message();
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
@@ -153,12 +137,6 @@ async fn register_org() {
     assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
-
-    assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
-        initial_balance_alice - register_org_message.bid,
-        "The tx author should have paid for all tx fees."
-    );
 }
 
 #[async_std::test]
@@ -168,16 +146,12 @@ async fn invalid_transaction() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = key_pair_from_string("Alice");
-    let initial_balance_alice = client.free_balance(&alice.public()).await.unwrap();
-    println!("Alice balance before {}", initial_balance_alice);
 
-    let bid = random_balance();
     let transfer_tx = Transaction::new_signed(
         &alice,
         message::Transfer {
             recipient: alice.public(),
             balance: 1000,
-            bid,
         },
         TransactionExtra {
             nonce: 0,
@@ -186,12 +160,6 @@ async fn invalid_transaction() {
     );
 
     let response = client.submit_transaction(transfer_tx).await;
-
-    assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
-        initial_balance_alice,
-        "The tx author shouldn't have been charged."
-    );
     match response {
         Err(Error::Other(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),

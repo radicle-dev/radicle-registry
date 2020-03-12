@@ -149,7 +149,6 @@ impl CommandT for RegisterOrg {
                 &command_context.author_key_pair,
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
-                    bid: self.bid,
                 },
             )
             .await?;
@@ -181,7 +180,6 @@ impl CommandT for UnregisterOrg {
                 &command_context.author_key_pair,
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
-                    bid: self.bid,
                 },
             )
             .await?;
@@ -222,7 +220,6 @@ impl CommandT for RegisterProject {
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
-                    bid: self.bid,
                 },
             )
             .await?;
@@ -240,7 +237,6 @@ impl CommandT for RegisterProject {
                     org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
-                    bid: self.bid,
                 },
             )
             .await?;
@@ -295,7 +291,6 @@ impl CommandT for Transfer {
                 message::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
-                    bid: self.bid,
                 },
             )
             .await?;
@@ -340,7 +335,6 @@ impl CommandT for TransferOrgFunds {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
-                    bid: self.bid,
                 },
             )
             .await?;

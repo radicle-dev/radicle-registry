@@ -14,10 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::registry::store;
-use crate::{
-    fees::{bid::Bid, Fee},
-    AccountId, DispatchError, RegistryCall,
-};
+use crate::{fees::bid::Bid, AccountId, DispatchError, RegistryCall};
 use radicle_registry_core::*;
 
 use frame_support::storage::StorageMap as _;
@@ -40,11 +37,11 @@ pub fn new_pay_fee(
     Ok(())
 }
 
-pub fn withdraw_fee(fee: impl Fee, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
+pub fn withdraw_fee(bid: Bid, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
     <crate::Balances as Currency<_>>::withdraw(
         payer,
-        fee.value(),
-        fee.withdraw_reasons(),
+        bid.value(),
+        bid.withdraw_reasons(),
         ExistenceRequirement::KeepAlive,
     )
 }
@@ -63,11 +60,15 @@ fn pay_block_author(_x: NegativeImbalance) -> Result<(), DispatchError> {
 /// Decide which account will pay the tx fees for running `registry_call`.
 fn decide_payer(author: AccountId, registry_call: RegistryCall) -> AccountId {
     match who_should_pay(registry_call) {
-        TxFeePayer::Org(org_id) => {
-            match store::Orgs::get(org_id) {
-                Some(org) => if org.members.contains(&author) { org.account_id } else { author },
-                None => author
+        TxFeePayer::Org(org_id) => match store::Orgs::get(org_id) {
+            Some(org) => {
+                if org.members.contains(&author) {
+                    org.account_id
+                } else {
+                    author
+                }
             }
+            None => author,
         },
         TxFeePayer::Author => author,
     }
@@ -94,9 +95,9 @@ fn who_should_pay(registry_call: RegistryCall) -> TxFeePayer {
 
 /// The payer of a transaction fee if the transaction is authorized.
 enum TxFeePayer {
-    /// The given org pays for the fees
+    /// The given org pays for the fees.
     Org(OrgId),
-    /// Represents that it should be the tx author paying for the tx fees.
+    /// The tx author pays for the fees.
     Author,
 }
 
@@ -105,23 +106,3 @@ enum TxFeePayer {
 /// We apply a small burn on that transfer to increase the value of our
 /// currency. We will burn this percentage and then floor to go back to Balance.
 const _FEE_PAYMENT_BURN: f64 = 0.01;
-
-//TODO(nuno): Deprecate
-/// Pay a given fee by withdrawing it from the `payer` account
-/// and transfering it, with a small burn, to the block author.
-pub fn pay_fee(fee: impl Fee, payer: &AccountId) -> Result<(), DispatchError> {
-    // 1. Withdraw from payer
-    let withdraw_result = <crate::Balances as Currency<_>>::withdraw(
-        payer,
-        fee.value(),
-        fee.withdraw_reasons(),
-        ExistenceRequirement::KeepAlive,
-    );
-    let _negative_imbalance = match withdraw_result {
-        Ok(x) => x,
-        Err(_e) => return Err(RegistryError::FailedFeePayment.into()),
-    };
-
-    Ok(())
-    // 2. Transfer to ??? TODO(nuno)
-}

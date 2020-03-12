@@ -29,7 +29,6 @@ async fn go() -> Result<(), Error> {
             message::CreateCheckpoint {
                 project_hash,
                 previous_checkpoint_id: None,
-                bid: 10,
             },
         )
         .await?
@@ -46,7 +45,6 @@ async fn go() -> Result<(), Error> {
                 org_id: org_id.clone(),
                 checkpoint_id,
                 metadata: Bytes128::random(),
-                bid: 10,
             },
         )
         .await?
