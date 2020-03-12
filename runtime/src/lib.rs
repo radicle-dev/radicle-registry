@@ -29,6 +29,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 extern crate alloc;
 
+use crate::fees::{bid::Bid, payment::new_pay_fee};
 use frame_support::weights::Weight;
 use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
@@ -211,7 +212,7 @@ pub struct PayTxFee {
 }
 
 impl SignedExtension for PayTxFee {
-    const IDENTIFIER: &'static str = "";
+    const IDENTIFIER: &'static str = "PayTxFee";
 
     type AccountId = AccountId;
     type Call = Call;
@@ -225,37 +226,20 @@ impl SignedExtension for PayTxFee {
 
     fn validate(
         &self,
-        _author: &Self::AccountId,
+        author: &Self::AccountId,
         call: &Self::Call,
         _info: Self::DispatchInfo,
         _len: usize,
     ) -> TransactionValidity {
-        let _bid = fees::bid::Bid::new(self.bid).ok_or(TransactionValidityError::Invalid(
-            InvalidTransaction::Payment,
-        ))?;
-
-        // store::Orgs::get(String32::from_string("h".to_string()).unwrap());
+        let error = TransactionValidityError::Invalid(InvalidTransaction::Payment);
+        let bid = Bid::new(self.bid).ok_or(error)?;
         match call {
-            Call::Registry(_registry_call) => {
-                // new_pay_fee()
-                // // This is all logic of "How do we pay fees for a given message"
-                // let payee = Self::decide_payee(*author, registry_call.clone());
-                // // Try to charge. Either it works and we get a negative_imbalance,
-                // // or an error we need to translate to TransactionValidityError.
-                // // When successful, we need to set the priority, which is based on the tip,
-                // // so we need to use Bid. That might fail if the bid is too low. Should be done earlier.
+            Call::Registry(registry_call) => {
+                new_pay_fee(*author, bid, registry_call.clone()).map_err(|_| error)?;
 
-                // let _ni = withdraw_fee(bid.base_fee, &payee)
-                //     // .and_then(|ni| ) TODO(nuno): pay the block author
-                //     .or_else(|_| {
-                //         Err(TransactionValidityError::Invalid(
-                //             InvalidTransaction::Payment,
-                //         ))
-                //     })?;
-
-                let mut x = ValidTransaction::default();
-                x.priority = 123; //TODO(nuno): convert bid.tip.value() to u64
-                Ok(x)
+                let mut valid_tx = ValidTransaction::default();
+                valid_tx.priority = 123; //TODO(nuno): convert bid.tip.value() to u64
+                Ok(valid_tx)
             }
             _ => Ok(ValidTransaction::default()),
         }
