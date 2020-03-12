@@ -98,7 +98,7 @@ fn who_should_pay(registry_call: RegistryCall) -> TxFeePayee {
 
 /// The Transaction Fee Payee.
 enum TxFeePayee {
-    /// Represents that it should be the given Org paying for the tx fees.
+    /// The given org pays for the fees
     Org(OrgId),
     /// Represents that it should be the tx author paying for the tx fees.
     TxAuthor,
