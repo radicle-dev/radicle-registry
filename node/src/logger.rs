@@ -19,7 +19,8 @@ use std::io::Write as _;
 
 /// Initializes [env_logger] using the `RUST_LOG` environment variables and our custom formatter.
 pub fn init() {
-    env_logger::Builder::from_default_env()
+    let env = env_logger::Env::new().default_filter_or("info");
+    env_logger::Builder::from_env(env)
         .format(format_record)
         .target(env_logger::Target::Stdout)
         .init();
