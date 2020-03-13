@@ -114,6 +114,48 @@ async fn register_org() {
 }
 
 #[async_std::test]
+#[serial]
+async fn register_user() {
+    let _ = env_logger::try_init();
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    // Must be distinct sender from other user registrations in tests to avoid
+    // AccountUserAssociated errors.
+    let sender = ed25519::Pair::from_string("//Alice", None).unwrap();
+
+    let register_user_message = random_register_user_message();
+    let tx_applied = submit_ok(&client, &sender, register_user_message.clone()).await;
+
+    assert_eq!(
+        tx_applied.events[0],
+        RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into(),
+    );
+
+    let maybe_user = client
+        .get_user(register_user_message.user_id.clone())
+        .await
+        .unwrap();
+    assert!(
+        maybe_user.is_some(),
+        "Registered user not found in users list"
+    );
+    let user = maybe_user.unwrap();
+    assert_eq!(user.id, register_user_message.user_id);
+    assert!(user.projects.is_empty());
+
+    // Unregistration.
+    let unregister_user_message = message::UnregisterUser {
+        user_id: register_user_message.user_id.clone(),
+    };
+    let tx_unregister_applied = submit_ok(&client, &sender, unregister_user_message.clone()).await;
+    assert!(tx_unregister_applied.result.is_ok());
+    assert!(
+        !user_exists(&client, register_user_message.user_id.clone()).await,
+        "The user was not expected to exist"
+    );
+}
+
+#[async_std::test]
 /// Submit a transaction with an invalid genesis hash and expect an error.
 async fn invalid_transaction() {
     let _ = env_logger::try_init();

@@ -154,3 +154,38 @@ impl Org {
         self
     }
 }
+
+/// # Storage
+///
+/// This type is only used for storage. See [crate::User] for the
+/// complete User type to be used everywhere else.
+///
+/// Users are stored as a map with the key derived from [crate::User::id].
+/// The user ID can be extracted from the storage key.
+///
+/// # Invariants
+///
+/// * `account_id` is immutable
+/// * `projects` is a set of all the projects owned by the User.
+///
+/// # Relevant messages
+///
+/// * [crate::message::RegisterUser]
+/// * [crate::message::UnregisterUser]
+#[derive(Clone, Debug, Decode, Encode, Eq, PartialEq)]
+pub struct User {
+    /// Account ID that holds the user funds.
+    pub account_id: AccountId,
+
+    /// Set of all projects owned by the user.
+    pub projects: Vec<ProjectName>,
+}
+
+impl User {
+    pub fn add_project(mut self, project_name: ProjectName) -> User {
+        if !self.projects.contains(&project_name) {
+            self.projects.push(project_name);
+        }
+        self
+    }
+}

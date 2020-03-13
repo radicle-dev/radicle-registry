@@ -20,6 +20,7 @@ use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::StorageMap as _,
+    storage::StoragePrefixedMap,
     traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::SimpleDispatchInfo,
 };
@@ -42,11 +43,15 @@ pub mod store {
     use super::*;
 
     decl_storage! {
-        pub trait Store for Module<T: Trait> as Counter {
+        pub trait Store for Module<T: Trait> as Registry {
             // The storage for Orgs, indexed by OrgId.
             // We use the blake2_128_concat hasher so that the OrgId
             // can be extracted from the key.
             pub Orgs: map hasher(blake2_128_concat) OrgId => Option<state::Org>;
+
+            // The storage for Users, indexed by UserId.
+            // We use the blake2_128_concat hasher so that the UserId can be extraced from the key.
+            pub Users: map hasher(blake2_128_concat) UserId => Option<state::User>;
 
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
@@ -190,6 +195,55 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+
+            if store::Users::get(message.user_id.clone()).is_some() {
+                return Err(RegistryError::DuplicateUserId.into())
+            }
+
+            // TODO(xla): This is a naive first version of the check to see if an account is
+            // already associated to a user. While fine for small dataset this needs to be reworked
+            // in the future.
+            for user in store::Users::iter() {
+                if sender == user.account_id {
+                    return Err(RegistryError::UserAccountAssociated.into())
+                }
+            }
+
+            let new_user = state::User {
+                account_id: sender,
+                projects: Vec::new(),
+            };
+            store::Users::insert(message.user_id.clone(), new_user);
+            Self::deposit_event(Event::UserRegistered(message.user_id));
+            Ok(())
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
+            fn can_be_unregistered(user: state::User, sender: AccountId) -> bool {
+                user.account_id == sender && user.projects.is_empty()
+            }
+
+            let sender = ensure_signed(origin)?;
+
+            match store::Users::get(message.user_id.clone()) {
+                None => Err(RegistryError::InexistentUser.into()),
+                Some(user) => {
+                    if can_be_unregistered(user, sender) {
+                        store::Users::remove(message.user_id.clone());
+                        Self::deposit_event(Event::UserUnregistered(message.user_id));
+                        Ok(())
+                    }
+                    else {
+                        Err(RegistryError::NonUnregisterableUser.into())
+                    }
+                }
+            }
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let org = match store::Orgs::get(message.org_id) {
@@ -284,11 +338,13 @@ decl_module! {
 }
 decl_event!(
     pub enum Event {
-        OrgUnregistered(OrgId),
-        OrgRegistered(OrgId),
-        ProjectRegistered(ProjectName, OrgId),
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectName, OrgId, CheckpointId),
+        OrgRegistered(OrgId),
+        OrgUnregistered(OrgId),
+        ProjectRegistered(ProjectName, OrgId),
+        UserRegistered(UserId),
+        UserUnregistered(UserId),
     }
 );
 
@@ -325,6 +381,14 @@ impl DecodeKey for store::Projects {
     }
 }
 
+impl DecodeKey for store::Users {
+    type Key = UserId;
+
+    fn decode_key(key: &[u8]) -> Result<UserId, parity_scale_codec::Error> {
+        decode_blake_two128_concat_key(key)
+    }
+}
+
 /// Decode a blake_two128_concat hashed key to the inferred type K.
 ///
 /// The key consists of the concatenation of the module prefix hash (16 bytes),
@@ -346,9 +410,9 @@ mod test {
 
     use super::*;
 
-    #[test]
     /// Test that store::Orgs::decode_key after store::Orgs::storage_map_final_key
-    /// is identify as to the original input id.
+    /// is identical to the original input id.
+    #[test]
     fn orgs_decode_key_identity() {
         let org_id = OrgId::try_from("monadic").unwrap();
         let hashed_key = store::Orgs::storage_map_final_key(org_id.clone());
@@ -356,9 +420,9 @@ mod test {
         assert_eq!(decoded_key, org_id);
     }
 
-    #[test]
     /// Test that store::Projects::decode_key after store::Projects::storage_map_final_key
-    /// is identify as to the original input id.
+    /// is identical to the original input id.
+    #[test]
     fn projects_decode_key_identity() {
         let org_id = OrgId::try_from("monadic").unwrap();
         let project_name = ProjectName::try_from("radicle".to_string()).unwrap();
@@ -366,5 +430,15 @@ mod test {
         let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
         let decoded_key = store::Projects::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, project_id);
+    }
+
+    /// Test that store::Users::decode_key after store::Users::storage_map_final_key
+    /// is identical the original user id.
+    #[test]
+    fn users_decode_key_identity() {
+        let user_id = UserId::try_from("cloudhead").unwrap();
+        let hashed_key = store::Users::storage_map_final_key(user_id.clone());
+        let decoded_key = store::Users::decode_key(&hashed_key).unwrap();
+        assert_eq!(decoded_key, user_id);
     }
 }

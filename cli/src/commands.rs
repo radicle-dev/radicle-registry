@@ -244,6 +244,65 @@ impl CommandT for RegisterProject {
 }
 
 #[derive(StructOpt, Debug, Clone)]
+/// Register a user.
+pub struct RegisterUser {
+    /// Id of the user to registered. The valid charset is: 'a-z0-9-' and can't begin or end with
+    /// a '-', must also not contain more than two '-' in a row.
+    user_id: UserId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for RegisterUser {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let client = &command_context.client;
+
+        let register_user_fut = client
+            .sign_and_submit_message(
+                &command_context.author_key_pair,
+                message::RegisterUser {
+                    user_id: self.user_id.clone(),
+                },
+            )
+            .await?;
+        println!("Registering user...");
+
+        let user_registered = register_user_fut.await?;
+        transaction_applied_ok(&user_registered)?;
+        println!("User {} is now registered.", self.user_id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Unregister a user.
+pub struct UnregisterUser {
+    /// Id of the org to unregister.
+    user_id: UserId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for UnregisterUser {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let client = &command_context.client;
+
+        let unregister_user = client
+            .sign_and_submit_message(
+                &command_context.author_key_pair,
+                message::UnregisterUser {
+                    user_id: self.user_id.clone(),
+                },
+            )
+            .await?;
+        println!("Unregistering user...");
+
+        let user_unregistered = unregister_user.await?;
+        transaction_applied_ok(&user_unregistered)?;
+        println!("User {} is now unregistered.", self.user_id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
 /// Show the genesis hash the node uses
 pub struct ShowGenesisHash {}
 

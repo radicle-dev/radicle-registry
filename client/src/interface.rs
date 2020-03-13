@@ -119,6 +119,10 @@ pub trait ClientT {
 
     async fn list_orgs(&self) -> Result<Vec<OrgId>, Error>;
 
+    async fn get_user(&self, user_id: UserId) -> Result<Option<User>, Error>;
+
+    async fn list_users(&self) -> Result<Vec<UserId>, Error>;
+
     async fn get_project(
         &self,
         project_name: ProjectName,

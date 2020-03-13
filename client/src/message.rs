@@ -98,6 +98,45 @@ impl Message for message::UnregisterOrg {
     }
 }
 
+impl Message for message::RegisterUser {
+    type Result = Result<(), DispatchError>;
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::register_user(self).into()
+    }
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+
+        match dispatch_result {
+            Ok(()) => find_event(&events, "UserRegistered", |event| match event {
+                Event::registry(registry::Event::UserRegistered(_)) => Some(Ok(())),
+                _ => None,
+            }),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
+        }
+    }
+}
+
+impl Message for message::UnregisterUser {
+    type Result = Result<(), DispatchError>;
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+        match dispatch_result {
+            Ok(()) => find_event(&events, "UserUnregistered", |event| match event {
+                Event::registry(registry::Event::UserUnregistered(_)) => Some(Ok(())),
+                _ => None,
+            }),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
+        }
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::unregister_user(self).into()
+    }
+}
+
 impl Message for message::CreateCheckpoint {
     type Result = Result<CheckpointId, DispatchError>;
 

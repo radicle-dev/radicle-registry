@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectName, UserId, H256};
 use parity_scale_codec::{Decode, Encode};
 
 /// Registers an org on the Radicle Registry with the given ID.
@@ -54,6 +54,39 @@ pub struct RegisterOrg {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
     pub org_id: OrgId,
+}
+
+/// Registers a user on the Radicle Registry with the given ID.
+///
+/// # State changes
+///
+/// If successful, a new [crate::state::User] with the given properties is added to the state.
+///
+/// [crate::state::User::account_id] is generated randomly.
+///
+/// # State-dependent validations
+///
+/// An Org with the same ID must not yet exist.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct RegisterUser {
+    pub user_id: UserId,
+}
+
+/// Unregisters a user on the Radicle Registry with the given ID.
+///
+/// # State changes
+///
+/// If successful, the targeted User is removed from the state.
+///
+/// # State-dependent validations
+///
+/// The targeted user must exist and have no projects and the
+/// the transaction origin must be the associated account.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct UnregisterUser {
+    pub user_id: UserId,
 }
 
 /// Register a project on the Radicle Registry with the given ID.
