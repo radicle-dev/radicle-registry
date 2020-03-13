@@ -42,6 +42,9 @@ pub use org_id::OrgId;
 mod project_name;
 pub use project_name::ProjectName;
 
+mod user_id;
+pub use user_id::UserId;
+
 mod error;
 pub use error::RegistryError;
 
@@ -120,3 +123,30 @@ impl Project {
 }
 
 pub type CheckpointId = H256;
+
+/// User
+///
+/// Different from [state::User] in which this type gathers
+/// both the [`UserId`] and the other [`User`] fields, respectively stored
+/// as an User's storage key and data, into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct User {
+    // Unique id of a User.
+    pub id: UserId,
+
+    /// See [state::User::account_id]
+    pub account_id: AccountId,
+
+    /// See [state::User::projects]
+    pub projects: Vec<ProjectName>,
+}
+
+impl User {
+    pub fn new(id: UserId, user: state::User) -> User {
+        User {
+            id,
+            account_id: user.account_id,
+            projects: user.projects,
+        }
+    }
+}

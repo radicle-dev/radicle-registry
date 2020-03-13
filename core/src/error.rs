@@ -20,15 +20,19 @@ use crate::DispatchError;
 pub enum RegistryError {
     InexistentCheckpointId = 0,
     InexistentOrg,
+    InexistentUser,
     DuplicateOrgId,
     DuplicateProjectId,
+    DuplicateUserId,
     InexistentProjectId,
     InsufficientBid,
     InsufficientSenderPermissions,
     InexistentParentCheckpoint,
     InexistentInitialProjectCheckpoint,
     InvalidCheckpointAncestry,
+    NonUnregisterableUser,
     UnregisterableOrg,
+    UserAccountAssociated,
 }
 
 impl From<RegistryError> for &'static str {
@@ -36,8 +40,10 @@ impl From<RegistryError> for &'static str {
         match error {
             RegistryError::InexistentCheckpointId => "The provided checkpoint does not exist",
             RegistryError::InexistentOrg => "The provided org does not exist",
+            RegistryError::InexistentUser => "The provided user does not exist",
             RegistryError::DuplicateOrgId => "An org with a similar ID already exists.",
             RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
+            RegistryError::DuplicateUserId => "A user with the same ID already exists.",
             RegistryError::InexistentProjectId => "Project does not exist",
             RegistryError::InsufficientBid => {
                 "The provided bid is insufficient to cover all mandatory fees."
@@ -50,8 +56,14 @@ impl From<RegistryError> for &'static str {
             RegistryError::InvalidCheckpointAncestry => {
                 "The provided checkpoint is not a descendant of the project's initial checkpoint."
             }
+            RegistryError::NonUnregisterableUser => {
+                "The provided user is not eligible for unregistration."
+            }
             RegistryError::UnregisterableOrg => {
                 "The provided org is not elibile for unregistration."
+            }
+            RegistryError::UserAccountAssociated => {
+                "The account is already associated with a user."
             }
         }
     }

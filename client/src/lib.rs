@@ -241,6 +241,25 @@ impl ClientT for Client {
         Ok(org_ids)
     }
 
+    async fn get_user(&self, id: UserId) -> Result<Option<User>, Error> {
+        self.fetch_map_value::<registry::store::Users, _, _>(id.clone())
+            .await
+            .map(|maybe_user: Option<state::User>| maybe_user.map(|user| User::new(id, user)))
+    }
+
+    async fn list_users(&self) -> Result<Vec<UserId>, Error> {
+        let users_prefix = registry::store::Users::final_prefix();
+        let keys = self.backend.fetch_keys(&users_prefix, None).await?;
+        let mut user_ids: Vec<UserId> = Vec::with_capacity(keys.len());
+        for key in keys {
+            let user_id = registry::store::Users::decode_key(&key)
+                .expect("Invalid runtime state key. Cannot extract user ID");
+            user_ids.push(user_id);
+        }
+
+        Ok(user_ids)
+    }
+
     async fn get_project(
         &self,
         project_name: ProjectName,
