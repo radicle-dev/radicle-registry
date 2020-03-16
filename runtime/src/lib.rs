@@ -32,7 +32,7 @@ extern crate alloc;
 use frame_support::weights::Weight;
 use frame_support::{construct_runtime, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
-use sp_runtime::traits::{BlakeTwo256, Block as BlockT, ConvertInto};
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 use sp_runtime::{
     create_runtime_str, generic, transaction_validity::TransactionValidity, ApplyExtrinsicResult,
     Perbill,
@@ -56,6 +56,8 @@ pub type Signature = ed25519::Signature;
 ///
 /// Same as [Hashing::Output].
 pub type Hash = sp_core::H256;
+
+type RegistryCall = registry::Call<Runtime>;
 
 pub type EventRecord = frame_system::EventRecord<Event, Hash>;
 
@@ -165,15 +167,6 @@ parameter_types! {
     pub const TransactionByteFee: u128 = 0;
 }
 
-impl pallet_transaction_payment::Trait for Runtime {
-    type Currency = pallet_balances::Module<Runtime>;
-    type OnTransactionPayment = ();
-    type TransactionBaseFee = TransactionBaseFee;
-    type TransactionByteFee = TransactionByteFee;
-    type WeightToFee = ConvertInto;
-    type FeeMultiplierUpdate = ();
-}
-
 impl pallet_balances::Trait for Runtime {
     type Balance = Balance;
     type OnReapAccount = System;
@@ -226,7 +219,7 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
-    pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+    crate::fees::PayTxFee,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;

@@ -25,17 +25,29 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
+pub async fn submit_ok_with_fee<Message_: Message>(
+    client: &Client,
+    author: &ed25519::Pair,
+    message: Message_,
+    fee: Balance,
+) -> TransactionApplied<Message_> {
+    client
+        .sign_and_submit_message(&author, message, fee)
+        .await
+        .unwrap()
+        .await
+        .unwrap()
+}
+
+/// Submit a transaction and wait for it to be successfully applied.
+///
+/// Panics if submission errors.
 pub async fn submit_ok<Message_: Message>(
     client: &Client,
     author: &ed25519::Pair,
     message: Message_,
 ) -> TransactionApplied<Message_> {
-    client
-        .sign_and_submit_message(&author, message)
-        .await
-        .unwrap()
-        .await
-        .unwrap()
+    submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
 
 pub async fn create_project_with_checkpoint(
@@ -59,6 +71,10 @@ pub async fn create_project_with_checkpoint(
         org_id: org_id.clone(),
     };
     submit_ok(&client, &author, register_org_message.clone()).await;
+
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    // The org needs funds to submit transactions.
+    transfer(&client, &author, org.account_id, 1000).await;
 
     let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
@@ -149,4 +165,31 @@ pub async fn user_exists(client: &Client, user_id: UserId) -> bool {
         .unwrap()
         .iter()
         .any(|id| *id == user_id.clone())
+}
+
+pub fn random_balance() -> Balance {
+    rand::thread_rng().gen_range(20, 100)
+}
+
+pub async fn transfer(
+    client: &Client,
+    donator: &ed25519::Pair,
+    recipient: AccountId,
+    value: Balance,
+) {
+    let tx_applied = submit_ok_with_fee(
+        &client,
+        &donator,
+        message::Transfer {
+            recipient,
+            balance: value,
+        },
+        1,
+    )
+    .await;
+    assert_eq!(
+        tx_applied.result,
+        Ok(()),
+        "Failed to grant funds to the recipient account."
+    );
 }

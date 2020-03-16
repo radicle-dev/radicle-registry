@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* Add `fee` to the Client and CLI APIs
 * Normalize core::message and cli commands parameters
 * Update `ProjectId`, now alias to `(OrgId, ProjectName)`
 * Drop `ProjectDomain`

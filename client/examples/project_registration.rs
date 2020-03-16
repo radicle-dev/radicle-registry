@@ -31,6 +31,7 @@ async fn go() -> Result<(), Error> {
                 project_hash,
                 previous_checkpoint_id: None,
             },
+            346,
         )
         .await?
         .await?
@@ -47,6 +48,7 @@ async fn go() -> Result<(), Error> {
                 checkpoint_id,
                 metadata: Bytes128::random(),
             },
+            567,
         )
         .await?
         .await?

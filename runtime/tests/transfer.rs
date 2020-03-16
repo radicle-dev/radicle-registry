@@ -35,31 +35,46 @@ async fn org_account_transfer() {
     let org = create_random_org(&client, &alice).await;
 
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 0);
-    submit_ok(
+    let alice_initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let random_fee = random_balance();
+    let transfer_amount = 2000;
+    submit_ok_with_fee(
         &client,
         &alice,
         message::Transfer {
             recipient: org.account_id,
-            balance: 2000,
+            balance: transfer_amount,
         },
+        random_fee,
     )
     .await;
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        alice_initial_balance - transfer_amount - random_fee,
+        "The tx fee was not charged properly."
+    );
 
     assert_eq!(client.free_balance(&bob).await.unwrap(), 0);
-
-    submit_ok(
+    let initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
+    let org_transfer_fee = random_balance();
+    let org_transfer_amount = 1000;
+    submit_ok_with_fee(
         &client,
         &alice,
         message::TransferFromOrg {
             org_id: org.id.clone(),
             recipient: bob,
-            value: 1000,
+            value: org_transfer_amount,
         },
+        org_transfer_fee,
     )
     .await;
     assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 1000);
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance_org - org_transfer_amount - org_transfer_fee
+    );
 }
 
 #[async_std::test]
@@ -67,7 +82,7 @@ async fn org_account_transfer() {
 async fn org_account_transfer_non_member() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
-    let bob = key_pair_from_string("Bob");
+
     let org = create_random_org(&client, &alice).await;
 
     submit_ok(
@@ -81,16 +96,28 @@ async fn org_account_transfer_non_member() {
     .await;
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
 
-    submit_ok(
+    let bad_actor = key_pair_from_string("BadActor");
+    let initial_balance = 1000;
+    // The bad actor needs funds to submit transactions.
+    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
+
+    let random_fee = random_balance();
+    submit_ok_with_fee(
         &client,
-        &bob,
+        &bad_actor,
         message::TransferFromOrg {
             org_id: org.id.clone(),
-            recipient: bob.public(),
+            recipient: bad_actor.public(),
             value: 1000,
         },
+        random_fee,
     )
     .await;
 
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
+    assert_eq!(
+        client.free_balance(&bad_actor.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }

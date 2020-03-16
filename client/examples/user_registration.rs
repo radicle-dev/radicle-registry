@@ -21,6 +21,7 @@ async fn main() {
             message::RegisterUser {
                 user_id: user_id.clone(),
             },
+            100,
         )
         .await
         .unwrap()

@@ -35,10 +35,21 @@ async fn register_project() {
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
 
+    // The org needs funds to submit transactions.
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    let initial_balance = 1000;
+    transfer(&client, &alice, org.account_id, initial_balance).await;
+
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_name = register_project_message.project_name.clone();
-    let org_id = register_project_message.org_id.clone();
-    let tx_applied = submit_ok(&client, &alice, register_project_message.clone()).await;
+    let random_fee = random_balance();
+    let tx_applied = submit_ok_with_fee(
+        &client,
+        &alice,
+        register_project_message.clone(),
+        random_fee,
+    )
+    .await;
     assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
@@ -83,6 +94,12 @@ async fn register_project() {
             project_name, org_id, org.projects
         )
     );
+
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]
@@ -91,10 +108,13 @@ async fn register_org() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
 
     let register_org_message = random_register_org_message();
-    let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let random_fee = random_balance();
+    let tx_applied =
+        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
 
     assert_eq!(
         tx_applied.events[0],
@@ -111,6 +131,12 @@ async fn register_org() {
     assert_eq!(org.id, register_org_message.org_id);
     assert_eq!(org.members, vec![alice.public()]);
     assert!(org.projects.is_empty());
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]
@@ -156,6 +182,7 @@ async fn register_user() {
 }
 
 #[async_std::test]
+#[serial]
 /// Submit a transaction with an invalid genesis hash and expect an error.
 async fn invalid_transaction() {
     let _ = env_logger::try_init();
@@ -172,10 +199,55 @@ async fn invalid_transaction() {
         TransactionExtra {
             nonce: 0,
             genesis_hash: Hash::zero(),
+            fee: 123,
         },
     );
 
     let response = client.submit_transaction(transfer_tx).await;
+    match response {
+        Err(Error::Other(_)) => (),
+        Err(error) => panic!("Unexpected error {:?}", error),
+        Ok(_) => panic!("Transaction was accepted unexpectedly"),
+    }
+}
+
+// Test that any message submited with an insufficient fee fails.
+#[async_std::test]
+#[serial]
+async fn insufficient_fee() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    let tx_author = key_pair_from_string("Alice");
+    let insufficient_fee: Balance = 0;
+
+    let whatever_message = random_register_org_message();
+    let response = client
+        .sign_and_submit_message(&tx_author, whatever_message, insufficient_fee)
+        .await;
+
+    match response {
+        Err(Error::Other(_)) => (),
+        Err(error) => panic!("Unexpected error {:?}", error),
+        Ok(_) => panic!("Transaction was accepted unexpectedly"),
+    }
+}
+
+// Test that any message submited by an author with insufficient
+// funds to pay the tx fee fails.
+#[async_std::test]
+#[serial]
+async fn insufficient_funds() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    let tx_author = key_pair_from_string("PoorActor");
+    assert_eq!(client.free_balance(&tx_author.public()).await.unwrap(), 0);
+
+    let whatever_message = random_register_org_message();
+    let random_fee = random_balance();
+    let response = client
+        .sign_and_submit_message(&tx_author, whatever_message, random_fee)
+        .await;
+
     match response {
         Err(Error::Other(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),

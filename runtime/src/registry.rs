@@ -334,6 +334,18 @@ decl_module! {
             ));
             Ok(())
         }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+
+            <crate::Balances as Currency<_>>::transfer(
+                &sender,
+                &message.recipient,
+                message.balance,
+                ExistenceRequirement::KeepAlive
+            )
+        }
     }
 }
 decl_event!(

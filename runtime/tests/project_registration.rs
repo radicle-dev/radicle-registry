@@ -27,8 +27,18 @@ async fn register_project() {
     let register_org = random_register_org_message();
     submit_ok(&client, &alice, register_org.clone()).await;
 
+    // The org needs funds to submit transactions.
+    let org = client
+        .get_org(register_org.org_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    let initial_balance = 1000;
+    transfer(&client, &alice, org.account_id, initial_balance).await;
+
+    let random_fee = random_balance();
     let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
-    let tx_applied = submit_ok(&client, &alice, message.clone()).await;
+    let tx_applied = submit_ok_with_fee(&client, &alice, message.clone(), random_fee).await;
 
     let project = client
         .get_project(message.clone().project_name, message.clone().org_id)
@@ -70,6 +80,12 @@ async fn register_project() {
     assert!(
         org.projects.contains(&project.name.clone()),
         "Org does not contain the added project."
+    );
+
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
     );
 }
 
@@ -121,6 +137,10 @@ async fn register_project_with_duplicate_id() {
     };
     submit_ok(&client, &alice, register_org.clone()).await;
 
+    // The org needs funds to submit transactions.
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    transfer(&client, &alice, org.account_id, 1000).await;
+
     let message = random_register_project_message(org_id.clone(), checkpoint_id);
     submit_ok(&client, &alice, message.clone()).await;
 
@@ -167,8 +187,15 @@ async fn register_project_with_bad_checkpoint() {
 
     let org_id = random_org_id();
     let register_project = random_register_project_message(org_id.clone(), checkpoint_id);
-    let register_org = message::RegisterOrg { org_id };
+    let register_org = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
     submit_ok(&client, &alice, register_org.clone()).await;
+
+    // The org needs funds to submit transactions.
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    transfer(&client, &alice, org.account_id, 1000).await;
+
     let tx_applied = submit_ok(&client, &alice, register_project.clone()).await;
 
     assert_eq!(
@@ -188,16 +215,33 @@ async fn register_project_with_bad_actor() {
     let client = Client::new_emulator();
     let god_actor = key_pair_from_string("Alice");
     let bad_actor = key_pair_from_string("BadActor");
+    // The bad actor needs funds to submit transactions.
+    transfer(&client, &god_actor, bad_actor.public(), 1000).await;
 
+    // The good actor creates an org, of which becomes its single member.
     let org_id = random_org_id();
-    let register_project = random_register_project_message(org_id.clone(), H256::random());
-    let register_org = message::RegisterOrg { org_id };
+    let register_org = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
     submit_ok(&client, &god_actor, register_org.clone()).await;
-    let tx_applied = submit_ok(&client, &bad_actor, register_project.clone()).await;
+
+    // The bad actor attempts to register a project within that org.
+    let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();
+    let register_project = random_register_project_message(org_id.clone(), H256::random());
+    let random_fee = random_balance();
+    let tx_applied =
+        submit_ok_with_fee(&client, &bad_actor, register_project.clone(), random_fee).await;
 
     assert_eq!(
         tx_applied.result,
         Err(RegistryError::InsufficientSenderPermissions.into())
+    );
+
+    // Check that the bad actor payed for the transaction anyway.
+    assert_eq!(
+        client.free_balance(&bad_actor.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
     );
 
     assert!(client

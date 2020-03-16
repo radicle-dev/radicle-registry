@@ -8,18 +8,62 @@ use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
-async fn set_checkpoint() {
+async fn create_checkpoint() {
     let client = Client::new_emulator();
-    let charles = key_pair_from_string("Charles");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_org_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &charles).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let project_hash = H256::random();
+    let random_fee = random_balance();
+    let new_checkpoint_id = submit_ok_with_fee(
+        &client,
+        &alice,
+        message::CreateCheckpoint {
+            project_hash,
+            previous_checkpoint_id: Some(project.current_cp),
+        },
+        random_fee,
+    )
+    .await
+    .result
+    .unwrap();
+
+    let checkpoint = client
+        .get_checkpoint(new_checkpoint_id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        checkpoint,
+        state::Checkpoint {
+            parent: Some(project.current_cp),
+            hash: project_hash
+        },
+    );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
+}
+
+#[async_std::test]
+async fn set_checkpoint() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let org_id = random_org_id();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &charles,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -29,14 +73,18 @@ async fn set_checkpoint() {
     .result
     .unwrap();
 
-    submit_ok(
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    let initial_balance = client.free_balance(&org.account_id).await.unwrap();
+    let random_fee = random_balance();
+    submit_ok_with_fee(
         &client,
-        &charles,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
             new_checkpoint_id,
         },
+        random_fee,
     )
     .await;
 
@@ -45,22 +93,28 @@ async fn set_checkpoint() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(new_checkpoint_id, new_project.current_cp)
+    assert_eq!(new_checkpoint_id, new_project.current_cp);
+
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]
 async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
-    let eve = key_pair_from_string("Eve");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_org_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &eve).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &eve,
+        &alice,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -70,10 +124,13 @@ async fn set_checkpoint_without_permission() {
     .result
     .unwrap();
 
-    let frank = key_pair_from_string("Frank");
+    let bad_actor = key_pair_from_string("BadActor");
+    // The bad actor needs funds to submit transactions.
+    transfer(&client, &alice, bad_actor.public(), 1000).await;
+
     let tx_applied = submit_ok(
         &client,
-        &frank,
+        &bad_actor,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -98,16 +155,16 @@ async fn set_checkpoint_without_permission() {
 #[async_std::test]
 async fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
-    let david = key_pair_from_string("David");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_org_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &david).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
     let tx_applied = submit_ok(
         &client,
-        &david,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -132,10 +189,11 @@ async fn fail_to_set_nonexistent_checkpoint() {
 #[async_std::test]
 async fn set_fork_checkpoint() {
     let client = Client::new_emulator();
-    let grace = key_pair_from_string("Grace");
+    let alice = key_pair_from_string("Alice");
 
     let org_id = random_org_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &grace).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+
     let project_name = project.name.clone();
     let mut current_cp = project.current_cp;
 
@@ -145,7 +203,7 @@ async fn set_fork_checkpoint() {
     for _ in 0..n {
         let new_checkpoint_id = submit_ok(
             &client,
-            &grace,
+            &alice,
             message::CreateCheckpoint {
                 project_hash: H256::random(),
                 previous_checkpoint_id: (Some(current_cp)),
@@ -160,7 +218,7 @@ async fn set_fork_checkpoint() {
 
     let forked_checkpoint_id = submit_ok(
         &client,
-        &grace,
+        &alice,
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: (Some(checkpoints[2])),
@@ -172,7 +230,7 @@ async fn set_fork_checkpoint() {
 
     submit_ok(
         &client,
-        &grace,
+        &alice,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -188,4 +246,63 @@ async fn set_fork_checkpoint() {
         .unwrap();
 
     assert_eq!(project_1.current_cp, forked_checkpoint_id)
+}
+
+// Test that a bad actor can not set a checkpoint of
+// a project from an org they do not belong to. Also,
+// test that the bad actor pays the tx fee nonetheless.
+#[async_std::test]
+async fn set_checkpoint_bad_actor() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let org_id = random_org_id();
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project_name = project.clone().name;
+
+    let project_hash2 = H256::random();
+    let new_checkpoint_id = submit_ok(
+        &client,
+        &alice,
+        message::CreateCheckpoint {
+            project_hash: project_hash2,
+            previous_checkpoint_id: Some(project.current_cp),
+        },
+    )
+    .await
+    .result
+    .unwrap();
+
+    let bad_actor = key_pair_from_string("BadActor");
+    let initial_balance = 1000;
+    // The bad actor needs funds to submit transactions.
+    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
+
+    let random_fee = random_balance();
+    submit_ok_with_fee(
+        &client,
+        &bad_actor,
+        message::SetCheckpoint {
+            project_name: project.name,
+            org_id: project.org_id,
+            new_checkpoint_id,
+        },
+        random_fee,
+    )
+    .await;
+
+    // Check that the project checkpoint was kept untouched.
+    let project_after = client
+        .get_project(project_name, org_id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(project.current_cp, project_after.current_cp);
+
+    // Check that the bad author paid the fee.
+    assert_eq!(
+        client.free_balance(&bad_actor.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }

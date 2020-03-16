@@ -2957,32 +2957,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-transaction-payment"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=09abd3b436ea568a47ec4fc47f933728d8cf466b#09abd3b436ea568a47ec4fc47f933728d8cf466b"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-transaction-payment-rpc-runtime-api"
-version = "2.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=09abd3b436ea568a47ec4fc47f933728d8cf466b#09abd3b436ea568a47ec4fc47f933728d8cf466b"
-dependencies = [
- "frame-support",
- "parity-scale-codec",
- "serde",
- "sp-api",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "parity-bytes"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3482,7 +3456,6 @@ dependencies = [
  "jsonrpc-core-client",
  "lazy_static",
  "log 0.4.8",
- "pallet-transaction-payment",
  "parity-scale-codec",
  "radicle-registry-core",
  "radicle-registry-runtime",
@@ -3560,7 +3533,6 @@ dependencies = [
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
- "pallet-transaction-payment",
  "parity-scale-codec",
  "radicle-registry-client",
  "radicle-registry-core",

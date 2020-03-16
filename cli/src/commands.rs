@@ -21,6 +21,7 @@ use structopt::StructOpt;
 pub struct CommandContext {
     pub author_key_pair: ed25519::Pair,
     pub client: Client,
+    pub fee: Balance,
 }
 
 /// Error returned by [CommandT::run].
@@ -148,6 +149,7 @@ impl CommandT for RegisterOrg {
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
                 },
+                command_context.fee,
             )
             .await?;
         println!("Registering org...");
@@ -177,6 +179,7 @@ impl CommandT for UnregisterOrg {
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
                 },
+                command_context.fee,
             )
             .await?;
         println!("Unregistering org...");
@@ -213,6 +216,7 @@ impl CommandT for RegisterProject {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
                 },
+                command_context.fee,
             )
             .await?;
         println!("creating checkpoint...");
@@ -230,6 +234,7 @@ impl CommandT for RegisterProject {
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
+                command_context.fee,
             )
             .await?;
         println!("registering project...");
@@ -262,6 +267,7 @@ impl CommandT for RegisterUser {
                 message::RegisterUser {
                     user_id: self.user_id.clone(),
                 },
+                command_context.fee,
             )
             .await?;
         println!("Registering user...");
@@ -291,6 +297,7 @@ impl CommandT for UnregisterUser {
                 message::UnregisterUser {
                     user_id: self.user_id.clone(),
                 },
+                command_context.fee,
             )
             .await?;
         println!("Unregistering user...");
@@ -341,6 +348,7 @@ impl CommandT for Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
                 },
+                command_context.fee,
             )
             .await?;
         println!("transferring funds...");
@@ -382,6 +390,7 @@ impl CommandT for TransferOrgFunds {
                     recipient: self.recipient,
                     value: self.funds,
                 },
+                command_context.fee,
             )
             .await?;
         println!("transferring funds...");
