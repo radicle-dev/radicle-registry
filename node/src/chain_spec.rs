@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines the [ChainSpec]s for various chains we want to run.
+//! Provides [Chain] and [ChainSpec]s for various chains we want to run.
 //!
 //! Available chain specs
 //! * [dev] for runnning a single node locally and develop against it.
@@ -28,25 +28,23 @@ use std::convert::TryFrom;
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
 
-pub fn load_spec(id: &str) -> Result<Option<ChainSpec>, String> {
-    match from_id(id) {
-        Some(spec) => Ok(Some(spec)),
-        _ => Err(format!(
-            "Unknown chain spec \"{}\". You must run the node with --dev",
-            id
-        )),
-    }
+/// Possible chains.
+///
+/// Use [Chain::spec] to get the corresponding [ChainSpec].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Chain {
+    Dev,
+    DevnetLocal,
+    Devnet,
 }
 
-pub fn from_id(id: &str) -> Option<ChainSpec> {
-    if id == "dev" {
-        Some(dev())
-    } else if id == "devnet" {
-        Some(devnet())
-    } else if id == "local-devnet" {
-        Some(local_devnet())
-    } else {
-        None
+impl Chain {
+    pub fn spec(&self) -> ChainSpec {
+        match self {
+            Chain::Dev => dev(),
+            Chain::DevnetLocal => local_devnet(),
+            Chain::Devnet => devnet(),
+        }
     }
 }
 

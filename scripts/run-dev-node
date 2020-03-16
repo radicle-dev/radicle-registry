@@ -2,5 +2,6 @@
 
 set -euo pipefail
 
+export RUST_LOG="${RUST_LOG:-info},substrate_consensus_slots=error,substrate=error"
 radicle_registry_node=./target/release/radicle-registry-node
-exec $radicle_registry_node "$@" --dev
+exec $radicle_registry_node "$@" --chain dev

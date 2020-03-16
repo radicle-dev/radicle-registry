@@ -15,31 +15,33 @@
 
 use sc_cli::{error, VersionInfo};
 
-use crate::chain_spec;
-use crate::cli::Cli;
+use crate::cli;
 use crate::service;
 
 /// Parse and run command line arguments
 pub fn run(version: VersionInfo) -> error::Result<()> {
-    let opt = sc_cli::from_args::<Cli>(&version);
-
-    let config = sc_service::Configuration::new(&version);
     crate::logger::init();
 
-    match opt.subcommand {
+    let args = cli::Arguments::from_args(&version);
+    let config = sc_service::Configuration::new(&version);
+
+    let chain_spec = args.chain.spec();
+    let spec_factory = |_: &str| Ok(Some(chain_spec));
+
+    match args.subcommand {
         Some(subcommand) => sc_cli::run_subcommand(
             config,
             subcommand,
-            chain_spec::load_spec,
+            spec_factory,
             |config: _| Ok(new_full_start!(config).0),
             &version,
         ),
         None => sc_cli::run(
             config,
-            opt.run,
+            args.run_cmd(),
             service::new_light,
             service::new_full,
-            chain_spec::load_spec,
+            spec_factory,
             &version,
         ),
     }
