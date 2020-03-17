@@ -125,6 +125,7 @@ impl Arguments {
             name,
             telemetry_endpoints,
             unsafe_rpc_external,
+            unsafe_ws_external: unsafe_rpc_external,
             ..run_cmd
         }
     }
