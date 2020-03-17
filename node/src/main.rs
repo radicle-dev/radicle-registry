@@ -21,6 +21,7 @@
 mod chain_spec;
 mod cli;
 mod command;
+mod inherent_data;
 mod logger;
 mod pow;
 mod service;
