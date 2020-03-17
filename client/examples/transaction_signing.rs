@@ -1,23 +1,13 @@
 //! Offline signing and creation of a `Transfer` transaction.
-use futures::compat::Compat;
-use futures::future::FutureExt;
 
-use radicle_registry_client::{
-    ed25519, message::Transfer, Client, ClientT as _, CryptoPair as _, Error, Transaction,
-    TransactionExtra,
-};
+use radicle_registry_client::*;
 
-fn main() {
-    env_logger::init();
-    let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    runtime.block_on(Compat::new(go().boxed())).unwrap();
-}
-
-async fn go() -> Result<(), Error> {
+#[async_std::main]
+async fn main() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
     let bob = ed25519::Pair::from_string("//Bob", None).unwrap();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create(node_host).await?;
+    let client = Client::create_with_executor(node_host).await?;
 
     // Construct `TransactionExtra` data that is required to validate a transaction.
     let account_nonce = client.account_nonce(&alice.public()).await?;
@@ -30,7 +20,7 @@ async fn go() -> Result<(), Error> {
     // Construct the transaction
     let transfer_tx = Transaction::new_signed(
         &alice,
-        Transfer {
+        message::Transfer {
             recipient: bob.public(),
             balance: 1000,
         },

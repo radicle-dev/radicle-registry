@@ -1,23 +1,15 @@
 //! Register a project on the ledger
-use futures::compat::{Compat, Future01CompatExt};
-use futures::future::FutureExt;
 use std::convert::TryFrom;
 
 use radicle_registry_client::*;
 
 #[async_std::main]
-async fn main() {
+async fn main() -> Result<(), Error> {
     env_logger::init();
-    let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    runtime.block_on(Compat::new(go().boxed())).unwrap();
-    runtime.shutdown_now().compat().await.unwrap();
-}
-
-async fn go() -> Result<(), Error> {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let node_host = url::Host::parse("127.0.0.1").unwrap();
-    let client = Client::create(node_host).await?;
+    let client = Client::create_with_executor(node_host).await?;
 
     let project_name = ProjectName::try_from("radicle-registry").unwrap();
     let org_id = OrgId::try_from("monadic").unwrap();
