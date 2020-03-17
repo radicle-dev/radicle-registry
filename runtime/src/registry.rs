@@ -100,12 +100,6 @@ fn descends_from_initial_checkpoint(
     false
 }
 
-// TODO Note on `DispatchError`
-//
-// This datatype is now an `enum`, and some of its variants can be used to
-// provide richer errors in the case of runtime failures.
-//
-// This will be handled in a future issue.
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         fn deposit_event() = default;
