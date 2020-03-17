@@ -30,7 +30,7 @@ mod pow;
 
 pub use sc_cli::{error, VersionInfo};
 
-fn main() -> Result<(), error::Error> {
+fn main() {
     let version = VersionInfo {
         name: "Radicle Registry Node",
         commit: "<none>",
@@ -44,5 +44,11 @@ fn main() -> Result<(), error::Error> {
         copyright_start_year: 2019,
     };
 
-    command::run(version)
+    match command::run(version) {
+        Ok(_) => (),
+        Err(error) => {
+            log::error!("{}", error);
+            std::process::exit(1);
+        }
+    }
 }
