@@ -4,27 +4,13 @@
 //!
 //! To run this example you need a running dev node. You can start it with
 //! `./scripts/run-dev-node`.
-use futures::compat::Compat;
-use futures::future::FutureExt;
 
 use radicle_registry_client::*;
 
-// Wrapper to run the async function `go`.
-fn main() {
+#[async_std::main]
+async fn main() -> Result<(), Error> {
     env_logger::init();
-    let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    let result = runtime.block_on(Compat::new(go().boxed()));
-    match result {
-        Ok(()) => (),
-        Err(err) => {
-            println!("ERROR: {:?}", err);
-            std::process::exit(1)
-        }
-    }
-}
 
-// We call [Future01CompatExt::compat] on all futures because the client only uses futures v0.1.
-async fn go() -> Result<(), Error> {
     // Create a key pair to author transactions from some seed data. This account is initialized
     // with funds on the local development chain.
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
@@ -37,7 +23,7 @@ async fn go() -> Result<(), Error> {
     // Create and connect to a client on local host
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     println!("Connecting to node on {}", node_host);
-    let client = Client::create(node_host).await?;
+    let client = Client::create_with_executor(node_host).await?;
 
     // Show balances of Alice’s and Bob’s accounts
     let balance_alice = client.free_balance(&alice.public()).await?;
