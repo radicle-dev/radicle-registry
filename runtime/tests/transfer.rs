@@ -25,6 +25,33 @@ async fn transfer_fail() {
     assert!(tx_applied.result.is_err());
 }
 
+// Test that we can transfer any amount within a reasonable range.
+// Affected by the [crate::ExistentialDeposit] parameter.
+#[async_std::test]
+async fn transfer_any_amount() {
+    let client = Client::new_emulator();
+    let donator = key_pair_from_string("Alice");
+    let receipient = key_pair_from_string("Bob").public();
+
+    for amount in (1..10000).step_by(500) {
+        let tx_applied = submit_ok(
+            &client,
+            &donator,
+            message::Transfer {
+                recipient: receipient,
+                balance: amount,
+            },
+        )
+        .await;
+        assert_eq!(
+            tx_applied.result,
+            Ok(()),
+            "Failed to transfer {} RAD",
+            amount
+        );
+    }
+}
+
 /// Test that we can transfer money to an org account and that the
 /// org owner can transfer money from an org to another account.
 #[async_std::test]
