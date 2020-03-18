@@ -27,10 +27,10 @@ impl Config {
     const PROPERTY_KEY: &'static str = "pow_alg";
 }
 
-impl<'a, T> TryFrom<&'a Configuration<T>> for Config {
+impl<'a> TryFrom<&'a Configuration> for Config {
     type Error = &'static str;
 
-    fn try_from(config: &'a Configuration<T>) -> Result<Self, Self::Error> {
+    fn try_from(config: &'a Configuration) -> Result<Self, Self::Error> {
         config
             .chain_spec
             .as_ref()

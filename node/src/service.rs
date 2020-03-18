@@ -29,10 +29,9 @@
 use std::sync::Arc;
 use sc_client::LongestChain;
 // [TEMPLATE DIFF] The types are changed from node_template_runtime to Radicle custom
-use radicle_registry_runtime::{opaque::Block, GenesisConfig, RuntimeApi};
+use radicle_registry_runtime::{opaque::Block, RuntimeApi};
 use sc_service::{error::{Error as ServiceError}, AbstractService, Configuration, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
-use sc_network::{construct_simple_protocol};
 use sc_executor::native_executor_instance;
 
 
@@ -44,11 +43,6 @@ native_executor_instance!(
         // [TEMPLATE DIFF] The type is changed to Radicle custom
         radicle_registry_runtime::native_version,
 );
-
-construct_simple_protocol! {
-    /// Demo protocol attachment for substrate.
-    pub struct NodeProtocol where Block = Block { }
-}
 
 /// Starts a `ServiceBuilder` for a full service.
 ///
@@ -86,14 +80,14 @@ macro_rules! new_full_start {
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(config: Configuration<GenesisConfig>)
+pub fn new_full(config: Configuration)
     -> Result<impl AbstractService, ServiceError> {
     // [TEMPLATE DIFF] The whole function is replaced
     new_full!(config)
 }
 
 /// Builds a new service for a light client.
-pub fn new_light(config: Configuration<GenesisConfig>)
+pub fn new_light(config: Configuration)
     -> Result<impl AbstractService, ServiceError>
 {
     let inherent_data_providers = InherentDataProviders::new();
@@ -120,7 +114,6 @@ pub fn new_light(config: Configuration<GenesisConfig>)
                 Ok(import_queue)
             }
         )?
-        .with_network_protocol(|_| Ok(NodeProtocol::new()))?
         // [TEMPLATE DIFF] The finality proof provider is completely removed
         .build()
 }

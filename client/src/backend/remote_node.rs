@@ -108,12 +108,7 @@ impl RemoteNode {
             None => return Err(Error::from("watch_extrinsic stream terminated")),
             Some(tx_status) => match tx_status {
                 TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => (),
-                TxStatus::InBlock(_block_hash) => {
-                    return Err("Invalid tx status \"InBlock\"".into())
-                }
-                TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
-                TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
-                TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
+                other => return Err(format!("Invalid TxStatus: {:?}", other).into()),
             },
         }
 
@@ -125,9 +120,7 @@ impl RemoteNode {
                     Some(tx_status) => match tx_status {
                         TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
                         TxStatus::InBlock(block_hash) => return Ok(block_hash),
-                        TxStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
-                        TxStatus::Dropped => return Err("Extrinsic Dropped".into()),
-                        TxStatus::Invalid => return Err("Extrinsic Invalid".into()),
+                        other => return Err(format!("Invalid TxStatus: {:?}", other).into()),
                     },
                 }
             }

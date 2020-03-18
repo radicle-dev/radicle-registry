@@ -143,7 +143,7 @@ mod test {
     use radicle_registry_runtime::{GenesisConfig, Runtime};
     use sp_core::H256;
     use sp_runtime::traits::{Checkable, IdentityLookup};
-    use sp_runtime::BuildStorage as _;
+    use sp_runtime::{BuildStorage as _, Perbill};
 
     #[test]
     /// Assert that extrinsics created with [create_and_sign] are validated by the runtime.
@@ -170,7 +170,7 @@ mod test {
 
         let xt = signed_extrinsic(
             &key_pair,
-            frame_system::Call::fill_block().into(),
+            frame_system::Call::fill_block(Perbill::from_parts(0)).into(),
             TransactionExtra {
                 nonce: 0,
                 genesis_hash,

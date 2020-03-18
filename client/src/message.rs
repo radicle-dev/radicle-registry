@@ -16,7 +16,7 @@
 //! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
-use radicle_registry_runtime::{registry, Call as RuntimeCall, Event};
+use radicle_registry_runtime::{registry, Call as RuntimeCall, Event, Runtime};
 use sp_runtime::DispatchError;
 
 pub use radicle_registry_core::message::*;
@@ -216,8 +216,8 @@ impl Message for message::TransferFromOrg {
 fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
-            frame_system::Event::ExtrinsicSuccess(_) => Some(Ok(())),
-            frame_system::Event::ExtrinsicFailed(ref dispatch_error, _) => {
+            frame_system::Event::<Runtime>::ExtrinsicSuccess(_) => Some(Ok(())),
+            frame_system::Event::<Runtime>::ExtrinsicFailed(ref dispatch_error, _) => {
                 Some(Err(*dispatch_error))
             }
             _ => None,

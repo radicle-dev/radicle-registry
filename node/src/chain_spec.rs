@@ -22,11 +22,12 @@ use crate::pow::config::Config as PowAlgConfig;
 use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
+use sc_service::GenericChainSpec;
 use sp_core::{Pair, Public};
 use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
+pub type ChainSpec = GenericChainSpec<GenesisConfig>;
 
 /// Possible chains.
 ///
@@ -49,7 +50,7 @@ impl Chain {
 }
 
 pub fn dev() -> ChainSpec {
-    ChainSpec::from_genesis(
+    GenericChainSpec::from_genesis(
         "Development, isolated node",
         "dev",
         dev_genesis_config,
@@ -87,7 +88,7 @@ fn dev_genesis_config() -> GenesisConfig {
 }
 
 pub fn devnet() -> ChainSpec {
-    ChainSpec::from_genesis(
+    GenericChainSpec::from_genesis(
         "devnet",
         "devnet",
         devnet_genesis_config,
@@ -106,7 +107,7 @@ pub fn devnet() -> ChainSpec {
 }
 
 pub fn local_devnet() -> ChainSpec {
-    ChainSpec::from_genesis(
+    GenericChainSpec::from_genesis(
         "local devnet, isolated on one machine",
         "local-devnet",
         devnet_genesis_config,
