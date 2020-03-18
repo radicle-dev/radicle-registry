@@ -34,6 +34,9 @@ pub enum CommandError {
         tx_hash: TxHash,
         block_hash: BlockHash,
     },
+    OrgNotFound {
+        org_id: OrgId,
+    },
     ProjectNotFound {
         project_name: ProjectName,
         org_id: OrgId,
@@ -48,6 +51,7 @@ impl core::fmt::Display for CommandError {
                 tx_hash,
                 block_hash,
             } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
+            CommandError::OrgNotFound { org_id } => write!(f, "Cannot find org {}", org_id),
             CommandError::ProjectNotFound {
                 project_name,
                 org_id,
@@ -115,6 +119,31 @@ impl CommandT for ShowProject {
         Ok(())
     }
 }
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show information for a registered org.
+pub struct ShowOrg {
+    /// The id of the org
+    org_id: OrgId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ShowOrg {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let opt_org = command_context.client.get_org(self.org_id.clone()).await?;
+
+        let org = opt_org.ok_or(CommandError::OrgNotFound {
+            org_id: self.org_id.clone(),
+        })?;
+
+        println!("id: {}", org.id.clone());
+        println!("account_id: {}", org.account_id.clone());
+        println!("members: {:?}", org.members.clone());
+        println!("projects: {:?}", org.projects);
+        Ok(())
+    }
+}
+
 #[derive(StructOpt, Debug, Clone)]
 /// List all projects in the registry
 pub struct ListProjects {}
