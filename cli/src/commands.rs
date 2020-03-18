@@ -101,21 +101,14 @@ pub struct ShowProject {
 #[async_trait::async_trait]
 impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let opt_project = command_context
+        let project = command_context
             .client
             .get_project(self.project_name.clone(), self.org_id.clone())
-            .await?;
-
-        let project = match opt_project {
-            None => {
-                return Err(CommandError::ProjectNotFound {
-                    project_name: self.project_name.clone(),
-                    org_id: self.org_id.clone(),
-                });
-            }
-            Some(project) => project,
-        };
-
+            .await?
+            .ok_or(CommandError::ProjectNotFound {
+                project_name: self.project_name.clone(),
+                org_id: self.org_id.clone(),
+            })?;
         println!("project: {}.{}", project.name, project.org_id);
         println!("checkpoint: {}", project.current_cp);
         Ok(())
@@ -132,11 +125,13 @@ pub struct ShowOrg {
 #[async_trait::async_trait]
 impl CommandT for ShowOrg {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let opt_org = command_context.client.get_org(self.org_id.clone()).await?;
-
-        let org = opt_org.ok_or(CommandError::OrgNotFound {
-            org_id: self.org_id.clone(),
-        })?;
+        let org = command_context
+            .client
+            .get_org(self.org_id.clone())
+            .await?
+            .ok_or(CommandError::OrgNotFound {
+                org_id: self.org_id.clone(),
+            })?;
 
         println!("id: {}", org.id.clone());
         println!("account_id: {}", org.account_id.clone());
