@@ -37,7 +37,7 @@ use parity_scale_codec::{Decode, FullCodec};
 
 use frame_support::storage::generator::{StorageMap, StorageValue};
 use frame_support::storage::StoragePrefixedMap;
-use radicle_registry_runtime::{balances, registry, registry::DecodeKey, Runtime};
+use radicle_registry_runtime::{registry, registry::DecodeKey, system, Runtime};
 
 mod backend;
 mod error;
@@ -215,15 +215,17 @@ impl ClientT for Client {
         &self,
         account_id: &AccountId,
     ) -> Result<state::AccountTransactionIndex, Error> {
-        self.fetch_map_value::<frame_system::AccountNonce<Runtime>, _, _>(*account_id)
-            .await
+        let account_info = self
+            .fetch_map_value::<frame_system::Account<Runtime>, _, _>(*account_id)
+            .await?;
+        Ok(account_info.nonce)
     }
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<state::AccountBalance, Error> {
-        let account_data = self
-            .fetch_map_value::<balances::Account<Runtime>, _, _>(account_id.clone())
+        let account_info = self
+            .fetch_map_value::<system::Account<Runtime>, _, _>(account_id.clone())
             .await?;
-        Ok(account_data.free)
+        Ok(account_info.data.free)
     }
 
     async fn get_org(&self, id: OrgId) -> Result<Option<Org>, Error> {

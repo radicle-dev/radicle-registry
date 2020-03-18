@@ -25,14 +25,10 @@ macro_rules! new_full {
         let (builder, import_setup, inherent_data_providers) = new_full_start!($config);
         let block_import = import_setup.expect("No import setup set for miner");
 
-        let service = builder
-            .with_network_protocol(|_| Ok(NodeProtocol::new()))?
-            .build()?;
+        let service = builder.build()?;
 
-        let proposer = sc_basic_authorship::ProposerFactory {
-            client: service.client(),
-            transaction_pool: service.transaction_pool(),
-        };
+        let proposer =
+            sc_basic_authorship::ProposerFactory::new(service.client(), service.transaction_pool());
 
         match pow_alg {
             PowAlgConfig::Dummy => start_mine!(

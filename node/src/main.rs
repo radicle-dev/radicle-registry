@@ -28,10 +28,8 @@ mod command;
 mod logger;
 mod pow;
 
-pub use sc_cli::{error, VersionInfo};
-
 fn main() {
-    let version = VersionInfo {
+    let version = sc_cli::VersionInfo {
         name: "Radicle Registry Node",
         commit: "<none>",
         // commit: env!("VERGEN_SHA_SHORT"),

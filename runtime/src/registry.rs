@@ -19,8 +19,7 @@ use alloc::vec::Vec;
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
-    storage::StorageMap as _,
-    storage::StoragePrefixedMap,
+    storage::{IterableStorageMap, StorageMap as _},
     traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::SimpleDispatchInfo,
 };
@@ -33,8 +32,27 @@ use radicle_registry_core::*;
 
 use crate::{AccountId, Hash, Hashing};
 
-pub trait Trait:
-    frame_system::Trait<AccountId = AccountId, Origin = crate::Origin, Hash = Hash>
+pub trait Trait
+where
+    // We fix the associated types so that the `Module` code that takes a type of this trait as a
+    // parameter does not need to be generic in, say, the `AccountId`, say.
+    //
+    // Fixing one associated type requires us to also either fix all dependent associated types or
+    // restate the associated types bounds.
+    //
+    // The associated type bounds that depend on the fixed types also need to be restated at the
+    // usage site of `Trait`. Currently `Trait` is used for `Store` and `Module`. This is due to a
+    // limitation with Rusts type checker.
+    Self: frame_system::Trait<
+        AccountId = AccountId,
+        Origin = crate::Origin,
+        Hash = Hash,
+        OnNewAccount = (),
+    >,
+    <Self as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
+    <Self as frame_system::Trait>::OnKilledAccount:
+        frame_support::traits::OnKilledAccount<Self::AccountId>,
+    <Self as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>,
 {
     type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 }
@@ -43,7 +61,16 @@ pub mod store {
     use super::*;
 
     decl_storage! {
-        pub trait Store for Module<T: Trait> as Registry {
+        pub trait Store for Module<T: Trait> as Counter
+        where
+            // Rust’s type checker is unable to deduce these type bounds from the fact that `T:
+            // Trait` altough they are stated in the definition of `Trait`. See the comment in
+            // `Trait` for more information.
+            <T as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
+            <T as frame_system::Trait>::OnKilledAccount:
+                frame_support::traits::OnKilledAccount<AccountId>,
+            <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
+        {
             // The storage for Orgs, indexed by OrgId.
             // We use the blake2_128_concat hasher so that the OrgId
             // can be extracted from the key.
@@ -58,10 +85,10 @@ pub mod store {
             pub Projects: map hasher(blake2_128_concat) ProjectId => Option<state::Project>;
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
-            pub InitialCheckpoints: map hasher(blake2_256) ProjectId => Option<CheckpointId>;
+            pub InitialCheckpoints: map hasher(opaque_blake2_256) ProjectId => Option<CheckpointId>;
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
-            pub Checkpoints: map hasher(blake2_256) CheckpointId => Option<state::Checkpoint>;
+            pub Checkpoints: map hasher(opaque_blake2_256) CheckpointId => Option<state::Checkpoint>;
         }
     }
 }
@@ -101,7 +128,16 @@ fn descends_from_initial_checkpoint(
 }
 
 decl_module! {
-    pub struct Module<T: Trait> for enum Call where origin: T::Origin {
+    pub struct Module<T: Trait> for enum Call where
+        origin: T::Origin,
+        // Rust’s type checker is unable to deduce these type bounds from the fact that `T:
+        // Trait` altough they are stated in the definition of `Trait`. See the comment in
+        // `Trait` for more information.
+        <T as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
+        <T as frame_system::Trait>::OnKilledAccount:
+            frame_support::traits::OnKilledAccount<AccountId>,
+        <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
+    {
         fn deposit_event() = default;
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
@@ -200,7 +236,7 @@ decl_module! {
             // already associated to a user. While fine for small dataset this needs to be reworked
             // in the future.
             for user in store::Users::iter() {
-                if sender == user.account_id {
+                if sender == user.1.account_id {
                     return Err(RegistryError::UserAccountAssociated.into())
                 }
             }
