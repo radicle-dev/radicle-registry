@@ -70,6 +70,7 @@ impl Args {
 
 #[derive(StructOpt, Debug, Clone)]
 enum Command {
+    ListOrgs(ListOrgs),
     ListProjects(ListProjects),
     RegisterOrg(RegisterOrg),
     UnregisterOrg(UnregisterOrg),
@@ -103,6 +104,7 @@ async fn run(args: Args) -> Result<(), CommandError> {
     let command_context = args.command_context().await?;
 
     match args.command {
+        Command::ListOrgs(cmd) => cmd.run(&command_context).await,
         Command::ListProjects(cmd) => cmd.run(&command_context).await,
         Command::RegisterOrg(cmd) => cmd.run(&command_context).await,
         Command::UnregisterOrg(cmd) => cmd.run(&command_context).await,

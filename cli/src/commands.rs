@@ -147,6 +147,22 @@ impl CommandT for ShowOrg {
 }
 
 #[derive(StructOpt, Debug, Clone)]
+/// List all orgs in the registry
+pub struct ListOrgs {}
+
+#[async_trait::async_trait]
+impl CommandT for ListOrgs {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let org_ids = command_context.client.list_orgs().await?;
+        println!("ORGS ({})", org_ids.len());
+        for org_id in org_ids {
+            println!("{}", org_id)
+        }
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
 /// List all projects in the registry
 pub struct ListProjects {}
 
@@ -154,7 +170,7 @@ pub struct ListProjects {}
 impl CommandT for ListProjects {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let project_ids = command_context.client.list_projects().await?;
-        println!("PROJECTS");
+        println!("PROJECTS ({})", project_ids.len());
         for (name, org) in project_ids {
             println!("{}.{}", name, org)
         }
