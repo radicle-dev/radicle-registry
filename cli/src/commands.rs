@@ -17,6 +17,8 @@
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
+use sp_core::crypto::Ss58Codec;
+
 /// Contextual data for running commands. Created from command line options.
 pub struct CommandContext {
     pub author_key_pair: ed25519::Pair,
@@ -362,7 +364,7 @@ pub struct Transfer {
 }
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
-    sp_core::crypto::Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
+    Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }
 
 #[async_trait::async_trait]
@@ -452,6 +454,25 @@ impl CommandT for ShowBalance {
             .free_balance(&self.account_id)
             .await?;
         println!("{} RAD", balance);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show the SS58 address for the key pair derived from `seed`.
+///
+/// For more information on how the seed string is interpreted see
+/// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>.
+pub struct ShowAddress {
+    seed: String,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ShowAddress {
+    async fn run(&self, _command_context: &CommandContext) -> Result<(), CommandError> {
+        let key_pair =
+            ed25519::Pair::from_string(format!("//{}", self.seed).as_str(), None).unwrap();
+        println!("SS58 address: {}", key_pair.public().to_ss58check());
         Ok(())
     }
 }

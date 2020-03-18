@@ -118,6 +118,13 @@ use radicle-registry-client::{ed25519, CryptoPair};
 let alice = ed25519::Pair::from_string("//Alice", None);
 ```
 
+For cases where you are only interested in obtaining the [`SS58`][ss58-docs] address
+for a given seed (string), you can run:
+
+``` bash
+cargo run -p radicle-registry-cli -- show-address <seed>
+```
+
 The `radicle-registry-client::ed25519` module and the crypto traits are
 re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
 [`substrate_primitives::crypto`][api-crypto], respectively
@@ -126,7 +133,7 @@ re-exports from [`substrate_primitives::ed25519`][api-ed25519] and
 [api-crypto]: https://crates.parity.io/substrate_primitives/crypto/index.html
 [api-pair-generate]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.generate
 [api-pair-from-string]: https://crates.parity.io/substrate_primitives/crypto/trait.Pair.html#method.from_string
-
+[ss58-docs]: https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)
 
 Developing with the Client
 --------------------------

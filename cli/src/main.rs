@@ -82,6 +82,7 @@ enum Command {
     ShowProject(ShowProject),
     Transfer(Transfer),
     TransferOrgFunds(TransferOrgFunds),
+    ShowAddress(ShowAddress),
 }
 
 #[async_std::main]
@@ -114,5 +115,6 @@ async fn run(args: Args) -> Result<(), CommandError> {
         Command::ShowProject(cmd) => cmd.run(&command_context).await,
         Command::Transfer(cmd) => cmd.run(&command_context).await,
         Command::TransferOrgFunds(cmd) => cmd.run(&command_context).await,
+        Command::ShowAddress(cmd) => cmd.run(&command_context).await,
     }
 }
