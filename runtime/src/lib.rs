@@ -169,7 +169,10 @@ impl pallet_timestamp::Trait for Runtime {
 }
 
 parameter_types! {
-    pub const ExistentialDeposit: u128 = 500;
+    /// The minimum amount required to keep an account open.
+    /// Transfers leaving the recipient with less than this
+    /// value fail.
+    pub const ExistentialDeposit: u128 = 1;
     pub const TransferFee: u128 = 0;
     pub const CreationFee: u128 = 0;
     pub const TransactionBaseFee: u128 = 0;
