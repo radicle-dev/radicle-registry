@@ -37,13 +37,13 @@ pub mod string32;
 pub use string32::String32;
 
 mod org_id;
-pub use org_id::OrgId;
+pub use org_id::{InvalidOrgIdError, OrgId};
 
 mod project_name;
-pub use project_name::ProjectName;
+pub use project_name::{InvalidProjectNameError, ProjectName};
 
 mod user_id;
-pub use user_id::UserId;
+pub use user_id::{InvalidUserIdError, UserId};
 
 mod error;
 pub use error::RegistryError;
