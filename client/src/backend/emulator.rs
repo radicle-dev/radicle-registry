@@ -29,12 +29,13 @@ use crate::interface::*;
 /// [backend::Backend] implementation using native runtime code and in memory state through
 /// [sp_io::TestExternalities] to emulate the ledger.
 ///
-/// # Differences with real [Client]
+/// # Differences with real backend
 ///
-/// The [Emulator] does not produce blocks. In particular the `blocks` field in
-/// [TransactionApplied]` always equals `Hash::default` when returned from [Client::submit].
+/// * The [Emulator] does not produce blocks. In particular the `blocks` field in
+///   [TransactionApplied]` always equals `Hash::default` when returned from
+///   [ClientT::submit_transaction].
 ///
-/// The responses returned from the client never result in an [Error].
+/// * The responses returned from the client never result in an [Error].
 #[derive(Clone)]
 pub struct Emulator {
     test_ext: Arc<Mutex<sp_io::TestExternalities>>,

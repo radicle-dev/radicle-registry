@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
-    storage::{IterableStorageMap, StorageMap as _},
+    storage::{IterableStorageMap, StorageMap},
     traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::SimpleDispatchInfo,
 };
@@ -390,20 +390,16 @@ decl_event!(
     }
 );
 
-/// DecodeKey trait
-///
-/// A DecodeKey type must implement the decode_key function and
-/// it is free to choose what decoding algorithm it prefers.
-///
-/// DecodedKey::Key is the expected decoded key type
-///
+/// Trait to decode [StorageMap] keys from raw storage keys.
 pub trait DecodeKey {
     type Key: parity_scale_codec::Decode;
 
-    /// Decode the given raw storage map `key`. It's the inverse of
-    /// [frame_support::generator::StorageMap::storage_map_final_key],
-    /// so applying `decode_key` after `storage_map_final_key` must
-    /// yield identity as to the original input key.
+    /// Decode the given raw storage map `key`. This method is inverse of the private
+    /// [`storage_map_final_key`][1] implementation for storage generators. so applying
+    /// `decode_key` after `storage_map_final_key` must yield identity as to the original input
+    /// key.
+    ///
+    /// [1]: https://github.com/paritytech/substrate/blob/c50faf2395218e644859611d703d9fe3a4876f5b/frame/support/src/storage/generator/map.rs#L71-L88
     fn decode_key(key: &[u8]) -> Result<Self::Key, parity_scale_codec::Error>;
 }
 

@@ -54,7 +54,7 @@ pub type Signature = ed25519::Signature;
 
 /// A hash of some data used by the chain.
 ///
-/// Same as [Hashing::Output].
+/// Same as  [sp_runtime::traits::Hash::Output] for [Hashing].
 pub type Hash = sp_core::H256;
 
 type RegistryCall = registry::Call<Runtime>;

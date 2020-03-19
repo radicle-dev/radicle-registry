@@ -38,7 +38,7 @@ use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectName, H2
 /// # Relevant messages
 ///
 /// * [crate::message::CreateCheckpoint]
-/// * [crate::message::SetCheckpiont]
+/// * [crate::message::SetCheckpoint]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Checkpoint {
     /// Previous checkpoint in the project histor.
