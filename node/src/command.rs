@@ -28,6 +28,9 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
     let chain_spec = args.chain.spec();
     let spec_factory = |_: &str| Ok(Box::new(chain_spec) as Box<_>);
 
+    let block_author = args.block_author();
+    let new_full_service = move |config| service::new_full(config, block_author);
+
     match args.subcommand {
         Some(subcommand) => {
             subcommand.init(&version)?;
@@ -38,7 +41,7 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
             let run_cmd = args.run_cmd();
             run_cmd.init(&version)?;
             run_cmd.update_config(&mut config, spec_factory, &version)?;
-            run_cmd.run(config, service::new_light, service::new_full, &version)
+            run_cmd.run(config, service::new_light, new_full_service, &version)
         }
     }
 }

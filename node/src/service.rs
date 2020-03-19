@@ -26,7 +26,7 @@ use sc_service::{AbstractService, Configuration, Error as ServiceError, ServiceB
 use sp_inherents::InherentDataProviders;
 
 use crate::pow::config::Config as PowAlgConfig;
-use radicle_registry_runtime::{opaque::Block, RuntimeApi};
+use radicle_registry_runtime::{opaque::Block, registry::InherentData, AccountId, RuntimeApi};
 
 // Our native executor instance.
 native_executor_instance!(
@@ -37,10 +37,8 @@ native_executor_instance!(
 
 /// Starts a `ServiceBuilder` for a full service.
 macro_rules! new_full_start {
-    ($config:expr) => {{
+    ($config:expr, $inherent_data_providers: expr) => {{
         let mut import_setup = None;
-        let inherent_data_providers = crate::inherent_data::new_full_providers();
-
         let builder = sc_service::ServiceBuilder::new_full::<Block, RuntimeApi, Executor>($config)?
             .with_select_chain(|_config, backend| {
                 Ok(sc_client::LongestChain::new(backend.clone()))
@@ -56,13 +54,13 @@ macro_rules! new_full_start {
                     config,
                     client,
                     select_chain,
-                    inherent_data_providers.clone()
+                    $inherent_data_providers.clone()
                 );
                 import_setup = Some(block_import);
                 Ok(import_queue)
             })?;
 
-        (builder, import_setup, inherent_data_providers)
+        (builder, import_setup)
     }};
 }
 
@@ -128,9 +126,13 @@ macro_rules! node_import_queue_for_pow_alg {
 }
 
 /// Builds a new service for a full client and starts the PoW miner.
-pub fn new_full(config: Configuration) -> Result<impl AbstractService, ServiceError> {
+pub fn new_full(
+    config: Configuration,
+    block_author: AccountId,
+) -> Result<impl AbstractService, ServiceError> {
     let pow_alg = PowAlgConfig::try_from(&config)?;
-    let (builder, import_setup, inherent_data_providers) = new_full_start!(config);
+    let inherent_data_providers = new_full_inherent_data_providers(block_author);
+    let (builder, import_setup) = new_full_start!(config, inherent_data_providers.clone());
     let block_import = import_setup.expect("No import setup set for miner");
 
     let service = builder.build()?;
@@ -191,5 +193,16 @@ pub fn new_light(config: Configuration) -> Result<impl AbstractService, ServiceE
 pub fn new_for_command(
     config: Configuration,
 ) -> Result<impl sc_service::ServiceBuilderCommand<Block = Block>, ServiceError> {
-    Ok(new_full_start!(config).0)
+    let inherent_data_providers = InherentDataProviders::new();
+    Ok(new_full_start!(config, inherent_data_providers).0)
+}
+
+/// Return [InherentDataProviders] that provides [InherentData] for registry blocks required by
+/// full nodes.
+fn new_full_inherent_data_providers(block_author: AccountId) -> InherentDataProviders {
+    let providers = InherentDataProviders::new();
+    let data = InherentData { block_author };
+    // Can only fail if a provider with the same name is already registered.
+    providers.register_provider(data).unwrap();
+    providers
 }
