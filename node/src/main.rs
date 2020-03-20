@@ -18,15 +18,12 @@
 #![warn(missing_docs)]
 #![warn(unused_extern_crates)]
 
-#[macro_use]
-mod service_customization;
-#[macro_use]
-mod service;
 mod chain_spec;
 mod cli;
 mod command;
 mod logger;
 mod pow;
+mod service;
 
 fn main() {
     let version = sc_cli::VersionInfo {

@@ -32,7 +32,7 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
         Some(subcommand) => {
             subcommand.init(&version)?;
             subcommand.update_config(&mut config, spec_factory, &version)?;
-            subcommand.run(config, |config: _| Ok(new_full_start!(config).0))
+            subcommand.run(config, service::new_for_command)
         }
         None => {
             let run_cmd = args.run_cmd();
