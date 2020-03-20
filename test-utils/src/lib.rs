@@ -115,14 +115,14 @@ fn random_user_id() -> UserId {
     UserId::try_from(random_alnum_string(size).to_lowercase()).unwrap()
 }
 
-/// Create a [core::message::RegisterOrg] with random parameters.
+/// Create a [message::RegisterOrg] with random parameters.
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
         org_id: random_org_id(),
     }
 }
 
-/// Create a [core::message::RegisterProject] with random parameters to register a project with.
+/// Create a [message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
     org_id: OrgId,
     checkpoint_id: CheckpointId,
@@ -135,7 +135,7 @@ pub fn random_register_project_message(
     }
 }
 
-/// Create a [`core::message::RegisterUser`] with random parameters.
+/// Create a [message::RegisterUser] with random parameters.
 pub fn random_register_user_message() -> message::RegisterUser {
     message::RegisterUser {
         user_id: random_user_id(),

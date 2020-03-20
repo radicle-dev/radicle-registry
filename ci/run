@@ -51,6 +51,11 @@ echo "--- cargo clippy"
 cargo clippy --workspace --all-targets --release -- -D clippy::all
 echo "--- cargo clippy (for wasm32 target)"
 cargo clippy --manifest-path runtime/Cargo.toml --no-default-features --target wasm32-unknown-unknown -- -D clippy::all
+
+echo "--- cargo doc"
+RUSTDOCFLAGS="-D intra-doc-link-resolution-failure" \
+  cargo doc --workspace --no-deps --document-private-items
+
 echo "--- cargo build"
 cargo build --workspace --all-targets --release
 

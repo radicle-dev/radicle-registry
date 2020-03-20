@@ -53,7 +53,7 @@ pub type Hashing = BlakeTwo256;
 
 /// Identifier for accounts, an Ed25519 public key.
 ///
-/// Each account has an associated [message::AccountBalance] and [message::Index].
+/// Each account has an associated [state::AccountBalance] and [state::AccountTransactionIndex].
 pub type AccountId = ed25519::Public;
 
 /// The non-negative balance of anything storing the amount of currency.

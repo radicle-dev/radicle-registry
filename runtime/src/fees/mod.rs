@@ -13,12 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Fee module
-//!
-//! This crate defines all things fees:
-//! * the types of fees supported by the registry
-//! * the [crate::fees::fee] module that abstracts the concept of fee.
-//! * the [crate::fees::payment] module where the withdrawing of fees takes place.
+//! Fee charging logic as [SignedExtension] for [PayTxFee].
 
 use crate::fees::payment::pay;
 use crate::{AccountId, Balance, Call};
@@ -29,7 +24,7 @@ use sp_runtime::transaction_validity::{
     InvalidTransaction, TransactionValidity, TransactionValidityError, ValidTransaction,
 };
 
-pub mod payment;
+mod payment;
 
 /// The base fee serves as a disincentive to stop bad actors
 /// from spamming the network in a DoS attack.
