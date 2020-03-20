@@ -17,6 +17,8 @@
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
+use sp_core::crypto::Ss58Codec;
+
 /// Contextual data for running commands. Created from command line options.
 pub struct CommandContext {
     pub author_key_pair: ed25519::Pair,
@@ -34,6 +36,9 @@ pub enum CommandError {
         tx_hash: TxHash,
         block_hash: BlockHash,
     },
+    OrgNotFound {
+        org_id: OrgId,
+    },
     ProjectNotFound {
         project_name: ProjectName,
         org_id: OrgId,
@@ -48,6 +53,7 @@ impl core::fmt::Display for CommandError {
                 tx_hash,
                 block_hash,
             } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
+            CommandError::OrgNotFound { org_id } => write!(f, "Cannot find org {}", org_id),
             CommandError::ProjectNotFound {
                 project_name,
                 org_id,
@@ -95,26 +101,62 @@ pub struct ShowProject {
 #[async_trait::async_trait]
 impl CommandT for ShowProject {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let opt_project = command_context
+        let project = command_context
             .client
             .get_project(self.project_name.clone(), self.org_id.clone())
-            .await?;
-
-        let project = match opt_project {
-            None => {
-                return Err(CommandError::ProjectNotFound {
-                    project_name: self.project_name.clone(),
-                    org_id: self.org_id.clone(),
-                });
-            }
-            Some(project) => project,
-        };
-
+            .await?
+            .ok_or(CommandError::ProjectNotFound {
+                project_name: self.project_name.clone(),
+                org_id: self.org_id.clone(),
+            })?;
         println!("project: {}.{}", project.name, project.org_id);
         println!("checkpoint: {}", project.current_cp);
         Ok(())
     }
 }
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show information for a registered org.
+pub struct ShowOrg {
+    /// The id of the org
+    org_id: OrgId,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ShowOrg {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let org = command_context
+            .client
+            .get_org(self.org_id.clone())
+            .await?
+            .ok_or(CommandError::OrgNotFound {
+                org_id: self.org_id.clone(),
+            })?;
+
+        println!("id: {}", org.id.clone());
+        println!("account_id: {}", org.account_id.clone());
+        println!("members: {:?}", org.members.clone());
+        println!("projects: {:?}", org.projects);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// List all orgs in the registry
+pub struct ListOrgs {}
+
+#[async_trait::async_trait]
+impl CommandT for ListOrgs {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        let org_ids = command_context.client.list_orgs().await?;
+        println!("ORGS ({})", org_ids.len());
+        for org_id in org_ids {
+            println!("{}", org_id)
+        }
+        Ok(())
+    }
+}
+
 #[derive(StructOpt, Debug, Clone)]
 /// List all projects in the registry
 pub struct ListProjects {}
@@ -123,7 +165,7 @@ pub struct ListProjects {}
 impl CommandT for ListProjects {
     async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
         let project_ids = command_context.client.list_projects().await?;
-        println!("PROJECTS");
+        println!("PROJECTS ({})", project_ids.len());
         for (name, org) in project_ids {
             println!("{}.{}", name, org)
         }
@@ -333,7 +375,7 @@ pub struct Transfer {
 }
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
-    sp_core::crypto::Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
+    Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }
 
 #[async_trait::async_trait]
@@ -423,6 +465,25 @@ impl CommandT for ShowBalance {
             .free_balance(&self.account_id)
             .await?;
         println!("{} RAD", balance);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Show the SS58 address for the key pair derived from `seed`.
+///
+/// For more information on how the seed string is interpreted see
+/// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>.
+pub struct ShowAddress {
+    seed: String,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ShowAddress {
+    async fn run(&self, _command_context: &CommandContext) -> Result<(), CommandError> {
+        let key_pair =
+            ed25519::Pair::from_string(format!("//{}", self.seed).as_str(), None).unwrap();
+        println!("SS58 address: {}", key_pair.public().to_ss58check());
         Ok(())
     }
 }

@@ -70,6 +70,7 @@ impl Args {
 
 #[derive(StructOpt, Debug, Clone)]
 enum Command {
+    ListOrgs(ListOrgs),
     ListProjects(ListProjects),
     RegisterOrg(RegisterOrg),
     UnregisterOrg(UnregisterOrg),
@@ -78,9 +79,11 @@ enum Command {
     UnregisterUser(UnregisterUser),
     ShowBalance(ShowBalance),
     ShowGenesisHash(ShowGenesisHash),
+    ShowOrg(ShowOrg),
     ShowProject(ShowProject),
     Transfer(Transfer),
     TransferOrgFunds(TransferOrgFunds),
+    ShowAddress(ShowAddress),
 }
 
 #[async_std::main]
@@ -101,6 +104,7 @@ async fn run(args: Args) -> Result<(), CommandError> {
     let command_context = args.command_context().await?;
 
     match args.command {
+        Command::ListOrgs(cmd) => cmd.run(&command_context).await,
         Command::ListProjects(cmd) => cmd.run(&command_context).await,
         Command::RegisterOrg(cmd) => cmd.run(&command_context).await,
         Command::UnregisterOrg(cmd) => cmd.run(&command_context).await,
@@ -109,8 +113,10 @@ async fn run(args: Args) -> Result<(), CommandError> {
         Command::UnregisterUser(cmd) => cmd.run(&command_context).await,
         Command::ShowBalance(cmd) => cmd.run(&command_context).await,
         Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
+        Command::ShowOrg(cmd) => cmd.run(&command_context).await,
         Command::ShowProject(cmd) => cmd.run(&command_context).await,
         Command::Transfer(cmd) => cmd.run(&command_context).await,
         Command::TransferOrgFunds(cmd) => cmd.run(&command_context).await,
+        Command::ShowAddress(cmd) => cmd.run(&command_context).await,
     }
 }
