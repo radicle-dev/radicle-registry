@@ -17,7 +17,7 @@ use crate::registry::store;
 use crate::{AccountId, Call, DispatchError, RegistryCall};
 use radicle_registry_core::*;
 
-use frame_support::storage::StorageMap as _;
+use frame_support::storage::{StorageMap as _, StorageValue as _};
 use frame_support::traits::{Currency, ExistenceRequirement, WithdrawReason};
 
 type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
@@ -27,7 +27,15 @@ type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbal
 /// charge the tx fees to the right account, which depends on the `registry_call`.
 pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
     let payer = payer_account(author, call);
-    let _withdrawn_fee = withdraw(fee, &payer)?;
+    let withdrawn_fee = withdraw(fee, &payer)?;
+
+    // The block author is only available when this function is run as part of the block execution.
+    // If this function is run as part of transaction validation the block author is not set. In
+    // that case we don’t need to credit the block author.
+    if let Some(block_author) = store::BlockAuthor::get() {
+        crate::Balances::resolve_creating(&block_author, withdrawn_fee);
+    }
+
     Ok(())
 }
 
@@ -58,6 +66,11 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
             | RegistryCall::transfer(_)
             | RegistryCall::register_user(_)
             | RegistryCall::unregister_user(_) => author,
+
+            // Inherents
+            RegistryCall::set_block_author(_) => {
+                panic!("Inherent calls are not allowed for signed extrinsics")
+            }
 
             crate::registry::Call::__PhantomItem(_, _) => {
                 unreachable!("__PhantomItem should never be used.")

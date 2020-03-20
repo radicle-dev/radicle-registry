@@ -19,18 +19,22 @@ use alloc::vec::Vec;
 use frame_support::{
     decl_event, decl_module, decl_storage,
     dispatch::DispatchResult,
-    storage::{IterableStorageMap, StorageMap},
+    storage::{IterableStorageMap, StorageMap, StorageValue as _},
     traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::SimpleDispatchInfo,
 };
 use frame_system as system; // required for `decl_module!` to work
-use frame_system::ensure_signed;
+use frame_system::{ensure_none, ensure_signed};
 use sp_core::crypto::UncheckedFrom;
 use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
 use crate::{AccountId, Hash, Hashing};
+
+mod inherents;
+
+pub use inherents::InherentData;
 
 pub trait Trait
 where
@@ -41,8 +45,8 @@ where
     // restate the associated types bounds.
     //
     // The associated type bounds that depend on the fixed types also need to be restated at the
-    // usage site of `Trait`. Currently `Trait` is used for `Store` and `Module`. This is due to a
-    // limitation with Rusts type checker.
+    // usage site of `Trait`. Currently `Trait` is used for `Store`, `Module`, and
+    // `ProvideInherent`. This is due to a limitation with Rusts type checker.
     Self: frame_system::Trait<
         AccountId = AccountId,
         Origin = crate::Origin,
@@ -56,6 +60,9 @@ where
 {
     type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 }
+
+/// Funds that are credited to the block author for every block.
+const BLOCK_REWARD: Balance = 1000;
 
 pub mod store {
     use super::*;
@@ -71,6 +78,10 @@ pub mod store {
                 frame_support::traits::OnKilledAccount<AccountId>,
             <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
         {
+            // Author of the current block. Is initialized at the beginning of a block with
+            // [Call::set_block_author] and not persisted.
+            pub BlockAuthor: Option<AccountId>;
+
             // The storage for Orgs, indexed by OrgId.
             // We use the blake2_128_concat hasher so that the OrgId
             // can be extracted from the key.
@@ -126,7 +137,6 @@ fn descends_from_initial_checkpoint(
 
     false
 }
-
 decl_module! {
     pub struct Module<T: Trait> for enum Call where
         origin: T::Origin,
@@ -139,7 +149,6 @@ decl_module! {
         <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
     {
         fn deposit_event() = default;
-
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
@@ -376,6 +385,21 @@ decl_module! {
                 ExistenceRequirement::KeepAlive
             )
         }
+
+        #[weight = SimpleDispatchInfo::FixedOperational(10_000)]
+        fn set_block_author(origin, author: AccountId) -> DispatchResult {
+            assert!(ensure_none(origin).is_ok(), "set_block_author call is only valid as an inherent");
+            assert!(store::BlockAuthor::get().is_none(), "set_block_author can only be called once");
+            store::BlockAuthor::put(author);
+            Ok(())
+        }
+
+        fn on_finalize() {
+            let block_author = store::BlockAuthor::take().expect("Block author must be set by an extrinsic");
+            let imbalance = crate::Balances::deposit_creating(&block_author, BLOCK_REWARD);
+            drop(imbalance);
+        }
+
     }
 }
 decl_event!(

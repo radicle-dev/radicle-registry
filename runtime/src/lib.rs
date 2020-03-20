@@ -209,7 +209,7 @@ construct_runtime!(
                 RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
                 Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
                 Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
-                Registry: registry::{Module, Call, Storage, Event},
+                Registry: registry::{Module, Call, Storage, Event, Inherent},
         }
 );
 
