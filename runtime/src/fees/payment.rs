@@ -18,9 +18,13 @@ use crate::{AccountId, Call, DispatchError, RegistryCall};
 use radicle_registry_core::*;
 
 use frame_support::storage::{StorageMap as _, StorageValue as _};
-use frame_support::traits::{Currency, ExistenceRequirement, WithdrawReason};
+use frame_support::traits::{Currency, ExistenceRequirement, Imbalance, WithdrawReason};
+use sp_runtime::Permill;
 
 type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
+
+/// Share of a transaction fee that is burned rather than credited to the block author.
+const BURN_SHARE: Permill = Permill::from_percent(1);
 
 /// Pay Fees
 /// Given a tx author, their fee, and a RegistryCall they are submitting,
@@ -28,12 +32,14 @@ type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbal
 pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
     let payer = payer_account(author, call);
     let withdrawn_fee = withdraw(fee, &payer)?;
+    let (burn, reward) = withdrawn_fee.split(BURN_SHARE * fee);
+    drop(burn);
 
     // The block author is only available when this function is run as part of the block execution.
     // If this function is run as part of transaction validation the block author is not set. In
     // that case we don’t need to credit the block author.
     if let Some(block_author) = store::BlockAuthor::get() {
-        crate::Balances::resolve_creating(&block_author, withdrawn_fee);
+        crate::Balances::resolve_creating(&block_author, reward);
     }
 
     Ok(())
@@ -93,5 +99,51 @@ fn org_payer_account(author: AccountId, org_id: &OrgId) -> AccountId {
             }
         }
         None => author,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Balances, GenesisConfig};
+
+    use core::convert::TryFrom;
+    use frame_support::traits::Currency;
+    use sp_core::{crypto::Pair, ed25519};
+    use sp_runtime::BuildStorage;
+
+    #[test]
+    fn pay_fee() {
+        let genesis_config = GenesisConfig {
+            pallet_balances: None,
+            pallet_sudo: None,
+            system: None,
+        };
+
+        let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
+
+        test_ext.execute_with(move || {
+            let block_author = ed25519::Pair::from_string("//Bob", None).unwrap().public();
+            store::BlockAuthor::put(block_author);
+
+            let tx_author = ed25519::Pair::from_string("//Alice", None)
+                .unwrap()
+                .public();
+            let _imbalance = Balances::deposit_creating(&tx_author, 3000);
+
+            let fee = 1000;
+            let call = RegistryCall::register_user(message::RegisterUser {
+                user_id: UserId::try_from("alice").unwrap(),
+            })
+            .into();
+
+            pay(tx_author, fee, &call).unwrap();
+
+            let block_author_balance = Balances::free_balance(&block_author);
+            assert_eq!(block_author_balance, 990);
+
+            let tx_author_balance = Balances::free_balance(&tx_author);
+            assert_eq!(tx_author_balance, 2000)
+        });
     }
 }
