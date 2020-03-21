@@ -13,109 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use radicle_registry_client::*;
+use radicle_registry_cli::*;
 use structopt::StructOpt;
-
-mod commands;
-use commands::*;
-
-#[derive(StructOpt, Clone)]
-#[structopt(max_term_width = 80)]
-struct Args {
-    /// Value to derive the key pair for signing transactions.
-    /// See
-    /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>
-    /// for information about the format of the string
-    #[structopt(
-        long,
-        default_value = "//Alice",
-        env = "RAD_AUTHOR_KEY",
-        value_name = "key",
-        parse(try_from_str = Args::parse_author_key)
-    )]
-    author_key: ed25519::Pair,
-
-    /// Fee that will be charged fo the transaction.
-    /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
-    fee: Balance,
-
-    #[structopt(subcommand)]
-    command: Command,
-
-    /// IP address or domain name that hosts the RPC API
-    #[structopt(
-        long,
-        default_value = "127.0.0.1",
-        env = "RAD_NODE_HOST",
-        parse(try_from_str = url::Host::parse),
-    )]
-    node_host: url::Host,
-}
-
-impl Args {
-    async fn command_context(&self) -> Result<CommandContext, CommandError> {
-        let client = Client::create_with_executor(self.node_host.clone()).await?;
-        Ok(CommandContext {
-            author_key_pair: self.author_key.clone(),
-            client,
-            fee: self.fee,
-        })
-    }
-
-    fn parse_author_key(s: &str) -> Result<ed25519::Pair, String> {
-        ed25519::Pair::from_string(s, None).map_err(|err| format!("{:?}", err))
-    }
-}
-
-#[derive(StructOpt, Debug, Clone)]
-enum Command {
-    Account(AccountCommand),
-    Org(OrgCommand),
-    Project(ProjectCommand),
-    User(UserCommand),
-
-    Genesis(GenesisCommand),
-}
-
-/// Account related commands
-#[derive(StructOpt, Debug, Clone)]
-enum AccountCommand {
-    Address(ShowAddress),
-    Transfer(Transfer),
-    Balance(ShowBalance),
-}
-
-#[derive(StructOpt, Debug, Clone)]
-/// Org related commands
-enum OrgCommand {
-    List(ListOrgs),
-    Show(ShowOrg),
-    Transfer(TransferOrgFunds),
-    Register(RegisterOrg),
-    Unregister(UnregisterOrg),
-}
-
-/// Project related commands
-#[derive(StructOpt, Debug, Clone)]
-enum ProjectCommand {
-    List(ListProjects),
-    Show(ShowProject),
-    Register(RegisterProject),
-}
-
-/// User related commands
-#[derive(StructOpt, Debug, Clone)]
-enum UserCommand {
-    Register(RegisterUser),
-    Unregister(UnregisterUser),
-}
-
-/// Genesis related commands
-#[derive(StructOpt, Debug, Clone)]
-enum GenesisCommand {
-    Hash(ShowGenesisHash),
-}
 
 #[async_std::main]
 async fn main() {
@@ -135,42 +34,29 @@ async fn run(args: Args) -> Result<(), CommandError> {
     let command_context = args.command_context().await?;
 
     match args.command {
-        Command::Account(acmd) => {
-            match acmd {
-                AccountCommand::Address(cmd) => cmd.run(&command_context).await,
-                AccountCommand::Balance(cmd) => cmd.run(&command_context).await,
-                AccountCommand::Transfer(cmd) => cmd.run(&command_context).await,
-            }
-        }
-
-        Command::Genesis(cmd) => {
-            match cmd {
-                GenesisCommand::Hash(cmd) => cmd.run(&command_context).await,
-            }
-        }
-
-        Command::Org(ocmd) => {
-            match ocmd {
-                OrgCommand::Show(cmd) => cmd.run(&command_context).await,
-                OrgCommand::List(cmd) => cmd.run(&command_context).await,
-                OrgCommand::Register(cmd) => cmd.run(&command_context).await,
-                OrgCommand::Unregister(cmd) => cmd.run(&command_context).await,
-                OrgCommand::Transfer(cmd) => cmd.run(&command_context).await,
-            }
-        }
-        Command::Project(pcmd) => {
-            match pcmd {
-                ProjectCommand::Show(cmd) => cmd.run(&command_context).await,
-                ProjectCommand::List(cmd) => cmd.run(&command_context).await,
-                ProjectCommand::Register(cmd) => cmd.run(&command_context).await,
-            }
+        Command::Account(acmd) => match acmd {
+            AccountCommand::Address(cmd) => cmd.run(&command_context).await,
+            AccountCommand::Balance(cmd) => cmd.run(&command_context).await,
+            AccountCommand::Transfer(cmd) => cmd.run(&command_context).await,
         },
-
-        Command::User(pcmd) => {
-            match pcmd {
-                UserCommand::Register(cmd) => cmd.run(&command_context).await,
-                UserCommand::Unregister(cmd) => cmd.run(&command_context).await,
-            }
+        Command::Genesis(cmd) => match cmd {
+            GenesisCommand::Hash(cmd) => cmd.run(&command_context).await,
+        },
+        Command::Org(ocmd) => match ocmd {
+            OrgCommand::Show(cmd) => cmd.run(&command_context).await,
+            OrgCommand::List(cmd) => cmd.run(&command_context).await,
+            OrgCommand::Register(cmd) => cmd.run(&command_context).await,
+            OrgCommand::Unregister(cmd) => cmd.run(&command_context).await,
+            OrgCommand::Transfer(cmd) => cmd.run(&command_context).await,
+        },
+        Command::Project(pcmd) => match pcmd {
+            ProjectCommand::Show(cmd) => cmd.run(&command_context).await,
+            ProjectCommand::List(cmd) => cmd.run(&command_context).await,
+            ProjectCommand::Register(cmd) => cmd.run(&command_context).await,
+        },
+        Command::User(pcmd) => match pcmd {
+            UserCommand::Register(cmd) => cmd.run(&command_context).await,
+            UserCommand::Unregister(cmd) => cmd.run(&command_context).await,
         },
     }
 }

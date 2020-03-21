@@ -13,81 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines [CommandT] trait, structs for all commands and their [CommandT] implementations.
+//! Defines all the [CommandT] implementations.
+
+use crate::{CommandContext, CommandError, CommandT};
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
 use sp_core::crypto::Ss58Codec;
-
-/// Contextual data for running commands. Created from command line options.
-pub struct CommandContext {
-    pub author_key_pair: ed25519::Pair,
-    pub client: Client,
-    pub fee: Balance,
-}
-
-/// Error returned by [CommandT::run].
-///
-/// Implements [From] for client errors.
-#[derive(Debug, derive_more::From)]
-pub enum CommandError {
-    ClientError(Error),
-    FailedTransaction {
-        tx_hash: TxHash,
-        block_hash: BlockHash,
-    },
-    OrgNotFound {
-        org_id: OrgId,
-    },
-    ProjectNotFound {
-        project_name: ProjectName,
-        org_id: OrgId,
-    },
-}
-
-impl core::fmt::Display for CommandError {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        match self {
-            CommandError::ClientError(error) => write!(f, "Client error: {}", error),
-            CommandError::FailedTransaction {
-                tx_hash,
-                block_hash,
-            } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
-            CommandError::OrgNotFound { org_id } => write!(f, "Cannot find org {}", org_id),
-            CommandError::ProjectNotFound {
-                project_name,
-                org_id,
-            } => write!(f, "Cannot find project {}.{}", project_name, org_id),
-        }
-    }
-}
-
-/// Check that a transaction has been applied succesfully.
-///
-/// If the transaction failed, that is if `tx_applied.result` is `Err`, then we return a
-/// [CommandError]. Otherwise we return the `Ok` value of the transaction result.
-fn transaction_applied_ok<Message_, T, E>(
-    tx_applied: &TransactionApplied<Message_>,
-) -> Result<T, CommandError>
-where
-    Message_: Message<Result = Result<T, E>>,
-    T: Copy + Send + 'static,
-    E: Send + 'static,
-{
-    match tx_applied.result {
-        Ok(value) => Ok(value),
-        Err(_) => Err(CommandError::FailedTransaction {
-            tx_hash: tx_applied.tx_hash,
-            block_hash: tx_applied.block,
-        }),
-    }
-}
-
-/// Every CLI command must implement this trait.
-#[async_trait::async_trait]
-pub trait CommandT {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError>;
-}
 
 #[derive(StructOpt, Debug, Clone)]
 /// Show information for a registered project.
@@ -485,5 +417,26 @@ impl CommandT for ShowAddress {
             ed25519::Pair::from_string(format!("//{}", self.seed).as_str(), None).unwrap();
         println!("SS58 address: {}", key_pair.public().to_ss58check());
         Ok(())
+    }
+}
+
+/// Check that a transaction has been applied succesfully.
+///
+/// If the transaction failed, that is if `tx_applied.result` is `Err`, then we return a
+/// [CommandError]. Otherwise we return the `Ok` value of the transaction result.
+fn transaction_applied_ok<Message_, T, E>(
+    tx_applied: &TransactionApplied<Message_>,
+) -> Result<T, CommandError>
+where
+    Message_: Message<Result = Result<T, E>>,
+    T: Copy + Send + 'static,
+    E: Send + 'static,
+{
+    match tx_applied.result {
+        Ok(value) => Ok(value),
+        Err(_) => Err(CommandError::FailedTransaction {
+            tx_hash: tx_applied.tx_hash,
+            block_hash: tx_applied.block,
+        }),
     }
 }
