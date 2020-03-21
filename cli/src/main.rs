@@ -70,20 +70,51 @@ impl Args {
 
 #[derive(StructOpt, Debug, Clone)]
 enum Command {
-    ListOrgs(ListOrgs),
-    ListProjects(ListProjects),
-    RegisterOrg(RegisterOrg),
-    UnregisterOrg(UnregisterOrg),
-    RegisterProject(RegisterProject),
-    RegisterUser(RegisterUser),
-    UnregisterUser(UnregisterUser),
-    ShowBalance(ShowBalance),
-    ShowGenesisHash(ShowGenesisHash),
-    ShowOrg(ShowOrg),
-    ShowProject(ShowProject),
+    Account(AccountCommand),
+    Org(OrgCommand),
+    Project(ProjectCommand),
+    User(UserCommand),
+
+    Genesis(GenesisCommand),
+}
+
+/// Account related commands
+#[derive(StructOpt, Debug, Clone)]
+enum AccountCommand {
+    Address(ShowAddress),
     Transfer(Transfer),
-    TransferOrgFunds(TransferOrgFunds),
-    ShowAddress(ShowAddress),
+    Balance(ShowBalance),
+}
+
+#[derive(StructOpt, Debug, Clone)]
+/// Org related commands
+enum OrgCommand {
+    List(ListOrgs),
+    Show(ShowOrg),
+    Transfer(TransferOrgFunds),
+    Register(RegisterOrg),
+    Unregister(UnregisterOrg),
+}
+
+/// Project related commands
+#[derive(StructOpt, Debug, Clone)]
+enum ProjectCommand {
+    List(ListProjects),
+    Show(ShowProject),
+    Register(RegisterProject),
+}
+
+/// User related commands
+#[derive(StructOpt, Debug, Clone)]
+enum UserCommand {
+    Register(RegisterUser),
+    Unregister(UnregisterUser),
+}
+
+/// Genesis related commands
+#[derive(StructOpt, Debug, Clone)]
+enum GenesisCommand {
+    Hash(ShowGenesisHash),
 }
 
 #[async_std::main]
@@ -104,19 +135,42 @@ async fn run(args: Args) -> Result<(), CommandError> {
     let command_context = args.command_context().await?;
 
     match args.command {
-        Command::ListOrgs(cmd) => cmd.run(&command_context).await,
-        Command::ListProjects(cmd) => cmd.run(&command_context).await,
-        Command::RegisterOrg(cmd) => cmd.run(&command_context).await,
-        Command::UnregisterOrg(cmd) => cmd.run(&command_context).await,
-        Command::RegisterProject(cmd) => cmd.run(&command_context).await,
-        Command::RegisterUser(cmd) => cmd.run(&command_context).await,
-        Command::UnregisterUser(cmd) => cmd.run(&command_context).await,
-        Command::ShowBalance(cmd) => cmd.run(&command_context).await,
-        Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
-        Command::ShowOrg(cmd) => cmd.run(&command_context).await,
-        Command::ShowProject(cmd) => cmd.run(&command_context).await,
-        Command::Transfer(cmd) => cmd.run(&command_context).await,
-        Command::TransferOrgFunds(cmd) => cmd.run(&command_context).await,
-        Command::ShowAddress(cmd) => cmd.run(&command_context).await,
+        Command::Account(acmd) => {
+            match acmd {
+                AccountCommand::Address(cmd) => cmd.run(&command_context).await,
+                AccountCommand::Balance(cmd) => cmd.run(&command_context).await,
+                AccountCommand::Transfer(cmd) => cmd.run(&command_context).await,
+            }
+        }
+
+        Command::Genesis(cmd) => {
+            match cmd {
+                GenesisCommand::Hash(cmd) => cmd.run(&command_context).await,
+            }
+        }
+
+        Command::Org(ocmd) => {
+            match ocmd {
+                OrgCommand::Show(cmd) => cmd.run(&command_context).await,
+                OrgCommand::List(cmd) => cmd.run(&command_context).await,
+                OrgCommand::Register(cmd) => cmd.run(&command_context).await,
+                OrgCommand::Unregister(cmd) => cmd.run(&command_context).await,
+                OrgCommand::Transfer(cmd) => cmd.run(&command_context).await,
+            }
+        }
+        Command::Project(pcmd) => {
+            match pcmd {
+                ProjectCommand::Show(cmd) => cmd.run(&command_context).await,
+                ProjectCommand::List(cmd) => cmd.run(&command_context).await,
+                ProjectCommand::Register(cmd) => cmd.run(&command_context).await,
+            }
+        },
+
+        Command::User(pcmd) => {
+            match pcmd {
+                UserCommand::Register(cmd) => cmd.run(&command_context).await,
+                UserCommand::Unregister(cmd) => cmd.run(&command_context).await,
+            }
+        },
     }
 }
