@@ -24,6 +24,15 @@ pub enum Command {
     GenesisHash(ShowGenesisHash),
 }
 
+#[async_trait::async_trait]
+impl CommandT for Command {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        match self {
+            Command::GenesisHash(cmd) => cmd.run(command_context).await,
+        }
+    }
+}
+
 #[derive(StructOpt, Debug, Clone)]
 /// Show the genesis hash the node uses
 pub struct ShowGenesisHash {}

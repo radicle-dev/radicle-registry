@@ -21,8 +21,19 @@ use super::*;
 #[derive(StructOpt, Debug, Clone)]
 pub enum Command {
     List(List),
-    Show(Show),
     Register(Register),
+    Show(Show),
+}
+
+#[async_trait::async_trait]
+impl CommandT for Command {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        match self {
+            Command::List(cmd) => cmd.run(command_context).await,
+            Command::Register(cmd) => cmd.run(command_context).await,
+            Command::Show(cmd) => cmd.run(command_context).await,
+        }
+    }
 }
 
 #[derive(StructOpt, Debug, Clone)]

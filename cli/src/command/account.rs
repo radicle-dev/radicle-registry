@@ -25,6 +25,17 @@ pub enum Command {
     Transfer(Transfer),
 }
 
+#[async_trait::async_trait]
+impl CommandT for Command {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        match self {
+            Command::Address(cmd) => cmd.run(command_context).await,
+            Command::Balance(cmd) => cmd.run(command_context).await,
+            Command::Transfer(cmd) => cmd.run(command_context).await,
+        }
+    }
+}
+
 #[derive(StructOpt, Debug, Clone)]
 /// Show the SS58 address for the key pair derived from `seed`.
 ///

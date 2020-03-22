@@ -81,6 +81,19 @@ pub enum Command {
     Other(other::Command),
 }
 
+#[async_trait::async_trait]
+impl CommandT for Command {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        match self.clone() {
+            Command::Account(cmd) => cmd.run(command_context).await,
+            Command::Org(cmd) => cmd.run(command_context).await,
+            Command::Project(cmd) => cmd.run(command_context).await,
+            Command::User(cmd) => cmd.run(command_context).await,
+            Command::Other(cmd) => cmd.run(command_context).await,
+        }
+    }
+}
+
 /// Contextual data for running commands. Created from command line options.
 pub struct CommandContext {
     pub author_key_pair: ed25519::Pair,

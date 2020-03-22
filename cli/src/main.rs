@@ -15,7 +15,7 @@
 
 //! The executable entry point for the Radicle Registry CLI.
 
-use radicle_registry_cli::{command::*, Args, Command, CommandError, CommandT};
+use radicle_registry_cli::{Args, CommandError, CommandT};
 use structopt::StructOpt;
 
 #[async_std::main]
@@ -33,32 +33,8 @@ async fn main() {
 }
 
 async fn run(args: Args) -> Result<(), CommandError> {
+    let command = args.command.clone();
     let command_context = args.command_context().await?;
 
-    match args.command {
-        Command::Account(acmd) => match acmd {
-            account::Command::Address(cmd) => cmd.run(&command_context).await,
-            account::Command::Balance(cmd) => cmd.run(&command_context).await,
-            account::Command::Transfer(cmd) => cmd.run(&command_context).await,
-        },
-        Command::Other(cmd) => match cmd {
-            other::Command::GenesisHash(cmd) => cmd.run(&command_context).await,
-        },
-        Command::Org(ocmd) => match ocmd {
-            org::Command::Show(cmd) => cmd.run(&command_context).await,
-            org::Command::List(cmd) => cmd.run(&command_context).await,
-            org::Command::Register(cmd) => cmd.run(&command_context).await,
-            org::Command::Unregister(cmd) => cmd.run(&command_context).await,
-            org::Command::Transfer(cmd) => cmd.run(&command_context).await,
-        },
-        Command::Project(pcmd) => match pcmd {
-            project::Command::Show(cmd) => cmd.run(&command_context).await,
-            project::Command::List(cmd) => cmd.run(&command_context).await,
-            project::Command::Register(cmd) => cmd.run(&command_context).await,
-        },
-        Command::User(pcmd) => match pcmd {
-            user::Command::Register(cmd) => cmd.run(&command_context).await,
-            user::Command::Unregister(cmd) => cmd.run(&command_context).await,
-        },
-    }
+    command.run(&command_context).await
 }

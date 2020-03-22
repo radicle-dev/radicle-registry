@@ -24,10 +24,20 @@ pub enum Command {
     Unregister(Unregister),
 }
 
+#[async_trait::async_trait]
+impl CommandT for Command {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+        match self {
+            user::Command::Register(cmd) => cmd.run(command_context).await,
+            user::Command::Unregister(cmd) => cmd.run(command_context).await,
+        }
+    }
+}
+
 #[derive(StructOpt, Debug, Clone)]
 /// Register a user.
 pub struct Register {
-    /// Id of the user to registered. The valid charset is: 'a-z0-9-' and can't begin or end with
+    /// Id of the user to register. The valid charset is: 'a-z0-9-' and can't begin or end with
     /// a '-', must also not contain more than two '-' in a row.
     user_id: UserId,
 }
