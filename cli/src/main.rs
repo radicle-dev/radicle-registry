@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use radicle_registry_cli::*;
+//! The executable entry point for the Radicle Registry CLI.
+
+use radicle_registry_cli::{command::*, Args, Command, CommandError, CommandT};
 use structopt::StructOpt;
 
 #[async_std::main]
@@ -35,28 +37,28 @@ async fn run(args: Args) -> Result<(), CommandError> {
 
     match args.command {
         Command::Account(acmd) => match acmd {
-            AccountCommand::Address(cmd) => cmd.run(&command_context).await,
-            AccountCommand::Balance(cmd) => cmd.run(&command_context).await,
-            AccountCommand::Transfer(cmd) => cmd.run(&command_context).await,
+            account::Command::Address(cmd) => cmd.run(&command_context).await,
+            account::Command::Balance(cmd) => cmd.run(&command_context).await,
+            account::Command::Transfer(cmd) => cmd.run(&command_context).await,
         },
-        Command::Genesis(cmd) => match cmd {
-            GenesisCommand::Hash(cmd) => cmd.run(&command_context).await,
+        Command::Other(cmd) => match cmd {
+            other::Command::GenesisHash(cmd) => cmd.run(&command_context).await,
         },
         Command::Org(ocmd) => match ocmd {
-            OrgCommand::Show(cmd) => cmd.run(&command_context).await,
-            OrgCommand::List(cmd) => cmd.run(&command_context).await,
-            OrgCommand::Register(cmd) => cmd.run(&command_context).await,
-            OrgCommand::Unregister(cmd) => cmd.run(&command_context).await,
-            OrgCommand::Transfer(cmd) => cmd.run(&command_context).await,
+            org::Command::Show(cmd) => cmd.run(&command_context).await,
+            org::Command::List(cmd) => cmd.run(&command_context).await,
+            org::Command::Register(cmd) => cmd.run(&command_context).await,
+            org::Command::Unregister(cmd) => cmd.run(&command_context).await,
+            org::Command::Transfer(cmd) => cmd.run(&command_context).await,
         },
         Command::Project(pcmd) => match pcmd {
-            ProjectCommand::Show(cmd) => cmd.run(&command_context).await,
-            ProjectCommand::List(cmd) => cmd.run(&command_context).await,
-            ProjectCommand::Register(cmd) => cmd.run(&command_context).await,
+            project::Command::Show(cmd) => cmd.run(&command_context).await,
+            project::Command::List(cmd) => cmd.run(&command_context).await,
+            project::Command::Register(cmd) => cmd.run(&command_context).await,
         },
         Command::User(pcmd) => match pcmd {
-            UserCommand::Register(cmd) => cmd.run(&command_context).await,
-            UserCommand::Unregister(cmd) => cmd.run(&command_context).await,
+            user::Command::Register(cmd) => cmd.run(&command_context).await,
+            user::Command::Unregister(cmd) => cmd.run(&command_context).await,
         },
     }
 }

@@ -13,11 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//! Define the command line parser and interface.
+
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
-pub mod commands;
-use commands::*;
+pub mod command;
+use command::{account, org, other, project, user};
 
 #[derive(StructOpt, Clone)]
 #[structopt(max_term_width = 80)]
@@ -70,56 +72,13 @@ impl Args {
 
 #[derive(StructOpt, Debug, Clone)]
 pub enum Command {
-    Account(AccountCommand),
-    Org(OrgCommand),
-    Project(ProjectCommand),
-    User(UserCommand),
-    Genesis(GenesisCommand),
-}
+    Account(account::Command),
+    Org(org::Command),
+    Project(project::Command),
+    User(user::Command),
 
-/// Account related commands
-#[derive(StructOpt, Debug, Clone)]
-pub enum AccountCommand {
-    Address(ShowAddress),
-    Transfer(Transfer),
-    Balance(ShowBalance),
-}
-
-#[derive(StructOpt, Debug, Clone)]
-/// Org related commands
-pub enum OrgCommand {
-    List(ListOrgs),
-    Show(ShowOrg),
-    Transfer(TransferOrgFunds),
-    Register(RegisterOrg),
-    Unregister(UnregisterOrg),
-}
-
-/// Project related commands
-#[derive(StructOpt, Debug, Clone)]
-pub enum ProjectCommand {
-    List(ListProjects),
-    Show(ShowProject),
-    Register(RegisterProject),
-}
-
-/// User related commands
-#[derive(StructOpt, Debug, Clone)]
-pub enum UserCommand {
-    Register(RegisterUser),
-    Unregister(UnregisterUser),
-}
-
-/// Genesis related commands
-#[derive(StructOpt, Debug, Clone)]
-pub enum GenesisCommand {
-    Hash(ShowGenesisHash),
-}
-
-/// Every command must implement this trait.
-#[async_trait::async_trait]
-pub trait CommandT {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError>;
+    #[structopt(flatten)]
+    Other(other::Command),
 }
 
 /// Contextual data for running commands. Created from command line options.
@@ -127,6 +86,12 @@ pub struct CommandContext {
     pub author_key_pair: ed25519::Pair,
     pub client: Client,
     pub fee: Balance,
+}
+
+/// The trait that every command must implement.
+#[async_trait::async_trait]
+pub trait CommandT {
+    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError>;
 }
 
 /// Error returned by [CommandT::run].
