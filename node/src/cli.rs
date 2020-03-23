@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [Arguments] struct that represents the command line arguments.
+use radicle_registry_runtime::AccountId;
 use sc_cli::{RunCmd, Subcommand};
 use structopt::{clap, StructOpt};
 
@@ -78,6 +79,13 @@ pub struct Arguments {
     /// If the file does not exist, it is created with a newly generated secret key.
     #[structopt(long, value_name = "FILE")]
     node_key_file: Option<std::path::PathBuf>,
+
+    /// Account to credit block rewards and transaction fees for mined blocks.
+    ///
+    /// If not provided the zero account is used as the block author.
+    /// Account address must be given in SS58 format.
+    #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
+    block_author: Option<AccountId>,
 }
 
 impl Arguments {
@@ -129,6 +137,11 @@ impl Arguments {
             ..run_cmd
         }
     }
+
+    pub fn block_author(&self) -> AccountId {
+        let zero_account = AccountId::from_raw([0; 32]);
+        self.block_author.unwrap_or(zero_account)
+    }
 }
 
 // NOTE Update `possible_values` in the structopt attribute if something is added here.
@@ -142,4 +155,8 @@ fn parse_chain(name: &str) -> Result<Chain, String> {
     } else {
         Err(format!("Invalid chain {}", name))
     }
+}
+
+fn parse_ss58_account_id(data: &str) -> Result<AccountId, String> {
+    sp_core::crypto::Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }
