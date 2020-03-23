@@ -18,10 +18,12 @@
 use futures::future::BoxFuture;
 use std::sync::{Arc, Mutex};
 
-use sp_runtime::{traits::Hash as _, BuildStorage as _};
+use sp_runtime::{traits::Hash as _, BuildStorage as _, Digest};
 use sp_state_machine::backend::Backend as _;
 
-use radicle_registry_runtime::{BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Runtime};
+use radicle_registry_runtime::{
+    registry, AccountId, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Header, Runtime,
+};
 
 use crate::backend;
 use crate::interface::*;
@@ -31,25 +33,63 @@ use crate::interface::*;
 ///
 /// # Differences with real backend
 ///
-/// * The [Emulator] does not produce blocks. In particular the `blocks` field in
-///   [TransactionApplied]` always equals `Hash::default` when returned from
-///   [ClientT::submit_transaction].
+/// * Every [backend::Backend::submit] call creates a new block that only contains the submited
+///   transaction.
 ///
 /// * The responses returned from the client never result in an [Error].
+///
+/// * The block author is fixed to [BLOCK_AUTHOR].
 #[derive(Clone)]
 pub struct Emulator {
-    test_ext: Arc<Mutex<sp_io::TestExternalities>>,
     genesis_hash: Hash,
+    inherent_data_providers: sp_inherents::InherentDataProviders,
+    state: Arc<Mutex<EmulatorState>>,
 }
+
+/// Mutable state of the emulator.
+struct EmulatorState {
+    test_ext: sp_io::TestExternalities,
+    next_header: Header,
+}
+
+/// Block author account used when the emulator creates blocks.
+pub const BLOCK_AUTHOR: AccountId = ed25519::Public([0u8; 32]);
 
 impl Emulator {
     pub fn new() -> Self {
         let genesis_config = make_genesis_config();
         let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = init_runtime(&mut test_ext);
+
+        let registry_inherent_data = registry::InherentData {
+            block_author: AccountId::from_raw([0u8; 32]),
+        };
+
+        let inherent_data_providers = sp_inherents::InherentDataProviders::new();
+
+        // Can only fail if a provider with the same name is already registered.
+        inherent_data_providers
+            .register_provider(sp_timestamp::InherentDataProvider)
+            .unwrap();
+        inherent_data_providers
+            .register_provider(registry_inherent_data)
+            .unwrap();
+
+        let next_header = Header {
+            parent_hash: Hash::zero(),
+            number: 1,
+            state_root: Hash::zero(),
+            extrinsics_root: Hash::zero(),
+            digest: Digest::default(),
+        };
+
         Emulator {
-            test_ext: Arc::new(Mutex::new(test_ext)),
             genesis_hash,
+            inherent_data_providers,
+            state: Arc::new(Mutex::new(EmulatorState {
+                test_ext,
+                next_header,
+            })),
         }
     }
 }
@@ -61,22 +101,38 @@ impl backend::Backend for Emulator {
         extrinsic: backend::UncheckedExtrinsic,
     ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
-        let test_ext = &mut self.test_ext.lock().unwrap();
-        let events = test_ext.execute_with(move || {
+        let mut state = self.state.lock().unwrap();
+        let next_header = state.next_header.clone();
+        let (header, events) = state.test_ext.execute_with(move || {
+            Executive::initialize_block(&next_header);
+
+            let inherent_data = self.inherent_data_providers.create_inherent_data().unwrap();
+            let inherents = radicle_registry_runtime::inherent_extrinsics(inherent_data);
+            for inherent in inherents {
+                let _apply_result = Executive::apply_extrinsic(inherent).unwrap();
+            }
+
             let event_start_index = frame_system::Module::<Runtime>::event_count();
             // We ignore the dispatch result. It is provided through the system event
             // TODO Pass on apply errors instead of unwrapping.
-            let _dispatch_result = Executive::apply_extrinsic(extrinsic).unwrap();
-            frame_system::Module::<Runtime>::events()
+            let _apply_result = Executive::apply_extrinsic(extrinsic).unwrap();
+            let events = frame_system::Module::<Runtime>::events()
                 .into_iter()
                 .skip(event_start_index as usize)
                 .map(|event_record| event_record.event)
-                .collect::<Vec<Event>>()
+                .collect::<Vec<Event>>();
+
+            let header = Executive::finalize_block();
+            (header, events)
         });
+
+        state.next_header.parent_hash = header.hash();
+        state.next_header.number += 1;
+
         Ok(Box::pin(futures::future::ready(Ok(
             backend::TransactionApplied {
                 tx_hash,
-                block: Default::default(),
+                block: header.hash(),
                 events,
             },
         ))))
@@ -91,8 +147,8 @@ impl backend::Backend for Emulator {
             panic!("Passing a block hash 'fetch' for the client emulator is not supported")
         }
 
-        let test_ext = &mut self.test_ext.lock().unwrap();
-        let maybe_data = test_ext.execute_with(|| sp_io::storage::get(key));
+        let mut state = self.state.lock().unwrap();
+        let maybe_data = state.test_ext.execute_with(|| sp_io::storage::get(key));
         Ok(maybe_data)
     }
 
@@ -105,8 +161,8 @@ impl backend::Backend for Emulator {
             panic!("Passing a block hash 'fetch_keys' for the client emulator is not supported")
         }
 
-        let test_ext = &mut self.test_ext.lock().unwrap();
-        let backend = test_ext.commit_all();
+        let state = self.state.lock().unwrap();
+        let backend = state.test_ext.commit_all();
 
         let mut keys = Vec::new();
         backend.for_keys_with_prefix(prefix, |key| keys.push(Vec::from(key)));

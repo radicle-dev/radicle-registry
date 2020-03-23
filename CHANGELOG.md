@@ -40,6 +40,7 @@ Upcoming
 * The `Client` and `ClientT` methods are now `async`.
 
 ### Addition
+* The client emulator now authors blocks when a transaction is submitted.
 * Add `TransferFromOrg` message
 * Add `Client::get_org` and `Client::list_orgs`
 * Add `RegisterOrg` and `UnregisterOrg` messages
