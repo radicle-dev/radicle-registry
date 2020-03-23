@@ -147,3 +147,8 @@ futures01 = "0.1"
 rand = "0.7.2"
 radicle-registry-client = { path = "../client" }
 radicle-registry-test-utils = { path = "../test-utils"}
+
+[dev-dependencies.sp-state-machine]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+default_features = false
