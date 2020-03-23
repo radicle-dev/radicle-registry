@@ -26,9 +26,7 @@ use sc_service::{AbstractService, Configuration, Error as ServiceError, ServiceB
 use sp_inherents::InherentDataProviders;
 
 use crate::pow::config::Config as PowAlgConfig;
-use radicle_registry_runtime::{
-    opaque::Block, registry::AuthoringInherentData, AccountId, RuntimeApi,
-};
+use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, Block, RuntimeApi};
 
 // Our native executor instance.
 native_executor_instance!(

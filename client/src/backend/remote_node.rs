@@ -30,19 +30,17 @@ use std::sync::Arc;
 use url::Url;
 
 use radicle_registry_runtime::{
-    opaque::Block as OpaqueBlock, BlockNumber, Event, EventRecord, Hash, Hashing, Header,
+    Block, BlockNumber, Event, EventRecord, Hash, Hashing, Header, UncheckedExtrinsic,
 };
 
 use crate::backend::{self, Backend};
 use crate::interface::*;
 
-type ChainBlock = SignedBlock<OpaqueBlock>;
-
 /// Collection of substrate RPC clients
 #[derive(Clone)]
 struct Rpc {
     state: StateClient<BlockHash>,
-    chain: ChainClient<BlockNumber, Hash, Header, ChainBlock>,
+    chain: ChainClient<BlockNumber, Hash, Header, SignedBlock<TransportBlock>>,
     author: AuthorClient<Hash, BlockHash>,
 }
 
@@ -143,11 +141,11 @@ impl RemoteNode {
             Decode::decode(&mut &events_data[..]).map_err(Error::Codec)?;
 
         let opt_signed_block = self.rpc.chain.block(Some(block_hash)).compat().await?;
-        let block = opt_signed_block
-            .ok_or_else(|| {
-                Error::from("Block that should include submitted transaction does not exist")
-            })?
-            .block;
+        let opt_block =
+            opt_signed_block.map(|signed_block| unpack_transport_block(signed_block.block));
+        let block = opt_block.ok_or_else(|| {
+            Error::from("Block that should include submitted transaction does not exist")
+        })?;
         extract_transaction_events(tx_hash, block, event_records)
             .ok_or_else(|| Error::from("Failed to extract transaction events"))
     }
@@ -214,7 +212,7 @@ impl backend::Backend for RemoteNode {
 /// since the events should at least include the system event for the transaction.
 fn extract_transaction_events(
     tx_hash: TxHash,
-    block: OpaqueBlock,
+    block: Block,
     event_records: Vec<EventRecord>,
 ) -> Option<Vec<Event>> {
     let xt_index = block
@@ -238,4 +236,38 @@ fn extract_transaction_events(
         })
         .collect();
     Some(events)
+}
+
+/// Similar to [Block] but replaces [UncheckedExtrinsic] with [TransportExtrinsic] to fix
+/// deserialization.
+///
+/// See [TransportExtrinsic] for details.
+type TransportBlock = sp_runtime::generic::Block<Header, TransportExtrinsic>;
+
+/// Wraps [UncheckedExtrinsic] with a fixed [serde::de::Deserialize] implementation.
+///
+/// The [serde::de::Deserialize] implementation fails to properly decode a [UncheckedExtrinsic].
+/// See https://github.com/paritytech/substrate/issues/5359
+#[derive(serde::Serialize, Clone)]
+struct TransportExtrinsic(pub UncheckedExtrinsic);
+
+impl<'a> serde::de::Deserialize<'a> for TransportExtrinsic {
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'a>,
+    {
+        let bytes: Vec<u8> = Vec::<u8>::deserialize(de)?;
+        let uncheck_extrinsic = Decode::decode(&mut &bytes[..])
+            .map_err(|e| serde::de::Error::custom(format!("Decode error: {}", e)))?;
+        Ok(TransportExtrinsic(uncheck_extrinsic))
+    }
+}
+
+/// Unpacks the [TransportExtrinsic] of the block into [UncheckedExtrinsic].
+fn unpack_transport_block(transport_block: TransportBlock) -> Block {
+    let TransportBlock { header, extrinsics } = transport_block;
+    Block {
+        header,
+        extrinsics: extrinsics.into_iter().map(|xt| xt.0).collect(),
+    }
 }

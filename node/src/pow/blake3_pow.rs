@@ -27,8 +27,7 @@
 //! There's no difficulty adjustment algorithm yet.
 
 use crate::pow::harmonic_mean::HarmonicMean;
-use radicle_registry_runtime::opaque::{Block, Header};
-use radicle_registry_runtime::Hash;
+use radicle_registry_runtime::{Block, Hash, Header};
 use sc_client::light::blockchain::{AuxStore, BlockchainHeaderBackend};
 use sc_consensus_pow::{Error, PowAlgorithm, PowAux};
 use sp_api::ProvideRuntimeApi;
