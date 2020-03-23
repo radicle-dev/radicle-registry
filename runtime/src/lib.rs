@@ -243,6 +243,13 @@ pub type Executive = frame_executive::Executive<
     AllModules,
 >;
 
+/// Create the inherent extrinsics that are included in a block based on the inherent data.
+///
+/// See [sp_block_builder::BlockBuilder::inherent_extrinsics].
+pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<UncheckedExtrinsic> {
+    data.create_extrinsics()
+}
+
 impl_runtime_apis! {
     impl sp_api::Core<Block> for Runtime {
         fn version() -> RuntimeVersion {
@@ -274,7 +281,7 @@ impl_runtime_apis! {
         }
 
         fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            data.create_extrinsics()
+            inherent_extrinsics(data)
         }
 
         fn check_inherents(

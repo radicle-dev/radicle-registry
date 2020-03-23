@@ -17,10 +17,9 @@ async fn register_org() {
     let tx_applied =
         submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
-    );
+    assert!(tx_applied
+        .events
+        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
@@ -68,10 +67,9 @@ async fn unregister_org() {
 
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
-    );
+    assert!(tx_applied
+        .events
+        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
@@ -117,10 +115,9 @@ async fn unregister_org_bad_actor() {
 
     let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
-    );
+    assert!(tx_applied
+        .events
+        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_applied.result, Ok(()));
 
     assert!(

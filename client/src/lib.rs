@@ -48,6 +48,8 @@ mod transaction;
 pub use crate::interface::*;
 pub use radicle_registry_core::Balance;
 
+pub use backend::EMULATOR_BLOCK_AUTHOR;
+
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
 /// The client can either use a full node as the backend (see [Client::create]) or emulate the

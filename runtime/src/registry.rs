@@ -62,7 +62,7 @@ where
 }
 
 /// Funds that are credited to the block author for every block.
-const BLOCK_REWARD: Balance = 1000;
+pub const BLOCK_REWARD: Balance = 1000;
 
 pub mod store {
     use super::*;

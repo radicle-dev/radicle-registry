@@ -33,11 +33,15 @@ rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
+[dependencies.sc-rpc-api]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
-[dependencies.sp-runtime]
+[dependencies.sp-inherents]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
@@ -45,11 +49,11 @@ rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
-[dependencies.sc-rpc-api]
+[dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
-[dependencies.sp-rpc]
+[dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
@@ -58,6 +62,10 @@ git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
 [dependencies.sp-transaction-pool]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+
+[dependencies.sp-timestamp]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
