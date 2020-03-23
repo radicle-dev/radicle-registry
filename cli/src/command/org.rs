@@ -29,13 +29,13 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self {
-            Command::Show(cmd) => cmd.run(command_context).await,
-            Command::List(cmd) => cmd.run(command_context).await,
-            Command::Register(cmd) => cmd.run(command_context).await,
-            Command::Unregister(cmd) => cmd.run(command_context).await,
-            Command::Transfer(cmd) => cmd.run(command_context).await,
+            Command::Show(cmd) => cmd.run(ctx).await,
+            Command::List(cmd) => cmd.run(ctx).await,
+            Command::Register(cmd) => cmd.run(ctx).await,
+            Command::Unregister(cmd) => cmd.run(ctx).await,
+            Command::Transfer(cmd) => cmd.run(ctx).await,
         }
     }
 }
@@ -46,8 +46,8 @@ pub struct List {}
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let org_ids = command_context.client.list_orgs().await?;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let org_ids = ctx.client.list_orgs().await?;
         println!("ORGS ({})", org_ids.len());
         for org_id in org_ids {
             println!("{}", org_id)
@@ -65,14 +65,14 @@ pub struct Show {
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let org = command_context
-            .client
-            .get_org(self.org_id.clone())
-            .await?
-            .ok_or(CommandError::OrgNotFound {
-                org_id: self.org_id.clone(),
-            })?;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let org =
+            ctx.client
+                .get_org(self.org_id.clone())
+                .await?
+                .ok_or(CommandError::OrgNotFound {
+                    org_id: self.org_id.clone(),
+                })?;
 
         println!("id: {}", org.id.clone());
         println!("account_id: {}", org.account_id.clone());
@@ -91,16 +91,16 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let register_org_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("Registering org...");
@@ -121,16 +121,16 @@ pub struct Unregister {
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let register_org_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("Unregistering org...");
@@ -160,17 +160,17 @@ pub struct Transfer {
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
         let transfer_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("transferring funds...");

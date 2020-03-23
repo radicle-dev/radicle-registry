@@ -27,11 +27,11 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self {
-            Command::Address(cmd) => cmd.run(command_context).await,
-            Command::Balance(cmd) => cmd.run(command_context).await,
-            Command::Transfer(cmd) => cmd.run(command_context).await,
+            Command::Address(cmd) => cmd.run(ctx).await,
+            Command::Balance(cmd) => cmd.run(ctx).await,
+            Command::Transfer(cmd) => cmd.run(ctx).await,
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct ShowAddress {
 
 #[async_trait::async_trait]
 impl CommandT for ShowAddress {
-    async fn run(&self, _command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, _ctx: &CommandContext) -> Result<(), CommandError> {
         let key_pair =
             ed25519::Pair::from_string(format!("//{}", self.seed).as_str(), None).unwrap();
         println!("SS58 address: {}", key_pair.public().to_ss58check());
@@ -68,11 +68,8 @@ pub struct ShowBalance {
 
 #[async_trait::async_trait]
 impl CommandT for ShowBalance {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let balance = command_context
-            .client
-            .free_balance(&self.account_id)
-            .await?;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let balance = ctx.client.free_balance(&self.account_id).await?;
         println!("{} RAD", balance);
         Ok(())
     }
@@ -90,17 +87,17 @@ pub struct Transfer {
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let transfer_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::Transfer {
                     recipient: self.recipient,
                     balance: self.funds,
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("transferring funds...");

@@ -27,11 +27,11 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self {
-            Command::List(cmd) => cmd.run(command_context).await,
-            Command::Register(cmd) => cmd.run(command_context).await,
-            Command::Show(cmd) => cmd.run(command_context).await,
+            Command::List(cmd) => cmd.run(ctx).await,
+            Command::Register(cmd) => cmd.run(ctx).await,
+            Command::Show(cmd) => cmd.run(ctx).await,
         }
     }
 }
@@ -47,8 +47,8 @@ pub struct Show {
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let project = command_context
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let project = ctx
             .client
             .get_project(self.project_name.clone(), self.org_id.clone())
             .await?
@@ -68,8 +68,8 @@ pub struct List {}
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let project_ids = command_context.client.list_projects().await?;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let project_ids = ctx.client.list_projects().await?;
         println!("PROJECTS ({})", project_ids.len());
         for (name, org) in project_ids {
             println!("{}.{}", name, org)
@@ -91,17 +91,17 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let create_checkpoint_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("creating checkpoint...");
@@ -112,14 +112,14 @@ impl CommandT for Register {
 
         let register_project_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
                     org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("registering project...");

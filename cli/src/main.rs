@@ -15,14 +15,15 @@
 
 //! The executable entry point for the Radicle Registry CLI.
 
-use radicle_registry_cli::{Args, CommandError, CommandT};
+use radicle_registry_cli::CommandLine;
 use structopt::StructOpt;
 
 #[async_std::main]
 async fn main() {
     pretty_env_logger::init();
-    let args = Args::from_args();
-    let result = run(args).await;
+    let cmd_line = CommandLine::from_args();
+    let result = cmd_line.run().await;
+
     match result {
         Ok(_) => std::process::exit(0),
         Err(error) => {
@@ -30,11 +31,4 @@ async fn main() {
             std::process::exit(1);
         }
     }
-}
-
-async fn run(args: Args) -> Result<(), CommandError> {
-    let command = args.command.clone();
-    let command_context = args.command_context().await?;
-
-    command.run(&command_context).await
 }

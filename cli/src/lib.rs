@@ -18,12 +18,33 @@
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
-pub mod command;
+mod command;
 use command::{account, org, other, project, user};
 
+/// The type that captures the command line,
+/// composed by a [Command] and [CommandLineOptions].
 #[derive(StructOpt, Clone)]
 #[structopt(max_term_width = 80)]
-pub struct Args {
+pub struct CommandLine {
+    #[structopt(subcommand)]
+    pub command: Command,
+
+    #[structopt(flatten)]
+    pub options: CommandLineOptions,
+}
+
+impl CommandLine {
+    pub async fn run(self) -> Result<(), CommandError> {
+        let Self { command, options } = self;
+        let context = CommandContext::new(options).await?;
+
+        command.run(&context).await
+    }
+}
+
+/// The accepted command-line options
+#[derive(StructOpt, Clone)]
+pub struct CommandLineOptions {
     /// Value to derive the key pair for signing transactions.
     /// See
     /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>
@@ -31,19 +52,16 @@ pub struct Args {
     #[structopt(
         long,
         default_value = "//Alice",
-        env = "RAD_AUTHOR_KEY",
-        value_name = "key",
-        parse(try_from_str = Args::parse_author_key)
+        env = "RAD_TX_AUTHOR",
+        value_name = "key_pair",
+        parse(try_from_str = Self::parse_key_pair)
     )]
-    pub author_key: ed25519::Pair,
+    pub tx_author: ed25519::Pair,
 
-    /// Fee that will be charged fo the transaction.
+    /// Fee that will be charged to submit transactions.
     /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
-    fee: Balance,
-
-    #[structopt(subcommand)]
-    pub command: Command,
+    #[structopt(long, default_value = "1", env = "RAD_TX_FEE", value_name = "fee")]
+    pub tx_fee: Balance,
 
     /// IP address or domain name that hosts the RPC API
     #[structopt(
@@ -55,21 +73,14 @@ pub struct Args {
     pub node_host: url::Host,
 }
 
-impl Args {
-    pub async fn command_context(&self) -> Result<CommandContext, CommandError> {
-        let client = Client::create_with_executor(self.node_host.clone()).await?;
-        Ok(CommandContext {
-            author_key_pair: self.author_key.clone(),
-            client,
-            fee: self.fee,
-        })
-    }
-
-    fn parse_author_key(s: &str) -> Result<ed25519::Pair, String> {
+impl CommandLineOptions {
+    fn parse_key_pair(s: &str) -> Result<ed25519::Pair, String> {
         ed25519::Pair::from_string(s, None).map_err(|err| format!("{:?}", err))
     }
 }
 
+/// The supported [CommandLine] commands.
+/// The commands are grouped by domain.
 #[derive(StructOpt, Debug, Clone)]
 pub enum Command {
     Account(account::Command),
@@ -83,28 +94,40 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self.clone() {
-            Command::Account(cmd) => cmd.run(command_context).await,
-            Command::Org(cmd) => cmd.run(command_context).await,
-            Command::Project(cmd) => cmd.run(command_context).await,
-            Command::User(cmd) => cmd.run(command_context).await,
-            Command::Other(cmd) => cmd.run(command_context).await,
+            Command::Account(cmd) => cmd.run(ctx).await,
+            Command::Org(cmd) => cmd.run(ctx).await,
+            Command::Project(cmd) => cmd.run(ctx).await,
+            Command::User(cmd) => cmd.run(ctx).await,
+            Command::Other(cmd) => cmd.run(ctx).await,
         }
     }
 }
 
-/// Contextual data for running commands. Created from command line options.
+/// Context for running commands.
+/// Created from [CommandLineOptions].
 pub struct CommandContext {
-    pub author_key_pair: ed25519::Pair,
+    pub tx_author: ed25519::Pair,
     pub client: Client,
-    pub fee: Balance,
+    pub tx_fee: Balance,
+}
+
+impl CommandContext {
+    pub async fn new(options: CommandLineOptions) -> Result<CommandContext, CommandError> {
+        let client = Client::create_with_executor(options.node_host.clone()).await?;
+        Ok(CommandContext {
+            tx_author: options.tx_author.clone(),
+            client,
+            tx_fee: options.tx_fee,
+        })
+    }
 }
 
 /// The trait that every command must implement.
 #[async_trait::async_trait]
 pub trait CommandT {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError>;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError>;
 }
 
 /// Error returned by [CommandT::run].

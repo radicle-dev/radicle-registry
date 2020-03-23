@@ -26,10 +26,10 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self {
-            user::Command::Register(cmd) => cmd.run(command_context).await,
-            user::Command::Unregister(cmd) => cmd.run(command_context).await,
+            user::Command::Register(cmd) => cmd.run(ctx).await,
+            user::Command::Unregister(cmd) => cmd.run(ctx).await,
         }
     }
 }
@@ -44,16 +44,16 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let register_user_fut = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::RegisterUser {
                     user_id: self.user_id.clone(),
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("Registering user...");
@@ -74,16 +74,16 @@ pub struct Unregister {
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self, command_context: &CommandContext) -> Result<(), CommandError> {
-        let client = &command_context.client;
+    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+        let client = &ctx.client;
 
         let unregister_user = client
             .sign_and_submit_message(
-                &command_context.author_key_pair,
+                &ctx.tx_author,
                 message::UnregisterUser {
                     user_id: self.user_id.clone(),
                 },
-                command_context.fee,
+                ctx.tx_fee,
             )
             .await?;
         println!("Unregistering user...");
