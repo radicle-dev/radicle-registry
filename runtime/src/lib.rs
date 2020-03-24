@@ -30,13 +30,15 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 extern crate alloc;
 
 use frame_support::weights::Weight;
-use frame_support::{construct_runtime, parameter_types, traits::Randomness};
+use frame_support::{construct_runtime, ensure, fail, parameter_types, traits::Randomness};
 use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 use sp_runtime::{
-    create_runtime_str, generic, transaction_validity::TransactionValidity, ApplyExtrinsicResult,
-    Perbill,
+    create_runtime_str, generic,
+    transaction_validity::{InvalidTransaction, TransactionValidity},
+    ApplyExtrinsicResult, Perbill,
 };
+
 use sp_std::prelude::*;
 
 use sp_api::impl_runtime_apis;
@@ -250,6 +252,36 @@ pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<UncheckedExt
     data.create_extrinsics()
 }
 
+const SIGNED_INHERENT_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(1);
+const FOBIDDEN_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(2);
+const UNSGINED_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(3);
+
+/// Validate that the call of the extrinsic is allowed.
+///
+/// * We forbid calls reserved for inherents when the extrinsic is not signed.
+/// * We forbid any calls to the [Balances] or [System] module.
+/// * We ensure that the extrinsic is signed for non-inherent calls.
+///
+fn validate_extrinsic_call(xt: &UncheckedExtrinsic) -> Result<(), InvalidTransaction> {
+    match xt.function {
+        // Inherents are only allowed if they are unsigned.
+        Call::Timestamp(_) | Call::Registry(registry::Call::set_block_author(_)) => {
+            ensure!(xt.signature.is_none(), SIGNED_INHERENT_CALL_ERROR)
+        }
+
+        // Forbidden internals.
+        Call::Balances(_) | Call::System(_) => fail!(FOBIDDEN_CALL_ERROR),
+
+        // Impossible cases that cannot be constructed.
+        Call::RandomnessCollectiveFlip(_) => fail!(FOBIDDEN_CALL_ERROR),
+
+        // Allowed calls for signed extrinsics.
+        Call::Registry(_) | Call::Sudo(_) => ensure!(xt.signature.is_some(), UNSGINED_CALL_ERROR),
+    }
+
+    Ok(())
+}
+
 impl_runtime_apis! {
     impl sp_api::Core<Block> for Runtime {
         fn version() -> RuntimeVersion {
@@ -273,6 +305,7 @@ impl_runtime_apis! {
 
     impl sp_block_builder::BlockBuilder<Block> for Runtime {
         fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
+            validate_extrinsic_call(&extrinsic)?;
             Executive::apply_extrinsic(extrinsic)
         }
 
@@ -298,6 +331,7 @@ impl_runtime_apis! {
 
     impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(tx: <Block as BlockT>::Extrinsic) -> TransactionValidity {
+            validate_extrinsic_call(&tx)?;
             Executive::validate_transaction(tx)
         }
     }
