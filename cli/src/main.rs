@@ -13,110 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use radicle_registry_client::*;
+//! The executable entry point for the Radicle Registry CLI.
+
+use radicle_registry_cli::CommandLine;
 use structopt::StructOpt;
-
-mod commands;
-use commands::*;
-
-#[derive(StructOpt, Clone)]
-#[structopt(max_term_width = 80)]
-struct Args {
-    /// Value to derive the key pair for signing transactions.
-    /// See
-    /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>
-    /// for information about the format of the string
-    #[structopt(
-        long,
-        default_value = "//Alice",
-        env = "RAD_AUTHOR_KEY",
-        value_name = "key",
-        parse(try_from_str = Args::parse_author_key)
-    )]
-    author_key: ed25519::Pair,
-
-    /// Fee that will be charged fo the transaction.
-    /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
-    fee: Balance,
-
-    #[structopt(subcommand)]
-    command: Command,
-
-    /// IP address or domain name that hosts the RPC API
-    #[structopt(
-        long,
-        default_value = "127.0.0.1",
-        env = "RAD_NODE_HOST",
-        parse(try_from_str = url::Host::parse),
-    )]
-    node_host: url::Host,
-}
-
-impl Args {
-    async fn command_context(&self) -> Result<CommandContext, CommandError> {
-        let client = Client::create_with_executor(self.node_host.clone()).await?;
-        Ok(CommandContext {
-            author_key_pair: self.author_key.clone(),
-            client,
-            fee: self.fee,
-        })
-    }
-
-    fn parse_author_key(s: &str) -> Result<ed25519::Pair, String> {
-        ed25519::Pair::from_string(s, None).map_err(|err| format!("{:?}", err))
-    }
-}
-
-#[derive(StructOpt, Debug, Clone)]
-enum Command {
-    ListOrgs(ListOrgs),
-    ListProjects(ListProjects),
-    RegisterOrg(RegisterOrg),
-    UnregisterOrg(UnregisterOrg),
-    RegisterProject(RegisterProject),
-    RegisterUser(RegisterUser),
-    UnregisterUser(UnregisterUser),
-    ShowBalance(ShowBalance),
-    ShowGenesisHash(ShowGenesisHash),
-    ShowOrg(ShowOrg),
-    ShowProject(ShowProject),
-    Transfer(Transfer),
-    TransferOrgFunds(TransferOrgFunds),
-    ShowAddress(ShowAddress),
-}
 
 #[async_std::main]
 async fn main() {
     pretty_env_logger::init();
-    let args = Args::from_args();
-    let result = run(args).await;
+    let cmd_line = CommandLine::from_args();
+    let result = cmd_line.run().await;
+
     match result {
         Ok(_) => std::process::exit(0),
         Err(error) => {
             eprintln!("ERROR: {}", error);
             std::process::exit(1);
         }
-    }
-}
-
-async fn run(args: Args) -> Result<(), CommandError> {
-    let command_context = args.command_context().await?;
-
-    match args.command {
-        Command::ListOrgs(cmd) => cmd.run(&command_context).await,
-        Command::ListProjects(cmd) => cmd.run(&command_context).await,
-        Command::RegisterOrg(cmd) => cmd.run(&command_context).await,
-        Command::UnregisterOrg(cmd) => cmd.run(&command_context).await,
-        Command::RegisterProject(cmd) => cmd.run(&command_context).await,
-        Command::RegisterUser(cmd) => cmd.run(&command_context).await,
-        Command::UnregisterUser(cmd) => cmd.run(&command_context).await,
-        Command::ShowBalance(cmd) => cmd.run(&command_context).await,
-        Command::ShowGenesisHash(cmd) => cmd.run(&command_context).await,
-        Command::ShowOrg(cmd) => cmd.run(&command_context).await,
-        Command::ShowProject(cmd) => cmd.run(&command_context).await,
-        Command::Transfer(cmd) => cmd.run(&command_context).await,
-        Command::TransferOrgFunds(cmd) => cmd.run(&command_context).await,
-        Command::ShowAddress(cmd) => cmd.run(&command_context).await,
     }
 }
