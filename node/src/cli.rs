@@ -86,6 +86,10 @@ pub struct Arguments {
     /// Account address must be given in SS58 format.
     #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
     block_author: Option<AccountId>,
+
+    /// Bind the prometheus metrics endpoint to 0.0.0.0
+    #[structopt(long)]
+    prometheus_external: bool,
 }
 
 impl Arguments {
@@ -115,6 +119,7 @@ impl Arguments {
             node_key_file,
             telemetry_endpoints,
             unsafe_rpc_external,
+            prometheus_external,
             ..
         } = self;
 
@@ -134,6 +139,7 @@ impl Arguments {
             telemetry_endpoints,
             unsafe_rpc_external,
             unsafe_ws_external: unsafe_rpc_external,
+            prometheus_external,
             ..run_cmd
         }
     }
