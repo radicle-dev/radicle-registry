@@ -4,7 +4,7 @@ version: "3.7"
 x-node: &node
   image: ubuntu:eoan-20191101
   volumes:
-  - ../target/release/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
+  - ../target/debug/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
   - ./start-node.sh:/usr/local/bin/start-node.sh:ro
   # Used by the --base-path option
   - /data
@@ -26,3 +26,25 @@ services:
     <<: *node
     environment:
       NODE_NAME: charlie
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+    - "9090:9090"
+    volumes:
+    - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    ports:
+    - "9004:3000"
+    volumes:
+    - grafana-data:/var/lib/grafana
+    - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    - ./grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+    - ./grafana-dashboards:/var/lib/grafana/dashboards
+
+volumes:
+  prometheus-data:
+  grafana-data:
