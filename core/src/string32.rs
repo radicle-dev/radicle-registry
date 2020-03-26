@@ -34,7 +34,7 @@ impl String32 {
 
     /// Returns an error if [String::len] of the provided is greater than 32.
     pub fn from_string(s: String) -> Result<Self, InordinateStringError> {
-        if s.len() > 32 {
+        if s.len() > Self::MAXIMUM_SUPPORTED_LENGTH {
             Err(InordinateStringError())
         } else {
             Ok(String32(s))

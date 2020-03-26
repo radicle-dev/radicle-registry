@@ -56,7 +56,6 @@ where
     <Self as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
     <Self as frame_system::Trait>::OnKilledAccount:
         frame_support::traits::OnKilledAccount<Self::AccountId>,
-    <Self as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>,
 {
     type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 }
@@ -76,7 +75,6 @@ pub mod store {
             <T as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
             <T as frame_system::Trait>::OnKilledAccount:
                 frame_support::traits::OnKilledAccount<AccountId>,
-            <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
         {
             // Author of the current block. Is initialized at the beginning of a block with
             // [Call::set_block_author] and not persisted.
@@ -145,8 +143,7 @@ decl_module! {
         // `Trait` for more information.
         <T as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
         <T as frame_system::Trait>::OnKilledAccount:
-            frame_support::traits::OnKilledAccount<AccountId>,
-        <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>
+            frame_support::traits::OnKilledAccount<AccountId>
     {
         fn deposit_event() = default;
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]

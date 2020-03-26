@@ -89,7 +89,6 @@ where
     <T as frame_system::Trait>::Event: From<frame_system::RawEvent<AccountId>>,
     <T as frame_system::Trait>::OnKilledAccount:
         frame_support::traits::OnKilledAccount<T::AccountId>,
-    <T as frame_system::Trait>::MigrateAccount: frame_support::traits::MigrateAccount<AccountId>,
 {
     type Call = Call<T>;
     type Error = CheckInherentError;
