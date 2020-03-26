@@ -4,7 +4,7 @@ version: "3.7"
 x-node: &node
   image: ubuntu:eoan-20191101
   volumes:
-  - ../target/debug/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
+  - ../target/release/radicle-registry-node:/usr/local/bin/radicle-registry-node:ro
   - ./start-node.sh:/usr/local/bin/start-node.sh:ro
   # Used by the --base-path option
   - /data
