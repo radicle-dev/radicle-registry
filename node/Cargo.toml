@@ -38,68 +38,68 @@ version = "3.1.3"
 
 [dependencies.sc-basic-authorship]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-inherents]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-network]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-cli]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-client]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-consensus-pow]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-executor]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-service]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sc-transaction-pool]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-transaction-pool]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-blockchain]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-consensus]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-consensus-pow]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"
 
 [dependencies.sp-api]
 git = "https://github.com/paritytech/substrate"
-rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+rev = "f7bd10a548201cb68491f72be73115279d97f160"

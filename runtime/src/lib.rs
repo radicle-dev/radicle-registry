@@ -35,7 +35,7 @@ use sp_core::{ed25519, OpaqueMetadata};
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 use sp_runtime::{
     create_runtime_str, generic,
-    transaction_validity::{InvalidTransaction, TransactionValidity},
+    transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, Perbill,
 };
 
@@ -154,8 +154,6 @@ impl frame_system::Trait for Runtime {
     type OnKilledAccount = Balances;
     /// The data to be stored in an account.
     type AccountData = balances::AccountData<Balance>;
-    /// Migrate an account.
-    type MigrateAccount = ();
 }
 
 parameter_types! {
@@ -330,9 +328,9 @@ impl_runtime_apis! {
     }
 
     impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
-        fn validate_transaction(tx: <Block as BlockT>::Extrinsic) -> TransactionValidity {
+        fn validate_transaction(source: TransactionSource, tx: <Block as BlockT>::Extrinsic) -> TransactionValidity {
             validate_extrinsic_call(&tx)?;
-            Executive::validate_transaction(tx)
+            Executive::validate_transaction(source, tx)
         }
     }
 
