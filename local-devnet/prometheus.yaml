@@ -1,0 +1,12 @@
+scrape_configs:
+- job_name: registry-nodes
+  scrape_interval: 5s
+  static_configs:
+  - targets:
+    - alice:9615
+    - bob:9615
+    - charlie:9615
+  relabel_configs:
+  - source_labels: ["__address__"]
+    regex: "([^:]*):.*"
+    target_label: "instance"

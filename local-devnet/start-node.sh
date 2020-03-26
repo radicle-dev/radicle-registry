@@ -15,5 +15,6 @@ exec /usr/local/bin/radicle-registry-node \
   --name "$NODE_NAME" \
   --chain local-devnet \
   --unsafe-rpc-external \
+  --prometheus-external \
   --bootnodes /dns4/alice/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR \
   "${extra_args[@]}"

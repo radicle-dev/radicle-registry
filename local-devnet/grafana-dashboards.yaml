@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+- name: dashboards
+  folder: ''
+  type: file
+  editable: true
+  allowUiUpdates: true
+  options:
+    path: /var/lib/grafana/dashboards
