@@ -11,17 +11,25 @@ may not use any other domain-specific abbreviations.
 
 # Git Flow
 
-TL;DR: This repository follows the Git rebase flow for the most part. Each feature branch must
-be reviewed and approved in a pull request. Once ready to merge, consider squashing the branch's
-commits when the separate commits don't add value, rebase it, force push with lease, and merge it
-via the GitHub UI.
+This repository follows the Git rebase flow for the most part.
 
-## Branches
+## Branches and pull requests
 
 1. Create a separate branch for each issue your are working on
 2. Do your magic
-3. Keep your branch up to date by rebasing it from its base branch
-4. Delete the branch after its been both approved and merged. GitHub does this automatically.
+3. Create a pull request and assign reviewers.
+  - Assign the registry team as the reviewer when one review from whoever member reviews first is
+    sufficient. The reviewer who arrives first must overwrite themselves as the reviewer to signal
+    ownership and avoid racing reviews.
+  - Assign multiple reviewers individually when you expect a review from everyone listed.
+4. Keep your branch up to date by rebasing it from its base branch
+5. Make sure that all the assigned reviewers approve the changes
+6. Consider squashing the branch's commits when the separate commits don't add value
+7. Merge it via the GitHub UI
+8. Delete the branch after its been merged. GitHub does this automatically.
+
+If you were asked to review a pull request by being member of a team that was assigned
+as a reviewer, always assign yourself and unassign the team before you start the review.
 
 ## Commits
 
