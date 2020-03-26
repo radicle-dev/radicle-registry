@@ -21,6 +21,8 @@ env_logger = "0.7"
 exit-future = "0.1.4"
 futures = "0.3.1"
 log = "0.4.8"
+num-bigint = "0.2.6"
+num-traits = "0.2.11"
 parking_lot = "0.9.0"
 rand = "0.7.3"
 serde = "1.0.104"
@@ -82,6 +84,10 @@ rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
+[dependencies.sp-blockchain]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+
 [dependencies.sp-consensus]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
@@ -91,5 +97,9 @@ git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 
 [dependencies.sp-runtime]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+
+[dependencies.sp-api]
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"

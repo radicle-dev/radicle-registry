@@ -23,6 +23,7 @@ std = [
     "serde",
     "sp-api/std",
     "sp-block-builder/std",
+    "sp-consensus-pow/std",
     "sp-core/std",
     "sp-io/std",
     "sp-offchain/std",
@@ -92,6 +93,11 @@ default_features = false
 git = "https://github.com/paritytech/substrate"
 rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
 default_features = false
+
+[dependencies.sp-consensus-pow]
+git = "https://github.com/paritytech/substrate"
+rev = "9fa8589d9b8cfe8716e9e4c48f9e3f238c1e502f"
+default-features = false
 
 [dependencies.sp-session]
 git = "https://github.com/paritytech/substrate"
