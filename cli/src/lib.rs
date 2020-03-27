@@ -18,6 +18,8 @@
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
+mod account_storage;
+
 mod command;
 use command::{account, org, other, project, user};
 
@@ -147,6 +149,7 @@ pub enum CommandError {
         project_name: ProjectName,
         org_id: OrgId,
     },
+    AccountStorageError(account_storage::Error),
 }
 
 impl core::fmt::Display for CommandError {
@@ -162,6 +165,9 @@ impl core::fmt::Display for CommandError {
                 project_name,
                 org_id,
             } => write!(f, "Cannot find project {}.{}", project_name, org_id),
+            CommandError::AccountStorageError(error) => {
+                write!(f, "Account storage error: {}", error)
+            }
         }
     }
 }
