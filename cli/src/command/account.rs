@@ -16,12 +16,15 @@
 //! Define the commands supported by the CLI related to Accounts.
 
 use super::*;
+use crate::account_storage;
 
 /// Account related commands
 #[derive(StructOpt, Debug, Clone)]
 pub enum Command {
     Address(ShowAddress),
     Balance(ShowBalance),
+    Generate(Generate),
+    List(List),
     Transfer(Transfer),
 }
 
@@ -31,16 +34,18 @@ impl CommandT for Command {
         match self {
             Command::Address(cmd) => cmd.run(ctx).await,
             Command::Balance(cmd) => cmd.run(ctx).await,
+            Command::Generate(cmd) => cmd.run(ctx).await,
+            Command::List(cmd) => cmd.run(ctx).await,
             Command::Transfer(cmd) => cmd.run(ctx).await,
         }
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
 /// Show the SS58 address for the key pair derived from `seed`.
 ///
 /// For more information on how the seed string is interpreted see
 /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>.
+#[derive(StructOpt, Debug, Clone)]
 pub struct ShowAddress {
     seed: String,
 }
@@ -55,8 +60,8 @@ impl CommandT for ShowAddress {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
 /// Show the balance of an account
+#[derive(StructOpt, Debug, Clone)]
 pub struct ShowBalance {
     #[structopt(
         value_name = "account",
@@ -75,8 +80,47 @@ impl CommandT for ShowBalance {
     }
 }
 
+/// Generate a local account and store it on disk.
+///
+/// Fail if there is already an account with the given `name`.
 #[derive(StructOpt, Debug, Clone)]
+pub struct Generate {
+    /// The name that uniquely identifies the account locally.
+    name: String,
+}
+
+#[async_trait::async_trait]
+impl CommandT for Generate {
+    async fn run(&self, _ctx: &CommandContext) -> Result<(), CommandError> {
+        let (_, seed) = ed25519::Pair::generate();
+        account_storage::add(self.name.clone(), account_storage::AccountData { seed })?;
+        println!("✓ Account generated successfully");
+        Ok(())
+    }
+}
+/// list all the local accounts
+#[derive(StructOpt, Debug, Clone)]
+pub struct List {}
+
+#[async_trait::async_trait]
+impl CommandT for List {
+    async fn run(&self, _ctx: &CommandContext) -> Result<(), CommandError> {
+        let accounts = account_storage::list()?;
+
+        println!("Accounts ({})", accounts.len());
+        for (name, data) in accounts {
+            println!("Account '{}'", name);
+            println!(
+                "\taddress: {}",
+                ed25519::Pair::from_seed(&data.seed).public().to_ss58check()
+            );
+        }
+        Ok(())
+    }
+}
+
 /// Transfer funds to recipient
+#[derive(StructOpt, Debug, Clone)]
 pub struct Transfer {
     #[structopt(parse(try_from_str = parse_account_id))]
     /// Recipient Account in SS58 address format.
