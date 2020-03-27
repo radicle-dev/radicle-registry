@@ -44,7 +44,7 @@ pub struct Arguments {
 
     /// Bind the RPC HTTP and WebSocket APIs to `0.0.0.0` instead of the local interface.
     #[structopt(long)]
-    unsafe_rpc_external: bool,
+    pub unsafe_rpc_external: bool,
 
     /// List of nodes to connect to on start'
     #[structopt(long, short, value_name = "ADDR")]
