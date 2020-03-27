@@ -28,8 +28,8 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
     let chain_spec = args.chain.spec();
     let spec_factory = |_: &str| Ok(Box::new(chain_spec) as Box<_>);
 
-    let block_author = args.block_author();
-    let new_full_service = move |config| service::new_full(config, block_author);
+    let opt_block_author = args.mine;
+    let new_full_service = move |config| service::new_full(config, opt_block_author);
 
     match args.subcommand {
         Some(subcommand) => {

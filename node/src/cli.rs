@@ -80,12 +80,11 @@ pub struct Arguments {
     #[structopt(long, value_name = "FILE")]
     node_key_file: Option<std::path::PathBuf>,
 
-    /// Account to credit block rewards and transaction fees for mined blocks.
+    /// Enable mining and credit rewards to the given account.
     ///
-    /// If not provided the zero account is used as the block author.
-    /// Account address must be given in SS58 format.
+    /// The account address must be given in SS58 format.
     #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
-    block_author: Option<AccountId>,
+    pub mine: Option<AccountId>,
 
     /// Bind the prometheus metrics endpoint to 0.0.0.0
     #[structopt(long)]
@@ -142,11 +141,6 @@ impl Arguments {
             prometheus_external,
             ..run_cmd
         }
-    }
-
-    pub fn block_author(&self) -> AccountId {
-        let zero_account = AccountId::from_raw([0; 32]);
-        self.block_author.unwrap_or(zero_account)
     }
 }
 

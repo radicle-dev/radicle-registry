@@ -61,8 +61,8 @@ impl Emulator {
         let mut test_ext = sp_io::TestExternalities::new(genesis_config.build_storage().unwrap());
         let genesis_hash = init_runtime(&mut test_ext);
 
-        let registry_inherent_data = registry::InherentData {
-            block_author: AccountId::from_raw([0u8; 32]),
+        let registry_inherent_data = registry::AuthoringInherentData {
+            block_author: BLOCK_AUTHOR,
         };
 
         let inherent_data_providers = sp_inherents::InherentDataProviders::new();
