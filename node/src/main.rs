@@ -28,14 +28,12 @@ mod service;
 fn main() {
     let version = sc_cli::VersionInfo {
         name: "Radicle Registry Node",
-        commit: "<none>",
-        // commit: env!("VERGEN_SHA_SHORT"),
-        // version: env!("CARGO_PKG_VERSION"),
-        version: "unstable",
+        commit: env!("VERGEN_SHA_SHORT"),
+        version: "ff.0",
         executable_name: "radicle-registry",
         author: "Monadic GmbH",
         description: "Radicle Registry Node",
-        support_url: "support.anonymous.an",
+        support_url: "http://github.com/radicle-dev/radicle-registry/issues",
         copyright_start_year: 2019,
     };
 
