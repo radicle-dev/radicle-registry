@@ -38,9 +38,14 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
             subcommand.run(config, service::new_for_command)
         }
         None => {
+            let unsafe_rpc_external = args.unsafe_rpc_external;
             let run_cmd = args.run_cmd();
             run_cmd.init(&version)?;
             run_cmd.update_config(&mut config, spec_factory, &version)?;
+            if unsafe_rpc_external {
+                // Allow all hosts to connect
+                config.rpc_cors = None;
+            }
             run_cmd.run(config, service::new_light, new_full_service, &version)
         }
     }
