@@ -15,11 +15,16 @@ radicle-registry-client = { version = "0.0.0", path = "../client" }
 async-std = { version = "1.4", features = ["attributes"] }
 async-trait = "0.1"
 derive_more = "0.99"
+directories = "2.0.2"
 futures = "0.3"
 hex = "0.4.0"
 pretty_env_logger = "0.3.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 structopt = "0.3"
+thiserror = "1.0"
 url = "1.7"
+
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
