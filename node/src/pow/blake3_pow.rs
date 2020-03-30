@@ -94,8 +94,8 @@ where
 {
     type Difficulty = Difficulty;
 
-    fn difficulty(&self, parent: &BlockId) -> Result<Self::Difficulty> {
-        let mut prev_header = self.header(*parent)?;
+    fn difficulty(&self, parent: Hash) -> Result<Self::Difficulty> {
+        let mut prev_header = self.header(parent)?;
         if (*prev_header.number() as u64) <= ADJUST_DIFFICULTY_WINDOW_SIZE {
             return Ok(Difficulty::from(INITIAL_DIFFICULTY));
         }
@@ -103,11 +103,10 @@ where
         for _ in 0..ADJUST_DIFFICULTY_WINDOW_SIZE {
             let difficulty = self.block_difficulty(prev_header.hash())?;
             difficulty_mean.push(difficulty);
-            prev_header = self.header(BlockId::hash(*prev_header.parent_hash()))?;
+            prev_header = self.header(*prev_header.parent_hash())?;
         }
         let avg_difficulty = difficulty_mean.calculate();
-        let time_observed =
-            self.window_mining_time_ms(BlockId::hash(prev_header.hash()), *parent)?;
+        let time_observed = self.window_mining_time_ms(prev_header.hash(), parent)?;
         Ok(next_difficulty(avg_difficulty, time_observed))
     }
 
@@ -146,14 +145,14 @@ where
     C: BlockchainHeaderBackend<Block>,
     C::Api: TimestampApi<Block, u64> + sp_api::ApiErrorExt<Error = sp_blockchain::Error>,
 {
-    fn header(&self, block_id: BlockId) -> Result<Header> {
+    fn header(&self, block_hash: Hash) -> Result<Header> {
         self.client
-            .header(block_id)
+            .header(BlockId::hash(block_hash))
             .and_then(|num_opt| {
                 num_opt.ok_or_else(|| {
                     sp_blockchain::Error::UnknownBlock(format!(
-                        "Can't find a block for the ID {}",
-                        block_id
+                        "Can't find a block for the hash {}",
+                        block_hash
                     ))
                 })
             })
@@ -171,18 +170,18 @@ where
     /// the difference between timestamps of the block and it's parent.
     fn window_mining_time_ms(
         &self,
-        first_block_parent_hash: BlockId,
-        last_block_id: BlockId,
+        first_block_parent_hash: Hash,
+        last_block_hash: Hash,
     ) -> Result<u64> {
         let start = self.block_timestamp_ms(first_block_parent_hash)?;
-        let end = self.block_timestamp_ms(last_block_id)?;
+        let end = self.block_timestamp_ms(last_block_hash)?;
         Ok(end - start)
     }
 
-    fn block_timestamp_ms(&self, block_id: BlockId) -> Result<u64> {
+    fn block_timestamp_ms(&self, block_hash: Hash) -> Result<u64> {
         self.client
             .runtime_api()
-            .timestamp(&block_id)
+            .timestamp(&BlockId::hash(block_hash))
             .map_err(Error::Client)
     }
 }

@@ -18,6 +18,7 @@ use radicle_registry_runtime::Hash;
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sp_consensus_pow::Seal;
 use sp_runtime::generic::BlockId;
+use sp_runtime::traits::Block as BlockT;
 
 /// This is a dummy implementation of a PoW algorithm that doesn't do anything and
 /// **provides no security**. Do not use it outside of a tightly controlled devnet!
@@ -42,7 +43,10 @@ const MINE_SUCCESS_PROBABILITY: f32 = 0.005;
 impl PowAlgorithm<Block> for DummyPow {
     type Difficulty = u128;
 
-    fn difficulty(&self, _parent: &BlockId<Block>) -> Result<Self::Difficulty, Error<Block>> {
+    fn difficulty(
+        &self,
+        _parent: <Block as BlockT>::Hash,
+    ) -> Result<Self::Difficulty, Error<Block>> {
         Ok(1)
     }
 

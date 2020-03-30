@@ -27,47 +27,47 @@ url = "1.7"
 
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-inherents]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-state-machine]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-transaction-pool]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dependencies.sp-timestamp]
 git = "https://github.com/paritytech/substrate"
-rev = "f7bd10a548201cb68491f72be73115279d97f160"
+rev = "b6c96a29d8c0779996145b2b57150a95508997e2"
 
 [dev-dependencies]
 async-std = { version = "1.4", features = ["attributes"] }
