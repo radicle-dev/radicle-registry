@@ -3,7 +3,7 @@
   command: "ci/run"
   timeout_in_minutes: 60
   env:
-    DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:does_not_exist
+    DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:9956955f61e2c91fb94a2ed4eee26bf17aa44b50
     DOCKER_FILE: ci/base-image/Dockerfile
     STEP_DOCKER_FILE: ci/node-image/Dockerfile
     STEP_DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/node
