@@ -54,6 +54,13 @@ as a reviewer, always assign yourself and unassign the team before you start the
 - Leave additional comments explaining 'why' rather than 'how', strive to have the code clean
   and elegant to make this aim viable.
 
+# Code
+
+## Imports
+
+- Only use import aliases to disambiguate, be it types, modules, or crates (in the case of
+  having two coexisting versions).
+
 # Changelog
 
 We use `./CHANGELOG.md` to record all changes visible to users of the client.
