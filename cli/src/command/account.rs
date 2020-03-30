@@ -21,7 +21,6 @@ use crate::account_storage as storage;
 /// Account related commands
 #[derive(StructOpt, Debug, Clone)]
 pub enum Command {
-    Address(ShowAddress),
     Balance(ShowBalance),
     Generate(Generate),
     List(List),
@@ -32,31 +31,11 @@ pub enum Command {
 impl CommandT for Command {
     async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
         match self {
-            Command::Address(cmd) => cmd.run(ctx).await,
             Command::Balance(cmd) => cmd.run(ctx).await,
             Command::Generate(cmd) => cmd.run(ctx).await,
             Command::List(cmd) => cmd.run(ctx).await,
             Command::Transfer(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Show the SS58 address for the key pair derived from `seed`.
-///
-/// For more information on how the seed string is interpreted see
-/// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>.
-#[derive(StructOpt, Debug, Clone)]
-pub struct ShowAddress {
-    seed: String,
-}
-
-#[async_trait::async_trait]
-impl CommandT for ShowAddress {
-    async fn run(&self, _ctx: &CommandContext) -> Result<(), CommandError> {
-        let key_pair =
-            ed25519::Pair::from_string(format!("//{}", self.seed).as_str(), None).unwrap();
-        println!("SS58 address: {}", key_pair.public().to_ss58check());
-        Ok(())
     }
 }
 

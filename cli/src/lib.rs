@@ -47,16 +47,13 @@ impl CommandLine {
 /// The accepted command-line options
 #[derive(StructOpt, Clone)]
 pub struct CommandLineOptions {
-    /// Value to derive the key pair for signing transactions.
-    /// See
-    /// <https://substrate.dev/rustdocs/v1.0/substrate_primitives/crypto/trait.Pair.html#method.from_string>
-    /// for information about the format of the string
+    /// The local account name to be used to sign a transaction.
+    /// TODO(nuno)
     #[structopt(
         long,
-        default_value = "//Alice",
         env = "RAD_TX_AUTHOR",
-        value_name = "key_pair",
-        parse(try_from_str = Self::parse_key_pair)
+        value_name = "account_name",
+        parse(try_from_str = Self::lookup_account)
     )]
     pub tx_author: ed25519::Pair,
 
@@ -76,8 +73,12 @@ pub struct CommandLineOptions {
 }
 
 impl CommandLineOptions {
-    fn parse_key_pair(s: &str) -> Result<ed25519::Pair, String> {
-        ed25519::Pair::from_string(s, None).map_err(|err| format!("{:?}", err))
+    fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
+        let accounts = account_storage::list().map_err(|e| format!("{}", e))?;
+        match accounts.get(&name.to_string()) {
+            Some(account) => Ok(ed25519::Pair::from_seed(&account.seed)),
+            None => Err(format!("Could not find local account named '{}'", name)),
+        }
     }
 }
 
