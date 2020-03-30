@@ -34,7 +34,7 @@ use crate::{AccountId, Hash, Hashing};
 
 mod inherents;
 
-pub use inherents::InherentData;
+pub use inherents::AuthoringInherentData;
 
 pub trait Trait
 where

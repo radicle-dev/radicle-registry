@@ -10,10 +10,14 @@ if [[ "$NODE_NAME" = "alice" ]]; then
   )
 fi
 
+# Adress for the seed string //Mine
+block_author=5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq
+
 exec /usr/local/bin/radicle-registry-node \
   --data-path /data \
   --name "$NODE_NAME" \
   --chain local-devnet \
+  --mine "$block_author" \
   --unsafe-rpc-external \
   --prometheus-external \
   --bootnodes /dns4/alice/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR \

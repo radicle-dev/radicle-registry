@@ -39,6 +39,8 @@ Upcoming
 * The error type in `get_dispatch_result` has changed from
   `Option<&'static str>` to `sp_runtime::DispatchError`.
 * The `Client` and `ClientT` methods are now `async`.
+* The `--block-author` option was replaced with the `--mine` option. A node only
+  mines if the option is given.
 
 ### Addition
 * The client emulator now authors blocks when a transaction is submitted.

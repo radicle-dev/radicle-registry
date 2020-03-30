@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Defines [InherentData] for the registry module and implement [ProvideInherent].
+//! Defines [AuthoringInherentData] for the registry module and implement [ProvideInherent].
 
 use frame_support::traits::GetCallName as _;
 use parity_scale_codec::{Decode, Encode};
@@ -27,14 +27,14 @@ use crate::Hash;
 
 const INHERENT_IDENTIFIER: InherentIdentifier = *b"registry";
 
-/// Structured inherent data for the registry
+/// Structured inherent data for authoring blocks
 #[derive(Encode, Decode)]
-pub struct InherentData {
+pub struct AuthoringInherentData {
     pub block_author: AccountId,
 }
 
 #[cfg(feature = "std")]
-impl sp_inherents::ProvideInherentData for InherentData {
+impl sp_inherents::ProvideInherentData for AuthoringInherentData {
     fn inherent_identifier(&self) -> &'static InherentIdentifier {
         &INHERENT_IDENTIFIER
     }
@@ -96,9 +96,9 @@ where
 
     fn create_inherent(raw_data: &sp_inherents::InherentData) -> Option<Self::Call> {
         let data = raw_data
-            .get_data::<InherentData>(&INHERENT_IDENTIFIER)
-            .expect("Failed to decode registry InherentData")
-            .expect("InherentData for registry is missing");
+            .get_data::<AuthoringInherentData>(&INHERENT_IDENTIFIER)
+            .expect("Failed to decode registry AuhoringInherentData")
+            .expect("AuhoringInherentData for registry is missing");
 
         Some(Call::set_block_author(data.block_author))
     }

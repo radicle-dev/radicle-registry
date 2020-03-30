@@ -26,7 +26,9 @@ use sc_service::{AbstractService, Configuration, Error as ServiceError, ServiceB
 use sp_inherents::InherentDataProviders;
 
 use crate::pow::config::Config as PowAlgConfig;
-use radicle_registry_runtime::{opaque::Block, registry::InherentData, AccountId, RuntimeApi};
+use radicle_registry_runtime::{
+    opaque::Block, registry::AuthoringInherentData, AccountId, RuntimeApi,
+};
 
 // Our native executor instance.
 native_executor_instance!(
@@ -125,37 +127,53 @@ macro_rules! node_import_queue_for_pow_alg {
     }};
 }
 
-/// Builds a new service for a full client and starts the PoW miner.
+/// Builds a new service for a full client.
+///
+/// Starts a miner if `opt_block_author` was provided.
 pub fn new_full(
     config: Configuration,
-    block_author: AccountId,
+    opt_block_author: Option<AccountId>,
 ) -> Result<impl AbstractService, ServiceError> {
     let pow_alg = PowAlgConfig::try_from(&config)?;
-    let inherent_data_providers = new_full_inherent_data_providers(block_author);
+    let inherent_data_providers = InherentDataProviders::new();
     let (builder, import_setup) = new_full_start!(config, inherent_data_providers.clone());
     let block_import = import_setup.expect("No import setup set for miner");
 
     let service = builder.build()?;
 
-    let proposer =
-        sc_basic_authorship::ProposerFactory::new(service.client(), service.transaction_pool());
+    if let Some(block_author) = opt_block_author {
+        let authoring_inherent_data = AuthoringInherentData { block_author };
 
-    match pow_alg {
-        PowAlgConfig::Dummy => start_mine!(
-            block_import,
-            service,
-            proposer,
-            inherent_data_providers,
-            crate::pow::dummy_pow::DummyPow
-        ),
-        PowAlgConfig::Blake3 => start_mine!(
-            block_import,
-            service,
-            proposer,
-            inherent_data_providers,
-            crate::pow::blake3_pow::Blake3Pow::new(service.client())
-        ),
+        // Can only fail if a provider with the same name is already registered.
+        inherent_data_providers
+            .register_provider(authoring_inherent_data)
+            .unwrap();
+
+        let proposer =
+            sc_basic_authorship::ProposerFactory::new(service.client(), service.transaction_pool());
+
+        log::info!("Starting block miner");
+
+        match pow_alg {
+            PowAlgConfig::Dummy => start_mine!(
+                block_import,
+                service,
+                proposer,
+                inherent_data_providers,
+                crate::pow::dummy_pow::DummyPow
+            ),
+            PowAlgConfig::Blake3 => start_mine!(
+                block_import,
+                service,
+                proposer,
+                inherent_data_providers,
+                crate::pow::blake3_pow::Blake3Pow::new(service.client())
+            ),
+        }
+    } else {
+        log::info!("Mining is disabled");
     }
+
     Ok(service)
 }
 
@@ -195,14 +213,4 @@ pub fn new_for_command(
 ) -> Result<impl sc_service::ServiceBuilderCommand<Block = Block>, ServiceError> {
     let inherent_data_providers = InherentDataProviders::new();
     Ok(new_full_start!(config, inherent_data_providers).0)
-}
-
-/// Return [InherentDataProviders] that provides [InherentData] for registry blocks required by
-/// full nodes.
-fn new_full_inherent_data_providers(block_author: AccountId) -> InherentDataProviders {
-    let providers = InherentDataProviders::new();
-    let data = InherentData { block_author };
-    // Can only fail if a provider with the same name is already registered.
-    providers.register_provider(data).unwrap();
-    providers
 }
