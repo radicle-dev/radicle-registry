@@ -21,7 +21,7 @@ use sp_runtime::DispatchError;
 
 pub use radicle_registry_core::message::*;
 
-/// Indicates that parsing the events into the approriate message result failed.
+/// Indicates that parsing the events into the appropriate message result failed.
 type EventParseError = String;
 
 /// Trait implemented for every runtime message
