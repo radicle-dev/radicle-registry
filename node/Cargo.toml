@@ -103,3 +103,6 @@ rev = "f7bd10a548201cb68491f72be73115279d97f160"
 [dependencies.sp-api]
 git = "https://github.com/paritytech/substrate"
 rev = "f7bd10a548201cb68491f72be73115279d97f160"
+
+[build-dependencies]
+vergen = "3"
