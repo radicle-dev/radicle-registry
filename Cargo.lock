@@ -3524,6 +3524,7 @@ dependencies = [
  "radicle-registry-client",
  "sp-core",
  "structopt",
+ "thiserror",
  "url 1.7.2",
 ]
 
