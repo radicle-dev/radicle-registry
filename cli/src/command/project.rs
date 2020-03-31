@@ -18,7 +18,7 @@
 use super::*;
 
 /// Project related commands
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 pub enum Command {
     List(List),
     Register(Register),
@@ -27,29 +27,34 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self) -> Result<(), CommandError> {
         match self {
-            Command::List(cmd) => cmd.run(ctx).await,
-            Command::Register(cmd) => cmd.run(ctx).await,
-            Command::Show(cmd) => cmd.run(ctx).await,
+            Command::List(cmd) => cmd.run().await,
+            Command::Register(cmd) => cmd.run().await,
+            Command::Show(cmd) => cmd.run().await,
         }
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Show information for a registered project.
 pub struct Show {
     /// The name of the project
     project_name: ProjectName,
+
     /// The org in which the project is registered.
     org_id: OrgId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let project = ctx
-            .client
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+
+        let project = client
             .get_project(self.project_name.clone(), self.org_id.clone())
             .await?
             .ok_or(CommandError::ProjectNotFound {
@@ -62,14 +67,18 @@ impl CommandT for Show {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// List all projects in the registry
-pub struct List {}
+pub struct List {
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let project_ids = ctx.client.list_projects().await?;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let project_ids = client.list_projects().await?;
         println!("PROJECTS ({})", project_ids.len());
         for (name, org) in project_ids {
             println!("{}.{}", name, org)
@@ -78,7 +87,7 @@ impl CommandT for List {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Register a project with the given name under the given org.
 pub struct Register {
     /// Name of the project to register.
@@ -87,21 +96,26 @@ pub struct Register {
     org_id: OrgId,
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
-
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
         let create_checkpoint_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::CreateCheckpoint {
                     project_hash: self.project_hash.unwrap_or_default(),
                     previous_checkpoint_id: None,
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("creating checkpoint...");
@@ -112,14 +126,14 @@ impl CommandT for Register {
 
         let register_project_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
                     org_id: self.org_id.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("registering project...");

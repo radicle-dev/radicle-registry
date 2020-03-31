@@ -18,7 +18,7 @@
 use super::*;
 
 /// Org related commands
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 pub enum Command {
     List(List),
     Show(Show),
@@ -29,25 +29,29 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self) -> Result<(), CommandError> {
         match self {
-            Command::Show(cmd) => cmd.run(ctx).await,
-            Command::List(cmd) => cmd.run(ctx).await,
-            Command::Register(cmd) => cmd.run(ctx).await,
-            Command::Unregister(cmd) => cmd.run(ctx).await,
-            Command::Transfer(cmd) => cmd.run(ctx).await,
+            Command::Show(cmd) => cmd.run().await,
+            Command::List(cmd) => cmd.run().await,
+            Command::Register(cmd) => cmd.run().await,
+            Command::Unregister(cmd) => cmd.run().await,
+            Command::Transfer(cmd) => cmd.run().await,
         }
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// List all orgs in the registry
-pub struct List {}
+pub struct List {
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let org_ids = ctx.client.list_orgs().await?;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let org_ids = client.list_orgs().await?;
         println!("ORGS ({})", org_ids.len());
         for org_id in org_ids {
             println!("{}", org_id)
@@ -56,23 +60,26 @@ impl CommandT for List {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Show information for a registered org.
 pub struct Show {
     /// The id of the org
     org_id: OrgId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let org =
-            ctx.client
-                .get_org(self.org_id.clone())
-                .await?
-                .ok_or(CommandError::OrgNotFound {
-                    org_id: self.org_id.clone(),
-                })?;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let org = client
+            .get_org(self.org_id.clone())
+            .await?
+            .ok_or(CommandError::OrgNotFound {
+                org_id: self.org_id.clone(),
+            })?;
 
         println!("id: {}", org.id);
         println!("account_id: {}", org.account_id);
@@ -82,25 +89,31 @@ impl CommandT for Show {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Register an org.
 pub struct Register {
     /// Id of the org to register.
     org_id: OrgId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
 
         let register_org_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::RegisterOrg {
                     org_id: self.org_id.clone(),
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("Registering org...");
@@ -112,25 +125,31 @@ impl CommandT for Register {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Unregister an org.
 pub struct Unregister {
     /// Id of the org to unregister.
     org_id: OrgId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
 
         let register_org_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::UnregisterOrg {
                     org_id: self.org_id.clone(),
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("Unregistering org...");
@@ -142,7 +161,7 @@ impl CommandT for Unregister {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Transfer funds from an org to a recipient.
 /// The author needs to be a member of the org.
 pub struct Transfer {
@@ -156,21 +175,27 @@ pub struct Transfer {
 
     // The balance to transfer from the org to the recipient.
     funds: Balance,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
         let transfer_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.funds,
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("transferring funds...");
