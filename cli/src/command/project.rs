@@ -27,7 +27,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::List(cmd) => cmd.run().await,
             Command::Register(cmd) => cmd.run().await,
@@ -51,7 +51,7 @@ pub struct Show {
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
         let project = client
@@ -76,7 +76,7 @@ pub struct List {
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let project_ids = client.list_projects().await?;
         println!("PROJECTS ({})", project_ids.len());
@@ -106,7 +106,7 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let create_checkpoint_fut = client
             .sign_and_submit_message(

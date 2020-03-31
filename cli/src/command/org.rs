@@ -29,7 +29,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::Show(cmd) => cmd.run().await,
             Command::List(cmd) => cmd.run().await,
@@ -49,7 +49,7 @@ pub struct List {
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let org_ids = client.list_orgs().await?;
         println!("ORGS ({})", org_ids.len());
@@ -72,7 +72,7 @@ pub struct Show {
 
 #[async_trait::async_trait]
 impl CommandT for Show {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let org = client
             .get_org(self.org_id.clone())
@@ -104,7 +104,7 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
         let register_org_fut = client
@@ -140,7 +140,7 @@ pub struct Unregister {
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
         let register_org_fut = client
@@ -185,7 +185,7 @@ pub struct Transfer {
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let transfer_fut = client
             .sign_and_submit_message(

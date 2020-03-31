@@ -100,7 +100,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self.clone() {
             Command::Account(cmd) => cmd.run().await,
             Command::Org(cmd) => cmd.run().await,
@@ -114,7 +114,7 @@ impl CommandT for Command {
 /// The trait that every command must implement.
 #[async_trait::async_trait]
 pub trait CommandT {
-    async fn run(&self) -> Result<(), CommandError>;
+    async fn run(self) -> Result<(), CommandError>;
 }
 
 /// Error returned by [CommandT::run].

@@ -26,7 +26,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self {
             user::Command::Register(cmd) => cmd.run().await,
             user::Command::Unregister(cmd) => cmd.run().await,
@@ -50,7 +50,7 @@ pub struct Register {
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let register_user_fut = client
             .sign_and_submit_message(
@@ -85,7 +85,7 @@ pub struct Unregister {
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let unregister_user = client
             .sign_and_submit_message(
