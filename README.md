@@ -118,11 +118,10 @@ use radicle-registry-client::{ed25519, CryptoPair};
 let alice = ed25519::Pair::from_string("//Alice", None);
 ```
 
-For cases where you are only interested in obtaining the [`SS58`][ss58-docs] address
-for a given seed (string), you can run:
+To obtain the [`SS58`][ss58-docs] address for your local accounts, you can run:
 
 ``` bash
-cargo run -p radicle-registry-cli -- show-address <seed>
+cargo run -p radicle-registry-cli -- account list
 ```
 
 The `radicle-registry-client::ed25519` module and the crypto traits are
