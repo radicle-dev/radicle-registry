@@ -74,9 +74,9 @@ impl CommandT for Show {
                     org_id: self.org_id.clone(),
                 })?;
 
-        println!("id: {}", org.id.clone());
-        println!("account_id: {}", org.account_id.clone());
-        println!("members: {:?}", org.members.clone());
+        println!("id: {}", org.id);
+        println!("account_id: {}", org.account_id);
+        println!("members: {:?}", org.members);
         println!("projects: {:?}", org.projects);
         Ok(())
     }
