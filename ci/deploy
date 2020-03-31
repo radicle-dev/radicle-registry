@@ -23,5 +23,7 @@ echo "6e0aaaffe5507a44ec6b1b8a0fb585285813b78cc045f8804e70a6aac9d1cb4c *kubectl"
 chmod +x kubectl
 source .secrets
 
-kubectl set image statefulsets.apps/devnet-nodes radicle-registry-node="$image"
-kubectl rollout status statefulsets devnet-nodes --timeout 2m
+kubectl set image statefulset.apps/validator radicle-registry-node="$image"
+kubectl set image deployment/miner radicle-registry-node="$image"
+kubectl rollout status statefulset.apps/validator --timeout 2m
+kubectl rollout status deployment/miner --timeout 2m
