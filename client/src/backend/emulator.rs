@@ -133,6 +133,7 @@ impl backend::Backend for Emulator {
             backend::TransactionApplied {
                 tx_hash,
                 block: header.hash(),
+                block_number: header.number,
                 events,
             },
         ))))

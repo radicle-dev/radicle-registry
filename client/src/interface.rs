@@ -21,7 +21,7 @@ use futures::future::BoxFuture;
 
 pub use radicle_registry_core::*;
 
-pub use radicle_registry_runtime::Hash;
+pub use radicle_registry_runtime::{BlockNumber, Hash};
 
 pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
@@ -47,6 +47,8 @@ pub struct TransactionApplied<Message_: Message> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
+    /// The number of the block the transaction is included in.
+    pub block_number: BlockNumber,
     /// Events emitted by this transaction
     pub events: Vec<Event>,
     /// The result of the runtime message.

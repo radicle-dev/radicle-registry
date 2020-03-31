@@ -16,7 +16,7 @@
 //! Define trait for client backends and provide emulator and remote node implementation
 use futures::future::BoxFuture;
 
-pub use radicle_registry_runtime::{Hash, UncheckedExtrinsic};
+pub use radicle_registry_runtime::{BlockNumber, Hash, UncheckedExtrinsic};
 
 use crate::interface::*;
 
@@ -35,6 +35,8 @@ pub struct TransactionApplied {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
+    /// The number of the block the transaction is included in.
+    pub block_number: BlockNumber,
     /// Events emitted by this transaction
     pub events: Vec<Event>,
 }

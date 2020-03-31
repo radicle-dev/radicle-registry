@@ -53,3 +53,4 @@ Upcoming
   * `ClientT::genesis_hash()`
   * `Transaction`
   * `Transaction::new_signed()`
+* Add `block_number` to `TransactionApplied` returned from client API

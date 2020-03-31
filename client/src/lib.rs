@@ -160,15 +160,12 @@ impl ClientT for Client {
         let tx_applied_future = backend.submit(transaction.extrinsic).await?;
         Ok(Box::pin(async move {
             let tx_applied = tx_applied_future.await?;
-            let events = tx_applied.events;
-            let tx_hash = tx_applied.tx_hash;
-            let block = tx_applied.block;
-            let result = Message_::result_from_events(events.clone())?;
             Ok(TransactionApplied {
-                tx_hash,
-                block,
-                events,
-                result,
+                result: Message_::result_from_events(tx_applied.events.clone())?,
+                tx_hash: tx_applied.tx_hash,
+                block: tx_applied.block,
+                block_number: tx_applied.block_number,
+                events: tx_applied.events,
             })
         }))
     }
@@ -193,20 +190,7 @@ impl ClientT for Client {
                 fee,
             },
         );
-        let tx_applied_fut = client.submit_transaction(transaction).await?;
-        Ok(Box::pin(async move {
-            let tx_applied = tx_applied_fut.await?;
-            let events = tx_applied.events;
-            let tx_hash = tx_applied.tx_hash;
-            let block = tx_applied.block;
-            let result = Message_::result_from_events(events.clone())?;
-            Ok(TransactionApplied {
-                tx_hash,
-                block,
-                events,
-                result,
-            })
-        }))
+        client.submit_transaction(transaction).await
     }
 
     fn genesis_hash(&self) -> Hash {

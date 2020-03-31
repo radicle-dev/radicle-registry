@@ -151,6 +151,16 @@ impl RemoteNode {
         extract_transaction_events(tx_hash, block, event_records)
             .ok_or_else(|| Error::from("Failed to extract transaction events"))
     }
+
+    /// Fetch block header for given block hash
+    async fn block_header(&self, block_hash: BlockHash) -> Result<Header, Error> {
+        self.rpc
+            .chain
+            .header(Some(block_hash))
+            .compat()
+            .await?
+            .ok_or_else(|| format!("Header not found for block hash {}", block_hash).into())
+    }
 }
 
 #[async_trait::async_trait]
@@ -164,11 +174,13 @@ impl backend::Backend for RemoteNode {
         let this = self.clone();
 
         Ok(Box::pin(async move {
-            let block_hash = block_hash_future.await?;
-            let events = this.get_transaction_events(tx_hash, block_hash).await?;
+            let block = block_hash_future.await?;
+            let block_number = this.block_header(block).await?.number;
+            let events = this.get_transaction_events(tx_hash, block).await?;
             Ok(backend::TransactionApplied {
                 tx_hash,
-                block: block_hash,
+                block,
+                block_number,
                 events,
             })
         }))
