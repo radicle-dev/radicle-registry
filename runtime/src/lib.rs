@@ -69,23 +69,6 @@ pub mod fees;
 
 pub use pallet_balances as balances;
 
-/// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
-/// the specifics of the runtime. They can then be made to be agnostic over specific formats
-/// of data like extrinsics, allowing for them to continue syncing the network through upgrades
-/// to even the core datastructures.
-pub mod opaque {
-    use super::*;
-
-    pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
-
-    /// Opaque block header type.
-    pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-    /// Opaque block type.
-    pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-    /// Opaque block identifier type.
-    pub type BlockId = generic::BlockId<Block>;
-}
-
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
@@ -129,7 +112,7 @@ impl frame_system::Trait for Runtime {
     /// The hashing algorithm used.
     type Hashing = Hashing;
     /// The header type.
-    type Header = generic::Header<BlockNumber, BlakeTwo256>;
+    type Header = Header;
     /// The ubiquitous event type.
     type Event = Event;
     /// The ubiquitous origin type.
@@ -201,7 +184,7 @@ pub use frame_system as system;
 construct_runtime!(
         pub enum Runtime where
                 Block = Block,
-                NodeBlock = opaque::Block,
+                NodeBlock = Block,
                 UncheckedExtrinsic = UncheckedExtrinsic
         {
                 System: system::{Module, Call, Storage, Config, Event<T>},
@@ -217,10 +200,6 @@ construct_runtime!(
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 /// Block type as expected by this runtime.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-/// A Block signed with a Justification
-pub type SignedBlock = generic::SignedBlock<Block>;
-/// BlockId type as expected by this runtime.
-pub type BlockId = generic::BlockId<Block>;
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
     frame_system::CheckVersion<Runtime>,

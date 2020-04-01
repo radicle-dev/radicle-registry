@@ -3599,6 +3599,7 @@ dependencies = [
  "radicle-registry-test-utils",
  "rand 0.7.3",
  "sc-rpc-api",
+ "serde",
  "serial_test",
  "sp-core",
  "sp-inherents",
