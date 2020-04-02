@@ -140,6 +140,6 @@ pub enum CommandError {
         org_id: OrgId,
     },
 
-    #[error("Account storage error: {0}")]
+    #[error("{0}")]
     AccountStorageError(account_storage::Error),
 }
