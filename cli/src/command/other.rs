@@ -26,7 +26,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::GenesisHash(cmd) => cmd.run().await,
         }
@@ -42,7 +42,7 @@ pub struct ShowGenesisHash {
 
 #[async_trait::async_trait]
 impl CommandT for ShowGenesisHash {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let genesis_hash = client.genesis_hash();
         println!("Genesis block hash: 0x{}", hex::encode(genesis_hash));

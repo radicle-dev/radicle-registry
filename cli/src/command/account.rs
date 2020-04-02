@@ -29,7 +29,7 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::Balance(cmd) => cmd.run().await,
             Command::Generate(cmd) => cmd.run().await,
@@ -55,7 +55,7 @@ pub struct ShowBalance {
 
 #[async_trait::async_trait]
 impl CommandT for ShowBalance {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let balance = client.free_balance(&self.account_id).await?;
         println!("{} RAD", balance);
@@ -74,9 +74,9 @@ pub struct Generate {
 
 #[async_trait::async_trait]
 impl CommandT for Generate {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let (_, seed) = ed25519::Pair::generate();
-        account_storage::add(self.name.clone(), account_storage::AccountData { seed })?;
+        account_storage::add(self.name, account_storage::AccountData { seed })?;
         println!("✓ Account generated successfully");
         Ok(())
     }
@@ -87,7 +87,7 @@ pub struct List {}
 
 #[async_trait::async_trait]
 impl CommandT for List {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let accounts = account_storage::list()?;
 
         println!("Accounts ({})", accounts.len());
@@ -121,7 +121,7 @@ pub struct Transfer {
 
 #[async_trait::async_trait]
 impl CommandT for Transfer {
-    async fn run(&self) -> Result<(), CommandError> {
+    async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
         let transfer_fut = client
