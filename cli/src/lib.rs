@@ -23,8 +23,7 @@ pub mod account_storage;
 mod command;
 use command::{account, org, other, project, user};
 
-/// The type that captures the command line,
-/// composed by a [Command] and [CommandLineOptions].
+/// The type that captures the command line.
 #[derive(StructOpt, Clone)]
 #[structopt(max_term_width = 80)]
 pub struct CommandLine {
