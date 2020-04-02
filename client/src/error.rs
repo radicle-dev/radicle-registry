@@ -13,20 +13,37 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use failure::{Compat, Fail};
 use jsonrpc_core_client::RpcError;
 use parity_scale_codec::Error as CodecError;
 
-/// Error that may be returned by any of the [crate::ClientT] methods.
-#[derive(Debug, derive_more::From, derive_more::Display, derive_more::TryInto)]
+/// Error that may be returned by any of the [crate::ClientT] methods
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Decoding data received from failed.
-    Codec(CodecError),
-    /// Error from the underlying RPC connection.
-    Rpc(RpcError),
+    /// Decoding the received data failed
+    #[error("Decoding the received data failed")]
+    Codec(#[from] CodecError),
+    /// Error from the underlying RPC connection
+    #[error("Error from the underlying RPC connection")]
+    Rpc(#[source] Compat<RpcError>),
     /// Invalid transaction
-    InvalidTransaction(),
-    /// Other error.
+    #[error("Invalid transaction")]
+    InvalidTransaction,
+    /// Other error
+    #[error("Other error: {0}")]
     Other(String),
+}
+
+impl From<RpcError> for Error {
+    fn from(error: RpcError) -> Self {
+        Error::Rpc(error.compat())
+    }
+}
+
+impl From<String> for Error {
+    fn from(error: String) -> Self {
+        Error::Other(error)
+    }
 }
 
 impl From<&str> for Error {
