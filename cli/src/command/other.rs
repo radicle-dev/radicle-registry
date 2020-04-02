@@ -19,28 +19,32 @@
 use super::*;
 
 /// Other commands, not related to any specific domain.
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 pub enum Command {
     GenesisHash(ShowGenesisHash),
 }
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self) -> Result<(), CommandError> {
         match self {
-            Command::GenesisHash(cmd) => cmd.run(ctx).await,
+            Command::GenesisHash(cmd) => cmd.run().await,
         }
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Show the genesis hash the node uses
-pub struct ShowGenesisHash {}
+pub struct ShowGenesisHash {
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
 
 #[async_trait::async_trait]
 impl CommandT for ShowGenesisHash {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let genesis_hash = ctx.client.genesis_hash();
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let genesis_hash = client.genesis_hash();
         println!("Genesis block hash: 0x{}", hex::encode(genesis_hash));
         Ok(())
     }

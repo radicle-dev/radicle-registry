@@ -15,6 +15,8 @@
 
 //! Define the command line parser and interface.
 
+#![allow(clippy::large_enum_variant)]
+
 use radicle_registry_client::*;
 use structopt::StructOpt;
 
@@ -29,37 +31,17 @@ use command::{account, org, other, project, user};
 pub struct CommandLine {
     #[structopt(subcommand)]
     pub command: Command,
-
-    #[structopt(flatten)]
-    pub options: CommandLineOptions,
 }
 
 impl CommandLine {
     pub async fn run(self) -> Result<(), CommandError> {
-        let Self { command, options } = self;
-        let context = CommandContext::new(options).await?;
-
-        command.run(&context).await
+        self.command.run().await
     }
 }
 
-/// The accepted command-line options
-#[derive(StructOpt, Clone)]
-pub struct CommandLineOptions {
-    /// The name of the local account to be used to sign transactions.
-    #[structopt(
-        long,
-        env = "RAD_TX_AUTHOR",
-        value_name = "account_name",
-        parse(try_from_str = Self::lookup_account)
-    )]
-    pub tx_author: ed25519::Pair,
-
-    /// Fee that will be charged to submit transactions.
-    /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_TX_FEE", value_name = "fee")]
-    pub tx_fee: Balance,
-
+/// Network-related command-line options
+#[derive(StructOpt, Clone, Debug)]
+pub struct NetworkOptions {
     /// IP address or domain name that hosts the RPC API
     #[structopt(
         long,
@@ -70,19 +52,41 @@ pub struct CommandLineOptions {
     pub node_host: url::Host,
 }
 
-impl CommandLineOptions {
-    fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
-        let accounts = account_storage::list().map_err(|e| format!("{}", e))?;
-        match accounts.get(&name.to_string()) {
-            Some(account) => Ok(ed25519::Pair::from_seed(&account.seed)),
-            None => Err(format!("Could not find local account named '{}'", name)),
-        }
+impl NetworkOptions {
+    pub async fn client(&self) -> Result<Client, Error> {
+        Client::create_with_executor(self.node_host.clone()).await
+    }
+}
+
+/// Transaction-related command-line options
+#[derive(StructOpt, Clone)]
+pub struct TxOptions {
+    /// The name of the local account to be used to sign transactions.
+    #[structopt(
+        long,
+        env = "RAD_TX_AUTHOR",
+        value_name = "account_name",
+        parse(try_from_str = lookup_account)
+    )]
+    pub author: ed25519::Pair,
+
+    /// Fee that will be charged to submit transactions.
+    /// The higher the fee, the higher the priority of a transaction.
+    #[structopt(long, default_value = "1", env = "RAD_TX_FEE", value_name = "fee")]
+    pub fee: Balance,
+}
+
+fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
+    let accounts = account_storage::list().map_err(|e| format!("{}", e))?;
+    match accounts.get(&name.to_string()) {
+        Some(account) => Ok(ed25519::Pair::from_seed(&account.seed)),
+        None => Err(format!("Could not find local account named '{}'", name)),
     }
 }
 
 /// The supported [CommandLine] commands.
 /// The commands are grouped by domain.
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 pub enum Command {
     Account(account::Command),
     Org(org::Command),
@@ -95,40 +99,21 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self) -> Result<(), CommandError> {
         match self.clone() {
-            Command::Account(cmd) => cmd.run(ctx).await,
-            Command::Org(cmd) => cmd.run(ctx).await,
-            Command::Project(cmd) => cmd.run(ctx).await,
-            Command::User(cmd) => cmd.run(ctx).await,
-            Command::Other(cmd) => cmd.run(ctx).await,
+            Command::Account(cmd) => cmd.run().await,
+            Command::Org(cmd) => cmd.run().await,
+            Command::Project(cmd) => cmd.run().await,
+            Command::User(cmd) => cmd.run().await,
+            Command::Other(cmd) => cmd.run().await,
         }
-    }
-}
-
-/// Context for running commands.
-/// Created from [CommandLineOptions].
-pub struct CommandContext {
-    pub tx_author: ed25519::Pair,
-    pub client: Client,
-    pub tx_fee: Balance,
-}
-
-impl CommandContext {
-    pub async fn new(options: CommandLineOptions) -> Result<CommandContext, CommandError> {
-        let client = Client::create_with_executor(options.node_host.clone()).await?;
-        Ok(CommandContext {
-            tx_author: options.tx_author.clone(),
-            client,
-            tx_fee: options.tx_fee,
-        })
     }
 }
 
 /// The trait that every command must implement.
 #[async_trait::async_trait]
 pub trait CommandT {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError>;
+    async fn run(&self) -> Result<(), CommandError>;
 }
 
 /// Error returned by [CommandT::run].

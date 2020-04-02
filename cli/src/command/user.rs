@@ -18,7 +18,7 @@
 use super::*;
 
 /// User related commands
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 pub enum Command {
     Register(Register),
     Unregister(Unregister),
@@ -26,34 +26,39 @@ pub enum Command {
 
 #[async_trait::async_trait]
 impl CommandT for Command {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
+    async fn run(&self) -> Result<(), CommandError> {
         match self {
-            user::Command::Register(cmd) => cmd.run(ctx).await,
-            user::Command::Unregister(cmd) => cmd.run(ctx).await,
+            user::Command::Register(cmd) => cmd.run().await,
+            user::Command::Unregister(cmd) => cmd.run().await,
         }
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Register a user.
 pub struct Register {
     /// Id of the user to register. The valid charset is: 'a-z0-9-' and can't begin or end with
     /// a '-', must also not contain more than two '-' in a row.
     user_id: UserId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Register {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
-
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
         let register_user_fut = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::RegisterUser {
                     user_id: self.user_id.clone(),
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("Registering user...");
@@ -65,25 +70,30 @@ impl CommandT for Register {
     }
 }
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Clone)]
 /// Unregister a user.
 pub struct Unregister {
     /// Id of the org to unregister.
     user_id: UserId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
 }
 
 #[async_trait::async_trait]
 impl CommandT for Unregister {
-    async fn run(&self, ctx: &CommandContext) -> Result<(), CommandError> {
-        let client = &ctx.client;
-
+    async fn run(&self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
         let unregister_user = client
             .sign_and_submit_message(
-                &ctx.tx_author,
+                &self.tx_options.author,
                 message::UnregisterUser {
                     user_id: self.user_id.clone(),
                 },
-                ctx.tx_fee,
+                self.tx_options.fee,
             )
             .await?;
         println!("Unregistering user...");
