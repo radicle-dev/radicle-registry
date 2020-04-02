@@ -19,6 +19,7 @@
 
 use radicle_registry_client::*;
 use structopt::StructOpt;
+use thiserror::Error as ThisError;
 
 pub mod account_storage;
 
@@ -118,40 +119,27 @@ pub trait CommandT {
 
 /// Error returned by [CommandT::run].
 ///
-/// Implements [From] for client errors.
-#[derive(Debug, derive_more::From)]
+/// Implements [From] for client errors and [account_storage] errors.
+#[derive(Debug, ThisError)]
 pub enum CommandError {
-    ClientError(Error),
+    #[error("Client error: {0}")]
+    ClientError(#[from] Error),
+
+    #[error("Transaction {tx_hash} failed in block {block_hash}")]
     FailedTransaction {
         tx_hash: TxHash,
         block_hash: BlockHash,
     },
-    OrgNotFound {
-        org_id: OrgId,
-    },
+
+    #[error("Cannot find org {org_id}")]
+    OrgNotFound { org_id: OrgId },
+
+    #[error("Cannot find project {project_name}.{org_id}")]
     ProjectNotFound {
         project_name: ProjectName,
         org_id: OrgId,
     },
-    AccountStorageError(account_storage::Error),
-}
 
-impl core::fmt::Display for CommandError {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        match self {
-            CommandError::ClientError(error) => write!(f, "Client error: {}", error),
-            CommandError::FailedTransaction {
-                tx_hash,
-                block_hash,
-            } => write!(f, "Transaction {} failed in block {}", tx_hash, block_hash),
-            CommandError::OrgNotFound { org_id } => write!(f, "Cannot find org {}", org_id),
-            CommandError::ProjectNotFound {
-                project_name,
-                org_id,
-            } => write!(f, "Cannot find project {}.{}", project_name, org_id),
-            CommandError::AccountStorageError(error) => {
-                write!(f, "Account storage error: {}", error)
-            }
-        }
-    }
+    #[error("{0}")]
+    AccountStorageError(#[from] account_storage::Error),
 }
