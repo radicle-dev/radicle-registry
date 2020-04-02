@@ -54,3 +54,4 @@ Upcoming
   * `ClientT::genesis_hash()`
   * `Transaction`
   * `Transaction::new_signed()`
+* Add block header fetching to the client API

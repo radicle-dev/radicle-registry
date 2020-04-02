@@ -169,6 +169,10 @@ impl backend::Backend for Emulator {
         Ok(keys)
     }
 
+    async fn block_header(&self, _block_hash: Option<BlockHash>) -> Result<BlockHeader, Error> {
+        panic!("Method 'block_header' for the client emulator is not supported")
+    }
+
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
     }

@@ -21,7 +21,7 @@ use futures::future::BoxFuture;
 
 pub use radicle_registry_core::*;
 
-pub use radicle_registry_runtime::Hash;
+pub use radicle_registry_runtime::{BlockNumber, Hash, Header};
 
 pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
@@ -38,6 +38,10 @@ pub type BlockHash = Hash;
 /// The hash of a transaction. Uniquely identifies a transaction.
 #[doc(inline)]
 pub type TxHash = Hash;
+
+/// The header of a block
+#[doc(inline)]
+pub type BlockHeader = Header;
 
 /// Result of a transaction being included in a block.
 ///
@@ -110,6 +114,12 @@ pub trait ClientT {
         &self,
         account_id: &AccountId,
     ) -> Result<state::AccountTransactionIndex, Error>;
+
+    /// Fetch the header of the given block hash
+    async fn block_header(&self, block_hash: BlockHash) -> Result<BlockHeader, Error>;
+
+    /// Fetch the header of the best chain tip
+    async fn block_header_best_chain(&self) -> Result<BlockHeader, Error>;
 
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;

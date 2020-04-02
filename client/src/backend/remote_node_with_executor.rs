@@ -85,6 +85,14 @@ impl backend::Backend for RemoteNodeWithExecutor {
         handle.await
     }
 
+    async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<BlockHeader, Error> {
+        let backend = self.backend.clone();
+        let handle = Executor01CompatExt::compat(self.runtime.executor())
+            .spawn_with_handle(async move { backend.block_header(block_hash).await })
+            .unwrap();
+        handle.await
+    }
+
     fn get_genesis_hash(&self) -> Hash {
         self.backend.get_genesis_hash()
     }
