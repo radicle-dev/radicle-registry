@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* cli: Drop `_TX_` from the environment options
 * cli: group and clean commands by domain and rename options
 * Add `fee` to the Client and CLI APIs
 * Normalize core::message and cli commands parameters

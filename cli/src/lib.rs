@@ -65,7 +65,7 @@ pub struct TxOptions {
     /// The name of the local account to be used to sign transactions.
     #[structopt(
         long,
-        env = "RAD_TX_AUTHOR",
+        env = "RAD_AUTHOR",
         value_name = "account_name",
         parse(try_from_str = lookup_account)
     )]
@@ -73,7 +73,7 @@ pub struct TxOptions {
 
     /// Fee that will be charged to submit transactions.
     /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_TX_FEE", value_name = "fee")]
+    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
     pub fee: Balance,
 }
 
