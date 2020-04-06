@@ -96,7 +96,8 @@ pub fn devnet() -> ChainSpec {
         // From key 000...001
         vec![
             "/ip4/35.233.120.254/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
-                .to_string(),
+                .parse()
+                .expect("Parsing a genesis peer address failed"),
         ],
         None, // telemetry endpoints
         // protocol_id
