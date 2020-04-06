@@ -16,7 +16,7 @@
 //! Define trait for client backends and provide emulator and remote node implementation
 use futures::future::BoxFuture;
 
-pub use radicle_registry_runtime::{Hash, UncheckedExtrinsic};
+pub use radicle_registry_runtime::{Hash, Header, UncheckedExtrinsic};
 
 use crate::interface::*;
 
@@ -65,6 +65,10 @@ pub trait Backend {
         prefix: &[u8],
         block_hash: Option<BlockHash>,
     ) -> Result<Vec<Vec<u8>>, Error>;
+
+    /// Fetch the header of the given block hash.
+    /// If the block hash is `None`, fetch the header of the best chain tip.
+    async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<Header, Error>;
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;
