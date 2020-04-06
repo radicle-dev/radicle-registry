@@ -75,9 +75,10 @@ pub struct Generate {
 #[async_trait::async_trait]
 impl CommandT for Generate {
     async fn run(self) -> Result<(), CommandError> {
-        let (_, seed) = ed25519::Pair::generate();
+        let (key_pair, seed) = ed25519::Pair::generate();
         account_storage::add(self.name, account_storage::AccountData { seed })?;
         println!("✓ Account generated successfully");
+        println!("ℹ SS58 address: {}", key_pair.public().to_ss58check());
         Ok(())
     }
 }
