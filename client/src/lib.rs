@@ -47,6 +47,7 @@ mod transaction;
 
 pub use crate::interface::*;
 pub use radicle_registry_core::Balance;
+pub use radicle_registry_runtime::fees::MINIMUM_FEE;
 
 pub use backend::EMULATOR_BLOCK_AUTHOR;
 

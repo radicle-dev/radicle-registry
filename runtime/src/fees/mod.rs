@@ -26,9 +26,9 @@ use sp_runtime::transaction_validity::{
 
 mod payment;
 
-/// The base fee serves as a disincentive to stop bad actors
-/// from spamming the network in a DoS attack.
-const MINIMUM_FEE: Balance = 1;
+/// The minimum fee required for a transaction to be considered
+/// for inclusion in the blockchain.
+pub const MINIMUM_FEE: Balance = 1;
 
 /// Pay the transaction fee indicated by the author.
 /// The fee should be higher or equal to [MINIMUM_FEE].

@@ -44,6 +44,7 @@ Upcoming
   mines if the option is given.
 
 ### Addition
+* Add `MINIMUM_FEE` to the registry client
 * The client emulator now authors blocks when a transaction is submitted.
 * Add `TransferFromOrg` message
 * Add `Client::get_org` and `Client::list_orgs`
