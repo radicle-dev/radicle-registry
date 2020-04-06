@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPTS_DIR=$(dirname $0)
+
+$SCRIPTS_DIR/build-runtime-wasm $SCRIPTS_DIR/../runtime/genesis_runtime.wasm

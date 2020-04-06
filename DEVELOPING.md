@@ -113,10 +113,31 @@ Updating substrate
 
 To update the revision of substrate run
 ~~~
-./scripts/update-substrate REV
+./scripts/update-substrate <revision>
 ~~~
-where `REV` is the new Git revision SHA.
+where `<revision>` is the new Git revision SHA.
 
+Building a WASM runtime binary
+------------------------------
+
+### Building a runtime for the genesis
+
+To build a genesis WASM runtime binary run
+~~~
+./scripts/build-genesis-runtime-wasm
+~~~
+This will create or update the `runtime/genesis_runtime.wasm` file.
+It will be then used as the genesis WASM runtime in all consecutive compilations of the node.
+
+Remember that this operation should **never** be done after starting the public network!
+It will make the node incompatible with any older nodes on the network.
+
+### Building a runtime for an update
+
+To build a WASM runtime binary meant for packing into a transaction and broadcasting on the network run
+~~~
+./scripts/build-runtime-wasm <output_file>
+~~~
 
 Updating Continuous Integration's base Docker image
 ---------------------------------------------------

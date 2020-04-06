@@ -23,10 +23,6 @@
 #![recursion_limit = "256"]
 #![feature(alloc_prelude)]
 
-// Make the WASM binary available.
-#[cfg(feature = "std")]
-include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
-
 extern crate alloc;
 
 use frame_support::weights::Weight;

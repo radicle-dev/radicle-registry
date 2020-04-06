@@ -44,7 +44,6 @@ time ./scripts/check-license-headers
 echo "--- cargo fmt"
 time cargo fmt --all -- --check
 
-export BUILD_DUMMY_WASM_BINARY=0
 export RUSTFLAGS="-D warnings"
 
 echo "--- cargo clippy"
