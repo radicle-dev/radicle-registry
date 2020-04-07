@@ -106,12 +106,12 @@ impl CommandT for List {
 
 #[derive(StructOpt, Clone)]
 pub struct Transfer {
+    // The amount to transfer.
+    amount: Balance,
+
     /// Recipient Account in SS58 address format.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
-
-    // The amount to transfer.
-    funds: Balance,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -130,7 +130,7 @@ impl CommandT for Transfer {
                 &self.tx_options.author,
                 message::Transfer {
                     recipient: self.recipient,
-                    balance: self.funds,
+                    balance: self.amount,
                 },
                 self.tx_options.fee,
             )
@@ -140,7 +140,7 @@ impl CommandT for Transfer {
         transaction_applied_ok(&transfered)?;
         println!(
             "transferred {} RAD to {} in block {}",
-            self.funds, self.recipient, transfered.block,
+            self.amount, self.recipient, transfered.block,
         );
         Ok(())
     }

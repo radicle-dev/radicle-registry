@@ -169,12 +169,12 @@ pub struct Transfer {
     #[structopt(value_name = "org")]
     org_id: OrgId,
 
+    // The amount to transfer from the org to the recipient.
+    amount: Balance,
+
     /// Recipient Account in SS58 address format
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
-
-    // The balance to transfer from the org to the recipient.
-    funds: Balance,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -193,7 +193,7 @@ impl CommandT for Transfer {
                 message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
-                    value: self.funds,
+                    value: self.amount,
                 },
                 self.tx_options.fee,
             )
@@ -203,7 +203,7 @@ impl CommandT for Transfer {
         transaction_applied_ok(&transfered)?;
         println!(
             "transferred {} RAD from Org {} to Account {} in block {}",
-            self.funds, self.org_id, self.recipient, transfered.block,
+            self.amount, self.org_id, self.recipient, transfered.block,
         );
         Ok(())
     }
