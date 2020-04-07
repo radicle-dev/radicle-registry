@@ -16,6 +16,7 @@
 //! Provides [Arguments] struct that represents the command line arguments.
 use radicle_registry_runtime::AccountId;
 use sc_cli::{RunCmd, Subcommand};
+use sc_network::config::MultiaddrWithPeerId;
 use structopt::{clap, StructOpt};
 
 use crate::chain_spec::Chain;
@@ -48,7 +49,7 @@ pub struct Arguments {
 
     /// List of nodes to connect to on start'
     #[structopt(long, short, value_name = "ADDR")]
-    bootnodes: Vec<String>,
+    bootnodes: Vec<MultiaddrWithPeerId>,
 
     /// Where to store data
     #[structopt(long, short, value_name = "PATH")]
