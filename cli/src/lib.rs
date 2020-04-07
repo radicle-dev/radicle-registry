@@ -17,6 +17,7 @@
 
 #![allow(clippy::large_enum_variant)]
 
+use lazy_static::lazy_static;
 use radicle_registry_client::*;
 use structopt::StructOpt;
 use thiserror::Error as ThisError;
@@ -73,8 +74,12 @@ pub struct TxOptions {
 
     /// Fee that will be charged to submit transactions.
     /// The higher the fee, the higher the priority of a transaction.
-    #[structopt(long, default_value = "1", env = "RAD_FEE", value_name = "fee")]
+    #[structopt(long, default_value = &FEE_DEFAULT, env = "RAD_FEE", value_name = "fee")]
     pub fee: Balance,
+}
+
+lazy_static! {
+    static ref FEE_DEFAULT: String = MINIMUM_FEE.to_string();
 }
 
 fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
