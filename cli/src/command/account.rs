@@ -21,9 +21,14 @@ use crate::account_storage;
 /// Account related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// Show the balance of an account.
     Balance(ShowBalance),
+    /// Generate a local account and store it on disk.
+    /// Fail if there is already an account with the given `name`
     Generate(Generate),
+    /// List all the local accounts.
     List(List),
+    /// Transfer funds from the author to a recipient account.
     Transfer(Transfer),
 }
 
@@ -63,9 +68,6 @@ impl CommandT for ShowBalance {
     }
 }
 
-/// Generate a local account and store it on disk.
-///
-/// Fail if there is already an account with the given `name`.
 #[derive(StructOpt, Clone)]
 pub struct Generate {
     /// The name that uniquely identifies the account locally.
@@ -82,7 +84,6 @@ impl CommandT for Generate {
         Ok(())
     }
 }
-/// list all the local accounts
 #[derive(StructOpt, Clone)]
 pub struct List {}
 
@@ -103,7 +104,6 @@ impl CommandT for List {
     }
 }
 
-/// Transfer funds to recipient
 #[derive(StructOpt, Clone)]
 pub struct Transfer {
     /// Recipient Account in SS58 address format.
