@@ -42,12 +42,12 @@ To build the node from source see [`DEVELOPING.md`][dev-manual].
 Running the node
 ----------------
 
-To run a node you need to specify the chain
+You can run the node with
 ~~~
-radicle-registry-node --chain devnet
+radicle-registry-node
 ~~~
 
-See below for more information on the different chains.
+The node will use the chain specified during its compilation.
 
 For more information use the `--help` flag.
 
@@ -63,25 +63,6 @@ You can adjust the global log level and the log level for specific targets with
 the [`RUST_LOG` environment variable][rust-log-docs].
 
 [rust-log-docs]: https://docs.rs/env_logger/0.7.1/env_logger/#enabling-logging
-
-### Dev
-
-The `dev` chain is intended for local development. The node runs an isolated
-network with a dummy proof-of-work.
-
-### Devnet
-
-We host a devnet that you can connect to. To join you need to use the most
-recent pre-built binary (see “Getting the node”).
-
-~~~
-radicle-registry-node --chain devnet
-~~~
-
-We are frequently resetting the devnet blockchain. If you local node is not
-syncing blocks download the most recent version and run `radicle-registry-node
---chain devnet purge-chain`.
-
 
 Using the Client
 ----------------

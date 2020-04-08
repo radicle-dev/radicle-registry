@@ -3698,6 +3698,7 @@ name = "radicle-registry-node"
 version = "0.0.0"
 dependencies = [
  "blake3",
+ "cfg-if",
  "ctrlc",
  "derive_more 0.15.0",
  "env_logger 0.7.1",

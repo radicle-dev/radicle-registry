@@ -16,6 +16,7 @@ name = "radicle-registry-node"
 radicle-registry-runtime = { version = "0.0.0", path = "../runtime" }
 
 blake3 = "0.2.1"
+cfg-if = "0.1.10"
 derive_more = "0.15.0"
 env_logger = "0.7"
 exit-future = "0.1.4"

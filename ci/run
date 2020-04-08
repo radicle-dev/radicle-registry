@@ -45,6 +45,7 @@ echo "--- cargo fmt"
 time cargo fmt --all -- --check
 
 export RUSTFLAGS="-D warnings"
+export GENESIS_CHAIN=ffnet
 
 echo "--- cargo clippy"
 cargo clippy --workspace --all-targets --release -- -D clippy::all
@@ -61,7 +62,6 @@ cargo build --workspace --all-targets --release
 echo "--- cargo test"
 echo "Starting radicle-registry-node"
 RUST_LOG=error ./target/release/radicle-registry-node \
-  --chain dev \
   --mine 5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq \
   --data-path /tmp/radicle-registry \
   &

@@ -38,6 +38,8 @@ Running development node
 ./scripts/run-dev-node
 ~~~
 
+The node is built for the `dev` chain. In order to
+
 The build script purges the chain data before running to avoid consensus issues.
 
 To purge the chain state manually run
@@ -46,6 +48,44 @@ To purge the chain state manually run
 ./scripts/run-dev-node purge-chain
 ~~~
 
+Building a node
+---------------
+
+In order to build a node run
+
+~~~
+GENESIS_CHAIN=<chain> cargo build -p radicle-registry-node --release
+~~~
+
+The `<chain>` parameter defines, for which chain the node is going to be built.
+It must be one of these values:
+
+### `dev`
+
+This chain is intended for local development.
+The node runs an isolated network with a dummy proof-of-work.
+
+### `local-devnet`
+
+This chain is intended for local development.
+The node runs only on a local cluster of nodes, but it has a real proof-of-work.
+See `./local-devnet/README.md` for more information.
+
+### `devnet`
+
+We host a devnet that you can connect to. To join you need to use the most
+recent pre-built binary (see “Getting the node”).
+
+We are frequently resetting the devnet blockchain. If you local node is not
+syncing blocks download the most recent version and run `radicle-registry-node purge-chain`.
+
+### `ffnet`
+
+We host a ffnet that you can connect to. To join you need to use the most
+recent pre-built binary (see “Getting the node”).
+
+It's more stable than the `devnet`, but breaking changes may occur frequently requiring updating
+and purging the node with `radicle-registry-node purge-chain`.
 
 Packages
 --------

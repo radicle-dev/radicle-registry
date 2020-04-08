@@ -5,4 +5,4 @@ set -euo pipefail
 # Adress for the seed string //Mine
 block_author=5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq
 radicle_registry_node=./target/release/radicle-registry-node
-exec $radicle_registry_node "$@" --chain dev --mine "$block_author"
+exec $radicle_registry_node "$@" --mine "$block_author"

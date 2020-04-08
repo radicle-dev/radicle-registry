@@ -16,7 +16,6 @@ block_author=5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq
 exec /usr/local/bin/radicle-registry-node \
   --data-path /data \
   --name "$NODE_NAME" \
-  --chain local-devnet \
   --mine "$block_author" \
   --unsafe-rpc-external \
   --prometheus-external \

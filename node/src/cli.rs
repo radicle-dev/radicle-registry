@@ -19,8 +19,6 @@ use sc_cli::{RunCmd, Subcommand};
 use sc_network::config::MultiaddrWithPeerId;
 use structopt::{clap, StructOpt};
 
-use crate::chain_spec::Chain;
-
 /// Command line arguments.
 ///
 /// Implements [StructOpt] for parsing.
@@ -28,16 +26,6 @@ use crate::chain_spec::Chain;
 pub struct Arguments {
     #[structopt(subcommand)]
     pub subcommand: Option<Subcommand>,
-
-    /// Chain to connect to.
-    #[structopt(
-        long,
-        default_value = "dev",
-        value_name = "CHAIN",
-        parse(try_from_str = parse_chain),
-        possible_values = &["dev", "local-devnet", "devnet"]
-    )]
-    pub chain: Chain,
 
     /// Human-readable name for this node to use for telemetry'
     #[structopt(long, value_name = "NAME")]
@@ -142,19 +130,6 @@ impl Arguments {
             prometheus_external,
             ..run_cmd
         }
-    }
-}
-
-// NOTE Update `possible_values` in the structopt attribute if something is added here.
-fn parse_chain(name: &str) -> Result<Chain, String> {
-    if name == "dev" {
-        Ok(Chain::Dev)
-    } else if name == "local-devnet" {
-        Ok(Chain::DevnetLocal)
-    } else if name == "devnet" {
-        Ok(Chain::Devnet)
-    } else {
-        Err(format!("Invalid chain {}", name))
     }
 }
 
