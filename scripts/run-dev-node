@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-export RUST_LOG="${RUST_LOG:-info},substrate_consensus_slots=error,substrate=error"
 # Adress for the seed string //Mine
 block_author=5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq
 radicle_registry_node=./target/release/radicle-registry-node
