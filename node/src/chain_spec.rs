@@ -20,7 +20,7 @@
 //! * [local_devnet] for runnning a cluster of three nodes locally.
 use crate::pow::config::Config as PowAlgConfig;
 use radicle_registry_runtime::{
-    AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY,
+    AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 };
 use sc_service::GenericChainSpec;
 use sp_core::{Pair, Public};
@@ -28,6 +28,8 @@ use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = GenericChainSpec<GenesisConfig>;
+
+const WASM_BINARY: &[u8] = include_bytes!("../../runtime/genesis_runtime.wasm");
 
 /// Possible chains.
 ///
