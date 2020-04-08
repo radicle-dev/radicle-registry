@@ -17,10 +17,11 @@
 //!
 //! This module is based on `service` module from the Substrate node template.
 
+use futures::StreamExt;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-use sc_client::LongestChain;
+use sc_client::{BlockchainEvents as _, LongestChain};
 use sc_executor::native_executor_instance;
 use sc_service::{AbstractService, Configuration, Error as ServiceError, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
@@ -140,6 +141,17 @@ pub fn new_full(
     let service = builder.build()?;
 
     if let Some(block_author) = opt_block_author {
+        let client = service.client();
+        service.spawn_essential_task(
+            "mined-block-notifier",
+            client.import_notification_stream().for_each(move |info| {
+                if info.origin == sp_consensus::BlockOrigin::Own {
+                    log::info!("Imported own block #{} ({})", info.header.number, info.hash)
+                }
+                futures::future::ready(())
+            }),
+        );
+
         let authoring_inherent_data = AuthoringInherentData { block_author };
 
         // Can only fail if a provider with the same name is already registered.
