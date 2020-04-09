@@ -66,6 +66,7 @@ RUST_LOG=error ./target/release/radicle-registry-node \
   --data-path /tmp/radicle-registry \
   &
 registry_node_pid=$!
+
 # We build tests in release mode so that we can reuse the artifacts
 # from 'cargo build'
 cargo test --workspace --release --color=always
@@ -73,6 +74,7 @@ kill "$registry_node_pid"
 
 echo "--- Copy artifacts"
 mkdir artifacts
+cp -a target/release/radicle-registry-cli artifacts
 cp -a target/release/radicle-registry-node artifacts
 cp -a target/release/radicle-registry-node ci/node-image
 

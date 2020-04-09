@@ -12,6 +12,7 @@
     platform: "linux"
     production: "true"
   artifact_paths:
+    - "artifacts/radicle-registry-cli"
     - "artifacts/radicle-registry-node"
 
 steps:
