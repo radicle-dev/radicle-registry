@@ -23,7 +23,7 @@ use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 };
 use sc_service::GenericChainSpec;
-use sp_core::{Pair, Public};
+use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -37,63 +37,40 @@ const WASM_BINARY: &[u8] = include_bytes!("../../runtime/genesis_runtime.wasm");
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Chain {
     Dev,
-    DevnetLocal,
+    LocalDevnet,
     Devnet,
+    Ffnet,
 }
 
 impl Chain {
     pub fn spec(&self) -> ChainSpec {
         match self {
             Chain::Dev => dev(),
-            Chain::DevnetLocal => local_devnet(),
+            Chain::LocalDevnet => local_devnet(),
             Chain::Devnet => devnet(),
+            Chain::Ffnet => ffnet(),
         }
     }
 }
 
-pub fn dev() -> ChainSpec {
+fn dev() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Development, isolated node",
         "dev",
         dev_genesis_config,
-        vec![], // boot nodes
-        None,   // telemetry endpoints
-        // protocol_id
-        Some("dev"),
+        vec![],      // boot nodes
+        None,        // telemetry endpoints
+        Some("dev"), // protocol_id
         Some(sc_service::Properties::try_from(PowAlgConfig::Dummy).unwrap()),
         None, // no extensions
     )
 }
 
-fn dev_genesis_config() -> GenesisConfig {
-    let endowed_accounts = vec![
-        get_from_seed::<AccountId>("Alice"),
-        get_from_seed::<AccountId>("Bob"),
-        get_from_seed::<AccountId>("Alice//stash"),
-        get_from_seed::<AccountId>("Bob//stash"),
-    ];
-    let root_key = get_from_seed::<AccountId>("Alice");
-    GenesisConfig {
-        system: Some(SystemConfig {
-            code: WASM_BINARY.to_vec(),
-            changes_trie_config: Default::default(),
-        }),
-        pallet_balances: Some(BalancesConfig {
-            balances: endowed_accounts
-                .iter()
-                .cloned()
-                .map(|k| (k, 1 << 60))
-                .collect(),
-        }),
-        pallet_sudo: Some(SudoConfig { key: root_key }),
-    }
-}
-
-pub fn devnet() -> ChainSpec {
+fn devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "devnet",
         "devnet",
-        devnet_genesis_config,
+        dev_genesis_config,
         // boot nodes
         // From key 000...001
         vec![
@@ -101,19 +78,31 @@ pub fn devnet() -> ChainSpec {
                 .parse()
                 .expect("Parsing a genesis peer address failed"),
         ],
-        None, // telemetry endpoints
-        // protocol_id
-        Some("devnet"),
+        None,           // telemetry endpoints
+        Some("devnet"), // protocol_id
         Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
     )
 }
 
-pub fn local_devnet() -> ChainSpec {
+fn ffnet() -> ChainSpec {
+    GenericChainSpec::from_genesis(
+        "ffnet",
+        "ffnet",
+        dev_genesis_config,
+        vec![],        // boot nodes
+        None,          // telemetry endpoints
+        Some("ffnet"), // protocol_id
+        Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
+        None, // no extensions
+    )
+}
+
+fn local_devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "local devnet, isolated on one machine",
         "local-devnet",
-        devnet_genesis_config,
+        dev_genesis_config,
         vec![], // boot nodes
         None,   // telemetry endpoints
         // protocol_id
@@ -123,33 +112,28 @@ pub fn local_devnet() -> ChainSpec {
     )
 }
 
-fn devnet_genesis_config() -> GenesisConfig {
-    let endowed_accounts = vec![
-        get_from_seed::<AccountId>("Alice"),
-        get_from_seed::<AccountId>("Bob"),
-        get_from_seed::<AccountId>("Alice//stash"),
-        get_from_seed::<AccountId>("Bob//stash"),
+fn dev_genesis_config() -> GenesisConfig {
+    let init_balance = 1u128 << 60;
+    let balances = vec![
+        (account_id("Alice"), init_balance),
+        (account_id("Bob"), init_balance),
+        (account_id("Alice//stash"), init_balance),
+        (account_id("Bob//stash"), init_balance),
     ];
-    let root_key = get_from_seed::<AccountId>("Alice");
+    let sudo_key = account_id("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
             code: WASM_BINARY.to_vec(),
             changes_trie_config: Default::default(),
         }),
-        pallet_balances: Some(BalancesConfig {
-            balances: endowed_accounts
-                .iter()
-                .cloned()
-                .map(|k| (k, 1 << 60))
-                .collect(),
-        }),
-        pallet_sudo: Some(SudoConfig { key: root_key }),
+        pallet_balances: Some(BalancesConfig { balances }),
+        pallet_sudo: Some(SudoConfig { key: sudo_key }),
     }
 }
 
-/// Helper function to generate a crypto pair from seed
-pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-    TPublic::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static values are valid; qed")
+/// Helper function to generate an account ID from a seed
+fn account_id(seed: &str) -> AccountId {
+    <AccountId as CryptoType>::Pair::from_string(&format!("//{}", seed), None)
+        .expect("Parsing the account key pair seed failed")
         .public()
 }
