@@ -21,9 +21,14 @@ use crate::account_storage;
 /// Account related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// Show the balance of an account.
     Balance(ShowBalance),
+    /// Generate a local account and store it on disk.
+    /// Fail if there is already an account with the given `name`
     Generate(Generate),
+    /// List all the local accounts.
     List(List),
+    /// Transfer funds from the author to a recipient account.
     Transfer(Transfer),
 }
 
@@ -63,9 +68,6 @@ impl CommandT for ShowBalance {
     }
 }
 
-/// Generate a local account and store it on disk.
-///
-/// Fail if there is already an account with the given `name`.
 #[derive(StructOpt, Clone)]
 pub struct Generate {
     /// The name that uniquely identifies the account locally.
@@ -75,13 +77,13 @@ pub struct Generate {
 #[async_trait::async_trait]
 impl CommandT for Generate {
     async fn run(self) -> Result<(), CommandError> {
-        let (_, seed) = ed25519::Pair::generate();
+        let (key_pair, seed) = ed25519::Pair::generate();
         account_storage::add(self.name, account_storage::AccountData { seed })?;
         println!("✓ Account generated successfully");
+        println!("ℹ SS58 address: {}", key_pair.public().to_ss58check());
         Ok(())
     }
 }
-/// list all the local accounts
 #[derive(StructOpt, Clone)]
 pub struct List {}
 
@@ -102,15 +104,14 @@ impl CommandT for List {
     }
 }
 
-/// Transfer funds to recipient
 #[derive(StructOpt, Clone)]
 pub struct Transfer {
+    // The amount to transfer.
+    amount: Balance,
+
     /// Recipient Account in SS58 address format.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
-
-    // The amount to transfer.
-    funds: Balance,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -129,7 +130,7 @@ impl CommandT for Transfer {
                 &self.tx_options.author,
                 message::Transfer {
                     recipient: self.recipient,
-                    balance: self.funds,
+                    balance: self.amount,
                 },
                 self.tx_options.fee,
             )
@@ -139,7 +140,7 @@ impl CommandT for Transfer {
         transaction_applied_ok(&transfered)?;
         println!(
             "transferred {} RAD to {} in block {}",
-            self.funds, self.recipient, transfered.block,
+            self.amount, self.recipient, transfered.block,
         );
         Ok(())
     }

@@ -20,8 +20,11 @@ use super::*;
 /// Project related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// List all projects in the registry
     List(List),
+    /// Register a project with the given name under the given org.
     Register(Register),
+    /// Show information for a registered project.
     Show(Show),
 }
 
@@ -37,7 +40,6 @@ impl CommandT for Command {
 }
 
 #[derive(StructOpt, Clone)]
-/// Show information for a registered project.
 pub struct Show {
     /// The name of the project
     project_name: ProjectName,
@@ -68,7 +70,6 @@ impl CommandT for Show {
 }
 
 #[derive(StructOpt, Clone)]
-/// List all projects in the registry
 pub struct List {
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -88,7 +89,6 @@ impl CommandT for List {
 }
 
 #[derive(StructOpt, Clone)]
-/// Register a project with the given name under the given org.
 pub struct Register {
     /// Name of the project to register.
     project_name: ProjectName,

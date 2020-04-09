@@ -3635,6 +3635,7 @@ dependencies = [
  "directories",
  "futures 0.3.4",
  "hex",
+ "lazy_static",
  "pretty_env_logger",
  "radicle-registry-client",
  "serde",

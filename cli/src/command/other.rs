@@ -21,6 +21,7 @@ use super::*;
 /// Other commands, not related to any specific domain.
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// Show the genesis hash the node uses
     GenesisHash(ShowGenesisHash),
 }
 
@@ -34,7 +35,6 @@ impl CommandT for Command {
 }
 
 #[derive(StructOpt, Clone)]
-/// Show the genesis hash the node uses
 pub struct ShowGenesisHash {
     #[structopt(flatten)]
     network_options: NetworkOptions,

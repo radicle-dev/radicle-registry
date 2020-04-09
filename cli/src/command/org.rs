@@ -20,10 +20,16 @@ use super::*;
 /// Org related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// List all orgs in the registry
     List(List),
+    /// Show information for a registered org.
     Show(Show),
+    /// Transfer funds from an org to a recipient.
+    /// The author needs to be a member of the org.
     Transfer(Transfer),
+    /// Register an org.
     Register(Register),
+    /// Unregister an org.
     Unregister(Unregister),
 }
 
@@ -41,7 +47,6 @@ impl CommandT for Command {
 }
 
 #[derive(StructOpt, Clone)]
-/// List all orgs in the registry
 pub struct List {
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -61,7 +66,6 @@ impl CommandT for List {
 }
 
 #[derive(StructOpt, Clone)]
-/// Show information for a registered org.
 pub struct Show {
     /// The id of the org
     org_id: OrgId,
@@ -90,7 +94,6 @@ impl CommandT for Show {
 }
 
 #[derive(StructOpt, Clone)]
-/// Register an org.
 pub struct Register {
     /// Id of the org to register.
     org_id: OrgId,
@@ -126,7 +129,6 @@ impl CommandT for Register {
 }
 
 #[derive(StructOpt, Clone)]
-/// Unregister an org.
 pub struct Unregister {
     /// Id of the org to unregister.
     org_id: OrgId,
@@ -162,19 +164,17 @@ impl CommandT for Unregister {
 }
 
 #[derive(StructOpt, Clone)]
-/// Transfer funds from an org to a recipient.
-/// The author needs to be a member of the org.
 pub struct Transfer {
     /// Id of the org.
     #[structopt(value_name = "org")]
     org_id: OrgId,
 
+    // The amount to transfer from the org to the recipient.
+    amount: Balance,
+
     /// Recipient Account in SS58 address format
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
-
-    // The balance to transfer from the org to the recipient.
-    funds: Balance,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -193,7 +193,7 @@ impl CommandT for Transfer {
                 message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
-                    value: self.funds,
+                    value: self.amount,
                 },
                 self.tx_options.fee,
             )
@@ -203,7 +203,7 @@ impl CommandT for Transfer {
         transaction_applied_ok(&transfered)?;
         println!(
             "transferred {} RAD from Org {} to Account {} in block {}",
-            self.funds, self.org_id, self.recipient, transfered.block,
+            self.amount, self.org_id, self.recipient, transfered.block,
         );
         Ok(())
     }

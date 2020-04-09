@@ -20,7 +20,9 @@ use super::*;
 /// User related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
+    /// Register a user.
     Register(Register),
+    /// Unregister a user.
     Unregister(Unregister),
 }
 
@@ -35,7 +37,6 @@ impl CommandT for Command {
 }
 
 #[derive(StructOpt, Clone)]
-/// Register a user.
 pub struct Register {
     /// Id of the user to register. The valid charset is: 'a-z0-9-' and can't begin or end with
     /// a '-', must also not contain more than two '-' in a row.
@@ -71,7 +72,6 @@ impl CommandT for Register {
 }
 
 #[derive(StructOpt, Clone)]
-/// Unregister a user.
 pub struct Unregister {
     /// Id of the org to unregister.
     user_id: UserId,
