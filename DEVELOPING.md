@@ -14,6 +14,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Packages](#packages)
 - [Running checks and tests](#running-checks-and-tests)
 - [Continuous Deployment](#continuous-deployment)
+- [Make a release](#make-a-release)
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
@@ -99,6 +100,31 @@ Continuous Deployment
 
 We’re continuously deploying master builds of the node to the devnet. We’re
 using Kubernetes for this. You can find the code in `ci/deploy`.
+
+
+Make a release
+--------------
+
+1. Download the latest binaries for the targeted master build [in Builkite](https://buildkite.com/monadic/radicle-registry/builds?branch=master)
+    - Select the targeted build
+    - Expand the `Test ci/run` section
+    - Open the `Artifacts` tab
+    - Download the following binaries:
+        - `radicle-registry-cli`
+        - `radicle-registry-node`
+2. Create a new release
+    - Open the [Radicle Registry Github Releases page](https://github.com/radicle-dev/radicle-registry/releases)
+    - Define the tag version (see [Tags](#tags))
+    - Select the right target
+    - Add a release title
+    - Describe the changes included in this release to users
+    - Attach the binaries downloaded in step 1.
+
+### Tags
+
+Our tags are composed of the release date followed by an incremental number. For example:
+
+- `2020-04-09-0`
 
 
 Local devnet
