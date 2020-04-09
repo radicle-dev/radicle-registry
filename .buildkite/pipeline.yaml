@@ -31,3 +31,8 @@ steps:
     agents:
       platform: "linux"
       production: "true"
+
+notify:
+  - email: "registry-devs@monadic.xyz"
+    if: |
+      build.state == "failed" && build.branch == "master"
