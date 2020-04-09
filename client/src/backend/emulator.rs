@@ -16,6 +16,7 @@
 //! Provides [Emulator] backend to run the registry ledger in memory.
 
 use futures::future::BoxFuture;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use sp_runtime::{traits::Hash as _, BuildStorage as _, Digest};
@@ -49,7 +50,8 @@ pub struct Emulator {
 /// Mutable state of the emulator.
 struct EmulatorState {
     test_ext: sp_io::TestExternalities,
-    next_header: Header,
+    tip_header: Header,
+    headers: HashMap<BlockHash, Header>,
 }
 
 /// Block author account used when the emulator creates blocks.
@@ -75,20 +77,23 @@ impl Emulator {
             .register_provider(registry_inherent_data)
             .unwrap();
 
-        let next_header = Header {
+        let tip_header = Header {
             parent_hash: Hash::zero(),
             number: 1,
             state_root: Hash::zero(),
             extrinsics_root: Hash::zero(),
             digest: Digest::default(),
         };
+        let mut headers = HashMap::new();
+        headers.insert(tip_header.hash(), tip_header.clone());
 
         Emulator {
             genesis_hash,
             inherent_data_providers,
             state: Arc::new(Mutex::new(EmulatorState {
                 test_ext,
-                next_header,
+                tip_header,
+                headers,
             })),
         }
     }
@@ -102,9 +107,15 @@ impl backend::Backend for Emulator {
     ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let mut state = self.state.lock().unwrap();
-        let next_header = state.next_header.clone();
-        let (header, events) = state.test_ext.execute_with(move || {
-            Executive::initialize_block(&next_header);
+
+        let new_tip_header_init = Header {
+            parent_hash: state.tip_header.hash(),
+            number: state.tip_header.number + 1,
+            ..state.tip_header.clone()
+        };
+
+        let (new_tip_header, events) = state.test_ext.execute_with(move || {
+            Executive::initialize_block(&new_tip_header_init);
 
             let inherent_data = self.inherent_data_providers.create_inherent_data().unwrap();
             let inherents = radicle_registry_runtime::inherent_extrinsics(inherent_data);
@@ -126,13 +137,14 @@ impl backend::Backend for Emulator {
             (header, events)
         });
 
-        state.next_header.parent_hash = header.hash();
-        state.next_header.number += 1;
+        state.tip_header = new_tip_header.clone();
+        let new_tip_hash = new_tip_header.hash();
+        state.headers.insert(new_tip_hash, new_tip_header);
 
         Ok(Box::pin(futures::future::ready(Ok(
             backend::TransactionApplied {
                 tx_hash,
-                block: header.hash(),
+                block: new_tip_hash,
                 events,
             },
         ))))
@@ -169,8 +181,17 @@ impl backend::Backend for Emulator {
         Ok(keys)
     }
 
-    async fn block_header(&self, _block_hash: Option<BlockHash>) -> Result<BlockHeader, Error> {
-        panic!("Method 'block_header' for the client emulator is not supported")
+    async fn block_header(&self, block_hash_opt: Option<BlockHash>) -> Result<BlockHeader, Error> {
+        let state = self.state.lock().unwrap();
+        let block_hash = match block_hash_opt {
+            Some(block_hash) => block_hash,
+            None => return Ok(state.tip_header.clone()),
+        };
+        state
+            .headers
+            .get(&block_hash)
+            .cloned()
+            .ok_or_else(|| format!("No block header found for hash {}", block_hash).into())
     }
 
     fn get_genesis_hash(&self) -> Hash {
