@@ -135,11 +135,11 @@ impl CommandT for Transfer {
                 self.tx_options.fee,
             )
             .await?;
-        println!("transferring funds...");
+        println!("Transferring funds...");
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
-            "transferred {} RAD to {} in block {}",
+            "✓ Transferred {} RAD to {} in block {}",
             self.amount, self.recipient, transfered.block,
         );
         Ok(())

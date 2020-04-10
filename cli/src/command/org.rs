@@ -123,7 +123,7 @@ impl CommandT for Register {
 
         let org_registered = register_org_fut.await?;
         transaction_applied_ok(&org_registered)?;
-        println!("Org {} is now registered.", self.org_id);
+        println!("✓ Org {} is now registered.", self.org_id);
         Ok(())
     }
 }
@@ -158,7 +158,7 @@ impl CommandT for Unregister {
 
         let org_unregistered = register_org_fut.await?;
         transaction_applied_ok(&org_unregistered)?;
-        println!("Org {} is now unregistered.", self.org_id);
+        println!("✓ Org {} is now unregistered.", self.org_id);
         Ok(())
     }
 }
@@ -198,11 +198,11 @@ impl CommandT for Transfer {
                 self.tx_options.fee,
             )
             .await?;
-        println!("transferring funds...");
+        println!("Transferring funds...");
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
-            "transferred {} RAD from Org {} to Account {} in block {}",
+            "✓ Transferred {} RAD from Org {} to Account {} in block {}",
             self.amount, self.org_id, self.recipient, transfered.block,
         );
         Ok(())

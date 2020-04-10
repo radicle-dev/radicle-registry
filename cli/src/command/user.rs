@@ -66,7 +66,7 @@ impl CommandT for Register {
 
         let user_registered = register_user_fut.await?;
         transaction_applied_ok(&user_registered)?;
-        println!("User {} is now registered.", self.user_id);
+        println!("✓ User {} is now registered.", self.user_id);
         Ok(())
     }
 }
@@ -100,7 +100,7 @@ impl CommandT for Unregister {
 
         let user_unregistered = unregister_user.await?;
         transaction_applied_ok(&user_unregistered)?;
-        println!("User {} is now unregistered.", self.user_id);
+        println!("✓ User {} is now unregistered.", self.user_id);
         Ok(())
     }
 }

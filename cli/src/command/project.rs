@@ -63,8 +63,8 @@ impl CommandT for Show {
                 project_name: self.project_name.clone(),
                 org_id: self.org_id.clone(),
             })?;
-        println!("project: {}.{}", project.name, project.org_id);
-        println!("checkpoint: {}", project.current_cp);
+        println!("Project: {}.{}", project.name, project.org_id);
+        println!("Checkpoint: {}", project.current_cp);
         Ok(())
     }
 }
@@ -118,11 +118,11 @@ impl CommandT for Register {
                 self.tx_options.fee,
             )
             .await?;
-        println!("creating checkpoint...");
+        println!("Creating checkpoint...");
 
         let checkpoint_created = create_checkpoint_fut.await?;
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
-        println!("checkpoint created in block {}", checkpoint_created.block);
+        println!("✓ Checkpoint created in block {}", checkpoint_created.block);
 
         let register_project_fut = client
             .sign_and_submit_message(
@@ -136,11 +136,11 @@ impl CommandT for Register {
                 self.tx_options.fee,
             )
             .await?;
-        println!("registering project...");
+        println!("Registering project...");
         let project_registered = register_project_fut.await?;
         transaction_applied_ok(&project_registered)?;
         println!(
-            "project {}.{} registered in block {}",
+            "✓ Project {}.{} registered in block {}",
             self.project_name, self.org_id, project_registered.block,
         );
         Ok(())
