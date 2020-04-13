@@ -127,24 +127,24 @@ pub trait CommandT {
 /// Implements [From] for client errors and [account_storage] errors.
 #[derive(Debug, ThisError)]
 pub enum CommandError {
-    #[error("Client error: {0}")]
+    #[error("client error")]
     ClientError(#[from] Error),
 
-    #[error("Transaction {tx_hash} failed in block {block_hash}")]
+    #[error("transaction {tx_hash} failed in block {block_hash}")]
     FailedTransaction {
         tx_hash: TxHash,
         block_hash: BlockHash,
     },
 
-    #[error("Cannot find org {org_id}")]
+    #[error("cannot find org {org_id}")]
     OrgNotFound { org_id: OrgId },
 
-    #[error("Cannot find project {project_name}.{org_id}")]
+    #[error("cannot find project {project_name}.{org_id}")]
     ProjectNotFound {
         project_name: ProjectName,
         org_id: OrgId,
     },
 
-    #[error("{0}")]
+    #[error(transparent)]
     AccountStorageError(#[from] account_storage::Error),
 }
