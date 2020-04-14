@@ -14,12 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Provides [Arguments] struct that represents the command line arguments.
+use crate::chain_spec::Chain;
+use core::convert::TryFrom;
 use radicle_registry_runtime::AccountId;
 use sc_cli::{RunCmd, Subcommand};
 use sc_network::config::MultiaddrWithPeerId;
 use structopt::{clap, StructOpt};
-
-use crate::chain_spec::Chain;
 
 /// Command line arguments.
 ///
@@ -147,15 +147,7 @@ impl Arguments {
 
 // NOTE Update `possible_values` in the structopt attribute if something is added here.
 fn parse_chain(name: &str) -> Result<Chain, String> {
-    if name == "dev" {
-        Ok(Chain::Dev)
-    } else if name == "local-devnet" {
-        Ok(Chain::DevnetLocal)
-    } else if name == "devnet" {
-        Ok(Chain::Devnet)
-    } else {
-        Err(format!("Invalid chain {}", name))
-    }
+    Chain::try_from(name.to_string())
 }
 
 fn parse_ss58_account_id(data: &str) -> Result<AccountId, String> {

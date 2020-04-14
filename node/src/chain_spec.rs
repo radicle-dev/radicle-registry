@@ -51,6 +51,22 @@ impl Chain {
     }
 }
 
+impl TryFrom<String> for Chain {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if value == "dev" {
+            Ok(Chain::Dev)
+        } else if value == "local-devnet" {
+            Ok(Chain::DevnetLocal)
+        } else if value == "devnet" {
+            Ok(Chain::Devnet)
+        } else {
+            Err(format!("Invalid chain {}", value))
+        }
+    }
+}
+
 pub fn dev() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Development, isolated node",
