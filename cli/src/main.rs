@@ -16,6 +16,7 @@
 //! The executable entry point for the Radicle Registry CLI.
 
 use radicle_registry_cli::CommandLine;
+use std::error::Error;
 use structopt::StructOpt;
 
 #[async_std::main]
@@ -27,8 +28,16 @@ async fn main() {
     match result {
         Ok(_) => std::process::exit(0),
         Err(error) => {
-            eprintln!("ERROR: {}", error);
+            print_error(&error);
             std::process::exit(1);
         }
+    }
+}
+
+fn print_error(mut error: &dyn Error) {
+    eprintln!("Error: {}", error);
+    while let Some(source) = error.source() {
+        error = source;
+        eprintln!("  Caused by: {}", error);
     }
 }

@@ -205,7 +205,7 @@ async fn invalid_transaction() {
 
     let response = client.submit_transaction(transfer_tx).await;
     match response {
-        Err(Error::Other(_)) => (),
+        Err(Error::Rpc(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),
         Ok(_) => panic!("Transaction was accepted unexpectedly"),
     }
@@ -226,7 +226,7 @@ async fn insufficient_fee() {
         .await;
 
     match response {
-        Err(Error::Other(_)) => (),
+        Err(Error::Rpc(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),
         Ok(_) => panic!("Transaction was accepted unexpectedly"),
     }
@@ -249,7 +249,7 @@ async fn insufficient_funds() {
         .await;
 
     match response {
-        Err(Error::Other(_)) => (),
+        Err(Error::Rpc(_)) => (),
         Err(error) => panic!("Unexpected error {:?}", error),
         Ok(_) => panic!("Transaction was accepted unexpectedly"),
     }

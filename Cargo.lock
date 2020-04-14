@@ -1915,9 +1915,8 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-client-transports"
-version = "14.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a9ae166c4d1f702d297cd76d4b55758ace80272ffc6dbb139fdc1bf810de40b"
+version = "14.1.0"
+source = "git+https://github.com/paritytech/jsonrpc?tag=v14.1.0#06375c3d31971f177bbf1a11c5d0216b03b106e7"
 dependencies = [
  "failure",
  "futures 0.1.29",
@@ -1933,9 +1932,8 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-core"
-version = "14.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe3b688648f1ef5d5072229e2d672ecb92cbff7d1c79bcf3fd5898f3f3df0970"
+version = "14.1.0"
+source = "git+https://github.com/paritytech/jsonrpc?tag=v14.1.0#06375c3d31971f177bbf1a11c5d0216b03b106e7"
 dependencies = [
  "futures 0.1.29",
  "log 0.4.8",
@@ -1946,9 +1944,8 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-core-client"
-version = "14.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "080dc110be17701097df238fad3c816d4a478a1899dfbcf8ec8957dd40ec7304"
+version = "14.1.0"
+source = "git+https://github.com/paritytech/jsonrpc?tag=v14.1.0#06375c3d31971f177bbf1a11c5d0216b03b106e7"
 dependencies = [
  "jsonrpc-client-transports",
 ]
@@ -1982,9 +1979,8 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-pubsub"
-version = "14.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b31c9b90731276fdd24d896f31bb10aecf2e5151733364ae81123186643d939"
+version = "14.1.0"
+source = "git+https://github.com/paritytech/jsonrpc?tag=v14.1.0#06375c3d31971f177bbf1a11c5d0216b03b106e7"
 dependencies = [
  "jsonrpc-core",
  "log 0.4.8",

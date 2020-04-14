@@ -7,3 +7,10 @@ members = [
   "runtime",
   "test-utils"
   ]
+
+# TODO remove when Substrate upgrades jsonrpc-core-client to 14.1.0
+# https://github.com/paritytech/substrate/issues/5623
+[patch.crates-io]
+jsonrpc-pubsub = { git = "https://github.com/paritytech/jsonrpc", tag = "v14.1.0" }
+jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc", tag = "v14.1.0" }
+jsonrpc-core-client = { git = "https://github.com/paritytech/jsonrpc", tag = "v14.1.0" }
