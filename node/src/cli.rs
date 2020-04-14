@@ -32,7 +32,7 @@ pub struct Arguments {
     /// Chain to connect to.
     #[structopt(
         long,
-        default_value = "dev",
+        default_value = "devnet",
         value_name = "CHAIN",
         parse(try_from_str = parse_chain),
         possible_values = &["dev", "local-devnet", "devnet"]
