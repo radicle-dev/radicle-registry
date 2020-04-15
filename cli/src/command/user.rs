@@ -26,6 +26,8 @@ pub enum Command {
     Unregister(Unregister),
     /// Show information for a registered user.
     Show(Show),
+    /// List all users in the registry.
+    List(List),
 }
 
 #[async_trait::async_trait]
@@ -35,6 +37,7 @@ impl CommandT for Command {
             user::Command::Register(cmd) => cmd.run().await,
             user::Command::Unregister(cmd) => cmd.run().await,
             user::Command::Show(cmd) => cmd.run().await,
+            user::Command::List(cmd) => cmd.run().await,
         }
     }
 }
@@ -132,6 +135,25 @@ impl CommandT for Show {
         println!("id: {}", user.id);
         println!("account_id: {}", user.account_id);
         println!("projects: {:?}", user.projects);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct List {
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for List {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let user_ids = client.list_users().await?;
+        println!("USERS ({})", user_ids.len());
+        for user_id in user_ids {
+            println!("{}", user_id)
+        }
         Ok(())
     }
 }
