@@ -43,7 +43,10 @@ pub struct Arguments {
     #[structopt(long)]
     pub unsafe_rpc_external: bool,
 
-    /// List of nodes to connect to on start'
+    /// List of nodes to connect to on start.
+    /// The addresses must be expressed as libp2p multiaddresses with a peer ID, e.g.
+    /// `/ip4/35.233.120.254/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR`.
+    /// For more information visit https://docs.libp2p.io/concepts/addressing/
     #[structopt(long, short, value_name = "ADDR")]
     bootnodes: Vec<MultiaddrWithPeerId>,
 
@@ -76,7 +79,7 @@ pub struct Arguments {
     #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
     pub mine: Option<AccountId>,
 
-    /// Bind the prometheus metrics endpoint to 0.0.0.0
+    /// Bind the prometheus metrics endpoint to 0.0.0.0 on port 9615
     #[structopt(long)]
     prometheus_external: bool,
 }
