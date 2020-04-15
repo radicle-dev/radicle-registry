@@ -61,7 +61,7 @@ async fn transfer_any_amount() {
         assert_eq!(
             tx_applied.result,
             Ok(()),
-            "Failed to transfer {} RAD",
+            "Failed to transfer {} μRAD",
             amount
         );
     }

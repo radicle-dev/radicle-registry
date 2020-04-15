@@ -63,7 +63,7 @@ impl CommandT for ShowBalance {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let balance = client.free_balance(&self.account_id).await?;
-        println!("{} RAD", balance);
+        println!("{} μRAD", balance);
         Ok(())
     }
 }
@@ -140,7 +140,7 @@ impl CommandT for Transfer {
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
-            "✓ Transferred {} RAD to {} in block {}",
+            "✓ Transferred {} μRAD to {} in block {}",
             self.amount, self.recipient, transfered.block,
         );
         Ok(())
