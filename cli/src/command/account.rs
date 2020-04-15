@@ -135,7 +135,8 @@ impl CommandT for Transfer {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Transferring funds...");
+        announce_tx("Transferring funds...");
+
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
