@@ -42,6 +42,7 @@ Upcoming
 * The `Client` and `ClientT` methods are now `async`.
 * The `--block-author` option was replaced with the `--mine` option. A node only
   mines if the option is given.
+* Polkadot telemetry was removed
 
 ### Addition
 * Add `MINIMUM_FEE` to the registry client

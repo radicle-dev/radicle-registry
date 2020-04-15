@@ -39,10 +39,6 @@ pub struct Arguments {
     )]
     pub chain: Chain,
 
-    /// Human-readable name for this node to use for telemetry'
-    #[structopt(long, value_name = "NAME")]
-    name: Option<String>,
-
     /// Bind the RPC HTTP and WebSocket APIs to `0.0.0.0` instead of the local interface.
     #[structopt(long)]
     pub unsafe_rpc_external: bool,
@@ -54,13 +50,6 @@ pub struct Arguments {
     /// Where to store data
     #[structopt(long, short, value_name = "PATH")]
     data_path: Option<std::path::PathBuf>,
-
-    /// The URL of the telemetry server to connect to.
-    ///
-    /// This flag can be passed multiple times as a mean to specify multiple
-    /// telemetry endpoints.
-    #[structopt(long, short, value_name = "URL")]
-    telemetry_endpoints: Vec<String>,
 
     /// The secret key to use for libp2p networking provided as a hex-encoded Ed25519 32 bytes
     /// secret key.
@@ -114,10 +103,8 @@ impl Arguments {
         let Arguments {
             bootnodes,
             data_path,
-            name,
             node_key,
             node_key_file,
-            telemetry_endpoints,
             unsafe_rpc_external,
             prometheus_external,
             ..
@@ -128,15 +115,7 @@ impl Arguments {
         run_cmd.network_config.node_key_params.node_key_file = node_key_file;
         run_cmd.shared_params.base_path = data_path;
 
-        // Add verbosity 0 to all endpoints.
-        let telemetry_endpoints = telemetry_endpoints
-            .into_iter()
-            .map(|url| (url, 0))
-            .collect();
-
         RunCmd {
-            name,
-            telemetry_endpoints,
             unsafe_rpc_external,
             unsafe_ws_external: unsafe_rpc_external,
             prometheus_external,
