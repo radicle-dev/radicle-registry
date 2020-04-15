@@ -45,6 +45,7 @@ Upcoming
 * Polkadot telemetry was removed
 
 ### Addition
+* Add `user list` and `user show` CLI commands 
 * Add `MINIMUM_FEE` to the registry client
 * The client emulator now authors blocks when a transaction is submitted.
 * Add `TransferFromOrg` message
