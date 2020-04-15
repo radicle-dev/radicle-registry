@@ -3699,6 +3699,7 @@ dependencies = [
  "env_logger 0.7.1",
  "exit-future 0.1.4",
  "futures 0.3.4",
+ "lazy_static",
  "log 0.4.8",
  "num-bigint",
  "num-traits 0.2.11",

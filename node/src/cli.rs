@@ -21,6 +21,10 @@ use structopt::{clap, StructOpt};
 
 use crate::chain_spec::Chain;
 
+lazy_static::lazy_static! {
+    static ref DEFAULT_CHAIN: &'static str = option_env!("DEFAULT_CHAIN").unwrap_or("dev");
+}
+
 /// Command line arguments.
 ///
 /// Implements [StructOpt] for parsing.
@@ -32,10 +36,10 @@ pub struct Arguments {
     /// Chain to connect to.
     #[structopt(
         long,
-        default_value = "devnet",
+        default_value = &DEFAULT_CHAIN,
         value_name = "CHAIN",
         parse(try_from_str = parse_chain),
-        possible_values = &["dev", "local-devnet", "devnet"]
+        possible_values = &["dev", "local-devnet", "devnet", "ffnet"]
     )]
     pub chain: Chain,
 
@@ -132,9 +136,11 @@ fn parse_chain(name: &str) -> Result<Chain, String> {
     if name == "dev" {
         Ok(Chain::Dev)
     } else if name == "local-devnet" {
-        Ok(Chain::DevnetLocal)
+        Ok(Chain::LocalDevnet)
     } else if name == "devnet" {
         Ok(Chain::Devnet)
+    } else if name == "ffnet" {
+        Ok(Chain::Ffnet)
     } else {
         Err(format!("Invalid chain {}", name))
     }
