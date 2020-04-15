@@ -139,6 +139,9 @@ pub enum CommandError {
     #[error("cannot find org {org_id}")]
     OrgNotFound { org_id: OrgId },
 
+    #[error("cannot find user {user_id}")]
+    UserNotFound { user_id: UserId },
+
     #[error("cannot find project {project_name}.{org_id}")]
     ProjectNotFound {
         project_name: ProjectName,

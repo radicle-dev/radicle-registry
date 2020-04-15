@@ -24,6 +24,8 @@ pub enum Command {
     Register(Register),
     /// Unregister a user.
     Unregister(Unregister),
+    /// Show information for a registered user.
+    Show(Show),
 }
 
 #[async_trait::async_trait]
@@ -32,6 +34,7 @@ impl CommandT for Command {
         match self {
             user::Command::Register(cmd) => cmd.run().await,
             user::Command::Unregister(cmd) => cmd.run().await,
+            user::Command::Show(cmd) => cmd.run().await,
         }
     }
 }
@@ -101,6 +104,34 @@ impl CommandT for Unregister {
         let user_unregistered = unregister_user.await?;
         transaction_applied_ok(&user_unregistered)?;
         println!("✓ User {} is now unregistered.", self.user_id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct Show {
+    /// The id of the user
+    user_id: UserId,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for Show {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let user =
+            client
+                .get_user(self.user_id.clone())
+                .await?
+                .ok_or(CommandError::UserNotFound {
+                    user_id: self.user_id.clone(),
+                })?;
+
+        println!("id: {}", user.id);
+        println!("account_id: {}", user.account_id);
+        println!("projects: {:?}", user.projects);
         Ok(())
     }
 }
