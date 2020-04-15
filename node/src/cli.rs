@@ -39,28 +39,20 @@ pub struct Arguments {
     )]
     pub chain: Chain,
 
-    /// Human-readable name for this node to use for telemetry'
-    #[structopt(long, value_name = "NAME")]
-    name: Option<String>,
-
     /// Bind the RPC HTTP and WebSocket APIs to `0.0.0.0` instead of the local interface.
     #[structopt(long)]
     pub unsafe_rpc_external: bool,
 
-    /// List of nodes to connect to on start'
+    /// List of nodes to connect to on start.
+    /// The addresses must be expressed as libp2p multiaddresses with a peer ID, e.g.
+    /// `/ip4/35.233.120.254/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR`.
+    /// For more information visit https://docs.libp2p.io/concepts/addressing/
     #[structopt(long, short, value_name = "ADDR")]
     bootnodes: Vec<MultiaddrWithPeerId>,
 
     /// Where to store data
     #[structopt(long, short, value_name = "PATH")]
     data_path: Option<std::path::PathBuf>,
-
-    /// The URL of the telemetry server to connect to.
-    ///
-    /// This flag can be passed multiple times as a mean to specify multiple
-    /// telemetry endpoints.
-    #[structopt(long, short, value_name = "URL")]
-    telemetry_endpoints: Vec<String>,
 
     /// The secret key to use for libp2p networking provided as a hex-encoded Ed25519 32 bytes
     /// secret key.
@@ -87,7 +79,7 @@ pub struct Arguments {
     #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
     pub mine: Option<AccountId>,
 
-    /// Bind the prometheus metrics endpoint to 0.0.0.0
+    /// Bind the prometheus metrics endpoint to 0.0.0.0 on port 9615
     #[structopt(long)]
     prometheus_external: bool,
 }
@@ -114,10 +106,8 @@ impl Arguments {
         let Arguments {
             bootnodes,
             data_path,
-            name,
             node_key,
             node_key_file,
-            telemetry_endpoints,
             unsafe_rpc_external,
             prometheus_external,
             ..
@@ -128,15 +118,7 @@ impl Arguments {
         run_cmd.network_config.node_key_params.node_key_file = node_key_file;
         run_cmd.shared_params.base_path = data_path;
 
-        // Add verbosity 0 to all endpoints.
-        let telemetry_endpoints = telemetry_endpoints
-            .into_iter()
-            .map(|url| (url, 0))
-            .collect();
-
         RunCmd {
-            name,
-            telemetry_endpoints,
             unsafe_rpc_external,
             unsafe_ws_external: unsafe_rpc_external,
             prometheus_external,
