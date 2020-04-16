@@ -51,3 +51,8 @@ where
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
     Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }
+
+fn announce_tx(msg: &str) {
+    println!("{}", msg);
+    println!("⏳ Transactions might take a while to be processed. Please wait...");
+}

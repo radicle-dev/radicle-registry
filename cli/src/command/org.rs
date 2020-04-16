@@ -119,7 +119,7 @@ impl CommandT for Register {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Registering org...");
+        announce_tx("Registering org...");
 
         let org_registered = register_org_fut.await?;
         transaction_applied_ok(&org_registered)?;
@@ -154,7 +154,7 @@ impl CommandT for Unregister {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Unregistering org...");
+        announce_tx("Unregistering org...");
 
         let org_unregistered = register_org_fut.await?;
         transaction_applied_ok(&org_unregistered)?;
@@ -198,7 +198,8 @@ impl CommandT for Transfer {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Transferring funds...");
+        announce_tx("Transferring funds...");
+
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(

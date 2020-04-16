@@ -118,7 +118,7 @@ impl CommandT for Register {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Creating checkpoint...");
+        announce_tx("Creating checkpoint...");
 
         let checkpoint_created = create_checkpoint_fut.await?;
         let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
@@ -136,7 +136,8 @@ impl CommandT for Register {
                 self.tx_options.fee,
             )
             .await?;
-        println!("Registering project...");
+        announce_tx("Registering project...");
+
         let project_registered = register_project_fut.await?;
         transaction_applied_ok(&project_registered)?;
         println!(
