@@ -5,10 +5,15 @@ Radicle Registry
 
 Experimental Radicle Registry implementation with Substrate.
 
-See [`DEVELOPING.md`][dev-manual] for developer information.
+Click [here](https://radicle.run/docs/getting-started) to learn how to get
+started participating in the Radicle Registry Network.
+
+See [`DEVELOPING.md`](./DEVELOPING.md) for developer information.
 
 <!-- toc -->
 
+- [Prerequisites](#prerequisites)
+- [Build from source](#build-from-source)
 - [Getting the Node](#getting-the-node)
 - [Running the node](#running-the-node)
 - [Using the Client](#using-the-client)
@@ -18,6 +23,51 @@ See [`DEVELOPING.md`][dev-manual] for developer information.
 - [License](#license)
 
 <!-- tocstop -->
+
+Prerequisites
+---------------
+
+ⓘ Follow this guide to get started [developing](./DEVELOPING.md)
+   or to [build from source](#build-from-source).
+
+1. [Install Rust](https://www.rust-lang.org/tools/install)
+
+   It will run `rustup`, The Rust toolchain installer, which installs
+   `rustc`, `cargo`, `rustup`, amongst other standard tools that compose
+   the default Rust toolchain.
+
+2. Run `rustc --version` in a new shell.
+
+   To verify that the installion is sound.
+
+3. Run `./scripts/rustup-setup`
+
+   To install all `rustup` components and targets required by the
+   Radicle Registry.
+
+
+Build from source
+-----------------
+
+⚠ Make sure you have followed the [prerequisites](#prerequisites) guide
+  before proceeding.
+
+We currently only provide prebuilt binaries for `x86_64` linux targets in
+the [Radicle Registry Releases][releases-page] page.
+
+To build the Radicle Registry binaries to run on other targers, run:
+
+``` bash
+./scripts/build-release
+```
+
+The resulting binaries can be found at:
+
+* `./target/release/radicle-registry-cli`
+* `./target/release/radicle-registry-node`
+
+[releases-page]: https://github.com/radicle-dev/radicle-registry/releases
+
 
 Getting the Node
 ----------------
@@ -148,10 +198,6 @@ Using the CLI
 
 We provide a CLI to talk read and update the ledger in the `cli` directory. To
 learn more run `cargo run -p radicle-registry-cli -- --help`.
-
-
-[dev-manual]: ./DEVELOPING.md
-[rustup-install]: https://github.com/rust-lang/rustup.rs#installation
 
 
 License
