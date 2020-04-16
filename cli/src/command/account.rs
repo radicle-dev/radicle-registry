@@ -96,7 +96,7 @@ impl CommandT for List {
         for (name, data) in accounts {
             println!("Account '{}'", name);
             println!(
-                "\taddress: {}",
+                "\tSS58 address: {}",
                 ed25519::Pair::from_seed(&data.seed).public().to_ss58check()
             );
         }
