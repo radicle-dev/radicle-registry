@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Build the CLI and node binaries for release. The resulting binaries can be found at:
+# * `./target/release/radicle-registry-cli`
+# * `./target/release/radicle-registry-node`
+
+DEFAULT_CHAIN=ffnet cargo build --workspace --all-targets --release

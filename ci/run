@@ -55,8 +55,8 @@ echo "--- cargo doc"
 RUSTDOCFLAGS="-D intra-doc-link-resolution-failure" \
   cargo doc --workspace --no-deps --document-private-items
 
-echo "--- cargo build"
-DEFAULT_CHAIN=ffnet cargo build --workspace --all-targets --release
+echo "--- scripts/build-release
+time ./scripts/build-release
 
 echo "--- cargo test"
 echo "Starting radicle-registry-node"
