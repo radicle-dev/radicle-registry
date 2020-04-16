@@ -55,8 +55,8 @@ echo "--- cargo doc"
 RUSTDOCFLAGS="-D intra-doc-link-resolution-failure" \
   cargo doc --workspace --no-deps --document-private-items
 
-echo "--- scripts/build-release
-time ./scripts/build-release
+echo "--- scripts/build-release"
+./scripts/build-release
 
 echo "--- cargo test"
 echo "Starting radicle-registry-node"

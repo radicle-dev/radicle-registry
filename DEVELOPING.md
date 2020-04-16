@@ -9,7 +9,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 <!-- toc -->
 
-- [Build requirements](#build-requirements)
+- [Prerequisites](#prerequisites)
 - [Running development node](#running-development-node)
 - [Packages](#packages)
 - [Running checks and tests](#running-checks-and-tests)
@@ -21,14 +21,10 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 <!-- tocstop -->
 
-Build requirements
-------------------
+Prerequisites
+-------------
 
-1. Get [`rustup`][rustup-install]
-2. Run `./scripts/rustup-setup` to install all required `rustup` components and
-   targets.
-
-[rustup-install]: https://github.com/rust-lang/rustup.rs#installation
+Follow the [README's Prerequisites guide](README.md#prerequisites).
 
 
 Running development node
