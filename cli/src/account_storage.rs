@@ -28,7 +28,7 @@ use std::path::PathBuf;
 /// The data that is stored in the filesystem relative
 /// to an account. The account name is used as the key
 /// to this value, therefore not included here.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AccountData {
     pub seed: Seed,
 }
@@ -50,6 +50,10 @@ pub enum Error {
     /// Failed to read the accounts file
     #[error("Failed to read the accounts file: {0}")]
     FailedRead(#[from] ReadingError),
+
+    /// Could not find an account with the given name
+    #[error("Could not find an account with the given name")]
+    NotFound(),
 }
 
 /// Possible errors when writing to the accounts file.
@@ -95,6 +99,14 @@ pub fn list() -> Result<HashMap<String, AccountData>, Error> {
     let accounts: HashMap<String, AccountData> =
         serde_json::from_reader(&file).map_err(ReadingError::Deserialization)?;
     Ok(accounts)
+}
+
+/// Get an account by name.
+///
+/// It can fail from IO and Serde Json errors, or if no such
+/// account is found.
+pub fn get(name: &str) -> Result<AccountData, Error> {
+    list()?.get(name).map(Clone::clone).ok_or(Error::NotFound())
 }
 
 fn update(accounts: HashMap<String, AccountData>) -> Result<(), Error> {
