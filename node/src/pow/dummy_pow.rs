@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::pow::Difficulty;
 use radicle_registry_runtime::{Block, Hash};
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sp_consensus_pow::Seal;
@@ -40,13 +41,13 @@ const MINE_DURATION: std::time::Duration = std::time::Duration::from_millis(10);
 const MINE_SUCCESS_PROBABILITY: f32 = 0.005;
 
 impl PowAlgorithm<Block> for DummyPow {
-    type Difficulty = u128;
+    type Difficulty = Difficulty;
 
     fn difficulty(
         &self,
         _parent: <Block as BlockT>::Hash,
     ) -> Result<Self::Difficulty, Error<Block>> {
-        Ok(1)
+        Ok(1.into())
     }
 
     fn verify(
