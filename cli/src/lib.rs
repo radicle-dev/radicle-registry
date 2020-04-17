@@ -83,11 +83,9 @@ lazy_static! {
 }
 
 fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
-    let accounts = account_storage::list().map_err(|e| format!("{}", e))?;
-    match accounts.get(&name.to_string()) {
-        Some(account) => Ok(ed25519::Pair::from_seed(&account.seed)),
-        None => Err(format!("Could not find local account named '{}'", name)),
-    }
+    account_storage::get(name)
+        .map(|account| ed25519::Pair::from_seed(&account.seed))
+        .map_err(|e| format!("{}", e))
 }
 
 /// The supported [CommandLine] commands.
