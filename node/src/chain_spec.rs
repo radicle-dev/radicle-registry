@@ -90,7 +90,13 @@ fn ffnet() -> ChainSpec {
         "ffnet",
         "ffnet",
         dev_genesis_config,
-        vec![],        // boot nodes
+        // Addresses are defined here: https://github.com/radicle-dev/infra/tree/master/registry/ffnet
+        vec![
+            "/dns4/boot-0.ff.radicle.network./tcp/30333/p2p/QmdEvLkAS8mxETQy1RCbdmcPPzxSs9RbExFcWvwJZDXxjG"
+                .parse().unwrap(),
+            "/dns4/boot-1.ff.radicle.network./tcp/30333/p2p/QmceS5WYfDyKNtnzrxCw4TEL9nokvJkRi941oUzBvErsuD"
+                .parse().unwrap()
+        ],
         None,          // telemetry endpoints
         Some("ffnet"), // protocol_id
         Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
