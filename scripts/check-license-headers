@@ -10,10 +10,12 @@ set -euo pipefail
 IFS=$'\n'
 
 license_header=$(cat ./LICENSE_HEADER)
+license_header_size=$(echo "$license_header" | wc --bytes)
 
-shopt -s globstar
-for file in */src/**/*.rs; do
-  file_start=$(head -n 15 "$file")
+shopt -s extglob
+
+for file in !(target)/**/*.rs; do
+  file_start=$(head --bytes $license_header_size "$file")
 
   if [[ "$file_start" != "$license_header" ]]; then
     if [[ "${1:-}" = "--fix" ]]; then
