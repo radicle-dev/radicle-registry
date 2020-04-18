@@ -67,6 +67,14 @@ impl From<RegistryError> for &'static str {
     }
 }
 
+#[cfg(feature = "std")]
+impl core::fmt::Display for RegistryError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let s: &str = self.clone().into();
+        write!(f, "{}", s)
+    }
+}
+
 // The index with which the registry runtime module is declared
 // in the Radicle Registry runtime - see the `construct_runtime`
 // declaration in the `runtime` crate.
