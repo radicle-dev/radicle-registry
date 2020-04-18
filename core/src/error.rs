@@ -16,6 +16,7 @@
 use crate::DispatchError;
 
 use derive_try_from_primitive::TryFromPrimitive;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[repr(u8)]
@@ -90,5 +91,26 @@ impl From<RegistryError> for DispatchError {
             error: error as u8,
             message: None,
         }
+    }
+}
+
+impl TryFrom<DispatchError> for RegistryError {
+    type Error = &'static str;
+
+    fn try_from(dispatch_error: DispatchError) -> Result<RegistryError, Self::Error> {
+        if let DispatchError::Module {
+            index,
+            error,
+            message: _,
+        } = dispatch_error
+        {
+            if index == REGISTRY_ERROR_INDEX {
+                return error.try_into().map_err(|_| {
+                    "Failed to build the RegistryError variant specified in the DispatchError"
+                });
+            }
+        }
+
+        Err("The given DispatchError does not wrap a RegistryError.")
     }
 }
