@@ -19,6 +19,7 @@
 
 use lazy_static::lazy_static;
 use radicle_registry_client::*;
+use std::convert::TryInto;
 use structopt::StructOpt;
 use thiserror::Error as ThisError;
 
@@ -128,11 +129,8 @@ pub enum CommandError {
     #[error("client error")]
     ClientError(#[from] Error),
 
-    #[error("transaction {tx_hash} failed in block {block_hash}")]
-    FailedTransaction {
-        tx_hash: TxHash,
-        block_hash: BlockHash,
-    },
+    #[error(transparent)]
+    FailedTransaction(#[from] TransactionError),
 
     #[error("cannot find org {org_id}")]
     OrgNotFound { org_id: OrgId },
@@ -148,4 +146,23 @@ pub enum CommandError {
 
     #[error(transparent)]
     AccountStorageError(#[from] account_storage::Error),
+}
+
+/// The subset of possible errors having led a transaction to failure.
+#[derive(Debug, ThisError)]
+pub enum TransactionError {
+    #[error("{0}")]
+    RegistryError(RegistryError),
+
+    #[error("{0:?}")]
+    OtherDispatchError(DispatchError),
+}
+
+impl From<DispatchError> for TransactionError {
+    fn from(dispatch_error: DispatchError) -> Self {
+        dispatch_error
+            .try_into()
+            .map(TransactionError::RegistryError)
+            .unwrap_or(TransactionError::OtherDispatchError(dispatch_error))
+    }
 }

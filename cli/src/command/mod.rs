@@ -15,7 +15,7 @@
 
 //! Define the commands supported by the CLI.
 
-use crate::{CommandError, CommandT, NetworkOptions, TxOptions};
+use crate::{CommandError, CommandT, NetworkOptions, TransactionError, TxOptions};
 use radicle_registry_client::*;
 
 use sp_core::crypto::Ss58Codec;
@@ -29,23 +29,18 @@ pub mod user;
 
 /// Check that a transaction has been applied succesfully.
 ///
-/// If the transaction failed, that is if `tx_applied.result` is `Err`, then we return a
-/// [CommandError]. Otherwise we return the `Ok` value of the transaction result.
-fn transaction_applied_ok<Message_, T, E>(
+/// Return the `Ok` value of the transaction result or, if the transaction failed
+/// (i.e., `tx_applied.result` is `Err`), return a [TransactionError].
+fn transaction_applied_ok<Message_, T>(
     tx_applied: &TransactionApplied<Message_>,
-) -> Result<T, CommandError>
+) -> Result<T, TransactionError>
 where
-    Message_: Message<Result = Result<T, E>>,
+    Message_: Message<Result = Result<T, DispatchError>>,
     T: Copy + Send + 'static,
-    E: Send + 'static,
 {
-    match tx_applied.result {
-        Ok(value) => Ok(value),
-        Err(_) => Err(CommandError::FailedTransaction {
-            tx_hash: tx_applied.tx_hash,
-            block_hash: tx_applied.block,
-        }),
-    }
+    tx_applied
+        .result
+        .map_err(|dispatch_error| dispatch_error.into())
 }
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
