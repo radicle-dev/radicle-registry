@@ -41,7 +41,7 @@ impl From<RegistryError> for &'static str {
             RegistryError::InexistentCheckpointId => "The provided checkpoint does not exist",
             RegistryError::InexistentOrg => "The provided org does not exist",
             RegistryError::InexistentUser => "The provided user does not exist",
-            RegistryError::DuplicateOrgId => "An org with a similar ID already exists.",
+            RegistryError::DuplicateOrgId => "An org with the same ID already exists.",
             RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
             RegistryError::DuplicateUserId => "A user with the same ID already exists.",
             RegistryError::InexistentProjectId => "Project does not exist",
@@ -67,14 +67,15 @@ impl From<RegistryError> for &'static str {
     }
 }
 
+// The index with which the registry runtime module is declared
+// in the Radicle Registry runtime - see the `construct_runtime`
+// declaration in the `runtime` crate.
+const REGISTRY_ERROR_INDEX: u8 = 7;
+
 impl From<RegistryError> for DispatchError {
     fn from(error: RegistryError) -> Self {
-        // This is the index with which the registry runtime module is declared
-        // in the Radicle Registry runtime - see the `construct_runtime`
-        // declaration in the `runtime` crate.
-        let registry_index = 7;
         DispatchError::Module {
-            index: registry_index,
+            index: REGISTRY_ERROR_INDEX,
             error: error as u8,
             message: None,
         }
