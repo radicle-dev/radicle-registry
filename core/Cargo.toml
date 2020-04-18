@@ -19,6 +19,7 @@ std = [
 ]
 
 [dependencies]
+derive-try-from-primitive = "1.0.0"
 rand = { version = "0.7.2", optional = true }
 
 [dependencies.parity-scale-codec]

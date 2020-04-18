@@ -15,7 +15,10 @@
 
 use crate::DispatchError;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+use derive_try_from_primitive::TryFromPrimitive;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[repr(u8)]
 /// Errors describing failed Registry transactions.
 pub enum RegistryError {
     InexistentCheckpointId = 0,
