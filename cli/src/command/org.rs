@@ -203,7 +203,7 @@ impl CommandT for Transfer {
         let transfered = transfer_fut.await?;
         transaction_applied_ok(&transfered)?;
         println!(
-            "✓ Transferred {} RAD from Org {} to Account {} in block {}",
+            "✓ Transferred {} μRAD from Org {} to Account {} in block {}",
             self.amount, self.org_id, self.recipient, transfered.block,
         );
         Ok(())
