@@ -17,66 +17,53 @@ use crate::DispatchError;
 
 use derive_try_from_primitive::TryFromPrimitive;
 use std::convert::{TryFrom, TryInto};
+use thiserror::Error as ThisError;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError, TryFromPrimitive)]
 #[repr(u8)]
 /// Errors describing failed Registry transactions.
 pub enum RegistryError {
+    #[error("the provided checkpoint does not exist")]
     InexistentCheckpointId = 0,
-    InexistentOrg,
-    InexistentUser,
-    DuplicateOrgId,
-    DuplicateProjectId,
-    DuplicateUserId,
-    InexistentProjectId,
-    InsufficientFee,
-    InsufficientSenderPermissions,
-    InexistentParentCheckpoint,
+
+    #[error("a registered project must have an initial checkpoint")]
     InexistentInitialProjectCheckpoint,
+
+    #[error("the provided org does not exist")]
+    InexistentOrg,
+
+    #[error("the provided project does not exist")]
+    InexistentProjectId,
+
+    #[error("the provided user does not exist")]
+    InexistentUser,
+
+    #[error("an org with the same ID already exists")]
+    DuplicateOrgId,
+
+    #[error("a project with the same ID already exists")]
+    DuplicateProjectId,
+
+    #[error("a user with the same ID already exists.")]
+    DuplicateUserId,
+
+    #[error("the provided fee is insufficient")]
+    InsufficientFee,
+
+    #[error("the sender is not a project member")]
+    InsufficientSenderPermissions,
+
+    #[error("the provided checkpoint is not a descendant of the project's initial checkpoint")]
     InvalidCheckpointAncestry,
-    NonUnregisterableUser,
+
+    #[error("the provided user is not eligible for unregistration")]
+    UnregisterableUser,
+
+    #[error("the provided org is not elibile for unregistration")]
     UnregisterableOrg,
+
+    #[error("the account is already associated with a user")]
     UserAccountAssociated,
-}
-
-impl From<RegistryError> for &'static str {
-    fn from(error: RegistryError) -> &'static str {
-        match error {
-            RegistryError::InexistentCheckpointId => "The provided checkpoint does not exist",
-            RegistryError::InexistentOrg => "The provided org does not exist",
-            RegistryError::InexistentUser => "The provided user does not exist",
-            RegistryError::DuplicateOrgId => "An org with the same ID already exists.",
-            RegistryError::DuplicateProjectId => "A project with a similar ID already exists.",
-            RegistryError::DuplicateUserId => "A user with the same ID already exists.",
-            RegistryError::InexistentProjectId => "Project does not exist",
-            RegistryError::InsufficientFee => "The provided fee is insufficient.",
-            RegistryError::InsufficientSenderPermissions => "Sender is not a project member",
-            RegistryError::InexistentParentCheckpoint => "Parent checkpoint does not exist",
-            RegistryError::InexistentInitialProjectCheckpoint => {
-                "A registered project must have an initial checkpoint."
-            }
-            RegistryError::InvalidCheckpointAncestry => {
-                "The provided checkpoint is not a descendant of the project's initial checkpoint."
-            }
-            RegistryError::NonUnregisterableUser => {
-                "The provided user is not eligible for unregistration."
-            }
-            RegistryError::UnregisterableOrg => {
-                "The provided org is not elibile for unregistration."
-            }
-            RegistryError::UserAccountAssociated => {
-                "The account is already associated with a user."
-            }
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl core::fmt::Display for RegistryError {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let s: &str = self.clone().into();
-        write!(f, "{}", s)
-    }
 }
 
 // The index with which the registry runtime module is declared

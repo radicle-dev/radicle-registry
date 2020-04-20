@@ -151,7 +151,7 @@ pub enum CommandError {
 /// The subset of possible errors having led a transaction to failure.
 #[derive(Debug, ThisError)]
 pub enum TransactionError {
-    #[error("{0}")]
+    #[error(transparent)]
     RegistryError(RegistryError),
 
     #[error("{0:?}")]

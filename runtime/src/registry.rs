@@ -273,7 +273,7 @@ decl_module! {
                         Ok(())
                     }
                     else {
-                        Err(RegistryError::NonUnregisterableUser.into())
+                        Err(RegistryError::UnregisterableUser.into())
                     }
                 }
             }
