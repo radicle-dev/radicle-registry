@@ -89,7 +89,7 @@ fn ffnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "ffnet",
         "ffnet",
-        dev_genesis_config,
+        ffnet_genesis_config,
         // Addresses are defined here: https://github.com/radicle-dev/infra/tree/master/registry/ffnet
         vec![
             "/dns4/boot-0.ff.radicle.network./tcp/30333/p2p/QmdEvLkAS8mxETQy1RCbdmcPPzxSs9RbExFcWvwJZDXxjG"
@@ -102,6 +102,36 @@ fn ffnet() -> ChainSpec {
         Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
     )
+}
+
+fn ffnet_genesis_config() -> GenesisConfig {
+    use sp_core::crypto::Ss58Codec;
+
+    // Public keys for Github handles
+    let nunoalexandre =
+        AccountId::from_ss58check("5CbJnuDccgarfidUapCAZZgx7rPWv6J5G4NK2H7Zcykh3EF8").unwrap();
+    let codesandwich =
+        AccountId::from_ss58check("5Caqj67GfbVRUBpyUpHBG6mQFzP6L9MjibkcrvriUWVLYfjf").unwrap();
+    let geigerzaehler =
+        AccountId::from_ss58check("5Chs9EgWihAkawHzszEnv3X3uBZMUmi98rUsbu2Fyw5gKHx6").unwrap();
+
+    let init_balance = 1_000_000_000_000;
+    let balances = vec![
+        (codesandwich, init_balance),
+        (geigerzaehler, init_balance),
+        (nunoalexandre, init_balance),
+    ];
+
+    let sudo_key = geigerzaehler;
+
+    GenesisConfig {
+        system: Some(SystemConfig {
+            code: WASM_BINARY.to_vec(),
+            changes_trie_config: Default::default(),
+        }),
+        pallet_balances: Some(BalancesConfig { balances }),
+        pallet_sudo: Some(SudoConfig { key: sudo_key }),
+    }
 }
 
 fn local_devnet() -> ChainSpec {
