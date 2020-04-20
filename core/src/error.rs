@@ -19,6 +19,26 @@ use derive_try_from_primitive::TryFromPrimitive;
 use std::convert::{TryFrom, TryInto};
 use thiserror::Error as ThisError;
 
+/// The subset of possible errors having led a transaction to failure.
+#[derive(Debug, ThisError)]
+pub enum TransactionError {
+    #[error(transparent)]
+    RegistryError(#[from] RegistryError),
+
+    #[error("{0:?}")]
+    OtherDispatchError(DispatchError),
+}
+
+impl From<DispatchError> for TransactionError {
+    fn from(dispatch_error: DispatchError) -> Self {
+        dispatch_error
+            .try_into()
+            .map(TransactionError::RegistryError)
+            .unwrap_or(TransactionError::OtherDispatchError(dispatch_error))
+    }
+}
+
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError, TryFromPrimitive)]
 #[repr(u8)]
 /// Errors describing failed Registry transactions.

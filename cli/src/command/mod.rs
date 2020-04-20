@@ -15,7 +15,7 @@
 
 //! Define the commands supported by the CLI.
 
-use crate::{CommandError, CommandT, NetworkOptions, TransactionError, TxOptions};
+use crate::{CommandError, CommandT, NetworkOptions, TxOptions};
 use radicle_registry_client::*;
 
 use sp_core::crypto::Ss58Codec;
