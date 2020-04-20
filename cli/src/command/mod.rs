@@ -27,22 +27,6 @@ pub mod other;
 pub mod project;
 pub mod user;
 
-/// Check that a transaction has been applied succesfully.
-///
-/// Return the `Ok` value of the transaction result or, if the transaction failed
-/// (i.e., `tx_applied.result` is `Err`), return a [TransactionError].
-fn transaction_applied_ok<Message_, T>(
-    tx_applied: &TransactionApplied<Message_>,
-) -> Result<T, TransactionError>
-where
-    Message_: Message<Result = Result<T, DispatchError>>,
-    T: Copy + Send + 'static,
-{
-    tx_applied
-        .result
-        .map_err(|dispatch_error| dispatch_error.into())
-}
-
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
     Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
 }

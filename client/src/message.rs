@@ -17,7 +17,6 @@
 
 use radicle_registry_core::*;
 use radicle_registry_runtime::{registry, Call as RuntimeCall, Event, Runtime};
-use sp_runtime::DispatchError;
 
 pub use radicle_registry_core::message::*;
 
@@ -42,7 +41,7 @@ pub trait Message: Send + 'static {
 }
 
 impl Message for message::RegisterProject {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -61,7 +60,7 @@ impl Message for message::RegisterProject {
 }
 
 impl Message for message::RegisterOrg {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -80,7 +79,7 @@ impl Message for message::RegisterOrg {
 }
 
 impl Message for message::UnregisterOrg {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -99,7 +98,7 @@ impl Message for message::UnregisterOrg {
 }
 
 impl Message for message::RegisterUser {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::register_user(self).into()
@@ -119,7 +118,7 @@ impl Message for message::RegisterUser {
 }
 
 impl Message for message::UnregisterUser {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -138,7 +137,7 @@ impl Message for message::UnregisterUser {
 }
 
 impl Message for message::CreateCheckpoint {
-    type Result = Result<CheckpointId, DispatchError>;
+    type Result = Result<CheckpointId, TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -159,7 +158,7 @@ impl Message for message::CreateCheckpoint {
 }
 
 impl Message for message::SetCheckpoint {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
@@ -182,7 +181,7 @@ impl Message for message::SetCheckpoint {
 }
 
 impl Message for message::Transfer {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         get_dispatch_result(&events)
@@ -194,7 +193,7 @@ impl Message for message::Transfer {
 }
 
 impl Message for message::TransferFromOrg {
-    type Result = Result<(), DispatchError>;
+    type Result = Result<(), TransactionError>;
 
     fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
         get_dispatch_result(&events)
@@ -212,13 +211,13 @@ impl Message for message::TransferFromOrg {
 ///
 /// Returns an outer [EventParseError] if no [frame_system::Event] was present in `events`.
 ///
-/// Because of an issue with substrate the `message` field of [DispatchError] will always be `None`
-fn get_dispatch_result(events: &[Event]) -> Result<Result<(), DispatchError>, EventParseError> {
+/// Because of an issue with substrate the `message` field of [TransactionError] will always be `None`
+fn get_dispatch_result(events: &[Event]) -> Result<Result<(), TransactionError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
             frame_system::Event::<Runtime>::ExtrinsicSuccess(_) => Some(Ok(())),
             frame_system::Event::<Runtime>::ExtrinsicFailed(ref dispatch_error, _) => {
-                Some(Err(*dispatch_error))
+                Some(Err((*dispatch_error).into()))
             }
             _ => None,
         },

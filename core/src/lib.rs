@@ -46,7 +46,7 @@ mod user_id;
 pub use user_id::{InvalidUserIdError, UserId};
 
 mod error;
-pub use error::{TransactionError, RegistryError};
+pub use error::{RegistryError, TransactionError};
 
 /// The hashing algorightm to use
 pub type Hashing = BlakeTwo256;

@@ -20,7 +20,7 @@ use std::convert::{TryFrom, TryInto};
 use thiserror::Error as ThisError;
 
 /// The subset of possible errors having led a transaction to failure.
-#[derive(Debug, ThisError)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError)]
 pub enum TransactionError {
     #[error(transparent)]
     RegistryError(#[from] RegistryError),
@@ -37,7 +37,6 @@ impl From<DispatchError> for TransactionError {
             .unwrap_or(TransactionError::OtherDispatchError(dispatch_error))
     }
 }
-
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError, TryFromPrimitive)]
 #[repr(u8)]

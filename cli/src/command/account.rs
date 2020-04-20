@@ -138,7 +138,7 @@ impl CommandT for Transfer {
         announce_tx("Transferring funds...");
 
         let transfered = transfer_fut.await?;
-        transaction_applied_ok(&transfered)?;
+        transfered.result?;
         println!(
             "✓ Transferred {} μRAD to {} in block {}",
             self.amount, self.recipient, transfered.block,
