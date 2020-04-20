@@ -29,21 +29,25 @@ type EventParseError = String;
 /// struct of the runtime message.
 pub trait Message: Send + 'static {
     /// Result of executing the message in the runtime that is presented to the client user.
-    type Result: Send + 'static;
+    type ReturnValue: Send + 'static;
 
     /// Parse all runtime events emitted by the message and return the appropriate message result.
     ///
     /// Returns an error if the event list is not well formed. For example if an expected event is
     /// missing.
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError>;
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError>;
 
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
 impl Message for message::RegisterProject {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
@@ -60,9 +64,11 @@ impl Message for message::RegisterProject {
 }
 
 impl Message for message::RegisterOrg {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "OrgRegistered", |event| match event {
@@ -79,9 +85,11 @@ impl Message for message::RegisterOrg {
 }
 
 impl Message for message::UnregisterOrg {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "OrgUnregistered", |event| match event {
@@ -98,13 +106,15 @@ impl Message for message::UnregisterOrg {
 }
 
 impl Message for message::RegisterUser {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::register_user(self).into()
     }
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
 
         match dispatch_result {
@@ -118,9 +128,11 @@ impl Message for message::RegisterUser {
 }
 
 impl Message for message::UnregisterUser {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "UserUnregistered", |event| match event {
@@ -137,9 +149,11 @@ impl Message for message::UnregisterUser {
 }
 
 impl Message for message::CreateCheckpoint {
-    type Result = Result<CheckpointId, TransactionError>;
+    type ReturnValue = CheckpointId;
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
@@ -158,9 +172,11 @@ impl Message for message::CreateCheckpoint {
 }
 
 impl Message for message::SetCheckpoint {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
@@ -181,9 +197,11 @@ impl Message for message::SetCheckpoint {
 }
 
 impl Message for message::Transfer {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         get_dispatch_result(&events)
     }
 
@@ -193,9 +211,11 @@ impl Message for message::Transfer {
 }
 
 impl Message for message::TransferFromOrg {
-    type Result = Result<(), TransactionError>;
+    type ReturnValue = ();
 
-    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::ReturnValue, TransactionError>, EventParseError> {
         get_dispatch_result(&events)
     }
 

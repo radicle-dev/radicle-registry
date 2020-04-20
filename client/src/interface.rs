@@ -56,7 +56,7 @@ pub struct TransactionApplied<Message_: Message> {
     /// The result of the runtime message.
     ///
     /// See [Message::result_from_events].
-    pub result: Message_::Result,
+    pub result: Result<Message_::ReturnValue, TransactionError>,
 }
 
 /// Return type for all [ClientT] methods.
