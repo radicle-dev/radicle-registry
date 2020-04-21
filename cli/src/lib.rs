@@ -47,7 +47,7 @@ pub struct NetworkOptions {
     /// IP address or domain name that hosts the RPC API
     #[structopt(
         long,
-        default_value = "127.0.0.1",
+        default_value = "rpc.ff.radicle.network",
         env = "RAD_NODE_HOST",
         parse(try_from_str = url::Host::parse),
     )]
@@ -55,6 +55,7 @@ pub struct NetworkOptions {
 }
 
 impl NetworkOptions {
+
     pub async fn client(&self) -> Result<Client, Error> {
         Client::create_with_executor(self.node_host.clone()).await
     }
