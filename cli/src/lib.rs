@@ -47,14 +47,25 @@ pub struct NetworkOptions {
     /// IP address or domain name that hosts the RPC API
     #[structopt(
         long,
-        default_value = "127.0.0.1",
+        default_value = "rpc.ff.radicle.network",
         env = "RAD_NODE_HOST",
-        parse(try_from_str = url::Host::parse),
+        parse(try_from_str = Self::parse_node_host),
     )]
     pub node_host: url::Host,
 }
 
 impl NetworkOptions {
+    fn parse_node_host(value: &str) -> Result<url::Host, url::ParseError> {
+        let node_host = match value {
+            // "localhost" gets translated to its ipv6 version in some
+            // systems, which causes the client-node rpc connection to
+            // fail as ipv6 is not yet supported.
+            "localhost" => "127.0.0.1",
+            x => x,
+        };
+        url::Host::parse(node_host)
+    }
+
     pub async fn client(&self) -> Result<Client, Error> {
         Client::create_with_executor(self.node_host.clone()).await
     }
