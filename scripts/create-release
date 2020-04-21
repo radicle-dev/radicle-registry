@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Create a Github draft release from the current master branch
+
+set -euo pipefail
+
+if ! ( command -v hub 1>/dev/null ); then
+  echo "hub was not found. Please install it from https://github.com/github/hub"
+  exit 1
+fi
+
+echo "Running git --fetch tags"
+git fetch --tags
+commit=$(git rev-parse origin/master)
+
+echo "Download build artifacts"
+base_url="https://builds.radicle.xyz/radicle-registry/master/$commit/artifacts"
+artifacts_dir=$(mktemp -d)
+(
+  cd "$artifacts_dir"
+  curl -sSLO "$base_url/radicle-registry-cli.tar.gz"
+  curl -sSLO "$base_url/radicle-registry-node.tar.gz"
+)
+
+declare -i release_counter=0
+while true; do
+  release_name="$(date +%Y-%m-%d)-$release_counter"
+  if [[ $(git tag -l "$release_name" | wc -l) -eq 0 ]]; then
+    break
+  fi
+  echo "Tag $release_name already exists"
+  release_counter+=1
+done
+
+echo "Creating and pushing tag"
+git tag --sign --message "$release_name" "$release_name" "$commit"
+git push origin "refs/tags/$release_name"
+
+echo "Creating Github draft release \"$release_name\""
+hub release create \
+  --draft \
+  --prerelease \
+  --attach "$artifacts_dir/radicle-registry-cli.tar.gz" \
+  --attach "$artifacts_dir/radicle-registry-node.tar.gz" \
+  "$release_name"
+rm -rf "$artifacts_dir"
+echo "Created draft release. Publish it on Github."

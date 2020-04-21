@@ -101,20 +101,7 @@ using Kubernetes for this. You can find the code in `ci/deploy`.
 Make a release
 --------------
 
-1. Download the latest binaries for the targeted master build [in Builkite](https://buildkite.com/monadic/radicle-registry/builds?branch=master)
-    - Select the targeted build
-    - Expand the `Test ci/run` section
-    - Open the `Artifacts` tab
-    - Download the following binaries:
-        - `radicle-registry-cli.tar.gz`
-        - `radicle-registry-node.tar.gz`
-2. Create a new release
-    - Open the [Radicle Registry Github Releases page](https://github.com/radicle-dev/radicle-registry/releases)
-    - Define the tag version (see [Tags](#tags))
-    - Select the right target
-    - Add a release title
-    - Describe the changes included in this release to users
-    - Attach the binaries downloaded in step 1.
+To create a release from the current master branch run `./scripts/create-release`.
 
 ### Tags
 
