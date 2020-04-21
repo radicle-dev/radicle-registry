@@ -234,7 +234,7 @@ impl ClientT for Client {
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<state::AccountBalance, Error> {
         let account_info = self
-            .fetch_map_value::<system::Account<Runtime>, _, _>(account_id.clone())
+            .fetch_map_value::<system::Account<Runtime>, _, _>(*account_id)
             .await?;
         Ok(account_info.data.free)
     }
