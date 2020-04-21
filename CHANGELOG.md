@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: `TransactionApplied` result is now `Result<(), TransactionError>`
+  for all messages.
 * cli: Drop `_TX_` from the environment options
 * cli: group and clean commands by domain and rename options
 * Add `fee` to the Client and CLI APIs
@@ -45,7 +47,7 @@ Upcoming
 * Polkadot telemetry was removed
 
 ### Addition
-* Add `user list` and `user show` CLI commands 
+* Add `user list` and `user show` CLI commands
 * Add `MINIMUM_FEE` to the registry client
 * The client emulator now authors blocks when a transaction is submitted.
 * Add `TransferFromOrg` message

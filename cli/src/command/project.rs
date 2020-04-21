@@ -121,7 +121,7 @@ impl CommandT for Register {
         announce_tx("Creating checkpoint...");
 
         let checkpoint_created = create_checkpoint_fut.await?;
-        let checkpoint_id = transaction_applied_ok(&checkpoint_created)?;
+        let checkpoint_id = checkpoint_created.result?;
         println!("✓ Checkpoint created in block {}", checkpoint_created.block);
 
         let register_project_fut = client
@@ -139,7 +139,7 @@ impl CommandT for Register {
         announce_tx("Registering project...");
 
         let project_registered = register_project_fut.await?;
-        transaction_applied_ok(&project_registered)?;
+        project_registered.result?;
         println!(
             "✓ Project {}.{} registered in block {}",
             self.project_name, self.org_id, project_registered.block,
