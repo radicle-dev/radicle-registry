@@ -5,7 +5,7 @@ Radicle Registry
 
 Experimental Radicle Registry implementation with Substrate.
 
-Click [here](https://radicle.run/docs/getting-started) to learn how to get
+Click [here](https://registry.radicle.xyz/docs/getting-started) to learn how to get
 started participating in the Radicle Registry Network.
 
 See [`DEVELOPING.md`](./DEVELOPING.md) for developer information.
