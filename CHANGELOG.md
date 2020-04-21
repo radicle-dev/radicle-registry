@@ -47,6 +47,8 @@ Upcoming
 * Polkadot telemetry was removed
 
 ### Addition
+* cli: Mutually support local account names where only SS58 address were
+  supported as params.
 * Add `user list` and `user show` CLI commands
 * Add `MINIMUM_FEE` to the registry client
 * The client emulator now authors blocks when a transaction is submitted.

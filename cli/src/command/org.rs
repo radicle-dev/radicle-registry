@@ -170,7 +170,8 @@ pub struct Transfer {
     // The amount to transfer from the org to the recipient.
     amount: Balance,
 
-    /// Recipient Account in SS58 address format
+    /// The recipient account.
+    /// SS58 address or name of a local account.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
 
