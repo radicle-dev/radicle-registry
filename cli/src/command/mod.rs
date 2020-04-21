@@ -15,7 +15,7 @@
 
 //! Define the commands supported by the CLI.
 
-use crate::{CommandError, CommandT, NetworkOptions, TxOptions};
+use crate::{lookup_account, CommandError, CommandT, NetworkOptions, TxOptions};
 use radicle_registry_client::*;
 
 use sp_core::crypto::Ss58Codec;
@@ -28,7 +28,22 @@ pub mod project;
 pub mod user;
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
-    Ss58Codec::from_ss58check(data).map_err(|err| format!("{:?}", err))
+    Ss58Codec::from_ss58check(data)
+        .map_err(|err| format!("{:?}", err))
+        .or_else(|address_error| {
+            lookup_account(data)
+                .map(|account| account.public())
+                .map_err(|account_error| {
+                    format!(
+                        "
+    ! Could not parse an ss58 address nor find a local account with the given name.
+    ⓘ Error parsing SS58 address: {}
+    ⓘ Error looking up account: {}
+    ",
+                        address_error, account_error
+                    )
+                })
+        })
 }
 
 fn announce_tx(msg: &str) {

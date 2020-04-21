@@ -47,7 +47,7 @@ impl CommandT for Command {
 /// Show the balance of an account
 #[derive(StructOpt, Clone)]
 pub struct ShowBalance {
-    /// SS58 address
+    /// SS58 address or name of a local account.
     #[structopt(
         value_name = "account",
         parse(try_from_str = parse_account_id),
@@ -109,7 +109,8 @@ pub struct Transfer {
     // The amount to transfer.
     amount: Balance,
 
-    /// Recipient Account in SS58 address format.
+    /// The recipient account.
+    /// SS58 address or name of a local account.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
 
