@@ -74,8 +74,8 @@ kill "$registry_node_pid"
 
 echo "--- Copy artifacts"
 mkdir artifacts
-cp -a target/release/radicle-registry-cli artifacts
-cp -a target/release/radicle-registry-node artifacts
+tar -cpzf artifacts/radicle-registry-cli.tar.gz -C target/release radicle-registry-cli
+tar -cpzf artifacts/radicle-registry-node.tar.gz -C target/release radicle-registry-node
 cp -a target/release/radicle-registry-node ci/node-image
 
 echo "--- Cleanup cache"

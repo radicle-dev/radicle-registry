@@ -106,8 +106,8 @@ Make a release
     - Expand the `Test ci/run` section
     - Open the `Artifacts` tab
     - Download the following binaries:
-        - `radicle-registry-cli`
-        - `radicle-registry-node`
+        - `radicle-registry-cli.tar.gz`
+        - `radicle-registry-node.tar.gz`
 2. Create a new release
     - Open the [Radicle Registry Github Releases page](https://github.com/radicle-dev/radicle-registry/releases)
     - Define the tag version (see [Tags](#tags))
