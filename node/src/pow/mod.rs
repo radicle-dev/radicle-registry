@@ -17,3 +17,5 @@ pub mod blake3_pow;
 pub mod config;
 pub mod dummy_pow;
 mod harmonic_mean;
+
+pub type Difficulty = sp_core::U256;

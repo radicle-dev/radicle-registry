@@ -21,12 +21,12 @@ use futures::StreamExt;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-use sc_client::{BlockchainEvents as _, LongestChain};
+use sc_client::{light::blockchain::AuxStore, BlockchainEvents as _, LongestChain};
 use sc_executor::native_executor_instance;
-use sc_service::{AbstractService, Configuration, Error as ServiceError, ServiceBuilder};
+use sc_service::{AbstractService, Configuration, Error, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
 
-use crate::pow::config::Config as PowAlgConfig;
+use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow, Difficulty};
 use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, Block, RuntimeApi};
 
 // Our native executor instance.
@@ -87,18 +87,18 @@ macro_rules! start_mine {
 /// The node with_import_queue closure body
 macro_rules! node_import_queue {
     ($config:expr, $client:expr, $select_chain:expr, $inherent_data_providers:expr) => {{
-        match PowAlgConfig::try_from($config)? {
-            PowAlgConfig::Dummy => node_import_queue_for_pow_alg!(
+        match Config::try_from($config)? {
+            Config::Dummy => node_import_queue_for_pow_alg!(
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                crate::pow::dummy_pow::DummyPow
+                DummyPow
             ),
-            PowAlgConfig::Blake3 => node_import_queue_for_pow_alg!(
+            Config::Blake3 => node_import_queue_for_pow_alg!(
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                crate::pow::blake3_pow::Blake3Pow::new($client.clone())
+                Blake3Pow::new($client.clone())
             ),
         }
     }};
@@ -132,19 +132,20 @@ macro_rules! node_import_queue_for_pow_alg {
 pub fn new_full(
     config: Configuration,
     opt_block_author: Option<AccountId>,
-) -> Result<impl AbstractService, ServiceError> {
-    let pow_alg = PowAlgConfig::try_from(&config)?;
+) -> Result<impl AbstractService, Error> {
+    let pow_alg = Config::try_from(&config)?;
     let inherent_data_providers = InherentDataProviders::new();
     let (builder, import_setup) = new_full_start!(config, inherent_data_providers.clone());
     let block_import = import_setup.expect("No import setup set for miner");
 
     let service = builder.build()?;
+    register_difficulty_metric(&service)?;
 
     if let Some(block_author) = opt_block_author {
         let client = service.client();
         service.spawn_essential_task(
             "mined-block-notifier",
-            client.import_notification_stream().for_each(move |info| {
+            client.import_notification_stream().for_each(|info| {
                 if info.origin == sp_consensus::BlockOrigin::Own {
                     log::info!("Imported own block #{} ({})", info.header.number, info.hash)
                 }
@@ -165,19 +166,19 @@ pub fn new_full(
         log::info!("Starting block miner");
 
         match pow_alg {
-            PowAlgConfig::Dummy => start_mine!(
+            Config::Dummy => start_mine!(
                 block_import,
                 service,
                 proposer,
                 inherent_data_providers,
-                crate::pow::dummy_pow::DummyPow
+                DummyPow
             ),
-            PowAlgConfig::Blake3 => start_mine!(
+            Config::Blake3 => start_mine!(
                 block_import,
                 service,
                 proposer,
                 inherent_data_providers,
-                crate::pow::blake3_pow::Blake3Pow::new(service.client())
+                Blake3Pow::new(client)
             ),
         }
     } else {
@@ -188,10 +189,8 @@ pub fn new_full(
 }
 
 /// Builds a new service for a light client.
-pub fn new_light(config: Configuration) -> Result<impl AbstractService, ServiceError> {
-    let inherent_data_providers = InherentDataProviders::new();
-
-    ServiceBuilder::new_light::<Block, RuntimeApi, Executor>(config)?
+pub fn new_light(config: Configuration) -> Result<impl AbstractService, Error> {
+    let service = ServiceBuilder::new_light::<Block, RuntimeApi, Executor>(config)?
         .with_select_chain(|_config, backend| Ok(LongestChain::new(backend.clone())))?
         .with_transaction_pool(|config, client, fetcher| {
             let fetcher = fetcher
@@ -206,21 +205,55 @@ pub fn new_light(config: Configuration) -> Result<impl AbstractService, ServiceE
             Ok(pool)
         })?
         .with_import_queue(|config, client, select_chain, _transaction_pool| {
-            let (_, import_queue) = node_import_queue!(
-                config,
-                client,
-                select_chain,
-                inherent_data_providers.clone()
-            );
+            let (_, import_queue) =
+                node_import_queue!(config, client, select_chain, InherentDataProviders::new());
             Ok(import_queue)
         })?
-        .build()
+        .build()?;
+    register_difficulty_metric(&service)?;
+    Ok(service)
+}
+
+fn register_difficulty_metric<S>(service: &S) -> Result<(), Error>
+where
+    S: AbstractService,
+    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+{
+    let registry = match service.prometheus_registry() {
+        Some(registry) => registry,
+        None => return Ok(()),
+    };
+    let new_gauge =
+        substrate_prometheus_endpoint::Gauge::<substrate_prometheus_endpoint::U64>::new(
+            "best_block_difficulty",
+            "The difficulty of the best block in the chain",
+        )
+        .map_err(|error| format!("failed to create a metric gauge: {}", error))?;
+    let gauge = substrate_prometheus_endpoint::register(new_gauge, &registry)
+        .map_err(|error| format!("failed to register a metric gauge: {}", error))?;
+    let client = service.client();
+    let metric_stream = client.import_notification_stream().for_each(move |info| {
+        let ready = futures::future::ready(());
+        if !info.is_new_best {
+            return ready;
+        }
+        let difficulty_res =
+            sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
+        let difficulty = match difficulty_res {
+            Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
+            Err(_) => return ready,
+        };
+        gauge.set(difficulty);
+        ready
+    });
+    service.spawn_essential_task("new-best-block-notifier", metric_stream);
+    Ok(())
 }
 
 /// Build a new service to be used for one-shot commands.
 pub fn new_for_command(
     config: Configuration,
-) -> Result<impl sc_service::ServiceBuilderCommand<Block = Block>, ServiceError> {
+) -> Result<impl sc_service::ServiceBuilderCommand<Block = Block>, Error> {
     let inherent_data_providers = InherentDataProviders::new();
     Ok(new_full_start!(config, inherent_data_providers).0)
 }

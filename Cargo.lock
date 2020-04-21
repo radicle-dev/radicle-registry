@@ -3739,6 +3739,7 @@ dependencies = [
  "sp-runtime",
  "sp-transaction-pool",
  "structopt",
+ "substrate-prometheus-endpoint",
  "time 0.2.9",
  "tokio 0.2.16",
  "trie-root 0.15.2",

@@ -26,7 +26,7 @@
 //!
 //! There's no difficulty adjustment algorithm yet.
 
-use crate::pow::harmonic_mean::HarmonicMean;
+use crate::pow::{harmonic_mean::HarmonicMean, Difficulty};
 use radicle_registry_runtime::{Block, Hash, Header};
 use sc_client::light::blockchain::{AuxStore, BlockchainHeaderBackend};
 use sc_consensus_pow::{Error, PowAlgorithm, PowAux};
@@ -39,7 +39,6 @@ use std::sync::Arc;
 
 type BlockId = sp_runtime::generic::BlockId<Block>;
 type Result<T> = std::result::Result<T, Error<Block>>;
-type Difficulty = U256;
 type Threshold = U256;
 
 const NONCES_PER_MINING_ROUND: usize = 10_000_000;
