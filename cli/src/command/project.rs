@@ -108,20 +108,19 @@ pub struct Register {
 impl CommandT for Register {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
+        let msg = message::CreateCheckpoint {
+            project_hash: self.project_hash.unwrap_or_default(),
+            previous_checkpoint_id: None,
+        };
         let create_checkpoint_fut = client
-            .sign_and_submit_message(
-                &self.tx_options.author,
-                message::CreateCheckpoint {
-                    project_hash: self.project_hash.unwrap_or_default(),
-                    previous_checkpoint_id: None,
-                },
-                self.tx_options.fee,
-            )
+            .sign_and_submit_message(&self.tx_options.author, msg.clone(), self.tx_options.fee)
             .await?;
         announce_tx("Creating checkpoint...");
 
         let checkpoint_created = create_checkpoint_fut.await?;
-        let checkpoint_id = checkpoint_created.result?;
+        checkpoint_created.result?;
+        let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
+
         println!("✓ Checkpoint created in block {}", checkpoint_created.block);
 
         let register_project_fut = client

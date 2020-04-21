@@ -33,18 +33,15 @@ async fn create_checkpoint() {
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
     let project_hash = H256::random();
     let random_fee = random_balance();
-    let new_checkpoint_id = submit_ok_with_fee(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash,
-            previous_checkpoint_id: Some(project.current_cp),
-        },
-        random_fee,
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash,
+        previous_checkpoint_id: Some(project.current_cp),
+    };
+    submit_ok_with_fee(&client, &alice, msg.clone(), random_fee)
+        .await
+        .result
+        .unwrap();
+    let new_checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let checkpoint = client
         .get_checkpoint(new_checkpoint_id)
@@ -76,17 +73,15 @@ async fn set_checkpoint() {
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash: project_hash2,
+        previous_checkpoint_id: Some(project.current_cp),
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let new_checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     let initial_balance = client.free_balance(&org.account_id).await.unwrap();
@@ -127,17 +122,15 @@ async fn set_checkpoint_without_permission() {
     let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash: project_hash2,
+        previous_checkpoint_id: Some(project.current_cp),
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let new_checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let bad_actor = key_pair_from_string("BadActor");
     // The bad actor needs funds to submit transactions.
@@ -216,32 +209,29 @@ async fn set_fork_checkpoint() {
     let n = 5;
     let mut checkpoints: Vec<CheckpointId> = Vec::with_capacity(n);
     for _ in 0..n {
-        let new_checkpoint_id = submit_ok(
-            &client,
-            &alice,
-            message::CreateCheckpoint {
-                project_hash: H256::random(),
-                previous_checkpoint_id: (Some(current_cp)),
-            },
-        )
-        .await
-        .result
-        .unwrap();
+        let msg = message::CreateCheckpoint {
+            project_hash: H256::random(),
+            previous_checkpoint_id: (Some(current_cp)),
+        };
+        submit_ok(&client, &alice, msg.clone())
+            .await
+            .result
+            .unwrap();
+        let new_checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
         current_cp = new_checkpoint_id;
         checkpoints.push(new_checkpoint_id);
     }
 
-    let forked_checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: (Some(checkpoints[2])),
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg2 = message::CreateCheckpoint {
+        project_hash: H256::random(),
+        previous_checkpoint_id: (Some(checkpoints[2])),
+    };
+    submit_ok(&client, &alice, msg2.clone())
+        .await
+        .result
+        .unwrap();
+    let forked_checkpoint_id =
+        Client::checkpoint_id(msg2.previous_checkpoint_id, msg2.project_hash);
 
     submit_ok(
         &client,
@@ -276,17 +266,15 @@ async fn set_checkpoint_bad_actor() {
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash: project_hash2,
+        previous_checkpoint_id: Some(project.current_cp),
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let new_checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let bad_actor = key_pair_from_string("BadActor");
     let initial_balance = 1000;

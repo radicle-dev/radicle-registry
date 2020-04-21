@@ -26,11 +26,10 @@ use frame_support::{
 use frame_system as system; // required for `decl_module!` to work
 use frame_system::{ensure_none, ensure_signed};
 use sp_core::crypto::UncheckedFrom;
-use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{AccountId, Hash, Hashing};
+use crate::{AccountId, Hash};
 
 mod inherents;
 
@@ -319,9 +318,8 @@ decl_module! {
                 parent: message.previous_checkpoint_id,
                 hash: message.project_hash,
             };
-            let checkpoint_id = Hashing::hash_of(&checkpoint);
+            let checkpoint_id = checkpoint.id();
             store::Checkpoints::insert(checkpoint_id, checkpoint);
-
             Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
             Ok(())
         }

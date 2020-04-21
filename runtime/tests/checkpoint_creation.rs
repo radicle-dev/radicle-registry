@@ -27,30 +27,26 @@ async fn create_checkpoint() {
     let alice = key_pair_from_string("Alice");
 
     let project_hash1 = H256::random();
-    let checkpoint_id1 = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: project_hash1,
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg1 = message::CreateCheckpoint {
+        project_hash: project_hash1,
+        previous_checkpoint_id: None,
+    };
+    submit_ok(&client, &alice, msg1.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id1 = Client::checkpoint_id(msg1.previous_checkpoint_id, msg1.project_hash);
 
     let project_hash2 = H256::random();
-    let checkpoint_id2 = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(checkpoint_id1),
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg2 = message::CreateCheckpoint {
+        project_hash: project_hash2,
+        previous_checkpoint_id: Some(checkpoint_id1),
+    };
+    submit_ok(&client, &alice, msg2.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id2 = Client::checkpoint_id(msg2.previous_checkpoint_id, msg2.project_hash);
 
     let checkpoint1_ = state::Checkpoint {
         parent: None,

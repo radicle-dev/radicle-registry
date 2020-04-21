@@ -30,7 +30,7 @@ pub async fn submit_ok_with_fee<Message_: Message>(
     author: &ed25519::Pair,
     message: Message_,
     fee: Balance,
-) -> TransactionApplied<Message_> {
+) -> TransactionApplied {
     client
         .sign_and_submit_message(&author, message, fee)
         .await
@@ -46,7 +46,7 @@ pub async fn submit_ok<Message_: Message>(
     client: &Client,
     author: &ed25519::Pair,
     message: Message_,
-) -> TransactionApplied<Message_> {
+) -> TransactionApplied {
     submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
 
@@ -55,17 +55,15 @@ pub async fn create_project_with_checkpoint(
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
-    let checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let message = message::CreateCheckpoint {
+        project_hash: H256::random(),
+        previous_checkpoint_id: None,
+    };
+
+    submit_ok(&client, &author, message.clone())
+        .await
+        .result
+        .unwrap();
 
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
@@ -76,6 +74,7 @@ pub async fn create_project_with_checkpoint(
     // The org needs funds to submit transactions.
     transfer(&client, &author, org.account_id, 1000).await;
 
+    let checkpoint_id = Client::checkpoint_id(message.previous_checkpoint_id, message.project_hash);
     let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 

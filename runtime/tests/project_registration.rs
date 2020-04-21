@@ -27,17 +27,15 @@ async fn register_project() {
     let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
-    let checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash,
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash,
+        previous_checkpoint_id: None,
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let register_org = random_register_org_message();
     submit_ok(&client, &alice, register_org.clone()).await;
@@ -110,17 +108,15 @@ async fn register_project_with_inexistent_org() {
     let alice = key_pair_from_string("Alice");
 
     let project_hash = H256::random();
-    let checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash,
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash,
+        previous_checkpoint_id: None,
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let inexistent_org_id = random_org_id();
     let message = random_register_project_message(inexistent_org_id, checkpoint_id);
@@ -134,17 +130,15 @@ async fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash: H256::random(),
+        previous_checkpoint_id: None,
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let org_id = random_org_id();
     let register_org = message::RegisterOrg {

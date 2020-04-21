@@ -31,17 +31,15 @@ async fn register_project() {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
-    let checkpoint_id = submit_ok(
-        &client,
-        &alice,
-        message::CreateCheckpoint {
-            project_hash,
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let msg = message::CreateCheckpoint {
+        project_hash,
+        previous_checkpoint_id: None,
+    };
+    submit_ok(&client, &alice, msg.clone())
+        .await
+        .result
+        .unwrap();
+    let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let org_id = random_org_id();
     let register_org_message = message::RegisterOrg {
