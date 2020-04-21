@@ -26,23 +26,21 @@
 extern crate alloc;
 
 use frame_support::weights::Weight;
-use frame_support::{construct_runtime, ensure, fail, parameter_types, traits::Randomness};
-use sp_core::{ed25519, OpaqueMetadata};
+use frame_support::{construct_runtime, parameter_types};
+use sp_core::ed25519;
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
-use sp_runtime::{
-    create_runtime_str, generic,
-    transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, Perbill,
-};
-
+use sp_runtime::{create_runtime_str, generic, Perbill};
 use sp_std::prelude::*;
-
-use sp_api::impl_runtime_apis;
-#[cfg(feature = "std")]
-use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
+pub mod fees;
+pub mod registry;
+pub mod runtime_api;
+
+pub use frame_system as system;
+pub use pallet_balances as balances;
 pub use radicle_registry_core::*;
+pub use runtime_api::{api, RuntimeApi};
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -55,15 +53,26 @@ pub type Signature = ed25519::Signature;
 /// Same as  [sp_runtime::traits::Hash::Output] for [Hashing].
 pub type Hash = sp_core::H256;
 
-type RegistryCall = registry::Call<Runtime>;
-
 pub type EventRecord = frame_system::EventRecord<Event, Hash>;
 
-pub mod registry;
+/// Block header type as expected by this runtime.
+pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 
-pub mod fees;
+/// Block type as expected by this runtime.
+pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 
-pub use pallet_balances as balances;
+/// The SignedExtension to the basic transaction logic.
+pub type SignedExtra = (
+    frame_system::CheckVersion<Runtime>,
+    frame_system::CheckGenesis<Runtime>,
+    frame_system::CheckEra<Runtime>,
+    frame_system::CheckNonce<Runtime>,
+    frame_system::CheckWeight<Runtime>,
+    crate::fees::PayTxFee,
+);
+
+/// Unchecked extrinsic type as expected by this runtime.
+pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
@@ -72,13 +81,13 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     authoring_version: 3,
     spec_version: 4,
     impl_version: 4,
-    apis: RUNTIME_API_VERSIONS,
+    apis: runtime_api::VERSIONS,
 };
 
 /// The version infromation used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
-pub fn native_version() -> NativeVersion {
-    NativeVersion {
+pub fn native_version() -> sp_version::NativeVersion {
+    sp_version::NativeVersion {
         runtime_version: VERSION,
         can_author_with: Default::default(),
     }
@@ -175,8 +184,6 @@ impl registry::Trait for Runtime {
     type Event = Event;
 }
 
-pub use frame_system as system;
-
 construct_runtime!(
         pub enum Runtime where
                 Block = Block,
@@ -191,149 +198,3 @@ construct_runtime!(
                 Registry: registry::{Module, Call, Storage, Event, Inherent},
         }
 );
-
-/// Block header type as expected by this runtime.
-pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-/// Block type as expected by this runtime.
-pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-/// The SignedExtension to the basic transaction logic.
-pub type SignedExtra = (
-    frame_system::CheckVersion<Runtime>,
-    frame_system::CheckGenesis<Runtime>,
-    frame_system::CheckEra<Runtime>,
-    frame_system::CheckNonce<Runtime>,
-    frame_system::CheckWeight<Runtime>,
-    crate::fees::PayTxFee,
-);
-/// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;
-/// Extrinsic type that has already been checked.
-pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Call, SignedExtra>;
-/// Executive: handles dispatch to the various modules.
-pub type Executive = frame_executive::Executive<
-    Runtime,
-    Block,
-    frame_system::ChainContext<Runtime>,
-    Runtime,
-    AllModules,
->;
-
-/// Create the inherent extrinsics that are included in a block based on the inherent data.
-///
-/// See [sp_block_builder::BlockBuilder::inherent_extrinsics].
-pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<UncheckedExtrinsic> {
-    data.create_extrinsics()
-}
-
-const SIGNED_INHERENT_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(1);
-const FOBIDDEN_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(2);
-const UNSGINED_CALL_ERROR: InvalidTransaction = InvalidTransaction::Custom(3);
-
-/// Validate that the call of the extrinsic is allowed.
-///
-/// * We forbid calls reserved for inherents when the extrinsic is not signed.
-/// * We forbid any calls to the [Balances] or [System] module.
-/// * We ensure that the extrinsic is signed for non-inherent calls.
-///
-fn validate_extrinsic_call(xt: &UncheckedExtrinsic) -> Result<(), InvalidTransaction> {
-    match xt.function {
-        // Inherents are only allowed if they are unsigned.
-        Call::Timestamp(_) | Call::Registry(registry::Call::set_block_author(_)) => {
-            ensure!(xt.signature.is_none(), SIGNED_INHERENT_CALL_ERROR)
-        }
-
-        // Forbidden internals.
-        Call::Balances(_) | Call::System(_) => fail!(FOBIDDEN_CALL_ERROR),
-
-        // Impossible cases that cannot be constructed.
-        Call::RandomnessCollectiveFlip(_) => fail!(FOBIDDEN_CALL_ERROR),
-
-        // Allowed calls for signed extrinsics.
-        Call::Registry(_) | Call::Sudo(_) => ensure!(xt.signature.is_some(), UNSGINED_CALL_ERROR),
-    }
-
-    Ok(())
-}
-
-impl_runtime_apis! {
-    impl sp_api::Core<Block> for Runtime {
-        fn version() -> RuntimeVersion {
-            VERSION
-        }
-
-        fn execute_block(block: Block) {
-            Executive::execute_block(block)
-        }
-
-        fn initialize_block(header: &<Block as BlockT>::Header) {
-            Executive::initialize_block(header)
-        }
-    }
-
-    impl sp_api::Metadata<Block> for Runtime {
-        fn metadata() -> OpaqueMetadata {
-            Runtime::metadata().into()
-        }
-    }
-
-    impl sp_block_builder::BlockBuilder<Block> for Runtime {
-        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
-            validate_extrinsic_call(&extrinsic)?;
-            Executive::apply_extrinsic(extrinsic)
-        }
-
-        fn finalize_block() -> <Block as BlockT>::Header {
-            Executive::finalize_block()
-        }
-
-        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            inherent_extrinsics(data)
-        }
-
-        fn check_inherents(
-            block: Block,
-            data: sp_inherents::InherentData,
-        ) -> sp_inherents::CheckInherentsResult {
-            data.check_extrinsics(&block)
-        }
-
-        fn random_seed() -> <Block as BlockT>::Hash {
-            RandomnessCollectiveFlip::random_seed()
-        }
-    }
-
-    impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
-        fn validate_transaction(source: TransactionSource, tx: <Block as BlockT>::Extrinsic) -> TransactionValidity {
-            validate_extrinsic_call(&tx)?;
-            Executive::validate_transaction(source, tx)
-        }
-    }
-
-    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
-        fn offchain_worker(header: &<Block as BlockT>::Header) {
-            Executive::offchain_worker(header)
-        }
-    }
-
-    // An implementation for the `SessionKeys` runtime API is required by the types
-    // of [sc_service::ServiceBuilder]. However, the implementation is otherwise unused
-    // and has no effect on the behavior of the runtime. Hence we implement a dummy
-    // version.
-    impl sp_session::SessionKeys<Block> for Runtime {
-        fn generate_session_keys(_seed: Option<Vec<u8>>) -> Vec<u8> {
-            Default::default()
-        }
-
-        fn decode_session_keys(
-            _encoded: Vec<u8>,
-        ) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
-            None
-        }
-    }
-
-    impl sp_consensus_pow::TimestampApi<Block, u64> for Runtime {
-        fn timestamp() -> u64 {
-            pallet_timestamp::Module::<Runtime>::get()
-        }
-    }
-}

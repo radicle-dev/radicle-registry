@@ -23,7 +23,7 @@ use sp_runtime::{traits::Hash as _, BuildStorage as _, Digest};
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
-    registry, AccountId, BalancesConfig, Executive, GenesisConfig, Hash, Hashing, Header, Runtime,
+    registry, runtime_api, AccountId, BalancesConfig, GenesisConfig, Hash, Hashing, Header, Runtime,
 };
 
 use crate::backend;
@@ -115,25 +115,25 @@ impl backend::Backend for Emulator {
         };
 
         let (new_tip_header, events) = state.test_ext.execute_with(move || {
-            Executive::initialize_block(&new_tip_header_init);
+            runtime_api::initialize_block(&new_tip_header_init);
 
             let inherent_data = self.inherent_data_providers.create_inherent_data().unwrap();
-            let inherents = radicle_registry_runtime::inherent_extrinsics(inherent_data);
+            let inherents = runtime_api::inherent_extrinsics(inherent_data);
             for inherent in inherents {
-                let _apply_result = Executive::apply_extrinsic(inherent).unwrap();
+                let _apply_result = runtime_api::apply_extrinsic(inherent).unwrap();
             }
 
             let event_start_index = frame_system::Module::<Runtime>::event_count();
             // We ignore the dispatch result. It is provided through the system event
             // TODO Pass on apply errors instead of unwrapping.
-            let _apply_result = Executive::apply_extrinsic(extrinsic).unwrap();
+            let _apply_result = runtime_api::apply_extrinsic(extrinsic).unwrap();
             let events = frame_system::Module::<Runtime>::events()
                 .into_iter()
                 .skip(event_start_index as usize)
                 .map(|event_record| event_record.event)
                 .collect::<Vec<Event>>();
 
-            let header = Executive::finalize_block();
+            let header = runtime_api::finalize_block();
             (header, events)
         });
 
