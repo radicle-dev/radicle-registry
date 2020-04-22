@@ -68,7 +68,7 @@ impl CommandT for List {
 #[derive(StructOpt, Clone)]
 pub struct Show {
     /// The id of the org
-    org_id: OrgId,
+    org_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -96,7 +96,7 @@ impl CommandT for Show {
 #[derive(StructOpt, Clone)]
 pub struct Register {
     /// Id of the org to register.
-    org_id: OrgId,
+    org_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -130,7 +130,7 @@ impl CommandT for Register {
 #[derive(StructOpt, Clone)]
 pub struct Unregister {
     /// Id of the org to unregister.
-    org_id: OrgId,
+    org_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -165,7 +165,7 @@ impl CommandT for Unregister {
 pub struct Transfer {
     /// Id of the org.
     #[structopt(value_name = "org")]
-    org_id: OrgId,
+    org_id: Id,
 
     // The amount to transfer from the org to the recipient.
     amount: Balance,

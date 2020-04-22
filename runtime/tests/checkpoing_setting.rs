@@ -27,7 +27,7 @@ async fn create_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
 
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
@@ -71,7 +71,7 @@ async fn set_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.clone().name;
 
@@ -122,7 +122,7 @@ async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
 
@@ -172,7 +172,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
@@ -206,7 +206,7 @@ async fn set_fork_checkpoint() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
 
     let project_name = project.name.clone();
@@ -271,7 +271,7 @@ async fn set_checkpoint_bad_actor() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
     let project_name = project.clone().name;
 

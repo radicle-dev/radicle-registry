@@ -33,17 +33,11 @@ pub mod state;
 pub mod bytes128;
 pub use bytes128::Bytes128;
 
-pub mod string32;
-pub use string32::String32;
-
-mod org_id;
-pub use org_id::{InvalidOrgIdError, OrgId};
+mod id;
+pub use id::{Id, InvalidIdError};
 
 mod project_name;
 pub use project_name::{InvalidProjectNameError, ProjectName};
-
-mod user_id;
-pub use user_id::{InvalidUserIdError, UserId};
 
 mod error;
 pub use error::{RegistryError, TransactionError};
@@ -63,17 +57,17 @@ pub type AccountId = ed25519::Public;
 pub type Balance = u128;
 
 /// The id of a project. Used as storage key.
-pub type ProjectId = (ProjectName, OrgId);
+pub type ProjectId = (ProjectName, Id);
 
 /// Org
 ///
 /// Different from [state::Org] in which this type gathers
-/// both the [`OrgId`] and the other [`Org`] fields, respectively stored
+/// both the [`Id`] and the other [`Org`] fields, respectively stored
 /// as an Org's storage key and data, into one complete type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Org {
     // Unique id of an Org.
-    pub id: OrgId,
+    pub id: Id,
 
     /// See [state::Org::account_id]
     pub account_id: AccountId,
@@ -86,7 +80,7 @@ pub struct Org {
 }
 
 impl Org {
-    pub fn new(id: OrgId, org: state::Org) -> Org {
+    pub fn new(id: Id, org: state::Org) -> Org {
         Org {
             id,
             account_id: org.account_id,
@@ -102,7 +96,7 @@ pub struct Project {
     pub name: ProjectName,
 
     /// The Org to which the project belongs to.
-    pub org_id: OrgId,
+    pub org_id: Id,
 
     /// See [state::Project::current_cp]
     pub current_cp: CheckpointId,
@@ -113,7 +107,7 @@ pub struct Project {
 
 impl Project {
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, org_id: OrgId, project: state::Project) -> Self {
+    pub fn new(name: ProjectName, org_id: Id, project: state::Project) -> Self {
         Project {
             name,
             org_id,
@@ -128,12 +122,12 @@ pub type CheckpointId = H256;
 /// User
 ///
 /// Different from [state::User] in which this type gathers
-/// both the [`UserId`] and the other [`User`] fields, respectively stored
+/// both the [`Id`] and the other [`User`] fields, respectively stored
 /// as an User's storage key and data, into one complete type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
     // Unique id of a User.
-    pub id: UserId,
+    pub id: Id,
 
     /// See [state::User::account_id]
     pub account_id: AccountId,
@@ -143,7 +137,7 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(id: UserId, user: state::User) -> User {
+    pub fn new(id: Id, user: state::User) -> User {
         User {
             id,
             account_id: user.account_id,

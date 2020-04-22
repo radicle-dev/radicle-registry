@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectName, UserId, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectName, H256};
 use parity_scale_codec::{Decode, Encode};
 
 /// Registers an org on the Radicle Registry with the given ID.
@@ -37,7 +37,7 @@ use parity_scale_codec::{Decode, Encode};
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
-    pub org_id: OrgId,
+    pub org_id: Id,
 }
 
 /// Unregisters an org on the Radicle Registry with the given ID.
@@ -53,7 +53,7 @@ pub struct RegisterOrg {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
-    pub org_id: OrgId,
+    pub org_id: Id,
 }
 
 /// Registers a user on the Radicle Registry with the given ID.
@@ -70,7 +70,7 @@ pub struct UnregisterOrg {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterUser {
-    pub user_id: UserId,
+    pub user_id: Id,
 }
 
 /// Unregisters a user on the Radicle Registry with the given ID.
@@ -86,7 +86,7 @@ pub struct RegisterUser {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterUser {
-    pub user_id: UserId,
+    pub user_id: Id,
 }
 
 /// Register a project on the Radicle Registry with the given ID.
@@ -113,7 +113,7 @@ pub struct RegisterProject {
     pub project_name: ProjectName,
 
     /// The org in which to register the project.
-    pub org_id: OrgId,
+    pub org_id: Id,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,
@@ -153,7 +153,7 @@ pub struct CreateCheckpoint {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_name: ProjectName,
-    pub org_id: OrgId,
+    pub org_id: Id,
     pub new_checkpoint_id: CheckpointId,
 }
 
@@ -176,7 +176,7 @@ pub struct SetCheckpoint {
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct TransferFromOrg {
-    pub org_id: OrgId,
+    pub org_id: Id,
     pub recipient: AccountId,
     pub value: Balance,
 }

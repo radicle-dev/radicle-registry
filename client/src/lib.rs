@@ -239,16 +239,16 @@ impl ClientT for Client {
         Ok(account_info.data.free)
     }
 
-    async fn get_org(&self, id: OrgId) -> Result<Option<Org>, Error> {
+    async fn get_org(&self, id: Id) -> Result<Option<Org>, Error> {
         self.fetch_map_value::<registry::store::Orgs, _, _>(id.clone())
             .await
             .map(|maybe_org: Option<state::Org>| maybe_org.map(|org| Org::new(id, org)))
     }
 
-    async fn list_orgs(&self) -> Result<Vec<OrgId>, Error> {
+    async fn list_orgs(&self) -> Result<Vec<Id>, Error> {
         let orgs_prefix = registry::store::Orgs::final_prefix();
         let keys = self.backend.fetch_keys(&orgs_prefix, None).await?;
-        let mut org_ids: Vec<OrgId> = Vec::with_capacity(keys.len());
+        let mut org_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
             let org_id = registry::store::Orgs::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract org ID");
@@ -257,16 +257,16 @@ impl ClientT for Client {
         Ok(org_ids)
     }
 
-    async fn get_user(&self, id: UserId) -> Result<Option<User>, Error> {
+    async fn get_user(&self, id: Id) -> Result<Option<User>, Error> {
         self.fetch_map_value::<registry::store::Users, _, _>(id.clone())
             .await
             .map(|maybe_user: Option<state::User>| maybe_user.map(|user| User::new(id, user)))
     }
 
-    async fn list_users(&self) -> Result<Vec<UserId>, Error> {
+    async fn list_users(&self) -> Result<Vec<Id>, Error> {
         let users_prefix = registry::store::Users::final_prefix();
         let keys = self.backend.fetch_keys(&users_prefix, None).await?;
-        let mut user_ids: Vec<UserId> = Vec::with_capacity(keys.len());
+        let mut user_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
             let user_id = registry::store::Users::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract user ID");
@@ -279,7 +279,7 @@ impl ClientT for Client {
     async fn get_project(
         &self,
         project_name: ProjectName,
-        org_id: OrgId,
+        org_id: Id,
     ) -> Result<Option<Project>, Error> {
         let project_id = (project_name.clone(), org_id.clone());
         self.fetch_map_value::<registry::store::Projects, _, _>(project_id.clone())

@@ -91,7 +91,7 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
 /// Find which account should pay for an org-related call.
 /// When `author` is a member of the org identified by `org_id`,
 /// return that org's account, otherwise the author's.
-fn org_payer_account(author: AccountId, org_id: &OrgId) -> AccountId {
+fn org_payer_account(author: AccountId, org_id: &Id) -> AccountId {
     match store::Orgs::get(org_id) {
         Some(org) => {
             if org.members.contains(&author) {
@@ -135,7 +135,7 @@ mod test {
 
             let fee = 1000;
             let call = RegistryCall::register_user(message::RegisterUser {
-                user_id: UserId::try_from("alice").unwrap(),
+                user_id: Id::try_from("alice").unwrap(),
             })
             .into();
 

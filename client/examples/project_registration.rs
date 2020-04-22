@@ -27,7 +27,7 @@ async fn main() -> Result<(), Error> {
     let client = Client::create_with_executor(node_host).await?;
 
     let project_name = ProjectName::try_from("radicle-registry").unwrap();
-    let org_id = OrgId::try_from("monadic").unwrap();
+    let org_id = Id::try_from("monadic").unwrap();
 
     // Choose some random project hash and create a checkpoint
     let project_hash = H256::random();

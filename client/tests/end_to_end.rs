@@ -43,7 +43,7 @@ async fn register_project() {
     .result
     .unwrap();
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
     };

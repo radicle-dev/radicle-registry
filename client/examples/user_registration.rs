@@ -17,7 +17,7 @@
 use sp_core::crypto::Pair;
 use std::convert::TryFrom;
 
-use radicle_registry_client::{ed25519, message, Client, ClientT, UserId};
+use radicle_registry_client::{ed25519, message, Client, ClientT, Id};
 
 #[async_std::main]
 async fn main() {
@@ -27,7 +27,7 @@ async fn main() {
         Client::create_with_executor(node_host).await.unwrap()
     };
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
-    let user_id = UserId::try_from("cloudhead").unwrap();
+    let user_id = Id::try_from("cloudhead").unwrap();
 
     // Register the user.
     client
