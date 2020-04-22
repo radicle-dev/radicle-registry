@@ -80,14 +80,14 @@ pub mod store {
             // [Call::set_block_author] and not persisted.
             pub BlockAuthor: Option<AccountId>;
 
-            // The storage for Orgs, indexed by OrgId.
-            // We use the blake2_128_concat hasher so that the OrgId
+            // The storage for Orgs, indexed by Id.
+            // We use the blake2_128_concat hasher so that the Id
             // can be extracted from the key.
-            pub Orgs: map hasher(blake2_128_concat) OrgId => Option<state::Org>;
+            pub Orgs: map hasher(blake2_128_concat) Id => Option<state::Org>;
 
-            // The storage for Users, indexed by UserId.
-            // We use the blake2_128_concat hasher so that the UserId can be extraced from the key.
-            pub Users: map hasher(blake2_128_concat) UserId => Option<state::User>;
+            // The storage for Users, indexed by Id.
+            // We use the blake2_128_concat hasher so that the Id can be extraced from the key.
+            pub Users: map hasher(blake2_128_concat) Id => Option<state::User>;
 
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
@@ -402,12 +402,12 @@ decl_module! {
 decl_event!(
     pub enum Event {
         CheckpointCreated(CheckpointId),
-        CheckpointSet(ProjectName, OrgId, CheckpointId),
-        OrgRegistered(OrgId),
-        OrgUnregistered(OrgId),
-        ProjectRegistered(ProjectName, OrgId),
-        UserRegistered(UserId),
-        UserUnregistered(UserId),
+        CheckpointSet(ProjectName, Id, CheckpointId),
+        OrgRegistered(Id),
+        OrgUnregistered(Id),
+        ProjectRegistered(ProjectName, Id),
+        UserRegistered(Id),
+        UserUnregistered(Id),
     }
 );
 
@@ -425,9 +425,9 @@ pub trait DecodeKey {
 }
 
 impl DecodeKey for store::Orgs {
-    type Key = OrgId;
+    type Key = Id;
 
-    fn decode_key(key: &[u8]) -> Result<OrgId, parity_scale_codec::Error> {
+    fn decode_key(key: &[u8]) -> Result<Id, parity_scale_codec::Error> {
         decode_blake_two128_concat_key(key)
     }
 }
@@ -441,9 +441,9 @@ impl DecodeKey for store::Projects {
 }
 
 impl DecodeKey for store::Users {
-    type Key = UserId;
+    type Key = Id;
 
-    fn decode_key(key: &[u8]) -> Result<UserId, parity_scale_codec::Error> {
+    fn decode_key(key: &[u8]) -> Result<Id, parity_scale_codec::Error> {
         decode_blake_two128_concat_key(key)
     }
 }
@@ -473,7 +473,7 @@ mod test {
     /// is identical to the original input id.
     #[test]
     fn orgs_decode_key_identity() {
-        let org_id = OrgId::try_from("monadic").unwrap();
+        let org_id = Id::try_from("monadic").unwrap();
         let hashed_key = store::Orgs::storage_map_final_key(org_id.clone());
         let decoded_key = store::Orgs::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, org_id);
@@ -483,7 +483,7 @@ mod test {
     /// is identical to the original input id.
     #[test]
     fn projects_decode_key_identity() {
-        let org_id = OrgId::try_from("monadic").unwrap();
+        let org_id = Id::try_from("monadic").unwrap();
         let project_name = ProjectName::try_from("radicle".to_string()).unwrap();
         let project_id: ProjectId = (project_name, org_id);
         let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
@@ -495,7 +495,7 @@ mod test {
     /// is identical the original user id.
     #[test]
     fn users_decode_key_identity() {
-        let user_id = UserId::try_from("cloudhead").unwrap();
+        let user_id = Id::try_from("cloudhead").unwrap();
         let hashed_key = store::Users::storage_map_final_key(user_id.clone());
         let decoded_key = store::Users::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, user_id);

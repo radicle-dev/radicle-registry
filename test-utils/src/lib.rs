@@ -51,7 +51,7 @@ pub async fn submit_ok<Message_: Message>(
 }
 
 pub async fn create_project_with_checkpoint(
-    org_id: OrgId,
+    org_id: Id,
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
@@ -100,9 +100,9 @@ pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
         .unwrap()
 }
 
-pub fn random_org_id() -> OrgId {
+pub fn random_id() -> Id {
     let size = rand::thread_rng().gen_range(1, 33);
-    OrgId::try_from(random_alnum_string(size).to_lowercase()).unwrap()
+    Id::try_from(random_alnum_string(size).to_lowercase()).unwrap()
 }
 
 pub fn random_project_name() -> ProjectName {
@@ -110,21 +110,16 @@ pub fn random_project_name() -> ProjectName {
     ProjectName::try_from(random_alnum_string(size).to_lowercase()).unwrap()
 }
 
-fn random_user_id() -> UserId {
-    let size = rand::thread_rng().gen_range(1, 33);
-    UserId::try_from(random_alnum_string(size).to_lowercase()).unwrap()
-}
-
 /// Create a [message::RegisterOrg] with random parameters.
 pub fn random_register_org_message() -> message::RegisterOrg {
     message::RegisterOrg {
-        org_id: random_org_id(),
+        org_id: random_id(),
     }
 }
 
 /// Create a [message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
-    org_id: OrgId,
+    org_id: Id,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
     message::RegisterProject {
@@ -138,16 +133,12 @@ pub fn random_register_project_message(
 /// Create a [message::RegisterUser] with random parameters.
 pub fn random_register_user_message() -> message::RegisterUser {
     message::RegisterUser {
-        user_id: random_user_id(),
+        user_id: random_id(),
     }
 }
 
 pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
-}
-
-pub fn random_string32() -> String32 {
-    String32::from_string(random_alnum_string(32)).unwrap()
 }
 
 pub fn random_alnum_string(size: usize) -> String {
@@ -158,7 +149,7 @@ pub fn random_alnum_string(size: usize) -> String {
 }
 
 /// Check if the user with the given id exists in the chain state.
-pub async fn user_exists(client: &Client, user_id: UserId) -> bool {
+pub async fn user_exists(client: &Client, user_id: Id) -> bool {
     client
         .list_users()
         .await

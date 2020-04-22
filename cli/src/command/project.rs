@@ -45,7 +45,7 @@ pub struct Show {
     project_name: ProjectName,
 
     /// The org in which the project is registered.
-    org_id: OrgId,
+    org_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -93,7 +93,7 @@ pub struct Register {
     /// Name of the project to register.
     project_name: ProjectName,
     /// Org under which to register the project.
-    org_id: OrgId,
+    org_id: Id,
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
 

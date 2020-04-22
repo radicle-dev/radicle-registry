@@ -46,7 +46,7 @@ impl CommandT for Command {
 pub struct Register {
     /// Id of the user to register. The valid charset is: 'a-z0-9-' and can't begin or end with
     /// a '-', must also not contain more than two '-' in a row.
-    user_id: UserId,
+    user_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -79,7 +79,7 @@ impl CommandT for Register {
 #[derive(StructOpt, Clone)]
 pub struct Unregister {
     /// Id of the org to unregister.
-    user_id: UserId,
+    user_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -112,7 +112,7 @@ impl CommandT for Unregister {
 #[derive(StructOpt, Clone)]
 pub struct Show {
     /// The id of the user
-    user_id: UserId,
+    user_id: Id,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,

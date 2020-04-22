@@ -143,15 +143,15 @@ pub enum CommandError {
     FailedTransaction(#[from] TransactionError),
 
     #[error("cannot find org {org_id}")]
-    OrgNotFound { org_id: OrgId },
+    OrgNotFound { org_id: Id },
 
     #[error("cannot find user {user_id}")]
-    UserNotFound { user_id: UserId },
+    UserNotFound { user_id: Id },
 
     #[error("cannot find project {project_name}.{org_id}")]
     ProjectNotFound {
         project_name: ProjectName,
-        org_id: OrgId,
+        org_id: Id,
     },
 
     #[error(transparent)]

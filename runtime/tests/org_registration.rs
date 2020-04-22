@@ -178,7 +178,7 @@ async fn unregister_org_with_projects() {
     let client = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
-    let org_id = random_org_id();
+    let org_id = random_id();
     let random_project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
 
     assert!(
@@ -210,7 +210,7 @@ async fn unregister_org_with_projects() {
     );
 }
 
-async fn org_exists(client: &Client, org_id: OrgId) -> bool {
+async fn org_exists(client: &Client, org_id: Id) -> bool {
     client
         .list_orgs()
         .await
