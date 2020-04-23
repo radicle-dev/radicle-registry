@@ -84,9 +84,11 @@ impl CommandT for Show {
             .ok_or(CommandError::OrgNotFound {
                 org_id: self.org_id.clone(),
             })?;
+        let balance = client.free_balance(&org.account_id).await?;
 
         println!("id: {}", org.id);
         println!("account id: {}", org.account_id);
+        println!("balance: {} μRAD", balance);
         println!("member ids: [{}]", org.members.iter().format(", "));
         println!("projects: [{}]", org.projects.iter().format(", "));
         Ok(())
