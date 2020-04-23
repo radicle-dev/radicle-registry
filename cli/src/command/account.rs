@@ -48,7 +48,7 @@ impl CommandT for Command {
 pub struct Show {
     /// The account's SS58 address or the name of a local account.
     #[structopt(
-        value_name = "account",
+        value_name = "address_or_name",
         parse(try_from_str = parse_account_id),
     )]
     account_id: AccountId,
