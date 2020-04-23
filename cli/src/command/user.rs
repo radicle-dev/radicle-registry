@@ -131,8 +131,8 @@ impl CommandT for Show {
                 })?;
 
         println!("id: {}", user.id);
-        println!("account_id: {}", user.account_id);
-        println!("projects: {:?}", user.projects);
+        println!("account id: {}", user.account_id);
+        println!("projects: [{}]", user.projects.iter().format(", "));
         Ok(())
     }
 }

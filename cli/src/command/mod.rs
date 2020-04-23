@@ -16,6 +16,7 @@
 //! Define the commands supported by the CLI.
 
 use crate::{lookup_account, CommandError, CommandT, NetworkOptions, TxOptions};
+use itertools::Itertools;
 use radicle_registry_client::*;
 
 use sp_core::crypto::Ss58Codec;

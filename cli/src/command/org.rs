@@ -86,9 +86,9 @@ impl CommandT for Show {
             })?;
 
         println!("id: {}", org.id);
-        println!("account_id: {}", org.account_id);
-        println!("members: {:?}", org.members);
-        println!("projects: {:?}", org.projects);
+        println!("account id: {}", org.account_id);
+        println!("member ids: [{}]", org.members.iter().format(", "));
+        println!("projects: [{}]", org.projects.iter().format(", "));
         Ok(())
     }
 }
