@@ -3642,6 +3642,7 @@ dependencies = [
  "directories",
  "futures 0.3.4",
  "hex",
+ "itertools",
  "lazy_static",
  "pretty_env_logger",
  "radicle-registry-client",
