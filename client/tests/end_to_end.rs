@@ -31,7 +31,7 @@ async fn register_project() {
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let project_hash = H256::random();
-    let msg = message::CreateCheckpoint {
+    let msg = Message::CreateCheckpoint {
         project_hash,
         previous_checkpoint_id: None,
     };
@@ -42,7 +42,7 @@ async fn register_project() {
     let checkpoint_id = Client::checkpoint_id(msg.previous_checkpoint_id, msg.project_hash);
 
     let org_id = random_org_id();
-    let register_org_message = message::RegisterOrg {
+    let register_org_message = Message::RegisterOrg {
         org_id: org_id.clone(),
     };
     let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
@@ -168,7 +168,7 @@ async fn register_user() {
     assert!(user.projects.is_empty());
 
     // Unregistration.
-    let unregister_user_message = message::UnregisterUser {
+    let unregister_user_message = Message::UnregisterUser {
         user_id: register_user_message.user_id.clone(),
     };
     let tx_unregister_applied = submit_ok(&client, &sender, unregister_user_message.clone()).await;
@@ -190,7 +190,7 @@ async fn invalid_transaction() {
 
     let transfer_tx = Transaction::new_signed(
         &alice,
-        message::Transfer {
+        Message::Transfer {
             recipient: alice.public(),
             balance: 1000,
         },

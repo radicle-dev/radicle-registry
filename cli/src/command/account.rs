@@ -129,7 +129,7 @@ impl CommandT for Transfer {
         let transfer_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::Transfer {
+                Message::Transfer {
                     recipient: self.recipient,
                     balance: self.amount,
                 },

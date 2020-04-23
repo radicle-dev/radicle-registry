@@ -13,14 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Provides [Transaction] and [TransactionExtra].
-use core::marker::PhantomData;
 use parity_scale_codec::Encode;
 use sp_runtime::generic::{Era, SignedPayload};
 use sp_runtime::traits::{Hash as _, SignedExtension};
 
-use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
-use radicle_registry_core::state::AccountTransactionIndex;
+use crate::{ed25519, CryptoPair as _, TxHash, message::into_runtime_call};
+use radicle_registry_core::{Message, state::AccountTransactionIndex};
 use radicle_registry_runtime::{
     fees::PayTxFee, Balance, Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
 };
@@ -38,21 +36,19 @@ use radicle_registry_runtime::{
 ///
 /// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
 /// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
-pub struct Transaction<Message_: Message> {
-    _phantom_data: PhantomData<Message_>,
+pub struct Transaction {
     pub(crate) extrinsic: UncheckedExtrinsic,
 }
 
-impl<Message_: Message> Transaction<Message_> {
+impl Transaction {
     /// Create and sign a transaction for the given message.
     pub fn new_signed(
         signer: &ed25519::Pair,
-        message: Message_,
+        message: Message,
         transaction_extra: TransactionExtra,
     ) -> Self {
-        let extrinsic = signed_extrinsic(signer, message.into_runtime_call(), transaction_extra);
+        let extrinsic = signed_extrinsic(signer, into_runtime_call(message), transaction_extra);
         Transaction {
-            _phantom_data: PhantomData,
             extrinsic,
         }
     }
@@ -189,7 +185,7 @@ mod test {
         let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
         let signed_tx = Transaction::new_signed(
             &alice,
-            message::Transfer {
+            Message::Transfer {
                 recipient: alice.public(),
                 balance: 1000,
             },

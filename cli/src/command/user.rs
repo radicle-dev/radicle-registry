@@ -62,7 +62,7 @@ impl CommandT for Register {
         let register_user_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::RegisterUser {
+                Message::RegisterUser {
                     user_id: self.user_id.clone(),
                 },
                 self.tx_options.fee,
@@ -95,7 +95,7 @@ impl CommandT for Unregister {
         let unregister_user = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::UnregisterUser {
+                Message::UnregisterUser {
                     user_id: self.user_id.clone(),
                 },
                 self.tx_options.fee,

@@ -153,9 +153,9 @@ impl Client {
 
 #[async_trait::async_trait]
 impl ClientT for Client {
-    async fn submit_transaction<Message_: Message>(
+    async fn submit_transaction(
         &self,
-        transaction: Transaction<Message_>,
+        transaction: Transaction,
     ) -> Result<Response<TransactionApplied, Error>, Error> {
         let backend = self.backend.clone();
         let tx_applied_future = backend.submit(transaction.extrinsic).await?;
@@ -174,10 +174,10 @@ impl ClientT for Client {
         }))
     }
 
-    async fn sign_and_submit_message<Message_: Message>(
+    async fn sign_and_submit_message(
         &self,
         author: &ed25519::Pair,
-        message: Message_,
+        message: Message,
         fee: Balance,
     ) -> Result<Response<TransactionApplied, Error>, Error> {
         let account_id = author.public();

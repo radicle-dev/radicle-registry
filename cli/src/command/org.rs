@@ -113,7 +113,7 @@ impl CommandT for Register {
         let register_org_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::RegisterOrg {
+                Message::RegisterOrg {
                     org_id: self.org_id.clone(),
                 },
                 self.tx_options.fee,
@@ -147,7 +147,7 @@ impl CommandT for Unregister {
         let register_org_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::UnregisterOrg {
+                Message::UnregisterOrg {
                     org_id: self.org_id.clone(),
                 },
                 self.tx_options.fee,
@@ -189,7 +189,7 @@ impl CommandT for Transfer {
         let transfer_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::TransferFromOrg {
+                Message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
                     value: self.amount,

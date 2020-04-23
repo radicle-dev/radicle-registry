@@ -11,84 +11,35 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with this progra  If not, see <https://www.gnu.org/licenses/>.
 
 //! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
 use radicle_registry_runtime::{registry, Call as RuntimeCall, Event, Runtime};
 
-pub use radicle_registry_core::message::*;
-
 /// Indicates that parsing the events into the appropriate message result failed.
 type EventParseError = String;
 
-/// Trait implemented for every runtime message
-///
-/// For every [RuntimeCall] that is exposed to the user we implement [Message] for the parameters
-/// struct of the runtime message.
-pub trait Message: Send + 'static {
+pub fn into_runtime_call(message: Message) -> RuntimeCall {
+    match message {
+        Message::RegisterOrg { org_id } => registry::Call::register_org(org_id).into(),
+        Message::UnregisterOrg { org_id } => registry::Call::unregister_org(org_id).into(),
+        Message::TransferFromOrg { org_id, recipient, value } => registry::Call::transfer_from_org(org_id, recipient, value).into(),
 
-    fn into_runtime_call(self) -> RuntimeCall;
-}
+        Message::RegisterUser { user_id } => registry::Call::register_user(user_id).into(),
+        Message::UnregisterUser { user_id } => registry::Call::unregister_user(user_id).into(),
 
-impl Message for message::RegisterProject {
+        Message::CreateCheckpoint { project_hash, previous_checkpoint_id } => registry::Call::create_checkpoint(project_hash, previous_checkpoint_id).into(),
+        Message::SetCheckpoint { project_name,
+            org_id,
+            new_checkpoint_id } => registry::Call::set_checkpoint(project_name,
+                org_id,
+                new_checkpoint_id).into(),
 
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_project(self).into()
-    }
-}
+        Message::RegisterProject { project_name, org_id, checkpoint_id, metadata } => registry::Call::register_project(project_name, org_id, checkpoint_id, metadata).into(),
 
-impl Message for message::RegisterOrg {
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_org(self).into()
-    }
-}
-
-impl Message for message::UnregisterOrg {
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::unregister_org(self).into()
-    }
-}
-
-impl Message for message::RegisterUser {
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_user(self).into()
-    }
-}
-
-impl Message for message::UnregisterUser {
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::unregister_user(self).into()
-    }
-}
-
-impl Message for message::CreateCheckpoint {
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::create_checkpoint(self).into()
-    }
-}
-
-impl Message for message::SetCheckpoint {
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::set_checkpoint(self).into()
-    }
-}
-
-impl Message for message::Transfer {
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::transfer(self).into()
-    }
-}
-
-impl Message for message::TransferFromOrg {
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::transfer_from_org(self).into()
+        Message::Transfer { recipient, balance } => registry::Call::transfer(recipient, balance).into(),
     }
 }
 

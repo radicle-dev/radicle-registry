@@ -25,10 +25,10 @@ use radicle_registry_client::*;
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-pub async fn submit_ok_with_fee<Message_: Message>(
+pub async fn submit_ok_with_fee(
     client: &Client,
     author: &ed25519::Pair,
-    message: Message_,
+    message: Message,
     fee: Balance,
 ) -> TransactionApplied {
     client
@@ -42,10 +42,10 @@ pub async fn submit_ok_with_fee<Message_: Message>(
 /// Submit a transaction and wait for it to be successfully applied.
 ///
 /// Panics if submission errors.
-pub async fn submit_ok<Message_: Message>(
+pub async fn submit_ok(
     client: &Client,
     author: &ed25519::Pair,
-    message: Message_,
+    message: Message,
 ) -> TransactionApplied {
     submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
@@ -55,7 +55,7 @@ pub async fn create_project_with_checkpoint(
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
-    let message = message::CreateCheckpoint {
+    let Message::CreateCheckpoint { project_hash, previous_checkpoint_id } = Message::CreateCheckpoint {
         project_hash: H256::random(),
         previous_checkpoint_id: None,
     };
@@ -65,7 +65,7 @@ pub async fn create_project_with_checkpoint(
         .result
         .unwrap();
 
-    let register_org_message = message::RegisterOrg {
+    let register_org_message = Message::RegisterOrg {
         org_id: org_id.clone(),
     };
     submit_ok(&client, &author, register_org_message.clone()).await;
@@ -74,7 +74,7 @@ pub async fn create_project_with_checkpoint(
     // The org needs funds to submit transactions.
     transfer(&client, &author, org.account_id, 1000).await;
 
-    let checkpoint_id = Client::checkpoint_id(message.previous_checkpoint_id, message.project_hash);
+    let checkpoint_id = Client::checkpoint_id(previous_checkpoint_id, project_hash);
     let register_project_message = random_register_project_message(org_id, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
@@ -114,19 +114,19 @@ fn random_user_id() -> UserId {
     UserId::try_from(random_alnum_string(size).to_lowercase()).unwrap()
 }
 
-/// Create a [message::RegisterOrg] with random parameters.
-pub fn random_register_org_message() -> message::RegisterOrg {
-    message::RegisterOrg {
+/// Create a [Message::RegisterOrg] with random parameters.
+pub fn random_register_org_message() -> Message {
+    Message::RegisterOrg {
         org_id: random_org_id(),
     }
 }
 
-/// Create a [message::RegisterProject] with random parameters to register a project with.
+/// Create a [Message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
     org_id: OrgId,
     checkpoint_id: CheckpointId,
-) -> message::RegisterProject {
-    message::RegisterProject {
+) -> Message {
+    Message::RegisterProject {
         project_name: random_project_name(),
         org_id,
         checkpoint_id,
@@ -134,9 +134,9 @@ pub fn random_register_project_message(
     }
 }
 
-/// Create a [message::RegisterUser] with random parameters.
-pub fn random_register_user_message() -> message::RegisterUser {
-    message::RegisterUser {
+/// Create a [Message::RegisterUser] with random parameters.
+pub fn random_register_user_message() -> Message {
+    Message::RegisterUser {
         user_id: random_user_id(),
     }
 }
@@ -179,7 +179,7 @@ pub async fn transfer(
     let tx_applied = submit_ok_with_fee(
         &client,
         &donator,
-        message::Transfer {
+        Message::Transfer {
             recipient,
             balance: value,
         },

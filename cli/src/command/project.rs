@@ -108,7 +108,7 @@ pub struct Register {
 impl CommandT for Register {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let msg = message::CreateCheckpoint {
+        let msg = Message::CreateCheckpoint {
             project_hash: self.project_hash.unwrap_or_default(),
             previous_checkpoint_id: None,
         };
@@ -126,7 +126,7 @@ impl CommandT for Register {
         let register_project_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::RegisterProject {
+                Message::RegisterProject {
                     project_name: self.project_name.clone(),
                     org_id: self.org_id.clone(),
                     checkpoint_id,

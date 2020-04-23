@@ -146,10 +146,15 @@ decl_module! {
     {
         fn deposit_event() = default;
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
+        pub fn register_project(origin,
+            project_name: ProjectName,
+            org_id: OrgId,
+            checkpoint_id: CheckpointId,
+            metadata: Bytes128
+        ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            let org = match store::Orgs::get(message.org_id.clone()) {
+            let org = match store::Orgs::get(org_id.clone()) {
                 None => return Err(RegistryError::InexistentOrg.into()),
                 Some(o) => o,
             };
@@ -158,33 +163,33 @@ decl_module! {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
 
-            if store::Checkpoints::get(message.checkpoint_id).is_none() {
+            if store::Checkpoints::get(checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            let project_id = (message.project_name.clone(), message.org_id.clone());
+            let project_id = (project_name.clone(), org_id.clone());
 
             if store::Projects::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
             };
 
             let new_project = state::Project {
-                current_cp: message.checkpoint_id,
-                metadata: message.metadata
+                current_cp: checkpoint_id,
+                metadata: metadata
             };
 
             store::Projects::insert(project_id.clone(), new_project);
-            store::Orgs::insert(message.org_id.clone(), org.add_project(message.project_name.clone()));
-            store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
+            store::Orgs::insert(org_id.clone(), org.add_project(project_name.clone()));
+            store::InitialCheckpoints::insert(project_id, checkpoint_id);
 
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
+        pub fn register_org(origin, org_id: OrgId) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.org_id.clone()) {
+            match store::Orgs::get(org_id.clone()) {
                 None => {},
                 Some(_) => return Err(RegistryError::DuplicateOrgId.into()),
             }
@@ -200,24 +205,24 @@ decl_module! {
                 members: vec![sender],
                 projects: Vec::new(),
             };
-            store::Orgs::insert(message.org_id, new_org);
+            store::Orgs::insert(org_id, new_org);
 
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
+        pub fn unregister_org(origin, org_id: OrgId) -> DispatchResult {
             fn can_be_unregistered(org: state::Org, sender: AccountId) -> bool {
                 org.members == vec![sender] && org.projects.is_empty()
             }
 
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.org_id.clone()) {
+            match store::Orgs::get(org_id.clone()) {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org, sender) {
-                        store::Orgs::remove(message.org_id);
+                        store::Orgs::remove(org_id);
                         Ok(())
                     }
                     else {
@@ -228,10 +233,10 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
+        pub fn register_user(origin, user_id: UserId) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Users::get(message.user_id.clone()).is_some() {
+            if store::Users::get(user_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateUserId.into())
             }
 
@@ -248,23 +253,23 @@ decl_module! {
                 account_id: sender,
                 projects: Vec::new(),
             };
-            store::Users::insert(message.user_id, new_user);
+            store::Users::insert(user_id, new_user);
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
+        pub fn unregister_user(origin, user_id: UserId) -> DispatchResult {
             fn can_be_unregistered(user: state::User, sender: AccountId) -> bool {
                 user.account_id == sender && user.projects.is_empty()
             }
 
             let sender = ensure_signed(origin)?;
 
-            match store::Users::get(message.user_id.clone()) {
+            match store::Users::get(user_id.clone()) {
                 None => Err(RegistryError::InexistentUser.into()),
                 Some(user) => {
                     if can_be_unregistered(user, sender) {
-                        store::Users::remove(message.user_id);
+                        store::Users::remove(user_id);
                         Ok(())
                     }
                     else {
@@ -275,17 +280,21 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
+        pub fn transfer_from_org(origin, org_id: OrgId,
+            recipient: AccountId,
+
+
+            value: Balance) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let org = match store::Orgs::get(message.org_id) {
+            let org = match store::Orgs::get(org_id) {
                 None => return Err(RegistryError::InexistentOrg.into()),
                 Some(o) => o,
             };
             if org.members.contains(&sender) {
                 <crate::Balances as Currency<_>>::transfer(
                     &org.account_id,
-                    &message.recipient,
-                    message.value, ExistenceRequirement::KeepAlive
+                    &recipient,
+                    value, ExistenceRequirement::KeepAlive
                 )
             }
             else {
@@ -296,11 +305,12 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn create_checkpoint(
             origin,
-            message: message::CreateCheckpoint,
+            project_hash: Hash,
+            previous_checkpoint_id: Option<CheckpointId>,
         ) -> DispatchResult {
             ensure_signed(origin)?;
 
-            match message.previous_checkpoint_id {
+            match previous_checkpoint_id {
                 None => {}
                 Some(cp_id) => {
                     match store::Checkpoints::get(cp_id) {
@@ -311,8 +321,8 @@ decl_module! {
             };
 
             let checkpoint = state::Checkpoint {
-                parent: message.previous_checkpoint_id,
-                hash: message.project_hash,
+                parent: previous_checkpoint_id,
+                hash: project_hash,
             };
             let checkpoint_id = checkpoint.id();
             store::Checkpoints::insert(checkpoint_id, checkpoint);
@@ -322,23 +332,25 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn set_checkpoint(
             origin,
-            message: message::SetCheckpoint,
+            project_name: ProjectName,
+            org_id: OrgId,
+            new_checkpoint_id: CheckpointId
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
+            if store::Checkpoints::get(new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
-            let project_id = (message.project_name.clone(), message.org_id.clone());
+            let project_id = (project_name.clone(), org_id.clone());
             let opt_project = store::Projects::get(project_id.clone());
-            let opt_org = store::Orgs::get(message.org_id.clone());
+            let opt_org = store::Orgs::get(org_id.clone());
             let new_project = match (opt_project, opt_org) {
                 (Some(prj), Some(org)) => {
                     if !org.members.contains(&sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
                     state::Project {
-                        current_cp: message.new_checkpoint_id,
+                        current_cp: new_checkpoint_id,
                         ..prj
                     }
                 }
@@ -350,7 +362,7 @@ decl_module! {
                 None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
                 Some(cp) => cp,
             };
-            if !descends_from_initial_checkpoint(message.new_checkpoint_id, initial_cp) {
+            if !descends_from_initial_checkpoint(new_checkpoint_id, initial_cp) {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
@@ -360,13 +372,14 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
-        pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
+        pub fn transfer(origin, recipient: AccountId,
+            balance: Balance) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
             <crate::Balances as Currency<_>>::transfer(
                 &sender,
-                &message.recipient,
-                message.balance,
+                &recipient,
+                balance,
                 ExistenceRequirement::KeepAlive
             )
         }

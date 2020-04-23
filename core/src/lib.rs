@@ -28,6 +28,7 @@ use sp_runtime::traits::BlakeTwo256;
 pub use sp_runtime::DispatchError;
 
 pub mod message;
+pub use message::Message;
 pub mod state;
 
 pub mod bytes128;

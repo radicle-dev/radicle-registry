@@ -31,7 +31,7 @@ async fn main() -> Result<(), Error> {
 
     // Choose some random project hash and create a checkpoint
     let project_hash = H256::random();
-    let msg = message::CreateCheckpoint {
+    let msg = Message::CreateCheckpoint {
         project_hash,
         previous_checkpoint_id: None,
     };
@@ -47,7 +47,7 @@ async fn main() -> Result<(), Error> {
     client
         .sign_and_submit_message(
             &alice,
-            message::RegisterProject {
+            Message::RegisterProject {
                 project_name: project_name.clone(),
                 org_id: org_id.clone(),
                 checkpoint_id,

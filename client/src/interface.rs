@@ -28,7 +28,6 @@ pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
 pub use crate::error::Error;
-pub use crate::message::Message;
 pub use crate::transaction::{Transaction, TransactionExtra};
 
 /// The hash of a block. Uniquely identifies a block.
@@ -94,18 +93,18 @@ pub trait ClientT {
     /// ```
     ///
     /// See the `getting_started` example for more details.
-    async fn submit_transaction<Message_: Message>(
+    async fn submit_transaction(
         &self,
-        transaction: Transaction<Message_>,
+        transaction: Transaction,
     ) -> Result<Response<TransactionApplied, Error>, Error>;
 
     /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
     /// Same as [ClientT::submit_transaction] but takes care of signing the message.
-    async fn sign_and_submit_message<Message_: Message>(
+    async fn sign_and_submit_message(
         &self,
         author: &ed25519::Pair,
-        message: Message_,
+        message: Message,
         fee: Balance,
     ) -> Result<Response<TransactionApplied, Error>, Error>;
 

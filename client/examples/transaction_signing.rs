@@ -35,7 +35,7 @@ async fn main() -> Result<(), Error> {
     // Construct the transaction
     let transfer_tx = Transaction::new_signed(
         &alice,
-        message::Transfer {
+        Message::Transfer {
             recipient: bob.public(),
             balance: 1000,
         },

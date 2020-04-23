@@ -33,7 +33,7 @@ async fn main() {
     client
         .sign_and_submit_message(
             &alice,
-            message::RegisterUser {
+            Message::RegisterUser {
                 user_id: user_id.clone(),
             },
             100,

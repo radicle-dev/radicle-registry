@@ -63,15 +63,15 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
     match call {
         Call::Registry(registry_call) => match registry_call {
             // Transactions payed by the org
-            RegistryCall::register_project(m) => org_payer_account(author, &m.org_id),
-            RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
-            RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
-            RegistryCall::set_checkpoint(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::register_project(_, org_id, _, _) => org_payer_account(author, &org_id),
+            RegistryCall::unregister_org(org_id) => org_payer_account(author, &org_id),
+            RegistryCall::transfer_from_org(org_id, _, _) => org_payer_account(author, &org_id),
+            RegistryCall::set_checkpoint(_, org_id, _) => org_payer_account(author, &org_id),
 
             // Transactions paid by the author
-            RegistryCall::create_checkpoint(_)
+            RegistryCall::create_checkpoint(_,_)
             | RegistryCall::register_org(_)
-            | RegistryCall::transfer(_)
+            | RegistryCall::transfer(_,_)
             | RegistryCall::register_user(_)
             | RegistryCall::unregister_user(_) => author,
 

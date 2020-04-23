@@ -52,7 +52,7 @@ async fn main() -> Result<(), Error> {
     let transfer_submitted = client
         .sign_and_submit_message(
             &alice,
-            message::Transfer {
+            Message::Transfer {
                 recipient: bob_public,
                 balance: 1,
             },

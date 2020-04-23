@@ -21,182 +21,356 @@ extern crate alloc;
 use crate::{AccountId, Balance, Bytes128, CheckpointId, OrgId, ProjectName, UserId, H256};
 use parity_scale_codec::{Decode, Encode};
 
-/// Registers an org on the Radicle Registry with the given ID.
-///
-/// # State changes
-///
-/// If successful, a new [crate::state::Org] with the given properties is added to the state.
-///
-/// [crate::state::Org::members] is initialized with the transaction author as the only member.
-///
-/// [crate::state::Org::account_id] is generated randomly.
-///
-/// # State-dependent validations
-///
-/// An Org with the same ID must not yet exist.
-///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct RegisterOrg {
-    pub org_id: OrgId,
+pub enum Message {
+    /// Registers an org on the Radicle Registry with the given ID.
+    ///
+    /// # State changes
+    ///
+    /// If successful, a new [crate::state::Org] with the given properties is added to the state.
+    ///
+    /// [crate::state::Org::members] is initialized with the transaction author as the only member.
+    ///
+    /// [crate::state::Org::account_id] is generated randomly.
+    ///
+    /// # State-dependent validations
+    ///
+    /// An Org with the same ID must not yet exist.
+    ///
+    RegisterOrg {
+        org_id: OrgId,
+    },
+
+    /// Unregisters an org on the Radicle Registry with the given ID.
+    ///
+    /// # State changes
+    ///
+    /// If successful, the targeted Org is removed from the state.
+    ///
+    /// # State-dependent validations
+    ///
+    /// The targeted org must exist and have no projects and the
+    /// the transaction origin must be its only member.
+    ///
+    UnregisterOrg {
+        org_id: OrgId,
+    },
+
+    /// Registers a user on the Radicle Registry with the given ID.
+    ///
+    /// # State changes
+    ///
+    /// If successful, a new [crate::state::User] with the given properties is added to the state.
+    ///
+    /// [crate::state::User::account_id] is generated randomly.
+    ///
+    /// # State-dependent validations
+    ///
+    /// An Org with the same ID must not yet exist.
+    ///
+    RegisterUser {
+        user_id: UserId,
+    },
+
+    /// Unregisters a user on the Radicle Registry with the given ID.
+    ///
+    /// # State changes
+    ///
+    /// If successful, the targeted User is removed from the state.
+    ///
+    /// # State-dependent validations
+    ///
+    /// The targeted user must exist and have no projects and the
+    /// the transaction origin must be the associated account.
+    ///
+    UnregisterUser {
+        user_id: UserId,
+    },
+
+    /// Register a project on the Radicle Registry with the given ID.
+    ///
+    /// # State changes
+    ///
+    /// If successful, a new [crate::state::Project] with the given
+    /// properties is added to the state.
+    ///
+    ///
+    /// # State-dependent validations
+    ///
+    /// The involved org must exit.
+    ///
+    /// The author must be a member of the involved org.
+    ///
+    /// A checkpoint with the given ID must exist.
+    ///
+    /// A project with the same name must not yet exist in the org.
+    ///
+    RegisterProject {
+        // The name of the project to register, unique in the org.
+        project_name: ProjectName,
+
+        /// The org in which to register the project.
+        org_id: OrgId,
+
+        /// Initial checkpoint of the project.
+        checkpoint_id: CheckpointId,
+
+        /// Opaque and imutable metadata, used by the application.
+        metadata: Bytes128,
+    },
+
+    /// Add a new checkpoint to the state.
+    ///
+    /// # State changes
+    ///
+    /// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+    ///
+    /// # State-dependent validations
+    ///
+    /// If `previous_checkpoint_id` is provided a checkpoint with the given ID must exist in the state.
+    CreateCheckpoint {
+        project_hash: H256,
+        previous_checkpoint_id: Option<CheckpointId>,
+    },
+
+    /// Updates [crate::state::Project::current_cp].
+    ///
+    /// # State changes
+    ///
+    /// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+    ///
+    /// # State-dependent validations
+    ///
+    /// The project `project_id` must exist.
+    ///
+    /// The checkpoint `new_checkpoint_id` must exist.
+    ///
+    /// The transaction author must be part of the [crate::state::Org::members] of the given project.
+    SetCheckpoint {
+        project_name: ProjectName,
+        org_id: OrgId,
+        new_checkpoint_id: CheckpointId,
+    },
+
+    /// Transfer funds from an org account to an account.
+    ///
+    /// # State changes
+    ///
+    /// If successful, `value` is deducated from the org account and
+    /// added to the the recipient account. The org account is given
+    /// by [crate::state::Org::account_id] of the given org.
+    ///
+    /// If the recipient account did not exist before, it is created.
+    /// The recipient account may be a user account or an org account.
+    ///
+    /// # State-dependent validations
+    ///
+    /// The author must be a member of [crate::state::Org::members].
+    ///
+    /// The org account must have a balance of at least `value`.
+    ///
+    TransferFromOrg {
+        org_id: OrgId,
+        recipient: AccountId,
+        value: Balance,
+    },
+
+    /// Transfer funds from one account to another.
+    ///
+    /// # State changes
+    ///
+    /// If successful, `balance` is deducated from the transaction author
+    /// account and added to the the recipient account. If the recipient
+    /// account did not exist before, it is created.
+    ///
+    /// The recipient account may be a user account or an org account.
+    ///
+    /// # State-dependent validations
+    ///
+    /// The author account must have a balance of at least `balance`.
+    ///
+    Transfer {
+        recipient: AccountId,
+        balance: Balance,
+    },
 }
 
-/// Unregisters an org on the Radicle Registry with the given ID.
-///
-/// # State changes
-///
-/// If successful, the targeted Org is removed from the state.
-///
-/// # State-dependent validations
-///
-/// The targeted org must exist and have no projects and the
-/// the transaction origin must be its only member.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct UnregisterOrg {
-    pub org_id: OrgId,
-}
+// /// Registers an org on the Radicle Registry with the given ID.
+// ///
+// /// # State changes
+// ///
+// /// If successful, a new [crate::state::Org] with the given properties is added to the state.
+// ///
+// /// [crate::state::Org::members] is initialized with the transaction author as the only member.
+// ///
+// /// [crate::state::Org::account_id] is generated randomly.
+// ///
+// /// # State-dependent validations
+// ///
+// /// An Org with the same ID must not yet exist.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct RegisterOrg {
+//     pub org_id: OrgId,
+// }
 
-/// Registers a user on the Radicle Registry with the given ID.
-///
-/// # State changes
-///
-/// If successful, a new [crate::state::User] with the given properties is added to the state.
-///
-/// [crate::state::User::account_id] is generated randomly.
-///
-/// # State-dependent validations
-///
-/// An Org with the same ID must not yet exist.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct RegisterUser {
-    pub user_id: UserId,
-}
+// /// Unregisters an org on the Radicle Registry with the given ID.
+// ///
+// /// # State changes
+// ///
+// /// If successful, the targeted Org is removed from the state.
+// ///
+// /// # State-dependent validations
+// ///
+// /// The targeted org must exist and have no projects and the
+// /// the transaction origin must be its only member.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct UnregisterOrg {
+//     pub org_id: OrgId,
+// }
 
-/// Unregisters a user on the Radicle Registry with the given ID.
-///
-/// # State changes
-///
-/// If successful, the targeted User is removed from the state.
-///
-/// # State-dependent validations
-///
-/// The targeted user must exist and have no projects and the
-/// the transaction origin must be the associated account.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct UnregisterUser {
-    pub user_id: UserId,
-}
+// /// Registers a user on the Radicle Registry with the given ID.
+// ///
+// /// # State changes
+// ///
+// /// If successful, a new [crate::state::User] with the given properties is added to the state.
+// ///
+// /// [crate::state::User::account_id] is generated randomly.
+// ///
+// /// # State-dependent validations
+// ///
+// /// An Org with the same ID must not yet exist.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct RegisterUser {
+//     pub user_id: UserId,
+// }
 
-/// Register a project on the Radicle Registry with the given ID.
-///
-/// # State changes
-///
-/// If successful, a new [crate::state::Project] with the given
-/// properties is added to the state.
-///
-///
-/// # State-dependent validations
-///
-/// The involved org must exit.
-///
-/// The author must be a member of the involved org.
-///
-/// A checkpoint with the given ID must exist.
-///
-/// A project with the same name must not yet exist in the org.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct RegisterProject {
-    // The name of the project to register, unique in the org.
-    pub project_name: ProjectName,
+// /// Unregisters a user on the Radicle Registry with the given ID.
+// ///
+// /// # State changes
+// ///
+// /// If successful, the targeted User is removed from the state.
+// ///
+// /// # State-dependent validations
+// ///
+// /// The targeted user must exist and have no projects and the
+// /// the transaction origin must be the associated account.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct UnregisterUser {
+//     pub user_id: UserId,
+// }
 
-    /// The org in which to register the project.
-    pub org_id: OrgId,
+// /// Register a project on the Radicle Registry with the given ID.
+// ///
+// /// # State changes
+// ///
+// /// If successful, a new [crate::state::Project] with the given
+// /// properties is added to the state.
+// ///
+// ///
+// /// # State-dependent validations
+// ///
+// /// The involved org must exit.
+// ///
+// /// The author must be a member of the involved org.
+// ///
+// /// A checkpoint with the given ID must exist.
+// ///
+// /// A project with the same name must not yet exist in the org.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct RegisterProject {
+//     // The name of the project to register, unique in the org.
+//     pub project_name: ProjectName,
 
-    /// Initial checkpoint of the project.
-    pub checkpoint_id: CheckpointId,
+//     /// The org in which to register the project.
+//     pub org_id: OrgId,
 
-    /// Opaque and imutable metadata, used by the application.
-    pub metadata: Bytes128,
-}
+//     /// Initial checkpoint of the project.
+//     pub checkpoint_id: CheckpointId,
 
-/// Add a new checkpoint to the state.
-///
-/// # State changes
-///
-/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
-///
-/// # State-dependent validations
-///
-/// If `previous_checkpoint_id` is provided a checkpoint with the given ID must exist in the state.
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct CreateCheckpoint {
-    pub project_hash: H256,
-    pub previous_checkpoint_id: Option<CheckpointId>,
-}
+//     /// Opaque and imutable metadata, used by the application.
+//     pub metadata: Bytes128,
+// }
 
-/// Updates [crate::state::Project::current_cp].
-///
-/// # State changes
-///
-/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
-///
-/// # State-dependent validations
-///
-/// The project `project_id` must exist.
-///
-/// The checkpoint `new_checkpoint_id` must exist.
-///
-/// The transaction author must be part of the [crate::state::Org::members] of the given project.
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct SetCheckpoint {
-    pub project_name: ProjectName,
-    pub org_id: OrgId,
-    pub new_checkpoint_id: CheckpointId,
-}
+// /// Add a new checkpoint to the state.
+// ///
+// /// # State changes
+// ///
+// /// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+// ///
+// /// # State-dependent validations
+// ///
+// /// If `previous_checkpoint_id` is provided a checkpoint with the given ID must exist in the state.
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct CreateCheckpoint {
+//     pub project_hash: H256,
+//     pub previous_checkpoint_id: Option<CheckpointId>,
+// }
 
-/// Transfer funds from an org account to an account.
-///
-/// # State changes
-///
-/// If successful, `value` is deducated from the org account and
-/// added to the the recipient account. The org account is given
-/// by [crate::state::Org::account_id] of the given org.
-///
-/// If the recipient account did not exist before, it is created.
-/// The recipient account may be a user account or an org account.
-///
-/// # State-dependent validations
-///
-/// The author must be a member of [crate::state::Org::members].
-///
-/// The org account must have a balance of at least `value`.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct TransferFromOrg {
-    pub org_id: OrgId,
-    pub recipient: AccountId,
-    pub value: Balance,
-}
+// /// Updates [crate::state::Project::current_cp].
+// ///
+// /// # State changes
+// ///
+// /// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+// ///
+// /// # State-dependent validations
+// ///
+// /// The project `project_id` must exist.
+// ///
+// /// The checkpoint `new_checkpoint_id` must exist.
+// ///
+// /// The transaction author must be part of the [crate::state::Org::members] of the given project.
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct SetCheckpoint {
+//     pub project_name: ProjectName,
+//     pub org_id: OrgId,
+//     pub new_checkpoint_id: CheckpointId,
+// }
 
-/// Transfer funds from one account to another.
-///
-/// # State changes
-///
-/// If successful, `balance` is deducated from the transaction author
-/// account and added to the the recipient account. If the recipient
-/// account did not exist before, it is created.
-///
-/// The recipient account may be a user account or an org account.
-///
-/// # State-dependent validations
-///
-/// The author account must have a balance of at least `balance`.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Transfer {
-    pub recipient: AccountId,
-    pub balance: Balance,
-}
+// /// Transfer funds from an org account to an account.
+// ///
+// /// # State changes
+// ///
+// /// If successful, `value` is deducated from the org account and
+// /// added to the the recipient account. The org account is given
+// /// by [crate::state::Org::account_id] of the given org.
+// ///
+// /// If the recipient account did not exist before, it is created.
+// /// The recipient account may be a user account or an org account.
+// ///
+// /// # State-dependent validations
+// ///
+// /// The author must be a member of [crate::state::Org::members].
+// ///
+// /// The org account must have a balance of at least `value`.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct TransferFromOrg {
+//     pub org_id: OrgId,
+//     pub recipient: AccountId,
+//     pub value: Balance,
+// }
+
+// /// Transfer funds from one account to another.
+// ///
+// /// # State changes
+// ///
+// /// If successful, `balance` is deducated from the transaction author
+// /// account and added to the the recipient account. If the recipient
+// /// account did not exist before, it is created.
+// ///
+// /// The recipient account may be a user account or an org account.
+// ///
+// /// # State-dependent validations
+// ///
+// /// The author account must have a balance of at least `balance`.
+// ///
+// #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+// pub struct Transfer {
+//     pub recipient: AccountId,
+//     pub balance: Balance,
+// }
