@@ -21,7 +21,7 @@ use crate::account_storage;
 /// Account related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
-    /// Show information for a given account.
+    /// Show information for a local, user's, or org's account
     Show(Show),
     /// Generate a local account and store it on disk.
     /// Fail if there is already an account with the given `name`
@@ -46,7 +46,7 @@ impl CommandT for Command {
 
 #[derive(StructOpt, Clone)]
 pub struct Show {
-    /// SS58 address or name of a local account.
+    /// The account's SS58 address or the name of a local account.
     #[structopt(
         value_name = "account",
         parse(try_from_str = parse_account_id),
