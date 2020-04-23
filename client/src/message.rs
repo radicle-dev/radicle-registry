@@ -28,33 +28,11 @@ type EventParseError = String;
 /// For every [RuntimeCall] that is exposed to the user we implement [Message] for the parameters
 /// struct of the runtime message.
 pub trait Message: Send + 'static {
-    // /// Result of executing the message in the runtime that is presented to the client user.
-    // type ReturnValue: Send + 'static;
-
-    /// Parse all runtime events emitted by the message and return the appropriate message result.
-    ///
-    /// Returns an error if the event list is not well formed. For example if an expected event is
-    /// missing.
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError>;
 
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
 impl Message for message::RegisterProject {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(registry::Event::ProjectRegistered(_, _)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::register_project(self).into()
@@ -62,18 +40,6 @@ impl Message for message::RegisterProject {
 }
 
 impl Message for message::RegisterOrg {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "OrgRegistered", |event| match event {
-                Event::registry(registry::Event::OrgRegistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::register_org(self).into()
@@ -81,19 +47,6 @@ impl Message for message::RegisterOrg {
 }
 
 impl Message for message::UnregisterOrg {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "OrgUnregistered", |event| match event {
-                Event::registry(registry::Event::OrgUnregistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
-
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::unregister_org(self).into()
     }
@@ -103,35 +56,9 @@ impl Message for message::RegisterUser {
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::register_user(self).into()
     }
-
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-
-        match dispatch_result {
-            Ok(()) => find_event(&events, "UserRegistered", |event| match event {
-                Event::registry(registry::Event::UserRegistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
 }
 
 impl Message for message::UnregisterUser {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "UserUnregistered", |event| match event {
-                Event::registry(registry::Event::UserUnregistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::unregister_user(self).into()
@@ -139,18 +66,6 @@ impl Message for message::UnregisterUser {
 }
 
 impl Message for message::CreateCheckpoint {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
-                Event::registry(registry::Event::CheckpointCreated(_checkpoint_id)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::create_checkpoint(self).into()
@@ -158,34 +73,12 @@ impl Message for message::CreateCheckpoint {
 }
 
 impl Message for message::SetCheckpoint {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
-                Event::registry(registry::Event::CheckpointSet(
-                    _project_name,
-                    _org_id,
-                    _checkpoint_id,
-                )) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
-    }
-
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::set_checkpoint(self).into()
     }
 }
 
 impl Message for message::Transfer {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        get_dispatch_result(&events)
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::transfer(self).into()
@@ -193,11 +86,6 @@ impl Message for message::Transfer {
 }
 
 impl Message for message::TransferFromOrg {
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<(), TransactionError>, EventParseError> {
-        get_dispatch_result(&events)
-    }
 
     fn into_runtime_call(self) -> RuntimeCall {
         registry::Call::transfer_from_org(self).into()
@@ -212,7 +100,7 @@ impl Message for message::TransferFromOrg {
 /// Returns an outer [EventParseError] if no [frame_system::Event] was present in `events`.
 ///
 /// Because of an issue with substrate the `message` field of [TransactionError] will always be `None`
-fn get_dispatch_result(events: &[Event]) -> Result<Result<(), TransactionError>, EventParseError> {
+pub fn get_dispatch_result(events: &[Event]) -> Result<Result<(), TransactionError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
             frame_system::Event::<Runtime>::ExtrinsicSuccess(_) => Some(Ok(())),

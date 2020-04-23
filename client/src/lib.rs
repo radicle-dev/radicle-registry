@@ -164,7 +164,7 @@ impl ClientT for Client {
             let events = tx_applied.events;
             let tx_hash = tx_applied.tx_hash;
             let block = tx_applied.block;
-            let result = Message_::result_from_events(events.clone())?;
+            let result = message::get_dispatch_result(&events)?;
             Ok(TransactionApplied {
                 tx_hash,
                 block,
@@ -200,7 +200,7 @@ impl ClientT for Client {
             let events = tx_applied.events;
             let tx_hash = tx_applied.tx_hash;
             let block = tx_applied.block;
-            let result = Message_::result_from_events(events.clone())?;
+            let result = message::get_dispatch_result(&events)?;
             Ok(TransactionApplied {
                 tx_hash,
                 block,
