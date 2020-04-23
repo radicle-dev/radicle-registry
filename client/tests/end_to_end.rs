@@ -78,11 +78,6 @@ async fn register_project() {
     );
     assert_eq!(project.metadata.clone(), register_project_message.metadata);
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(project_name.clone(), org_id.clone()).into()
-    );
-
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
     let checkpoint_ = state::Checkpoint {
         parent: None,
@@ -128,11 +123,6 @@ async fn register_org() {
     let random_fee = random_balance();
     let tx_applied =
         submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
-
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
-    );
     assert_eq!(tx_applied.result, Ok(()));
 
     let opt_org = client
@@ -164,11 +154,6 @@ async fn register_user() {
 
     let register_user_message = random_register_user_message();
     let tx_applied = submit_ok(&client, &sender, register_user_message.clone()).await;
-
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into(),
-    );
 
     let maybe_user = client
         .get_user(register_user_message.user_id.clone())

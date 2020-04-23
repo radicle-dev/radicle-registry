@@ -177,7 +177,6 @@ decl_module! {
             store::Orgs::insert(message.org_id.clone(), org.add_project(message.project_name.clone()));
             store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.org_id));
             Ok(())
         }
 
@@ -201,8 +200,8 @@ decl_module! {
                 members: vec![sender],
                 projects: Vec::new(),
             };
-            store::Orgs::insert(message.org_id.clone(), new_org);
-            Self::deposit_event(Event::OrgRegistered(message.org_id));
+            store::Orgs::insert(message.org_id, new_org);
+
             Ok(())
         }
 
@@ -218,8 +217,7 @@ decl_module! {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org, sender) {
-                        store::Orgs::remove(message.org_id.clone());
-                        Self::deposit_event(Event::OrgUnregistered(message.org_id));
+                        store::Orgs::remove(message.org_id);
                         Ok(())
                     }
                     else {
@@ -250,8 +248,7 @@ decl_module! {
                 account_id: sender,
                 projects: Vec::new(),
             };
-            store::Users::insert(message.user_id.clone(), new_user);
-            Self::deposit_event(Event::UserRegistered(message.user_id));
+            store::Users::insert(message.user_id, new_user);
             Ok(())
         }
 
@@ -267,8 +264,7 @@ decl_module! {
                 None => Err(RegistryError::InexistentUser.into()),
                 Some(user) => {
                     if can_be_unregistered(user, sender) {
-                        store::Users::remove(message.user_id.clone());
-                        Self::deposit_event(Event::UserUnregistered(message.user_id));
+                        store::Users::remove(message.user_id);
                         Ok(())
                     }
                     else {
@@ -320,7 +316,6 @@ decl_module! {
             };
             let checkpoint_id = checkpoint.id();
             store::Checkpoints::insert(checkpoint_id, checkpoint);
-            Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
             Ok(())
         }
 
@@ -361,11 +356,6 @@ decl_module! {
 
             store::Projects::insert(project_id, new_project);
 
-            Self::deposit_event(Event::CheckpointSet(
-                message.project_name.clone(),
-                message.org_id.clone(),
-                message.new_checkpoint_id
-            ));
             Ok(())
         }
 
@@ -397,16 +387,10 @@ decl_module! {
 
     }
 }
+
 decl_event!(
-    pub enum Event {
-        CheckpointCreated(CheckpointId),
-        CheckpointSet(ProjectName, OrgId, CheckpointId),
-        OrgRegistered(OrgId),
-        OrgUnregistered(OrgId),
-        ProjectRegistered(ProjectName, OrgId),
-        UserRegistered(UserId),
-        UserUnregistered(UserId),
-    }
+    // We don't make use of this feature.
+    pub enum Event {}
 );
 
 /// Trait to decode [StorageMap] keys from raw storage keys.

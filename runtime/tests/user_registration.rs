@@ -31,10 +31,7 @@ async fn register_user() {
     let random_fee = random_balance();
     let tx_applied =
         submit_ok_with_fee(&client, &alice, register_user_message.clone(), random_fee).await;
-
-    assert!(tx_applied
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
+    assert_eq!(tx_applied.result, Ok(()));
 
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,
@@ -98,9 +95,6 @@ async fn unregister_user() {
 
     // Registration.
     let tx_applied = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(tx_applied
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
     assert!(tx_applied.result.is_ok());
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,
@@ -134,11 +128,8 @@ async fn unregister_user_with_invalid_sender() {
     let alice = key_pair_from_string("Alice");
     let register_user_message = random_register_user_message();
 
-    // Reistration.
+    // Registration.
     let tx_applied = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(tx_applied
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
     assert!(tx_applied.result.is_ok());
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,

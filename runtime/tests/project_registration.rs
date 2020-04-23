@@ -52,6 +52,7 @@ async fn register_project() {
     let random_fee = random_balance();
     let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
     let tx_applied = submit_ok_with_fee(&client, &alice, message.clone(), random_fee).await;
+    assert_eq!(tx_applied.result, Ok(()));
 
     let project = client
         .get_project(message.clone().project_name, message.clone().org_id)
@@ -62,12 +63,6 @@ async fn register_project() {
     assert_eq!(project.org_id.clone(), message.org_id.clone());
     assert_eq!(project.current_cp.clone(), checkpoint_id);
     assert_eq!(project.metadata.clone(), message.metadata.clone());
-
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::ProjectRegistered(message.clone().project_name, message.clone().org_id)
-            .into()
-    );
 
     let has_project = client
         .list_projects()
