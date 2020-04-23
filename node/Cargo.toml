@@ -77,6 +77,10 @@ rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
 git = "https://github.com/paritytech/substrate"
 rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
 
+[dependencies.sc-telemetry]
+git = "https://github.com/paritytech/substrate"
+rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
+
 [dependencies.sc-transaction-pool]
 git = "https://github.com/paritytech/substrate"
 rev = "3f134a1af2462482b2868adf73a050a8da0d3934"

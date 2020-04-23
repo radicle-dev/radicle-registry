@@ -19,7 +19,7 @@ use sc_cli::{RunCmd, Subcommand};
 use sc_network::config::MultiaddrWithPeerId;
 use structopt::{clap, StructOpt};
 
-use crate::chain_spec::Chain;
+use crate::chain_spec::{Chain, ChainSpec};
 
 lazy_static::lazy_static! {
     static ref DEFAULT_CHAIN: &'static str = option_env!("DEFAULT_CHAIN").unwrap_or("dev");
@@ -41,7 +41,7 @@ pub struct Arguments {
         parse(try_from_str = parse_chain),
         possible_values = &["dev", "local-devnet", "devnet", "ffnet"]
     )]
-    pub chain: Chain,
+    chain: Chain,
 
     /// Bind the RPC HTTP and WebSocket APIs to `0.0.0.0` instead of the local interface.
     #[structopt(long)]
@@ -86,6 +86,14 @@ pub struct Arguments {
     /// Bind the prometheus metrics endpoint to 0.0.0.0 on port 9615
     #[structopt(long)]
     prometheus_external: bool,
+
+    /// Human-readable name for this node to use for telemetry
+    #[structopt(long, value_name = "NAME")]
+    name: Option<String>,
+
+    /// Disable sending telemetry data to https://telemetry.polkadot.io/
+    #[structopt(long)]
+    no_telemetry: bool,
 }
 
 impl Arguments {
@@ -114,6 +122,7 @@ impl Arguments {
             node_key_file,
             unsafe_rpc_external,
             prometheus_external,
+            name,
             ..
         } = self;
 
@@ -123,11 +132,16 @@ impl Arguments {
         run_cmd.shared_params.base_path = data_path;
 
         RunCmd {
+            name,
             unsafe_rpc_external,
             unsafe_ws_external: unsafe_rpc_external,
             prometheus_external,
             ..run_cmd
         }
+    }
+
+    pub fn chain_spec(&self) -> ChainSpec {
+        self.chain.spec(!self.no_telemetry)
     }
 }
 
