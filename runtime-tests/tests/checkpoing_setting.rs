@@ -25,17 +25,17 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn create_checkpoint() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
 
-    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let project_hash = H256::random();
     let random_fee = random_balance();
     let new_checkpoint_id = submit_ok_with_fee(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: Some(project.current_cp),
@@ -60,7 +60,7 @@ async fn create_checkpoint() {
     );
 
     assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
+        client.free_balance(&author.public()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
@@ -69,16 +69,16 @@ async fn create_checkpoint() {
 #[async_std::test]
 async fn set_checkpoint() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -93,7 +93,7 @@ async fn set_checkpoint() {
     let random_fee = random_balance();
     submit_ok_with_fee(
         &client,
-        &alice,
+        &author,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -120,16 +120,16 @@ async fn set_checkpoint() {
 #[async_std::test]
 async fn set_checkpoint_without_permission() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
     let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -139,9 +139,7 @@ async fn set_checkpoint_without_permission() {
     .result
     .unwrap();
 
-    let bad_actor = key_pair_from_string("BadActor");
-    // The bad actor needs funds to submit transactions.
-    transfer(&client, &alice, bad_actor.public(), 1000).await;
+    let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 
     let tx_applied = submit_ok(
         &client,
@@ -170,16 +168,16 @@ async fn set_checkpoint_without_permission() {
 #[async_std::test]
 async fn fail_to_set_nonexistent_checkpoint() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
     let tx_applied = submit_ok(
         &client,
-        &alice,
+        &author,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -204,10 +202,10 @@ async fn fail_to_set_nonexistent_checkpoint() {
 #[async_std::test]
 async fn set_fork_checkpoint() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
 
     let project_name = project.name.clone();
     let mut current_cp = project.current_cp;
@@ -218,7 +216,7 @@ async fn set_fork_checkpoint() {
     for _ in 0..n {
         let new_checkpoint_id = submit_ok(
             &client,
-            &alice,
+            &author,
             message::CreateCheckpoint {
                 project_hash: H256::random(),
                 previous_checkpoint_id: (Some(current_cp)),
@@ -233,7 +231,7 @@ async fn set_fork_checkpoint() {
 
     let forked_checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: (Some(checkpoints[2])),
@@ -245,7 +243,7 @@ async fn set_fork_checkpoint() {
 
     submit_ok(
         &client,
-        &alice,
+        &author,
         message::SetCheckpoint {
             project_name: project.name,
             org_id: project.org_id,
@@ -269,16 +267,16 @@ async fn set_fork_checkpoint() {
 #[async_std::test]
 async fn set_checkpoint_bad_actor() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
             previous_checkpoint_id: Some(project.current_cp),
@@ -291,7 +289,7 @@ async fn set_checkpoint_bad_actor() {
     let bad_actor = key_pair_from_string("BadActor");
     let initial_balance = 1000;
     // The bad actor needs funds to submit transactions.
-    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
+    transfer(&client, &author, bad_actor.public(), initial_balance).await;
 
     let random_fee = random_balance();
     submit_ok_with_fee(
