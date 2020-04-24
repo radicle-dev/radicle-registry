@@ -72,17 +72,18 @@ async fn transfer_any_amount() {
 #[async_std::test]
 async fn org_account_transfer() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
+
     let bob = key_pair_from_string("Bob").public();
-    let org = create_random_org(&client, &alice).await;
+    let org = create_random_org(&client, &author).await;
 
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 0);
-    let alice_initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let alice_initial_balance = client.free_balance(&author.public()).await.unwrap();
     let random_fee = random_balance();
     let transfer_amount = 2000;
     submit_ok_with_fee(
         &client,
-        &alice,
+        &author,
         message::Transfer {
             recipient: org.account_id,
             balance: transfer_amount,
@@ -92,7 +93,7 @@ async fn org_account_transfer() {
     .await;
     assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
     assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
+        client.free_balance(&author.public()).await.unwrap(),
         alice_initial_balance - transfer_amount - random_fee,
         "The tx fee was not charged properly."
     );
@@ -103,7 +104,7 @@ async fn org_account_transfer() {
     let org_transfer_amount = 1000;
     submit_ok_with_fee(
         &client,
-        &alice,
+        &author,
         message::TransferFromOrg {
             org_id: org.id.clone(),
             recipient: bob,
@@ -123,13 +124,12 @@ async fn org_account_transfer() {
 /// Test that a transfer from an org account fails if the sender is not an org member.
 async fn org_account_transfer_non_member() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-
-    let org = create_random_org(&client, &alice).await;
+    let (author, _) = key_pair_with_associated_user(&client).await;
+    let org = create_random_org(&client, &author).await;
 
     submit_ok(
         &client,
-        &alice,
+        &author,
         message::Transfer {
             recipient: org.account_id,
             balance: 2000,
@@ -141,7 +141,7 @@ async fn org_account_transfer_non_member() {
     let bad_actor = key_pair_from_string("BadActor");
     let initial_balance = 1000;
     // The bad actor needs funds to submit transactions.
-    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
+    transfer(&client, &author, bad_actor.public(), initial_balance).await;
 
     let random_fee = random_balance();
     submit_ok_with_fee(

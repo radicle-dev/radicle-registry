@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::registry::store;
+use crate::registry::{org_has_member_with_account, store};
 use crate::{AccountId, Call, DispatchError, Runtime};
 use radicle_registry_core::*;
 
@@ -89,12 +89,12 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
 }
 
 /// Find which account should pay for an org-related call.
-/// When `author` is a member of the org identified by `org_id`,
-/// return that org's account, otherwise the author's.
+/// When the User associated with `author` is a member of the org
+/// identified by `org_id`, return that org's account, otherwise the author's.
 fn org_payer_account(author: AccountId, org_id: &Id) -> AccountId {
     match store::Orgs::get(org_id) {
         Some(org) => {
-            if org.members.contains(&author) {
+            if org_has_member_with_account(&org, author) {
                 org.account_id
             } else {
                 author

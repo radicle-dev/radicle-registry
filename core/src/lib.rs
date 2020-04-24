@@ -73,7 +73,7 @@ pub struct Org {
     pub account_id: AccountId,
 
     /// See [state::Org::members]
-    pub members: Vec<AccountId>,
+    pub members: Vec<Id>,
 
     /// See [state::Org::projects]
     pub projects: Vec<ProjectName>,

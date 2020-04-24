@@ -150,12 +150,8 @@ decl_module! {
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            let org = match store::Orgs::get(message.org_id.clone()) {
-                None => return Err(RegistryError::InexistentOrg.into()),
-                Some(o) => o,
-            };
-
-            if !org.members.contains(&sender) {
+            let org = store::Orgs::get(message.org_id.clone()).ok_or(RegistryError::InexistentOrg)?;
+            if !org_has_member_with_account(&org, sender) {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
 
@@ -186,10 +182,11 @@ decl_module! {
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.org_id.clone()) {
-                None => {},
-                Some(_) => return Err(RegistryError::DuplicateOrgId.into()),
+            if store::Orgs::get(message.org_id.clone()).is_some() {
+                return Err(RegistryError::DuplicateOrgId.into());
             }
+
+            let user = get_user_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
 
             let random_account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(
@@ -199,7 +196,7 @@ decl_module! {
 
             let new_org = state::Org {
                 account_id: random_account_id,
-                members: vec![sender],
+                members: vec![user.id],
                 projects: Vec::new(),
             };
             store::Orgs::insert(message.org_id.clone(), new_org);
@@ -210,7 +207,8 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
             fn can_be_unregistered(org: state::Org, sender: AccountId) -> bool {
-                org.members == vec![sender] && org.projects.is_empty()
+                org.projects.is_empty() && get_user_with_account(sender)
+                    .map(|user| org.members == vec![user.id]).unwrap_or(false)
             }
 
             let sender = ensure_signed(origin)?;
@@ -238,13 +236,8 @@ decl_module! {
                 return Err(RegistryError::DuplicateUserId.into())
             }
 
-            // TODO(xla): This is a naive first version of the check to see if an account is
-            // already associated to a user. While fine for small dataset this needs to be reworked
-            // in the future.
-            for user in store::Users::iter() {
-                if sender == user.1.account_id {
-                    return Err(RegistryError::UserAccountAssociated.into())
-                }
+            if get_user_with_account(sender).is_some() {
+                return Err(RegistryError::UserAccountAssociated.into())
             }
 
             let new_user = state::User {
@@ -282,11 +275,10 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let org = match store::Orgs::get(message.org_id) {
-                None => return Err(RegistryError::InexistentOrg.into()),
-                Some(o) => o,
-            };
-            if org.members.contains(&sender) {
+            let org = store::Orgs::get(message.org_id)
+                .ok_or(RegistryError::InexistentOrg)?;
+
+            if org_has_member_with_account(&org, sender) {
                 <crate::Balances as Currency<_>>::transfer(
                     &org.account_id,
                     &message.recipient,
@@ -341,7 +333,7 @@ decl_module! {
             let opt_org = store::Orgs::get(message.org_id.clone());
             let new_project = match (opt_project, opt_org) {
                 (Some(prj), Some(org)) => {
-                    if !org.members.contains(&sender) {
+                    if !org_has_member_with_account(&org, sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
                     state::Project {
@@ -399,6 +391,26 @@ decl_module! {
 
     }
 }
+
+// TODO(xla): This is a naive first version of the check to see if an account is
+// already associated to a user. While fine for small dataset this needs to be reworked
+// in the future.
+pub fn get_user_with_account(account_id: AccountId) -> Option<User> {
+    store::Users::iter()
+        .find(|(_, user)| user.account_id == account_id)
+        .map(|(id, user)| User::new(id, user))
+}
+
+/// Check whether the user associated with the given account_id is a member of the given org.
+/// Return false if the account doesn't have an associated user or if said user is not a member
+/// of the org.
+pub fn org_has_member_with_account(org: &state::Org, account_id: AccountId) -> bool {
+    match get_user_with_account(account_id) {
+        Some(user) => org.members.contains(&user.id),
+        None => false,
+    }
+}
+
 decl_event!(
     pub enum Event {
         CheckpointCreated(CheckpointId),

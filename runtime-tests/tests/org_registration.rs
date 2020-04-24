@@ -24,13 +24,13 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_org() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
-    let random_fee = random_balance();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
 
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
+    let random_fee = random_balance();
     let register_org_message = random_register_org_message();
     let tx_applied =
-        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
+        submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
 
     assert!(tx_applied
         .events
@@ -48,8 +48,37 @@ async fn register_org() {
         .unwrap()
         .unwrap();
     assert_eq!(org.id, register_org_message.org_id);
-    assert_eq!(org.members, vec![alice.public()]);
+    assert_eq!(org.members, vec![user_id]);
     assert!(org.projects.is_empty());
+
+    assert_eq!(
+        client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
+}
+
+/// Attempt to register an org using an author that does not
+/// have a registered user associated to its account id.
+#[async_std::test]
+async fn register_org_no_user() {
+    let client = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let random_fee = random_balance();
+    let register_org_message = random_register_org_message();
+    let tx_applied =
+        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::AuthorHasNoAssociatedUser.into())
+    );
+    assert!(
+        !org_exists(&client, register_org_message.org_id.clone()).await,
+        "Org shouldn't have been registered"
+    );
 
     assert_eq!(
         client.free_balance(&alice.public()).await.unwrap(),
@@ -61,13 +90,13 @@ async fn register_org() {
 #[async_std::test]
 async fn register_with_duplicated_org_id() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
-    let tx_applied_once = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let tx_applied_once = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(tx_applied_once.result, Ok(()));
 
-    let tx_applied_twice = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let tx_applied_twice = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(
         tx_applied_twice.result,
         Err(RegistryError::DuplicateOrgId.into())
@@ -77,10 +106,11 @@ async fn register_with_duplicated_org_id() {
 #[async_std::test]
 async fn unregister_org() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
+
     let register_org_message = random_register_org_message();
 
-    let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let tx_applied = submit_ok(&client, &author, register_org_message.clone()).await;
 
     assert!(tx_applied
         .events
@@ -100,14 +130,14 @@ async fn unregister_org() {
         .unwrap()
         .unwrap();
     // The org needs funds to submit transactions.
-    transfer(&client, &alice, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id, initial_balance).await;
 
     let unregister_org_message = message::UnregisterOrg {
         org_id: register_org_message.org_id.clone(),
     };
     let random_fee = random_balance();
     let tx_unregister_applied =
-        submit_ok_with_fee(&client, &alice, unregister_org_message.clone(), random_fee).await;
+        submit_ok_with_fee(&client, &author, unregister_org_message.clone(), random_fee).await;
     assert_eq!(tx_unregister_applied.result, Ok(()));
 
     assert!(
@@ -125,10 +155,10 @@ async fn unregister_org() {
 #[async_std::test]
 async fn unregister_org_bad_actor() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
-    let tx_applied = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let tx_applied = submit_ok(&client, &author, register_org_message.clone()).await;
 
     assert!(tx_applied
         .events
@@ -144,11 +174,9 @@ async fn unregister_org_bad_actor() {
     let unregister_org_message = message::UnregisterOrg {
         org_id: register_org_message.org_id.clone(),
     };
-    let bad_actor = key_pair_from_string("BadActor");
-    let initial_balance = 1000;
-    // The bad actor needs funds to submit transactions.
-    transfer(&client, &alice, bad_actor.public(), initial_balance).await;
 
+    let (bad_actor, _) = key_pair_with_associated_user(&client).await;
+    let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();
     let random_fee = random_balance();
     let tx_unregister_applied = submit_ok_with_fee(
         &client,
@@ -176,10 +204,10 @@ async fn unregister_org_bad_actor() {
 #[async_std::test]
 async fn unregister_org_with_projects() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let random_project = create_project_with_checkpoint(org_id.clone(), &client, &alice).await;
+    let random_project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
 
     assert!(
         org_exists(&client, random_project.org_id.clone()).await,
@@ -198,7 +226,7 @@ async fn unregister_org_with_projects() {
     let unregister_org_message = message::UnregisterOrg {
         org_id: random_project.org_id.clone(),
     };
-    let tx_unregister_applied = submit_ok(&client, &alice, unregister_org_message.clone()).await;
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_org_message.clone()).await;
 
     assert_eq!(
         tx_unregister_applied.result,

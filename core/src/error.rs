@@ -99,6 +99,12 @@ pub enum RegistryError {
         error("the account is already associated with a user")
     )]
     UserAccountAssociated,
+
+    #[cfg_attr(
+        feature = "std",
+        error("the tx author needs to have an associated user")
+    )]
+    AuthorHasNoAssociatedUser,
 }
 
 // The index with which the registry runtime module is declared

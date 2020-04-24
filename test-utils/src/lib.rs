@@ -141,6 +141,27 @@ pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
 }
 
+/// Create a key pair derived from `value` and register a user with that key pair.
+/// The user name is `value.to_lowercase()`. Ensures that the account for the key
+/// pair is equipped with at least 100.000 RAD.
+pub async fn key_pair_with_associated_user(client: &Client) -> (ed25519::Pair, Id) {
+    let seed = &random_alnum_string(5);
+    let key_pair = key_pair_from_string(seed);
+
+    // Have Alice transfer 100.000 μRAD to this new account, necessary to submit transactions.
+    let alice = key_pair_from_string("Alice");
+    transfer(&client, &alice, key_pair.public(), 100_000).await;
+
+    let user_id = Id::try_from(seed.to_lowercase()).unwrap();
+    let register_user_message = message::RegisterUser {
+        user_id: user_id.clone(),
+    };
+    let tx_applied = submit_ok(&client, &key_pair, register_user_message).await;
+    assert_eq!(tx_applied.result, Ok(()));
+
+    (key_pair, user_id)
+}
+
 pub fn random_alnum_string(size: usize) -> String {
     rand::thread_rng()
         .sample_iter(&Alphanumeric)
