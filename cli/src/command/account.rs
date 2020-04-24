@@ -21,8 +21,8 @@ use crate::account_storage;
 /// Account related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
-    /// Show the balance of an account.
-    Balance(ShowBalance),
+    /// Show information for a local, user's, or org's account
+    Show(Show),
     /// Generate a local account and store it on disk.
     /// Fail if there is already an account with the given `name`
     Generate(Generate),
@@ -36,7 +36,7 @@ pub enum Command {
 impl CommandT for Command {
     async fn run(self) -> Result<(), CommandError> {
         match self {
-            Command::Balance(cmd) => cmd.run().await,
+            Command::Show(cmd) => cmd.run().await,
             Command::Generate(cmd) => cmd.run().await,
             Command::List(cmd) => cmd.run().await,
             Command::Transfer(cmd) => cmd.run().await,
@@ -44,12 +44,11 @@ impl CommandT for Command {
     }
 }
 
-/// Show the balance of an account
 #[derive(StructOpt, Clone)]
-pub struct ShowBalance {
-    /// SS58 address or name of a local account.
+pub struct Show {
+    /// The account's SS58 address or the name of a local account.
     #[structopt(
-        value_name = "account",
+        value_name = "address_or_name",
         parse(try_from_str = parse_account_id),
     )]
     account_id: AccountId,
@@ -59,11 +58,12 @@ pub struct ShowBalance {
 }
 
 #[async_trait::async_trait]
-impl CommandT for ShowBalance {
+impl CommandT for Show {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
         let balance = client.free_balance(&self.account_id).await?;
-        println!("{} μRAD", balance);
+        println!("ss58 address: {}", self.account_id.to_ss58check());
+        println!("balance: {} μRAD", balance);
         Ok(())
     }
 }
