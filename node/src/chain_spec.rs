@@ -23,6 +23,7 @@ use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 };
 use sc_service::GenericChainSpec;
+use sc_telemetry::TelemetryEndpoints;
 use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
 
@@ -43,19 +44,19 @@ pub enum Chain {
 }
 
 impl Chain {
-    pub fn spec(&self) -> ChainSpec {
+    pub fn spec(&self, enable_telemetry: bool) -> ChainSpec {
         match self {
             Chain::Dev => dev(),
             Chain::LocalDevnet => local_devnet(),
             Chain::Devnet => devnet(),
-            Chain::Ffnet => ffnet(),
+            Chain::Ffnet => ffnet(enable_telemetry),
         }
     }
 }
 
 fn dev() -> ChainSpec {
     GenericChainSpec::from_genesis(
-        "Development, isolated node",
+        "Radicle Registry isolated development",
         "dev",
         dev_genesis_config,
         vec![],      // boot nodes
@@ -68,7 +69,7 @@ fn dev() -> ChainSpec {
 
 fn devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
-        "devnet",
+        "Radicle Registry devnet",
         "devnet",
         dev_genesis_config,
         // boot nodes
@@ -85,9 +86,9 @@ fn devnet() -> ChainSpec {
     )
 }
 
-fn ffnet() -> ChainSpec {
+fn ffnet(enable_telemetry: bool) -> ChainSpec {
     GenericChainSpec::from_genesis(
-        "ffnet",
+        "Radicle Registry ffnet",
         "ffnet",
         ffnet_genesis_config,
         // Addresses are defined here: https://github.com/radicle-dev/infra/tree/master/registry/ffnet
@@ -97,7 +98,7 @@ fn ffnet() -> ChainSpec {
             "/dns4/boot-1.ff.radicle.network./tcp/30333/p2p/QmceS5WYfDyKNtnzrxCw4TEL9nokvJkRi941oUzBvErsuD"
                 .parse().unwrap()
         ],
-        None,          // telemetry endpoints
+        polkadot_telemetry(enable_telemetry),
         Some("ffnet"), // protocol_id
         Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
@@ -136,7 +137,7 @@ fn ffnet_genesis_config() -> GenesisConfig {
 
 fn local_devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
-        "local devnet, isolated on one machine",
+        "Radicle Registry local devnet",
         "local-devnet",
         dev_genesis_config,
         vec![], // boot nodes
@@ -172,4 +173,15 @@ fn account_id(seed: &str) -> AccountId {
     <AccountId as CryptoType>::Pair::from_string(&format!("//{}", seed), None)
         .expect("Parsing the account key pair seed failed")
         .public()
+}
+
+fn polkadot_telemetry(enable: bool) -> Option<TelemetryEndpoints> {
+    if enable {
+        Some(
+            TelemetryEndpoints::new(vec![("wss://telemetry.polkadot.io/submit/".to_string(), 0)])
+                .unwrap(),
+        )
+    } else {
+        None
+    }
 }

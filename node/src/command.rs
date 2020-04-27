@@ -25,7 +25,7 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
     let args = cli::Arguments::from_args(&version);
     let mut config = sc_service::Configuration::from_version(&version);
 
-    let chain_spec = args.chain.spec();
+    let chain_spec = args.chain_spec();
     let spec_factory = |_: &str| Ok(Box::new(chain_spec) as Box<_>);
 
     let opt_block_author = args.mine;
