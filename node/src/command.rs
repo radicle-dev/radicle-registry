@@ -42,6 +42,9 @@ pub fn run(version: VersionInfo) -> sc_cli::Result<()> {
             let run_cmd = args.run_cmd();
             run_cmd.init(&version)?;
             run_cmd.update_config(&mut config, spec_factory, &version)?;
+            config.execution_strategies.block_construction =
+                sc_client::ExecutionStrategy::NativeElseWasm;
+
             if unsafe_rpc_external {
                 // Allow all hosts to connect
                 config.rpc_cors = None;
