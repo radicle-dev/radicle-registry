@@ -19,12 +19,15 @@
 
 use futures::StreamExt;
 use std::convert::TryFrom;
+use std::future::Future;
 use std::sync::Arc;
+use std::time::Duration;
 
 use sc_client::{light::blockchain::AuxStore, BlockchainEvents as _, LongestChain};
 use sc_executor::native_executor_instance;
 use sc_service::{AbstractService, Configuration, Error, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
+use substrate_prometheus_endpoint::{Gauge, U64};
 
 use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow, Difficulty};
 use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, Block, RuntimeApi};
@@ -76,7 +79,7 @@ macro_rules! start_mine {
             None,
             0,
             $service.network(),
-            std::time::Duration::new(2, 0),
+            Duration::new(2, 0),
             $service.select_chain(),
             $inherent_data_providers,
             sp_consensus::AlwaysCanAuthor,
@@ -140,6 +143,7 @@ pub fn new_full(
 
     let service = builder.build()?;
     register_difficulty_metric(&service)?;
+    register_is_major_synced_metric(&service)?;
 
     if let Some(block_author) = opt_block_author {
         let client = service.client();
@@ -211,6 +215,7 @@ pub fn new_light(config: Configuration) -> Result<impl AbstractService, Error> {
         })?
         .build()?;
     register_difficulty_metric(&service)?;
+    register_is_major_synced_metric(&service)?;
     Ok(service)
 }
 
@@ -219,34 +224,66 @@ where
     S: AbstractService,
     sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
 {
+    let gauge_name = "best_block_difficulty";
+    let gauge_help = "The difficulty of the best block in the chain";
+    let task_gen = |gauge: Gauge<U64>| {
+        let client = service.client();
+        client.import_notification_stream().for_each(move |info| {
+            let ready = futures::future::ready(());
+            if !info.is_new_best {
+                return ready;
+            }
+            let difficulty_res =
+                sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
+            let difficulty = match difficulty_res {
+                Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
+                Err(_) => return ready,
+            };
+            gauge.set(difficulty);
+            ready
+        })
+    };
+    spawn_u64_metric_gauge_task(service, gauge_name, gauge_help, task_gen)
+}
+
+fn register_is_major_synced_metric(service: &impl AbstractService) -> Result<(), Error> {
+    const POLL_INTERVAL: Duration = Duration::from_secs(1);
+    let gauge_name = "is_major_synced";
+    let gauge_help = "Whether the node is major synced, i.e. it's not in the state of fetching \
+        blocks after being started from the genesis or recovering from a big desynchronization";
+    let task_gen = move |gauge: Gauge<U64>| {
+        let network = service.network();
+        async move {
+            loop {
+                let is_synced = !network.is_major_syncing();
+                gauge.set(is_synced as u64);
+                async_std::task::sleep(POLL_INTERVAL).await;
+            }
+        }
+    };
+    spawn_u64_metric_gauge_task(service, gauge_name, gauge_help, task_gen)
+}
+
+/// Spawns a task, which updates a metric using a gauge
+///
+/// `task_gen` should return a future, which never finishes,
+/// but updates the received gauge while running on an executor
+fn spawn_u64_metric_gauge_task<F: Future<Output = ()> + Send + 'static>(
+    service: &impl AbstractService,
+    gauge_name: &str,
+    gauge_help: &str,
+    task_gen: impl FnOnce(Gauge<U64>) -> F,
+) -> Result<(), Error> {
     let registry = match service.prometheus_registry() {
         Some(registry) => registry,
         None => return Ok(()),
     };
-    let new_gauge =
-        substrate_prometheus_endpoint::Gauge::<substrate_prometheus_endpoint::U64>::new(
-            "best_block_difficulty",
-            "The difficulty of the best block in the chain",
-        )
-        .map_err(|error| format!("failed to create a metric gauge: {}", error))?;
+    let new_gauge = Gauge::new(gauge_name, gauge_help)
+        .map_err(|e| format!("failed to create metric gauge '{}': {}", gauge_name, e))?;
     let gauge = substrate_prometheus_endpoint::register(new_gauge, &registry)
-        .map_err(|error| format!("failed to register a metric gauge: {}", error))?;
-    let client = service.client();
-    let metric_stream = client.import_notification_stream().for_each(move |info| {
-        let ready = futures::future::ready(());
-        if !info.is_new_best {
-            return ready;
-        }
-        let difficulty_res =
-            sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
-        let difficulty = match difficulty_res {
-            Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
-            Err(_) => return ready,
-        };
-        gauge.set(difficulty);
-        ready
-    });
-    service.spawn_essential_task("new-best-block-notifier", metric_stream);
+        .map_err(|e| format!("failed to register metric gauge '{}': {}", gauge_name, e))?;
+    let task_name = format!("{}_metric_notifier", gauge_name);
+    service.spawn_task(task_name, task_gen(gauge));
     Ok(())
 }
 

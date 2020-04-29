@@ -3707,6 +3707,7 @@ dependencies = [
 name = "radicle-registry-node"
 version = "0.0.0"
 dependencies = [
+ "async-std",
  "blake3",
  "ctrlc",
  "derive_more 0.15.0",
