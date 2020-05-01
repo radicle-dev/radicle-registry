@@ -173,7 +173,7 @@ pub struct Transfer {
     amount: Balance,
 
     /// The recipient account.
-    /// SS58 address or name of a local account.
+    /// SS58 address or name of a local key pair.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
 
