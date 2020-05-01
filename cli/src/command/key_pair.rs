@@ -27,6 +27,9 @@ pub enum Command {
     Generate(Generate),
     /// List all the local key pairs.
     List(List),
+    /// Export all or specific key-pairs from a specified file
+    /// to this machine.
+    Export(Export),
 }
 
 #[async_trait::async_trait]
@@ -35,6 +38,7 @@ impl CommandT for Command {
         match self {
             Command::Generate(cmd) => cmd.run().await,
             Command::List(cmd) => cmd.run().await,
+            Command::Export(cmd) => cmd.run().await,
         }
     }
 }
@@ -71,5 +75,39 @@ impl CommandT for List {
             );
         }
         Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct Export {
+    /// The file to import key-pairs from.
+    file: std::path::PathBuf,
+}
+
+#[async_trait::async_trait]
+impl CommandT for Export {
+
+    async fn run(self) -> Result<(), CommandError> {
+        // 1. List all local key pairs to help user dedice which to export
+        // 2. Ask user input to select key pairs to export
+        //      - :* to export all
+        //      - enumerate by name, comma-separated, to export specific ones
+        //          - alternatively, ask and export one at a time
+        //      - :q to stop
+        // 3. Add specified key-pairs to the specified file
+        //      - Ask user if we should overwrite existing file if not a valid key-pairs file
+        use std::io::{self, BufRead};
+
+        List{}.run().await?;
+
+        println!("Specify which key pairs you whish to export");
+        println!("help: input '*' to import all or enumerate the specific key-pair names separated by comma");
+
+        let mut line = String::new();
+        io::stdin().lock().read_line(&mut line).unwrap();
+        println!("{}", line);
+
+        Ok(())
+
     }
 }
