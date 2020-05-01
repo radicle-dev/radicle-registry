@@ -44,11 +44,11 @@ pub enum Error {
     AlreadyExists(),
 
     /// Failed to write to the key-pairs file
-    #[error("Failed to write to the key-pairs file: {0}")]
+    #[error("Failed to write to the key-pairs file")]
     FailedWrite(#[from] WritingError),
 
     /// Failed to read the key-pairs file
-    #[error("Failed to read the key-pairs file: {0}")]
+    #[error("Failed to read the key-pairs file")]
     FailedRead(#[from] ReadingError),
 
     /// Could not find a key-pair with the given name
