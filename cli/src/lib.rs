@@ -22,10 +22,10 @@ use radicle_registry_client::*;
 use structopt::StructOpt;
 use thiserror::Error as ThisError;
 
-pub mod account_storage;
+pub mod key_pair_storage;
 
 mod command;
-use command::{account, org, other, project, user};
+use command::{account, key_pair, org, other, project, user};
 
 /// The type that captures the command line.
 #[derive(StructOpt, Clone)]
@@ -74,12 +74,12 @@ impl NetworkOptions {
 /// Transaction-related command-line options
 #[derive(StructOpt, Clone)]
 pub struct TxOptions {
-    /// The name of the local account to be used to sign transactions.
+    /// The name of the local key-pair to be used to sign transactions.
     #[structopt(
         long,
         env = "RAD_AUTHOR",
-        value_name = "account_name",
-        parse(try_from_str = lookup_account)
+        value_name = "key_pair_name",
+        parse(try_from_str = lookup_key_pair)
     )]
     pub author: ed25519::Pair,
 
@@ -93,9 +93,9 @@ lazy_static! {
     static ref FEE_DEFAULT: String = MINIMUM_FEE.to_string();
 }
 
-fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
-    account_storage::get(name)
-        .map(|account| ed25519::Pair::from_seed(&account.seed))
+fn lookup_key_pair(name: &str) -> Result<ed25519::Pair, String> {
+    key_pair_storage::get(name)
+        .map(|data| ed25519::Pair::from_seed(&data.seed))
         .map_err(|e| format!("{}", e))
 }
 
@@ -104,6 +104,7 @@ fn lookup_account(name: &str) -> Result<ed25519::Pair, String> {
 #[derive(StructOpt, Clone)]
 pub enum Command {
     Account(account::Command),
+    KeyPair(key_pair::Command),
     Org(org::Command),
     Project(project::Command),
     User(user::Command),
@@ -117,6 +118,7 @@ impl CommandT for Command {
     async fn run(self) -> Result<(), CommandError> {
         match self.clone() {
             Command::Account(cmd) => cmd.run().await,
+            Command::KeyPair(cmd) => cmd.run().await,
             Command::Org(cmd) => cmd.run().await,
             Command::Project(cmd) => cmd.run().await,
             Command::User(cmd) => cmd.run().await,
@@ -133,7 +135,7 @@ pub trait CommandT {
 
 /// Error returned by [CommandT::run].
 ///
-/// Implements [From] for client errors and [account_storage] errors.
+/// Implements [From] for client errors and [key_pair_storage] errors.
 #[derive(Debug, ThisError)]
 pub enum CommandError {
     #[error("client error")]
@@ -155,5 +157,5 @@ pub enum CommandError {
     },
 
     #[error(transparent)]
-    AccountStorageError(#[from] account_storage::Error),
+    KeyPairStorageError(#[from] key_pair_storage::Error),
 }

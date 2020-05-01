@@ -16,18 +16,12 @@
 //! Define the commands supported by the CLI related to Accounts.
 
 use super::*;
-use crate::account_storage;
 
 /// Account related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
-    /// Show information for a local, user's, or org's account
+    /// Show account information for a user, an org or a local key-pair.
     Show(Show),
-    /// Generate a local account and store it on disk.
-    /// Fail if there is already an account with the given `name`
-    Generate(Generate),
-    /// List all the local accounts.
-    List(List),
     /// Transfer funds from the author to a recipient account.
     Transfer(Transfer),
 }
@@ -37,8 +31,6 @@ impl CommandT for Command {
     async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::Show(cmd) => cmd.run().await,
-            Command::Generate(cmd) => cmd.run().await,
-            Command::List(cmd) => cmd.run().await,
             Command::Transfer(cmd) => cmd.run().await,
         }
     }
@@ -46,7 +38,7 @@ impl CommandT for Command {
 
 #[derive(StructOpt, Clone)]
 pub struct Show {
-    /// The account's SS58 address or the name of a local account.
+    /// The account's SS58 address or the name of a local key-pair.
     #[structopt(
         value_name = "address_or_name",
         parse(try_from_str = parse_account_id),
@@ -69,48 +61,12 @@ impl CommandT for Show {
 }
 
 #[derive(StructOpt, Clone)]
-pub struct Generate {
-    /// The name that uniquely identifies the account locally.
-    name: String,
-}
-
-#[async_trait::async_trait]
-impl CommandT for Generate {
-    async fn run(self) -> Result<(), CommandError> {
-        let (key_pair, seed) = ed25519::Pair::generate();
-        account_storage::add(self.name, account_storage::AccountData { seed })?;
-        println!("✓ Account generated successfully");
-        println!("ℹ SS58 address: {}", key_pair.public().to_ss58check());
-        Ok(())
-    }
-}
-#[derive(StructOpt, Clone)]
-pub struct List {}
-
-#[async_trait::async_trait]
-impl CommandT for List {
-    async fn run(self) -> Result<(), CommandError> {
-        let accounts = account_storage::list()?;
-
-        println!("Accounts ({})", accounts.len());
-        for (name, data) in accounts {
-            println!("Account '{}'", name);
-            println!(
-                "\tSS58 address: {}",
-                ed25519::Pair::from_seed(&data.seed).public().to_ss58check()
-            );
-        }
-        Ok(())
-    }
-}
-
-#[derive(StructOpt, Clone)]
 pub struct Transfer {
     // The amount to transfer.
     amount: Balance,
 
     /// The recipient account.
-    /// SS58 address or name of a local account.
+    /// SS58 address or name of a local key-pair.
     #[structopt(parse(try_from_str = parse_account_id))]
     recipient: AccountId,
 
