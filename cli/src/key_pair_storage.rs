@@ -44,16 +44,24 @@ pub enum Error {
     AlreadyExists(),
 
     /// Failed to write to the key-pairs file
-    #[error("Failed to write to the key-pairs file")]
+    #[error("{}", io_error_message("write"))]
     FailedWrite(#[from] WritingError),
 
     /// Failed to read the key-pairs file
-    #[error("Failed to read the key-pairs file")]
+    #[error("{}", io_error_message("read"))]
     FailedRead(#[from] ReadingError),
 
     /// Could not find a key pair with the given name
     #[error("Could not find a key pair with the given name")]
     NotFound(),
+}
+
+fn io_error_message(action: &str) -> String {
+    let path_info = match build_path(FILE) {
+        Ok(x) => format!("{:?}", x),
+        Err(e) => format!("{}", e),
+    };
+    format!("Failed to {} the key-pairs file: {}", action, path_info)
 }
 
 /// Possible errors when writing to the key-pairs file.
