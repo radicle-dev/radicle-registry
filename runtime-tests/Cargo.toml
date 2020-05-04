@@ -1,0 +1,27 @@
+[package]
+edition = "2018"
+name = "radicle-registry-runtime-tests"
+description = "Tests for the runtime using the client"
+authors = ["Monadic GmbH <radicle@monadic.xyz>"]
+version = "0.0.0"
+homepage = "https://github.com/radicle-dev/radicle-registry"
+documentation = "https://github.com/radicle-dev/radicle-registry"
+license = "GPL-3.0-only"
+repository = "https://github.com/radicle-dev/radicle-registry"
+
+[dependencies]
+async-std = { version = "1.4", features = ["attributes"] }
+futures01 = "0.1"
+rand = "0.7.2"
+
+radicle-registry-client = { path = "../client" }
+radicle-registry-runtime = { path = "../runtime" }
+radicle-registry-test-utils = { path = "../test-utils"}
+
+[dependencies.sp-state-machine]
+git = "https://github.com/paritytech/substrate"
+rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
+
+[dependencies.sp-runtime]
+git = "https://github.com/paritytech/substrate"
+rev = "3f134a1af2462482b2868adf73a050a8da0d3934"

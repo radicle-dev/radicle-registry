@@ -5,6 +5,7 @@ members = [
   "core",
   "node",
   "runtime",
+  "runtime-tests",
   "test-utils"
   ]
 

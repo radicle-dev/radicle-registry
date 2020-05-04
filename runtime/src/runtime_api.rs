@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Implements Substrate runtime APIs and provide a function based interface for the runtime APIs.
+use alloc::vec::Vec;
 use frame_support::{ensure, fail, traits::Randomness};
 use sp_core::OpaqueMetadata;
 use sp_runtime::traits::Block as BlockT;

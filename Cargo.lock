@@ -3753,20 +3753,15 @@ dependencies = [
 name = "radicle-registry-runtime"
 version = "0.0.0"
 dependencies = [
- "async-std",
  "frame-executive",
  "frame-support",
  "frame-system",
- "futures01",
  "pallet-balances",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
  "parity-scale-codec",
- "radicle-registry-client",
  "radicle-registry-core",
- "radicle-registry-test-utils",
- "rand 0.7.3",
  "serde",
  "sp-api",
  "sp-block-builder",
@@ -3777,11 +3772,24 @@ dependencies = [
  "sp-offchain",
  "sp-runtime",
  "sp-session",
- "sp-state-machine",
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder-runner",
+]
+
+[[package]]
+name = "radicle-registry-runtime-tests"
+version = "0.0.0"
+dependencies = [
+ "async-std",
+ "futures01",
+ "radicle-registry-client",
+ "radicle-registry-runtime",
+ "radicle-registry-test-utils",
+ "rand 0.7.3",
+ "sp-runtime",
+ "sp-state-machine",
 ]
 
 [[package]]

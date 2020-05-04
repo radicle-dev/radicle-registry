@@ -23,6 +23,9 @@
 #![recursion_limit = "256"]
 #![feature(alloc_prelude)]
 
+#[cfg(all(feature = "std", feature = "no-std"))]
+std::compile_error!("Features \"std\" and \"no-std\" cannot be enabled simultaneously. Maybe a dependency implicitly enabled the \"std\" feature.");
+
 extern crate alloc;
 
 use frame_support::weights::Weight;
