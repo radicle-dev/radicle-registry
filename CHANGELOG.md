@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'
+* cli: Move key-pair related commands under the new `key-pair` command group
 * client: `TransactionApplied` result is now `Result<(), TransactionError>`
   for all messages.
 * cli: Drop `_TX_` from the environment options
