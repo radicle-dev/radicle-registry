@@ -128,7 +128,8 @@ pub fn get(name: &str) -> Result<KeyPairData, Error> {
 
 fn update(key_pairs: HashMap<String, KeyPairData>) -> Result<(), Error> {
     let path_buf = get_or_create_path()?;
-    let new_content = serde_json::to_string(&key_pairs).map_err(WritingError::Serialization)?;
+    let new_content =
+        serde_json::to_string_pretty(&key_pairs).map_err(WritingError::Serialization)?;
     std::fs::write(path_buf.as_path(), new_content.as_bytes()).map_err(WritingError::IO)?;
     Ok(())
 }
