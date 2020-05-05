@@ -15,17 +15,17 @@
 
 use crate::DispatchError;
 
+use core::convert::{TryFrom, TryInto};
 use derive_try_from_primitive::TryFromPrimitive;
-use std::convert::{TryFrom, TryInto};
-use thiserror::Error as ThisError;
 
 /// The subset of possible errors having led a transaction to failure.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "std", derive(thiserror::Error))]
 pub enum TransactionError {
-    #[error(transparent)]
-    RegistryError(#[from] RegistryError),
+    #[cfg_attr(feature = "std", error(transparent))]
+    RegistryError(#[cfg_attr(feature = "std", from)] RegistryError),
 
-    #[error("{0:?}")]
+    #[cfg_attr(feature = "std", error("{0:?}"))]
     OtherDispatchError(DispatchError),
 }
 
@@ -38,50 +38,66 @@ impl From<DispatchError> for TransactionError {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, ThisError, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[cfg_attr(feature = "std", derive(thiserror::Error))]
 #[repr(u8)]
 /// Errors describing failed Registry transactions.
 pub enum RegistryError {
-    #[error("the provided checkpoint does not exist")]
+    #[cfg_attr(feature = "std", error("the provided checkpoint does not exist"))]
     InexistentCheckpointId = 0,
 
-    #[error("a registered project must have an initial checkpoint")]
+    #[cfg_attr(
+        feature = "std",
+        error("a registered project must have an initial checkpoint")
+    )]
     InexistentInitialProjectCheckpoint,
 
-    #[error("the provided org does not exist")]
+    #[cfg_attr(feature = "std", error("the provided org does not exist"))]
     InexistentOrg,
 
-    #[error("the provided project does not exist")]
+    #[cfg_attr(feature = "std", error("the provided project does not exist"))]
     InexistentProjectId,
 
-    #[error("the provided user does not exist")]
+    #[cfg_attr(feature = "std", error("the provided user does not exist"))]
     InexistentUser,
 
-    #[error("an org with the same ID already exists")]
+    #[cfg_attr(feature = "std", error("an org with the same ID already exists"))]
     DuplicateOrgId,
 
-    #[error("a project with the same ID already exists")]
+    #[cfg_attr(feature = "std", error("a project with the same ID already exists"))]
     DuplicateProjectId,
 
-    #[error("a user with the same ID already exists.")]
+    #[cfg_attr(feature = "std", error("a user with the same ID already exists."))]
     DuplicateUserId,
 
-    #[error("the provided fee is insufficient")]
+    #[cfg_attr(feature = "std", error("the provided fee is insufficient"))]
     InsufficientFee,
 
-    #[error("the sender is not a project member")]
+    #[cfg_attr(feature = "std", error("the sender is not a project member"))]
     InsufficientSenderPermissions,
 
-    #[error("the provided checkpoint is not a descendant of the project's initial checkpoint")]
+    #[cfg_attr(
+        feature = "std",
+        error("the provided checkpoint is not a descendant of the project's initial checkpoint")
+    )]
     InvalidCheckpointAncestry,
 
-    #[error("the provided user is not eligible for unregistration")]
+    #[cfg_attr(
+        feature = "std",
+        error("the provided user is not eligible for unregistration")
+    )]
     UnregisterableUser,
 
-    #[error("the provided org is not elibile for unregistration")]
+    #[cfg_attr(
+        feature = "std",
+        error("the provided org is not elibile for unregistration")
+    )]
     UnregisterableOrg,
 
-    #[error("the account is already associated with a user")]
+    #[cfg_attr(
+        feature = "std",
+        error("the account is already associated with a user")
+    )]
     UserAccountAssociated,
 }
 

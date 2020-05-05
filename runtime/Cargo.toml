@@ -11,6 +11,7 @@ repository = "https://github.com/radicle-dev/radicle-registry"
 
 [features]
 default = ["std"]
+no-std = []
 std = [
     "frame-executive/std",
     "frame-support/std",
@@ -146,15 +147,3 @@ default_features = false
 
 [build-dependencies]
 substrate-wasm-builder-runner = "1.0.5"
-
-[dev-dependencies]
-async-std = { version = "1.4", features = ["attributes"] }
-futures01 = "0.1"
-rand = "0.7.2"
-radicle-registry-client = { path = "../client" }
-radicle-registry-test-utils = { path = "../test-utils"}
-
-[dev-dependencies.sp-state-machine]
-git = "https://github.com/paritytech/substrate"
-rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
-default_features = false

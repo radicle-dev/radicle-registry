@@ -16,12 +16,13 @@ std = [
     "rand",
     "sp-core/std",
     "sp-runtime/std",
+    "thiserror",
 ]
 
 [dependencies]
 derive-try-from-primitive = "1.0.0"
 rand = { version = "0.7.2", optional = true }
-thiserror = "1.0"
+thiserror = { version = "1.0", optional = true }
 
 [dependencies.parity-scale-codec]
 default-features = false
