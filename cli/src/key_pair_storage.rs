@@ -51,17 +51,26 @@ pub enum Error {
     #[error("{}", io_error_message("read"))]
     FailedRead(#[from] ReadingError),
 
+    /// Cannot read directory
+    #[error("Cannot read directory '{1}'")]
+    CannotReadDirectory(#[source] IOError, PathBuf),
+
+    /// Cannot create directory
+    #[error("Cannot create directory '{1}'")]
+    CannotCreateDirectory(#[source] IOError, PathBuf),
+
     /// Could not find a key pair with the given name
     #[error("Could not find a key pair with the given name")]
     NotFound(),
 }
 
 fn io_error_message(action: &str) -> String {
-    let path_info = match build_path(FILE) {
-        Ok(x) => format!("{:?}", x),
-        Err(e) => format!("{}", e),
-    };
-    format!("Failed to {} the key-pairs file: {}", action, path_info)
+    let path = build_path(FILE);
+    format!(
+        "Failed to {} the key-pairs file: '{}'",
+        action,
+        path.display()
+    )
 }
 
 /// Possible errors when writing to the key-pairs file.
@@ -133,9 +142,10 @@ const FILE: &str = "key-pairs.json";
 /// it with an empty object so that it can be deserialized
 /// as an empty HashMap<String, KeyPairData>.
 fn get_or_create_path() -> Result<PathBuf, Error> {
-    let path_buf = build_path(FILE)?;
+    let path_buf = build_path(FILE);
+    dir_ready(path_buf.parent().unwrap().to_path_buf())?;
 
-    let old_path = build_path("accounts.json")?;
+    let old_path = build_path("accounts.json");
     if old_path.exists() {
         println!("=> Migrating the key-pair storage to the latest version...");
         std::fs::rename(old_path, &path_buf).map_err(WritingError::IO)?;
@@ -150,17 +160,26 @@ fn get_or_create_path() -> Result<PathBuf, Error> {
     Ok(path_buf)
 }
 
-fn build_path(filename: &str) -> Result<PathBuf, Error> {
-    let dir = dir()?;
-    let path = dir.join(filename);
-    Ok(path)
+/// Ensure that the given directory path is ready to be used.
+/// Fails with
+///   * [Error::CannotCreateDirectory] if the directory
+///     does not exist and fails to be created.
+///   * [Error::CannotReadDirectory] if the directory
+///     does exist but can not be read.
+fn dir_ready(dir: PathBuf) -> Result<PathBuf, Error> {
+    std::fs::create_dir_all(&dir).map_err(|err| Error::CannotCreateDirectory(err, dir.clone()))?;
+    File::open(&dir).map_err(|err| Error::CannotReadDirectory(err, dir.clone()))?;
+    Ok(dir)
 }
 
-fn dir() -> Result<PathBuf, Error> {
-    let dir = BaseDirs::new()
+/// Build the path to the given filename under [dir()].
+fn build_path(filename: &str) -> PathBuf {
+    dir().join(filename)
+}
+
+fn dir() -> PathBuf {
+    BaseDirs::new()
         .unwrap()
         .data_dir()
-        .join("radicle-registry-cli");
-    std::fs::create_dir_all(&dir).map_err(ReadingError::IO)?;
-    Ok(dir)
+        .join("radicle-registry-cli")
 }
