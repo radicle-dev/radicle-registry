@@ -51,6 +51,14 @@ pub enum Error {
     #[error("{}", io_error_message("read"))]
     FailedRead(#[from] ReadingError),
 
+    /// Cannot read directory
+    #[error("Cannot read directory '{1}'")]
+    CannotReadDirectory(#[source] IOError, PathBuf),
+
+    /// Cannot create directory
+    #[error("Cannot create directory '{1}'")]
+    CannotCreateDirectory(#[source] IOError, PathBuf),
+
     /// Could not find a key pair with the given name
     #[error("Could not find a key pair with the given name")]
     NotFound(),
@@ -58,10 +66,10 @@ pub enum Error {
 
 fn io_error_message(action: &str) -> String {
     let path_info = match build_path(FILE) {
-        Ok(x) => format!("{:?}", x),
+        Ok(x) => format!("{}", x.display()),
         Err(e) => format!("{}", e),
     };
-    format!("Failed to {} the key-pairs file: {}", action, path_info)
+    format!("Failed to {} the key-pairs file: '{}'", action, path_info)
 }
 
 /// Possible errors when writing to the key-pairs file.
@@ -150,17 +158,29 @@ fn get_or_create_path() -> Result<PathBuf, Error> {
     Ok(path_buf)
 }
 
+/// Build the path to the given file name under [dir_ready()].
 fn build_path(filename: &str) -> Result<PathBuf, Error> {
-    let dir = dir()?;
+    let dir = dir_ready()?;
     let path = dir.join(filename);
     Ok(path)
 }
 
-fn dir() -> Result<PathBuf, Error> {
-    let dir = BaseDirs::new()
+/// Ensure that the key-pair storage [dir()] is ready to be used.
+/// Fails with
+///   * [Error::CannotCreateDirectory] if the directory
+///     does not exist and fails to be created.
+///    * [Error::CannotReadDirectory] if the directory
+///      does exist but can not be read.
+fn dir_ready() -> Result<PathBuf, Error> {
+    let dir = dir();
+    std::fs::create_dir_all(&dir).map_err(|err| Error::CannotCreateDirectory(err, dir.clone()))?;
+    File::open(dir.as_path()).map_err(|err| Error::CannotReadDirectory(err, dir.clone()))?;
+    Ok(dir)
+}
+
+fn dir() -> PathBuf {
+    BaseDirs::new()
         .unwrap()
         .data_dir()
-        .join("radicle-registry-cli");
-    std::fs::create_dir_all(&dir).map_err(ReadingError::IO)?;
-    Ok(dir)
+        .join("radicle-registry-cli")
 }
