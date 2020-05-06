@@ -23,11 +23,16 @@ use std::future::Future;
 use std::sync::Arc;
 use std::time::Duration;
 
+// TODO remove in favor of substrate_prometheus_endpoint::prometheus after substrate upgrade
+use prometheus::core::Atomic;
+use sc_client::BlockImportNotification;
 use sc_client::{light::blockchain::AuxStore, BlockchainEvents as _, LongestChain};
 use sc_executor::native_executor_instance;
 use sc_service::{AbstractService, Configuration, Error, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
-use substrate_prometheus_endpoint::{Gauge, U64};
+use sp_runtime::generic::BlockId;
+use sp_runtime::traits::Block as _;
+use substrate_prometheus_endpoint::{Gauge, Registry, U64};
 
 use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow, Difficulty};
 use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, Block, RuntimeApi};
@@ -142,8 +147,7 @@ pub fn new_full(
     let block_import = import_setup.expect("No import setup set for miner");
 
     let service = builder.build()?;
-    register_difficulty_metric(&service)?;
-    register_is_major_synced_metric(&service)?;
+    register_metrics(&service)?;
 
     if let Some(block_author) = opt_block_author {
         let client = service.client();
@@ -214,77 +218,142 @@ pub fn new_light(config: Configuration) -> Result<impl AbstractService, Error> {
             Ok(import_queue)
         })?
         .build()?;
-    register_difficulty_metric(&service)?;
-    register_is_major_synced_metric(&service)?;
+    register_metrics(&service)?;
     Ok(service)
 }
 
-fn register_difficulty_metric<S>(service: &S) -> Result<(), Error>
+fn register_metrics<S>(service: &S) -> Result<(), Error>
 where
     S: AbstractService,
     sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
 {
-    let gauge_name = "best_block_difficulty";
-    let gauge_help = "The difficulty of the best block in the chain";
-    let task_gen = |gauge: Gauge<U64>| {
-        let client = service.client();
-        client.import_notification_stream().for_each(move |info| {
-            let ready = futures::future::ready(());
-            if !info.is_new_best {
-                return ready;
-            }
-            let difficulty_res =
-                sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
-            let difficulty = match difficulty_res {
-                Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
-                Err(_) => return ready,
-            };
-            gauge.set(difficulty);
-            ready
-        })
-    };
-    spawn_u64_metric_gauge_task(service, gauge_name, gauge_help, task_gen)
-}
-
-fn register_is_major_synced_metric(service: &impl AbstractService) -> Result<(), Error> {
-    const POLL_INTERVAL: Duration = Duration::from_secs(1);
-    let gauge_name = "is_major_synced";
-    let gauge_help = "Whether the node is major synced, i.e. it's not in the state of fetching \
-        blocks after being started from the genesis or recovering from a big desynchronization";
-    let task_gen = move |gauge: Gauge<U64>| {
-        let network = service.network();
-        async move {
-            loop {
-                let is_synced = !network.is_major_syncing();
-                gauge.set(is_synced as u64);
-                async_std::task::sleep(POLL_INTERVAL).await;
-            }
-        }
-    };
-    spawn_u64_metric_gauge_task(service, gauge_name, gauge_help, task_gen)
-}
-
-/// Spawns a task, which updates a metric using a gauge
-///
-/// `task_gen` should return a future, which never finishes,
-/// but updates the received gauge while running on an executor
-fn spawn_u64_metric_gauge_task<F: Future<Output = ()> + Send + 'static>(
-    service: &impl AbstractService,
-    gauge_name: &str,
-    gauge_help: &str,
-    task_gen: impl FnOnce(Gauge<U64>) -> F,
-) -> Result<(), Error> {
     let registry = match service.prometheus_registry() {
         Some(registry) => registry,
-        None => return Ok(()),
+        None => {
+            log::warn!("Prometheus is disabled, some metrics won't be collected");
+            return Ok(());
+        }
     };
-    let new_gauge = Gauge::new(gauge_name, gauge_help)
-        .map_err(|e| format!("failed to create metric gauge '{}': {}", gauge_name, e))?;
-    let gauge = substrate_prometheus_endpoint::register(new_gauge, &registry)
-        .map_err(|e| format!("failed to register metric gauge '{}': {}", gauge_name, e))?;
-    let task_name = format!("{}_metric_notifier", gauge_name);
-    service.spawn_task(task_name, task_gen(gauge));
+    register_best_block_metrics(service, &registry)?;
+    register_is_major_synced_metric(service, &registry)
+}
+
+fn register_best_block_metrics<S>(service: &S, registry: &Registry) -> Result<(), Error>
+where
+    S: AbstractService,
+    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+{
+    let update_difficulty_gauge = create_difficulty_gauge_updater(service, registry)?;
+    let update_block_size_gauges = create_block_size_gauges_updater(service, registry)?;
+    let task = service
+        .client()
+        .import_notification_stream()
+        .for_each(move |info| {
+            if info.is_new_best {
+                update_difficulty_gauge(&info);
+                update_block_size_gauges(&info);
+            }
+            futures::future::ready(())
+        });
+    spawn_metric_task(service, "best_block", task);
     Ok(())
+}
+
+fn create_difficulty_gauge_updater<S>(
+    service: &S,
+    registry: &Registry,
+) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error>
+where
+    S: AbstractService,
+    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+{
+    let difficulty_gauge = register_gauge::<U64>(
+        &registry,
+        "best_block_difficulty",
+        "The difficulty of the best block in the chain",
+    )?;
+    let client = service.client();
+    let updater = move |info: &BlockImportNotification<S::Block>| {
+        let difficulty_res =
+            sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
+        let difficulty = match difficulty_res {
+            Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
+            Err(_) => return,
+        };
+        difficulty_gauge.set(difficulty);
+    };
+    Ok(updater)
+}
+
+fn create_block_size_gauges_updater<S: AbstractService>(
+    service: &S,
+    registry: &Registry,
+) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error> {
+    let transactions_gauge = register_gauge::<U64>(
+        &registry,
+        "best_block_transactions",
+        "Number of transactions in the best block in the chain",
+    )?;
+    let length_gauge = register_gauge::<U64>(
+        &registry,
+        "best_block_length",
+        "Length in bytes of the best block in the chain",
+    )?;
+    let client = service.client();
+    let updater = move |info: &BlockImportNotification<S::Block>| {
+        let body = match client.body(&BlockId::hash(info.hash)) {
+            Ok(Some(body)) => body,
+            _ => return,
+        };
+        transactions_gauge.set(body.len() as u64);
+        let encoded_block = S::Block::encode_from(&info.header, &body);
+        length_gauge.set(encoded_block.len() as u64);
+    };
+    Ok(updater)
+}
+
+fn register_is_major_synced_metric(
+    service: &impl AbstractService,
+    registry: &Registry,
+) -> Result<(), Error> {
+    const POLL_INTERVAL: Duration = Duration::from_secs(1);
+    const GAUGE_NAME: &str = "is_major_synced";
+    let gauge = register_gauge::<U64>(
+        &registry,
+        GAUGE_NAME,
+        "Whether the node is major synced, i.e. it's not in the state of fetching \
+        blocks after being started from the genesis or recovering from a big desynchronization",
+    )?;
+    let network = service.network();
+    let task = async move {
+        loop {
+            let is_synced = !network.is_major_syncing();
+            gauge.set(is_synced as u64);
+            async_std::task::sleep(POLL_INTERVAL).await;
+        }
+    };
+    spawn_metric_task(service, GAUGE_NAME, task);
+    Ok(())
+}
+
+fn register_gauge<P: Atomic + 'static>(
+    registry: &Registry,
+    gauge_name: &str,
+    gauge_help: &str,
+) -> Result<Gauge<P>, Error> {
+    let gauge = Gauge::new(gauge_name, gauge_help)
+        .map_err(|e| format!("failed to create metric gauge '{}': {}", gauge_name, e))?;
+    substrate_prometheus_endpoint::register(gauge, &registry)
+        .map_err(|e| format!("failed to register metric gauge '{}': {}", gauge_name, e).into())
+}
+
+fn spawn_metric_task(
+    service: &impl AbstractService,
+    name: &str,
+    task: impl Future<Output = ()> + Send + 'static,
+) {
+    let task_name = format!("{}_metric_notifier", name);
+    service.spawn_task(task_name, task);
 }
 
 /// Build a new service to be used for one-shot commands.
