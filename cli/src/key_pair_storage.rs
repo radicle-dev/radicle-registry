@@ -144,16 +144,16 @@ const FILE: &str = "key-pairs.json";
 /// as an empty HashMap<String, KeyPairData>.
 fn get_or_create_path() -> Result<PathBuf, Error> {
     let path_buf = build_path(FILE);
-    dir_ready(path_buf.parent().unwrap().to_path_buf())?;
+    let path = path_buf.as_path();
+    dir_ready(path.parent().unwrap().to_path_buf())?;
 
     let old_path = build_path("accounts.json");
-    if old_path.exists() {
+    if !path.exists() && old_path.exists() {
         println!("=> Migrating the key-pair storage to the latest version...");
-        std::fs::rename(old_path, &path_buf).map_err(WritingError::IO)?;
+        std::fs::rename(old_path, path).map_err(WritingError::IO)?;
         println!("✓ Done")
     }
 
-    let path = path_buf.as_path();
     if !path.exists() {
         std::fs::write(path, b"{}").map_err(WritingError::IO)?;
     }
