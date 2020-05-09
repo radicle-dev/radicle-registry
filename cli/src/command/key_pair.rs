@@ -55,6 +55,7 @@ impl CommandT for Generate {
         Ok(())
     }
 }
+
 #[derive(StructOpt, Clone)]
 pub struct List {}
 

@@ -28,7 +28,7 @@ use std::path::PathBuf;
 /// The data that is stored in the filesystem relative
 /// to a key pair. The name of the key pair is used as
 /// the key to this value, therefore not included here.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct KeyPairData {
     pub seed: Seed,
 }
@@ -109,13 +109,15 @@ pub fn add(name: String, data: KeyPairData) -> Result<(), Error> {
 
 /// List all the stored key-pairs.
 ///
-/// It can fail from IO and Serde Json errors.
+/// It can fail from IO errors or Serde Json errors.
+/// Attempts to migrate the key-pairs file if outdated.
 pub fn list() -> Result<HashMap<String, KeyPairData>, Error> {
-    let path_buf = get_or_create_path()?;
-    let file = File::open(path_buf.as_path()).map_err(ReadingError::IO)?;
-    let key_pairs: HashMap<String, KeyPairData> =
-        serde_json::from_reader(&file).map_err(ReadingError::Deserialization)?;
-    Ok(key_pairs)
+    use {KeyStorageFile::*, VersionedFile::*};
+
+    match parse_file()? {
+        Unversioned(key_pairs) => Ok(key_pairs),
+        Versioned(V1 { key_pairs }) => Ok(key_pairs),
+    }
 }
 
 /// Get a key pair by name.
@@ -127,9 +129,9 @@ pub fn get(name: &str) -> Result<KeyPairData, Error> {
 }
 
 fn update(key_pairs: HashMap<String, KeyPairData>) -> Result<(), Error> {
+    let data = VersionedFile::V1 { key_pairs };
     let path_buf = get_or_create_path()?;
-    let new_content =
-        serde_json::to_string_pretty(&key_pairs).map_err(WritingError::Serialization)?;
+    let new_content = serde_json::to_string_pretty(&data).map_err(WritingError::Serialization)?;
     std::fs::write(path_buf.as_path(), new_content.as_bytes()).map_err(WritingError::IO)?;
     Ok(())
 }
@@ -147,15 +149,13 @@ fn get_or_create_path() -> Result<PathBuf, Error> {
     let path = path_buf.as_path();
     dir_ready(path.parent().unwrap().to_path_buf())?;
 
-    let old_path = build_path("accounts.json");
-    if !path.exists() && old_path.exists() {
-        println!("=> Migrating the key-pair storage to the latest version...");
-        std::fs::rename(old_path, path).map_err(WritingError::IO)?;
-        println!("✓ Done")
-    }
-
     if !path.exists() {
-        std::fs::write(path, b"{}").map_err(WritingError::IO)?;
+        let old_path = build_path("accounts.json");
+        if old_path.exists() {
+            std::fs::rename(old_path, path).map_err(WritingError::IO)?;
+        } else {
+            std::fs::write(path, b"{}").map_err(WritingError::IO)?;
+        }
     }
 
     Ok(path_buf)
@@ -183,4 +183,32 @@ fn dir() -> PathBuf {
         .unwrap()
         .data_dir()
         .join("radicle-registry-cli")
+}
+
+fn parse_file() -> Result<KeyStorageFile, Error> {
+    let path_buf = get_or_create_path()?;
+    let file = File::open(path_buf.as_path()).map_err(ReadingError::IO)?;
+
+    serde_json::from_reader(&file).map_err(|e| ReadingError::Deserialization(e).into())
+}
+
+/// The possible file variants to be handled when deserialization [FILE].
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+enum KeyStorageFile {
+    /// The genesis, unversioned file variant.
+    Unversioned(HashMap<String, KeyPairData>),
+
+    /// A versioned file variant, to which we have moved to
+    /// in order to leverage backwards-compatibility.
+    Versioned(VersionedFile),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "version")]
+enum VersionedFile {
+    #[serde(rename = "1")]
+    V1 {
+        key_pairs: HashMap<String, KeyPairData>,
+    },
 }
