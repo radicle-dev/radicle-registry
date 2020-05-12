@@ -235,7 +235,7 @@ where
         }
     };
     register_best_block_metrics(service, &registry)?;
-    register_is_major_synced_metric(service, &registry)
+    Ok(())
 }
 
 fn register_best_block_metrics<S>(service: &S, registry: &Registry) -> Result<(), Error>
@@ -334,30 +334,6 @@ fn create_reorganization_gauges_updater<S: AbstractService>(
         }
     };
     Ok(updater)
-}
-
-fn register_is_major_synced_metric(
-    service: &impl AbstractService,
-    registry: &Registry,
-) -> Result<(), Error> {
-    const POLL_INTERVAL: Duration = Duration::from_secs(1);
-    const GAUGE_NAME: &str = "is_major_synced";
-    let gauge = register_gauge::<U64>(
-        &registry,
-        GAUGE_NAME,
-        "Whether the node is major synced, i.e. it's not in the state of fetching \
-        blocks after being started from the genesis or recovering from a big desynchronization",
-    )?;
-    let network = service.network();
-    let task = async move {
-        loop {
-            let is_synced = !network.is_major_syncing();
-            gauge.set(is_synced as u64);
-            async_std::task::sleep(POLL_INTERVAL).await;
-        }
-    };
-    spawn_metric_task(service, GAUGE_NAME, task);
-    Ok(())
 }
 
 fn register_gauge<P: Atomic + 'static>(
