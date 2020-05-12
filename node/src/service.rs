@@ -245,6 +245,7 @@ where
 {
     let update_difficulty_gauge = create_difficulty_gauge_updater(service, registry)?;
     let update_block_size_gauges = create_block_size_gauges_updater(service, registry)?;
+    let update_reorganization_gauges = create_reorganization_gauges_updater(registry)?;
     let task = service
         .client()
         .import_notification_stream()
@@ -252,6 +253,7 @@ where
             if info.is_new_best {
                 update_difficulty_gauge(&info);
                 update_block_size_gauges(&info);
+                update_reorganization_gauges(&info);
             }
             futures::future::ready(())
         });
@@ -308,6 +310,28 @@ fn create_block_size_gauges_updater<S: AbstractService>(
         transactions_gauge.set(body.len() as u64);
         let encoded_block = S::Block::encode_from(&info.header, &body);
         length_gauge.set(encoded_block.len() as u64);
+    };
+    Ok(updater)
+}
+
+fn create_reorganization_gauges_updater<S: AbstractService>(
+    registry: &Registry,
+) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error> {
+    let reorg_length_gauge = register_gauge::<U64>(
+        &registry,
+        "best_block_reorganization_length",
+        "Number of blocks rolled back to establish the best block in the chain",
+    )?;
+    let reorg_count_gauge = register_gauge::<U64>(
+        &registry,
+        "best_block_reorganization_count",
+        "Number of best block reorganizations, which occurred in the chain",
+    )?;
+    let updater = move |info: &BlockImportNotification<S::Block>| {
+        reorg_length_gauge.set(info.retracted.len() as u64);
+        if !info.retracted.is_empty() {
+            reorg_count_gauge.inc();
+        }
     };
     Ok(updater)
 }
