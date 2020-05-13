@@ -70,6 +70,9 @@ pub enum RegistryError {
     #[cfg_attr(feature = "std", error("a user with the same ID already exists."))]
     DuplicateUserId,
 
+    #[cfg_attr(feature = "std", error("the user is already a member of the org"))]
+    AlreadyAMember,
+
     #[cfg_attr(feature = "std", error("the provided fee is insufficient"))]
     InsufficientFee,
 

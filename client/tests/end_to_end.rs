@@ -120,6 +120,72 @@ async fn register_project() {
 
 #[async_std::test]
 #[serial]
+async fn register_member() {
+    let _ = env_logger::try_init();
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    let (author, author_id) = key_pair_with_associated_user(&client).await;
+    let (_, user_id) = key_pair_with_associated_user(&client).await;
+
+    let org_id = random_id();
+    let register_org_message = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
+    let org_registered_tx = submit_ok(&client, &author, register_org_message.clone()).await;
+    assert_eq!(org_registered_tx.result, Ok(()));
+
+    // The org needs funds to submit transactions.
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    let initial_balance = 1000;
+    transfer(&client, &author, org.account_id, initial_balance).await;
+
+    assert_eq!(org.members, vec![author_id.clone()]);
+
+    let register_member_message = message::RegisterMember {
+        org_id: org_id.clone(),
+        user_id: user_id.clone(),
+    };
+    let random_fee = random_balance();
+    let tx_applied = submit_ok_with_fee(
+        &client,
+        &author,
+        register_member_message.clone(),
+        random_fee,
+    )
+    .await;
+    assert_eq!(tx_applied.result, Ok(()));
+
+    assert_eq!(
+        tx_applied.events[0],
+        RegistryEvent::MemberRegistered(user_id.clone(), org_id.clone()).into()
+    );
+
+    let re_org: Org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    assert_eq!(re_org.members.len(), 2);
+    assert!(
+        re_org.members.contains(&author_id),
+        format!(
+            "Expected author id {} in Org {} with members {:?}",
+            author_id, org_id, re_org.members
+        )
+    );
+    assert!(
+        re_org.members.contains(&user_id),
+        format!(
+            "Expected user id {} in Org {} with members {:?}",
+            user_id, org_id, re_org.members
+        )
+    );
+
+    assert_eq!(
+        client.free_balance(&org.account_id).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
+}
+
+#[async_std::test]
+#[serial]
 async fn register_org() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();

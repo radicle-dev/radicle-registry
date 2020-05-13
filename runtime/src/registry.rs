@@ -179,6 +179,29 @@ decl_module! {
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        pub fn register_member(origin, message: message::RegisterMember) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+
+            let org = store::Orgs::get(message.org_id.clone()).ok_or(RegistryError::InexistentOrg)?;
+            if !org_has_member_with_account(&org, sender) {
+                return Err(RegistryError::InsufficientSenderPermissions.into());
+            }
+
+            if store::Users::get(message.user_id.clone()).is_none() {
+                return Err(RegistryError::InexistentUser.into());
+            }
+
+            if org.members.contains(&message.user_id) {
+                return Err(RegistryError::AlreadyAMember.into());
+            }
+
+            let org_with_member = org.add_member(message.user_id.clone());
+            store::Orgs::insert(message.org_id.clone(), org_with_member);
+            Self::deposit_event(Event::MemberRegistered(message.user_id, message.org_id));
+            Ok(())
+        }
+
+        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -415,6 +438,7 @@ decl_event!(
     pub enum Event {
         CheckpointCreated(CheckpointId),
         CheckpointSet(ProjectName, Id, CheckpointId),
+        MemberRegistered(Id, Id),
         OrgRegistered(Id),
         OrgUnregistered(Id),
         ProjectRegistered(ProjectName, Id),

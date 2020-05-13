@@ -31,6 +31,8 @@ pub enum Command {
     Register(Register),
     /// Unregister an org.
     Unregister(Unregister),
+    /// Register a new member under an org.
+    RegisterMember(RegisterMember),
 }
 
 #[async_trait::async_trait]
@@ -42,6 +44,7 @@ impl CommandT for Command {
             Command::Register(cmd) => cmd.run().await,
             Command::Unregister(cmd) => cmd.run().await,
             Command::Transfer(cmd) => cmd.run().await,
+            Command::RegisterMember(cmd) => cmd.run().await,
         }
     }
 }
@@ -206,6 +209,47 @@ impl CommandT for Transfer {
         println!(
             "✓ Transferred {} μRAD from Org {} to Account {} in block {}",
             self.amount, self.org_id, self.recipient, transfered.block,
+        );
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct RegisterMember {
+    /// Id of the org to register the member under.
+    org_id: Id,
+
+    /// Id of the user to be registered as a member.
+    user_id: Id,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for RegisterMember {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+
+        let register_member_fut = client
+            .sign_and_submit_message(
+                &self.tx_options.author,
+                message::RegisterMember {
+                    org_id: self.org_id.clone(),
+                    user_id: self.user_id.clone(),
+                },
+                self.tx_options.fee,
+            )
+            .await?;
+        announce_tx("Registering member...");
+
+        register_member_fut.await?.result?;
+        println!(
+            "✓ User {} is now a member of the Org {}.",
+            self.user_id, self.org_id
         );
         Ok(())
     }

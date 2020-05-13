@@ -67,6 +67,7 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
             RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::set_checkpoint(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::register_member(m) => org_payer_account(author, &m.org_id),
 
             // Transactions paid by the author
             RegistryCall::create_checkpoint(_)
