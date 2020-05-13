@@ -214,7 +214,7 @@ fn init_file(path: &Path) -> Result<(), Error> {
         if old_path.exists() {
             std::fs::rename(old_path, path).map_err(WritingError::IO)?;
         } else {
-            std::fs::write(path, b"{}").map_err(WritingError::IO)?;
+            update(HashMap::new())?;
         }
     }
 
