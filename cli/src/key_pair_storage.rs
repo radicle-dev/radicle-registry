@@ -23,7 +23,7 @@ use std::fs::File;
 use thiserror::Error as ThisError;
 
 use std::io::Error as IOError;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// The data that is stored in the filesystem relative
 /// to a key pair. The name of the key pair is used as
@@ -114,6 +114,7 @@ pub fn add(name: String, data: KeyPairData) -> Result<(), Error> {
 pub fn list() -> Result<HashMap<String, KeyPairData>, Error> {
     use {KeyStorageFile::*, VersionedFile::*};
 
+    init()?;
     match parse_file()? {
         Unversioned(key_pairs) => Ok(key_pairs),
         Versioned(V1 { key_pairs }) => Ok(key_pairs),
@@ -130,7 +131,7 @@ pub fn get(name: &str) -> Result<KeyPairData, Error> {
 
 fn update(key_pairs: HashMap<String, KeyPairData>) -> Result<(), Error> {
     let data = VersionedFile::V1 { key_pairs };
-    let path_buf = get_or_create_path()?;
+    let path_buf = build_path(FILE);
     let new_content = serde_json::to_string_pretty(&data).map_err(WritingError::Serialization)?;
     std::fs::write(path_buf.as_path(), new_content.as_bytes()).map_err(WritingError::IO)?;
     Ok(())
@@ -138,40 +139,6 @@ fn update(key_pairs: HashMap<String, KeyPairData>) -> Result<(), Error> {
 
 /// The file where the user key-pairs are stored.
 const FILE: &str = "key-pairs.json";
-
-/// Get the path to the key-pairs file on disk.
-///
-/// If the file does not yet exist, create it and initialize
-/// it with an empty object so that it can be deserialized
-/// as an empty HashMap<String, KeyPairData>.
-fn get_or_create_path() -> Result<PathBuf, Error> {
-    let path_buf = build_path(FILE);
-    let path = path_buf.as_path();
-    dir_ready(path.parent().unwrap().to_path_buf())?;
-
-    if !path.exists() {
-        let old_path = build_path("accounts.json");
-        if old_path.exists() {
-            std::fs::rename(old_path, path).map_err(WritingError::IO)?;
-        } else {
-            std::fs::write(path, b"{}").map_err(WritingError::IO)?;
-        }
-    }
-
-    Ok(path_buf)
-}
-
-/// Ensure that the given directory path is ready to be used.
-/// Fails with
-///   * [Error::CannotCreateDirectory] if the directory
-///     does not exist and fails to be created.
-///   * [Error::CannotReadDirectory] if the directory
-///     does exist but can not be read.
-fn dir_ready(dir: PathBuf) -> Result<PathBuf, Error> {
-    std::fs::create_dir_all(&dir).map_err(|err| Error::CannotCreateDirectory(err, dir.clone()))?;
-    File::open(&dir).map_err(|err| Error::CannotReadDirectory(err, dir.clone()))?;
-    Ok(dir)
-}
 
 /// Build the path to the given filename under [dir()].
 fn build_path(filename: &str) -> PathBuf {
@@ -186,7 +153,7 @@ fn dir() -> PathBuf {
 }
 
 fn parse_file() -> Result<KeyStorageFile, Error> {
-    let path_buf = get_or_create_path()?;
+    let path_buf = build_path(FILE);
     let file = File::open(path_buf.as_path()).map_err(ReadingError::IO)?;
 
     serde_json::from_reader(&file).map_err(|e| ReadingError::Deserialization(e).into())
@@ -211,4 +178,45 @@ enum VersionedFile {
     V1 {
         key_pairs: HashMap<String, KeyPairData>,
     },
+}
+
+/// Initialize the storage on disk to be used correctly.
+///   * Create the directory structure and check permissions
+///   * Create and initialize the [FILE] where the key pairs will be stored.
+fn init() -> Result<(), Error> {
+    let path_buf = build_path(FILE);
+    let path = path_buf.as_path();
+
+    init_dir(path.parent().unwrap().to_path_buf())?;
+    init_file(path)?;
+    Ok(())
+}
+
+/// Ensure that the given directory path is ready to be used.
+/// Fails with
+///   * [Error::CannotCreateDirectory] if the directory
+///     does not exist and fails to be created.
+///   * [Error::CannotReadDirectory] if the directory
+///     does exist but can not be read.
+fn init_dir(dir: PathBuf) -> Result<PathBuf, Error> {
+    std::fs::create_dir_all(&dir).map_err(|err| Error::CannotCreateDirectory(err, dir.clone()))?;
+    File::open(&dir).map_err(|err| Error::CannotReadDirectory(err, dir.clone()))?;
+    Ok(dir)
+}
+
+/// Init the key-pair storage file on disk.
+///
+/// Renames the legacy `accounts.json` file to [FILE] and creates
+/// [FILE] an empty value to be deserializable if it doesn't exist.
+fn init_file(path: &Path) -> Result<(), Error> {
+    if !path.exists() {
+        let old_path = build_path("accounts.json");
+        if old_path.exists() {
+            std::fs::rename(old_path, path).map_err(WritingError::IO)?;
+        } else {
+            std::fs::write(path, b"{}").map_err(WritingError::IO)?;
+        }
+    }
+
+    Ok(())
 }
