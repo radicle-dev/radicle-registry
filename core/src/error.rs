@@ -99,6 +99,18 @@ pub enum RegistryError {
         error("the account is already associated with a user")
     )]
     UserAccountAssociated,
+
+    #[cfg_attr(
+        feature = "std",
+        error(
+            "failed to update the chain runtime. Ensure that:
+    * the author is the chain's sudo key
+    * the 'spec_name' match
+    * the wasm 'spec_version' is greater
+        "
+        )
+    )]
+    FailedChainRuntimeUpdate,
 }
 
 // The index with which the registry runtime module is declared

@@ -28,6 +28,12 @@ thiserror = "1.0.14"
 tokio = "0.1"
 url = "1.7"
 
+
+[dependencies.pallet-sudo]
+git = "https://github.com/paritytech/substrate"
+rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
+default_features = false
+
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
 rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
