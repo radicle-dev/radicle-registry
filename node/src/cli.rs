@@ -130,6 +130,8 @@ impl Arguments {
         run_cmd.network_config.node_key_params.node_key = node_key;
         run_cmd.network_config.node_key_params.node_key_file = node_key_file;
         run_cmd.shared_params.base_path = data_path;
+        run_cmd.import_params.execution_strategies.execution =
+            Some(sc_cli::ExecutionStrategy::Both);
 
         RunCmd {
             name,

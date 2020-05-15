@@ -141,6 +141,12 @@ pub fn new_full(
     config: Configuration,
     opt_block_author: Option<AccountId>,
 ) -> Result<impl AbstractService, Error> {
+    log::info!(
+        "Native runtime version: spec={} impl={}",
+        radicle_registry_runtime::VERSION.spec_version,
+        radicle_registry_runtime::VERSION.impl_version,
+    );
+
     let pow_alg = Config::try_from(&config)?;
     let inherent_data_providers = InherentDataProviders::new();
     let (builder, import_setup) = new_full_start!(config, inherent_data_providers.clone());
