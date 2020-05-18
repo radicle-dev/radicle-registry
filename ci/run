@@ -17,9 +17,6 @@ TIMEFORMAT='elapsed time: %R (user: %U, system: %S)'
 declare -r target_cache="/cache/target"
 
 export CARGO_HOME=/cache/cargo
-# Incremental builds use timestamps of local code. Since we always
-# check it out fresh we can never use incremental builds.
-export CARGO_BUILD_INCREMENTAL=false
 
 export RUSTC_WRAPPER=sccache
 export SCCACHE_DIR=/cache/sccache
@@ -59,7 +56,7 @@ cargo clippy \
 
 echo "--- cargo doc"
 RUSTDOCFLAGS="-D intra-doc-link-resolution-failure" \
-  cargo doc --workspace --no-deps --document-private-items
+  cargo doc --workspace --release --no-deps --document-private-items
 
 echo "--- scripts/build-release"
 ./scripts/build-release
@@ -85,8 +82,17 @@ tar -cpzf artifacts/radicle-registry-node.tar.gz -C target/release radicle-regis
 cp -a target/release/radicle-registry-node ci/node-image
 
 echo "--- Cleanup cache"
+
 # Remove all executables that need to be rebuild.
 find ./target -maxdepth 2 -executable -type f -exec rm {} \;
+
+# Remove incremental artifacts for local packages. These artifacts are
+# usesless for subsequent builds because incremental builds are based
+# on timestamps and we always do a fresh checkout of the repository.
+find ./target -name incremental -type d -exec rm -r {} \;
+
 # Remove artifats from local code
 rm -r target/release/deps/radicle* target/release/build/radicle*
+find ./target -name 'radicle*' -exec rm -r {} \;
+
 echo "Size of $target_cache is $(du -sh "$target_cache" | cut -f 1)"
