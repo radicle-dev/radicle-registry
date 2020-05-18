@@ -17,6 +17,7 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 - [Make a release](#make-a-release)
 - [Local devnet](#local-devnet)
 - [Updating substrate](#updating-substrate)
+- [Runtime updates](#runtime-updates)
 - [Updating Continuous Integration's base Docker image](#updating-continuous-integrations-base-docker-image)
 
 <!-- tocstop -->
@@ -43,6 +44,8 @@ To purge the chain state manually run
 ./scripts/run-dev-node purge-chain
 ~~~
 
+The dev node runs the `dev` chain and uses `./runtime/latest.wasm` as
+the genesis runtime.
 
 Packages
 --------
@@ -129,27 +132,40 @@ To update the revision of substrate run
 ~~~
 where `<revision>` is the new Git revision SHA.
 
-Building a WASM runtime binary
-------------------------------
+Runtime updates
+---------------
 
-### Building a runtime for the genesis
+There are special policies and processes around updates to the `runtime` package.
 
-To build a genesis WASM runtime binary run
-~~~
-./scripts/build-genesis-runtime-wasm
-~~~
-This will create or update the `runtime/genesis_runtime.wasm` file.
-It will be then used as the genesis WASM runtime in all consecutive compilations of the node.
+Updates to the runtime are tracked by the `VERSION` exported from the `runtime`
+crate. The updates fall into two categories: Implementation updates and
+semantic updates.
 
-Remember that this operation should **never** be done after starting the public network!
-It will make the node incompatible with any older nodes on the network.
+### Implementation updates
 
-### Building a runtime for an update
+Implementation updates only change the implementation of the runtime but do not
+affect the semantics.
 
-To build a WASM runtime binary meant for packing into a transaction and broadcasting on the network run
-~~~
-./scripts/build-runtime-wasm <output_file>
-~~~
+Commits with implementation updates must increment the `impl_version` field of
+`VERSION`. They may not recompile `./runtime/latest.wasm`.
+
+### Semantic updates
+
+Semantic changes must increment the `spec_version` field and reset the
+`impl_version` field to `0`.
+
+In a commit with a semantic update you must also update the latest Wasm
+runtime.
+
+```
+./scripts/build-runtime-wasm ./runtime/latest.wasm
+```
+
+For semantic updates to take effect on an existing chain they need to be
+deployed to the chain. This process has not been established yet.
+
+Changes to the chain state must be backwards-compatibility, requiring particular
+attention. A policy and process for such updates have not been established yet.
 
 Updating Continuous Integration's base Docker image
 ---------------------------------------------------
