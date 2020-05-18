@@ -47,7 +47,7 @@ pub type BlockHeader = Header;
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionApplied<Message_: Message> {
+pub struct IncludedTransaction<Message_: Message> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
@@ -78,7 +78,7 @@ pub trait ClientT {
     /// //
     /// // This call fails if the transaction is invalid or if the RPC communication with the node
     /// // failed.
-    /// let applied_fut = client.submit_transaction(tx).await?;
+    /// let included_tx_fut = client.submit_transaction(tx).await?;
     ///
     /// // We can now wait for the transaction to be included in a block.
     /// //
@@ -86,8 +86,8 @@ pub trait ClientT {
     /// // we fail to retrieve the transaction state from the node.
     /// //
     /// // This will not error if the transaction errored while applying. See
-    /// // TransactionApplied::result for that.
-    /// let transaction_applied = applied_fut.await?;
+    /// // IncludedTransaction::result for that.
+    /// let included_transaction = included_tx_fut.await?;
     ///
     /// Ok(())
     /// # }
@@ -97,7 +97,7 @@ pub trait ClientT {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
+    ) -> Result<Response<IncludedTransaction<Message_>, Error>, Error>;
 
     /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
@@ -107,7 +107,7 @@ pub trait ClientT {
         author: &ed25519::Pair,
         message: Message_,
         fee: Balance,
-    ) -> Result<Response<TransactionApplied<Message_>, Error>, Error>;
+    ) -> Result<Response<IncludedTransaction<Message_>, Error>, Error>;
 
     /// Fetch the nonce for the given account from the chain state
     async fn account_nonce(

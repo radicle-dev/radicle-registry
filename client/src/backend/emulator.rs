@@ -104,7 +104,7 @@ impl backend::Backend for Emulator {
     async fn submit(
         &self,
         extrinsic: backend::UncheckedExtrinsic,
-    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::IncludedTransaction, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let mut state = self.state.lock().unwrap();
 
@@ -142,7 +142,7 @@ impl backend::Backend for Emulator {
         state.headers.insert(new_tip_hash, new_tip_header);
 
         Ok(Box::pin(futures::future::ready(Ok(
-            backend::TransactionApplied {
+            backend::IncludedTransaction {
                 tx_hash,
                 block: new_tip_hash,
                 events,

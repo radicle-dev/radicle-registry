@@ -30,7 +30,7 @@ pub async fn submit_ok_with_fee<Message_: Message>(
     author: &ed25519::Pair,
     message: Message_,
     fee: Balance,
-) -> TransactionApplied<Message_> {
+) -> IncludedTransaction<Message_> {
     client
         .sign_and_submit_message(&author, message, fee)
         .await
@@ -46,7 +46,7 @@ pub async fn submit_ok<Message_: Message>(
     client: &Client,
     author: &ed25519::Pair,
     message: Message_,
-) -> TransactionApplied<Message_> {
+) -> IncludedTransaction<Message_> {
     submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
 
@@ -168,7 +168,7 @@ pub async fn transfer(
     recipient: AccountId,
     value: Balance,
 ) {
-    let tx_applied = submit_ok_with_fee(
+    let included_tx = submit_ok_with_fee(
         &client,
         &donator,
         message::Transfer {
@@ -179,7 +179,7 @@ pub async fn transfer(
     )
     .await;
     assert_eq!(
-        tx_applied.result,
+        included_tx.result,
         Ok(()),
         "Failed to grant funds to the recipient account."
     );
