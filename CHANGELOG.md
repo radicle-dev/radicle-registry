@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: `Client::new_emulator()` now returns a pair of a `Client` and
+  `EmulatorControl`.
 * cli: Move `update-runtime` to `runtime update`
 * Rename `TransactionApplied` to `TransactionIncluded`
 * cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'

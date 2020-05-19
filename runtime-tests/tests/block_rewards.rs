@@ -21,7 +21,7 @@ use sp_runtime::Permill;
 /// Assert that block rewards and transaction fees are credited to the block author.
 #[async_std::test]
 async fn block_rewards_credited() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
 
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();

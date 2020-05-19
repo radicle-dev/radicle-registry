@@ -23,7 +23,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn transfer_fail() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let bob = key_pair_from_string("Bob").public();
 
@@ -44,7 +44,7 @@ async fn transfer_fail() {
 // Affected by the [crate::ExistentialDeposit] parameter.
 #[async_std::test]
 async fn transfer_any_amount() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let donator = key_pair_from_string("Alice");
     let receipient = key_pair_from_string("Bob").public();
 
@@ -71,7 +71,7 @@ async fn transfer_any_amount() {
 /// org owner can transfer money from an org to another account.
 #[async_std::test]
 async fn org_account_transfer() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let bob = key_pair_from_string("Bob").public();
@@ -123,7 +123,7 @@ async fn org_account_transfer() {
 #[async_std::test]
 /// Test that a transfer from an org account fails if the sender is not an org member.
 async fn org_account_transfer_non_member() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
     let org = create_random_org(&client, &author).await;
 

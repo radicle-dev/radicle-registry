@@ -24,7 +24,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn create_checkpoint() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
@@ -68,7 +68,7 @@ async fn create_checkpoint() {
 
 #[async_std::test]
 async fn set_checkpoint() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
@@ -119,7 +119,7 @@ async fn set_checkpoint() {
 
 #[async_std::test]
 async fn set_checkpoint_without_permission() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
@@ -167,7 +167,7 @@ async fn set_checkpoint_without_permission() {
 
 #[async_std::test]
 async fn fail_to_set_nonexistent_checkpoint() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
@@ -201,7 +201,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
 
 #[async_std::test]
 async fn set_fork_checkpoint() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
@@ -266,7 +266,7 @@ async fn set_fork_checkpoint() {
 // test that the bad actor pays the tx fee nonetheless.
 #[async_std::test]
 async fn set_checkpoint_bad_actor() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();

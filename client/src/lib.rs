@@ -49,7 +49,7 @@ pub use crate::interface::*;
 pub use radicle_registry_core::Balance;
 pub use radicle_registry_runtime::fees::MINIMUM_FEE;
 
-pub use backend::EMULATOR_BLOCK_AUTHOR;
+pub use backend::{EmulatorControl, EMULATOR_BLOCK_AUTHOR};
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///
@@ -79,10 +79,14 @@ impl Client {
         Ok(Self::new(backend))
     }
 
-    /// Create a new client that emulates the registry ledger in memory. See
-    /// [backend::emulator::Emulator] for details.
-    pub fn new_emulator() -> Self {
-        Self::new(backend::Emulator::new())
+    /// Create a new client that emulates the registry ledger in memory. Also returns a control
+    /// handle to manipulate the emulator state. See [backend::Emulator] and [EmulatorControl] for
+    /// details.
+    pub fn new_emulator() -> (Self, EmulatorControl) {
+        let emulator = backend::Emulator::new();
+        let control = emulator.control();
+        let client = Self::new(emulator);
+        (client, control)
     }
 
     fn new(backend: impl backend::Backend + Sync + Send + 'static) -> Self {
@@ -321,6 +325,6 @@ mod test {
     #[allow(dead_code)]
     fn client_is_sync_send_static() {
         fn is_sync_send(_x: impl Sync + Send + 'static) {}
-        is_sync_send(Client::new_emulator());
+        is_sync_send(Client::new_emulator().0);
     }
 }
