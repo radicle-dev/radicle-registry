@@ -156,16 +156,16 @@ impl ClientT for Client {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Result<Response<IncludedTransaction<Message_>, Error>, Error> {
+    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error> {
         let backend = self.backend.clone();
-        let included_tx_future = backend.submit(transaction.extrinsic).await?;
+        let tx_included_future = backend.submit(transaction.extrinsic).await?;
         Ok(Box::pin(async move {
-            let included_tx = included_tx_future.await?;
-            let events = included_tx.events;
-            let tx_hash = included_tx.tx_hash;
-            let block = included_tx.block;
+            let tx_included = tx_included_future.await?;
+            let events = tx_included.events;
+            let tx_hash = tx_included.tx_hash;
+            let block = tx_included.block;
             let result = Message_::result_from_events(events.clone())?;
-            Ok(IncludedTransaction {
+            Ok(TransactionIncluded {
                 tx_hash,
                 block,
                 events,
@@ -179,7 +179,7 @@ impl ClientT for Client {
         author: &ed25519::Pair,
         message: Message_,
         fee: Balance,
-    ) -> Result<Response<IncludedTransaction<Message_>, Error>, Error> {
+    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();
@@ -194,14 +194,14 @@ impl ClientT for Client {
                 fee,
             },
         );
-        let included_tx_fut = client.submit_transaction(transaction).await?;
+        let tx_included_fut = client.submit_transaction(transaction).await?;
         Ok(Box::pin(async move {
-            let included_tx = included_tx_fut.await?;
-            let events = included_tx.events;
-            let tx_hash = included_tx.tx_hash;
-            let block = included_tx.block;
+            let tx_included = tx_included_fut.await?;
+            let events = tx_included.events;
+            let tx_hash = tx_included.tx_hash;
+            let block = tx_included.block;
             let result = Message_::result_from_events(events.clone())?;
-            Ok(IncludedTransaction {
+            Ok(TransactionIncluded {
                 tx_hash,
                 block,
                 events,

@@ -28,7 +28,7 @@ async fn transfer_fail() {
     let bob = key_pair_from_string("Bob").public();
 
     let balance_alice = client.free_balance(&alice.public()).await.unwrap();
-    let included_tx = submit_ok(
+    let tx_included = submit_ok(
         &client,
         &alice,
         message::Transfer {
@@ -37,7 +37,7 @@ async fn transfer_fail() {
         },
     )
     .await;
-    assert!(included_tx.result.is_err());
+    assert!(tx_included.result.is_err());
 }
 
 // Test that we can transfer any amount within a reasonable range.
@@ -49,7 +49,7 @@ async fn transfer_any_amount() {
     let receipient = key_pair_from_string("Bob").public();
 
     for amount in (1..10000).step_by(500) {
-        let included_tx = submit_ok(
+        let tx_included = submit_ok(
             &client,
             &donator,
             message::Transfer {
@@ -59,7 +59,7 @@ async fn transfer_any_amount() {
         )
         .await;
         assert_eq!(
-            included_tx.result,
+            tx_included.result,
             Ok(()),
             "Failed to transfer {} μRAD",
             amount

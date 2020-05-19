@@ -53,7 +53,7 @@ async fn register_project() {
 
     let random_fee = random_balance();
     let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
-    let included_tx = submit_ok_with_fee(&client, &alice, message.clone(), random_fee).await;
+    let tx_included = submit_ok_with_fee(&client, &alice, message.clone(), random_fee).await;
 
     let project = client
         .get_project(message.clone().project_name, message.clone().org_id)
@@ -66,7 +66,7 @@ async fn register_project() {
     assert_eq!(project.metadata.clone(), message.metadata.clone());
 
     assert_eq!(
-        included_tx.events[0],
+        tx_included.events[0],
         RegistryEvent::ProjectRegistered(message.clone().project_name, message.clone().org_id)
             .into()
     );
@@ -124,9 +124,9 @@ async fn register_project_with_inexistent_org() {
 
     let inexistent_org_id = random_id();
     let message = random_register_project_message(inexistent_org_id, checkpoint_id);
-    let included_tx = submit_ok(&client, &alice, message.clone()).await;
+    let tx_included = submit_ok(&client, &alice, message.clone()).await;
 
-    assert_eq!(included_tx.result, Err(RegistryError::InexistentOrg.into()));
+    assert_eq!(tx_included.result, Err(RegistryError::InexistentOrg.into()));
 }
 
 #[async_std::test]
@@ -211,10 +211,10 @@ async fn register_project_with_bad_checkpoint() {
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     transfer(&client, &alice, org.account_id, 1000).await;
 
-    let included_tx = submit_ok(&client, &alice, register_project.clone()).await;
+    let tx_included = submit_ok(&client, &alice, register_project.clone()).await;
 
     assert_eq!(
-        included_tx.result,
+        tx_included.result,
         Err(RegistryError::InexistentCheckpointId.into())
     );
 
@@ -244,11 +244,11 @@ async fn register_project_with_bad_actor() {
     let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();
     let register_project = random_register_project_message(org_id.clone(), H256::random());
     let random_fee = random_balance();
-    let included_tx =
+    let tx_included =
         submit_ok_with_fee(&client, &bad_actor, register_project.clone(), random_fee).await;
 
     assert_eq!(
-        included_tx.result,
+        tx_included.result,
         Err(RegistryError::InsufficientSenderPermissions.into())
     );
 

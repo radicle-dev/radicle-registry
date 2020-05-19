@@ -6,10 +6,10 @@ Upcoming
 
 ### Breaking changes
 
-* Rename `TransactionApplied` to `IncludedTransaction`
+* Rename `TransactionApplied` to `TransactionIncluded`
 * cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'
 * cli: Move key-pair related commands under the new `key-pair` command group
-* client: `IncludedTransaction` result is now `Result<(), TransactionError>`
+* client: `TransactionApplied` result is now `Result<(), TransactionError>`
   for all messages.
 * cli: Drop `_TX_` from the environment options
 * cli: group and clean commands by domain and rename options

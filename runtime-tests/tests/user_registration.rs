@@ -29,10 +29,10 @@ async fn register_user() {
 
     let register_user_message = random_register_user_message();
     let random_fee = random_balance();
-    let included_tx =
+    let tx_included =
         submit_ok_with_fee(&client, &alice, register_user_message.clone(), random_fee).await;
 
-    assert!(included_tx
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
 
@@ -62,12 +62,12 @@ async fn register_user_with_duplicate_id() {
     let alice = key_pair_from_string("Alice");
     let register_user_message = random_register_user_message();
 
-    let included_tx_once = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(included_tx_once.result.is_ok());
+    let tx_included_once = submit_ok(&client, &alice, register_user_message.clone()).await;
+    assert!(tx_included_once.result.is_ok());
 
-    let included_tx_twice = submit_ok(&client, &alice, register_user_message.clone()).await;
+    let tx_included_twice = submit_ok(&client, &alice, register_user_message.clone()).await;
     assert_eq!(
-        included_tx_twice.result,
+        tx_included_twice.result,
         Err(RegistryError::DuplicateUserId.into())
     )
 }
@@ -78,14 +78,14 @@ async fn register_user_with_already_associated_account() {
     let alice = key_pair_from_string("Alice");
     let register_first_user_message = random_register_user_message();
 
-    let included_tx_first = submit_ok(&client, &alice, register_first_user_message.clone()).await;
-    assert!(included_tx_first.result.is_ok());
+    let tx_included_first = submit_ok(&client, &alice, register_first_user_message.clone()).await;
+    assert!(tx_included_first.result.is_ok());
 
     // Register a different user with the same account.
     let register_second_user_message = random_register_user_message();
-    let included_tx_twice = submit_ok(&client, &alice, register_second_user_message.clone()).await;
+    let tx_included_twice = submit_ok(&client, &alice, register_second_user_message.clone()).await;
     assert_eq!(
-        included_tx_twice.result,
+        tx_included_twice.result,
         Err(RegistryError::UserAccountAssociated.into())
     )
 }
@@ -97,11 +97,11 @@ async fn unregister_user() {
     let register_user_message = random_register_user_message();
 
     // Registration.
-    let included_tx = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(included_tx
+    let tx_included = submit_ok(&client, &alice, register_user_message.clone()).await;
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
-    assert!(included_tx.result.is_ok());
+    assert!(tx_included.result.is_ok());
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,
         "User not found in users list"
@@ -135,11 +135,11 @@ async fn unregister_user_with_invalid_sender() {
     let register_user_message = random_register_user_message();
 
     // Reistration.
-    let included_tx = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(included_tx
+    let tx_included = submit_ok(&client, &alice, register_user_message.clone()).await;
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
-    assert!(included_tx.result.is_ok());
+    assert!(tx_included.result.is_ok());
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,
         "User not found in users list",

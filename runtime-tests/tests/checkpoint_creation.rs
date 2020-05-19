@@ -83,7 +83,7 @@ async fn create_checkpoint_without_parent() {
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());
 
-    let included_tx = submit_ok(
+    let tx_included = submit_ok(
         &client,
         &alice,
         message::CreateCheckpoint {
@@ -94,7 +94,7 @@ async fn create_checkpoint_without_parent() {
     .await;
 
     assert_eq!(
-        included_tx.result,
+        tx_included.result,
         Err(RegistryError::InexistentCheckpointId.into())
     )
 }
