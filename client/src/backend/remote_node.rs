@@ -156,7 +156,7 @@ impl backend::Backend for RemoteNode {
     async fn submit(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&xt);
         let block_hash_future = self.submit_transaction(xt).await?;
         let this = self.clone();
@@ -164,7 +164,7 @@ impl backend::Backend for RemoteNode {
         Ok(Box::pin(async move {
             let block_hash = block_hash_future.await?;
             let events = this.get_transaction_events(tx_hash, block_hash).await?;
-            Ok(backend::TransactionApplied {
+            Ok(backend::TransactionIncluded {
                 tx_hash,
                 block: block_hash,
                 events,

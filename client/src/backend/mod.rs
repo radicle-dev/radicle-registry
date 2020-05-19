@@ -31,7 +31,7 @@ pub use remote_node_with_executor::RemoteNodeWithExecutor;
 /// Indicator that a transaction has been included in a block and has run in the runtime.
 ///
 /// Obtained after a transaction has been submitted and processed.
-pub struct TransactionApplied {
+pub struct TransactionIncluded {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
@@ -50,7 +50,7 @@ pub trait Backend {
     async fn submit(
         &self,
         xt: UncheckedExtrinsic,
-    ) -> Result<BoxFuture<'static, Result<TransactionApplied, Error>>, Error>;
+    ) -> Result<BoxFuture<'static, Result<TransactionIncluded, Error>>, Error>;
 
     /// Fetch a value from the runtime state storage at the given block.
     async fn fetch(

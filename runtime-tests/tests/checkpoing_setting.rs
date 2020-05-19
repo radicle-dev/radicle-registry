@@ -143,7 +143,7 @@ async fn set_checkpoint_without_permission() {
     // The bad actor needs funds to submit transactions.
     transfer(&client, &alice, bad_actor.public(), 1000).await;
 
-    let tx_applied = submit_ok(
+    let tx_included = submit_ok(
         &client,
         &bad_actor,
         message::SetCheckpoint {
@@ -160,7 +160,7 @@ async fn set_checkpoint_without_permission() {
         .unwrap()
         .unwrap();
     assert_eq!(
-        tx_applied.result,
+        tx_included.result,
         Err(RegistryError::InsufficientSenderPermissions.into())
     );
     assert_eq!(updated_project.current_cp, project.current_cp.clone());
@@ -177,7 +177,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
-    let tx_applied = submit_ok(
+    let tx_included = submit_ok(
         &client,
         &alice,
         message::SetCheckpoint {
@@ -189,7 +189,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
     .await;
 
     assert_eq!(
-        tx_applied.result,
+        tx_included.result,
         Err(RegistryError::InexistentCheckpointId.into())
     );
     let updated_project = client

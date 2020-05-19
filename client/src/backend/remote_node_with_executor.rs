@@ -49,7 +49,7 @@ impl backend::Backend for RemoteNodeWithExecutor {
     async fn submit(
         &self,
         xt: backend::UncheckedExtrinsic,
-    ) -> Result<BoxFuture<'static, Result<backend::TransactionApplied, Error>>, Error> {
+    ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
         let exec = Executor01CompatExt::compat(self.runtime.executor());
         let backend = self.backend.clone();
         let handle = exec

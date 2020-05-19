@@ -65,7 +65,7 @@ async fn main() -> Result<(), Error> {
     let transfer_applied = transfer_submitted.await?;
     println!("done");
 
-    // We can use the [TransactionApplied] struct to get the block.
+    // We can use the [TransactionIncluded] struct to get the block.
     println!("Transaction included in block {}", transfer_applied.block);
 
     // We can also use it to get result of applying the transaction in the ledger. This might fail
