@@ -50,6 +50,8 @@ Upcoming
 * Polkadot telemetry was removed
 
 ### Addition
+
+* cli: Add `update-runtime` command to update the on-chain runtime
 * cli: Mutually support local account names where only SS58 address were
   supported as params.
 * Add `user list` and `user show` CLI commands

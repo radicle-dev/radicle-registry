@@ -162,7 +162,11 @@ runtime.
 ```
 
 For semantic updates to take effect on an existing chain they need to be
-deployed to the chain. This process has not been established yet.
+deployed to the chain.
+
+```
+radicle-registry-cli update-runtime ./runtime/latest.wasm --author <sudo_key> --node-host <node_host>
+```
 
 Changes to the chain state must be backwards-compatibility, requiring particular
 attention. A policy and process for such updates have not been established yet.
