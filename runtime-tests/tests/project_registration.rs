@@ -24,12 +24,12 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_project() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let project_hash = H256::random();
     let checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
@@ -40,7 +40,7 @@ async fn register_project() {
     .unwrap();
 
     let register_org = random_register_org_message();
-    submit_ok(&client, &alice, register_org.clone()).await;
+    submit_ok(&client, &author, register_org.clone()).await;
 
     // The org needs funds to submit transactions.
     let org = client
@@ -49,11 +49,11 @@ async fn register_project() {
         .unwrap()
         .unwrap();
     let initial_balance = 1000;
-    transfer(&client, &alice, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id, initial_balance).await;
 
     let random_fee = random_balance();
     let message = random_register_project_message(register_org.org_id.clone(), checkpoint_id);
-    let tx_included = submit_ok_with_fee(&client, &alice, message.clone(), random_fee).await;
+    let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
 
     let project = client
         .get_project(message.clone().project_name, message.clone().org_id)
@@ -107,12 +107,12 @@ async fn register_project() {
 #[async_std::test]
 async fn register_project_with_inexistent_org() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let project_hash = H256::random();
     let checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
@@ -124,7 +124,7 @@ async fn register_project_with_inexistent_org() {
 
     let inexistent_org_id = random_id();
     let message = random_register_project_message(inexistent_org_id, checkpoint_id);
-    let tx_included = submit_ok(&client, &alice, message.clone()).await;
+    let tx_included = submit_ok(&client, &author, message.clone()).await;
 
     assert_eq!(tx_included.result, Err(RegistryError::InexistentOrg.into()));
 }
@@ -132,11 +132,11 @@ async fn register_project_with_inexistent_org() {
 #[async_std::test]
 async fn register_project_with_duplicate_id() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash: H256::random(),
             previous_checkpoint_id: None,
@@ -150,19 +150,19 @@ async fn register_project_with_duplicate_id() {
     let register_org = message::RegisterOrg {
         org_id: org_id.clone(),
     };
-    submit_ok(&client, &alice, register_org.clone()).await;
+    submit_ok(&client, &author, register_org.clone()).await;
 
     // The org needs funds to submit transactions.
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    transfer(&client, &alice, org.account_id, 1000).await;
+    transfer(&client, &author, org.account_id, 1000).await;
 
     let message = random_register_project_message(org_id.clone(), checkpoint_id);
-    submit_ok(&client, &alice, message.clone()).await;
+    submit_ok(&client, &author, message.clone()).await;
 
     // Duplicate submission with a different metadata.
     let registration_2 = submit_ok(
         &client,
-        &alice,
+        &author,
         message::RegisterProject {
             metadata: Bytes128::random(),
             ..message.clone()
@@ -196,7 +196,7 @@ async fn register_project_with_duplicate_id() {
 #[async_std::test]
 async fn register_project_with_bad_checkpoint() {
     let client = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let checkpoint_id = H256::random();
 
@@ -205,13 +205,13 @@ async fn register_project_with_bad_checkpoint() {
     let register_org = message::RegisterOrg {
         org_id: org_id.clone(),
     };
-    submit_ok(&client, &alice, register_org.clone()).await;
+    submit_ok(&client, &author, register_org.clone()).await;
 
     // The org needs funds to submit transactions.
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    transfer(&client, &alice, org.account_id, 1000).await;
+    transfer(&client, &author, org.account_id, 1000).await;
 
-    let tx_included = submit_ok(&client, &alice, register_project.clone()).await;
+    let tx_included = submit_ok(&client, &author, register_project.clone()).await;
 
     assert_eq!(
         tx_included.result,
@@ -228,17 +228,15 @@ async fn register_project_with_bad_checkpoint() {
 #[async_std::test]
 async fn register_project_with_bad_actor() {
     let client = Client::new_emulator();
-    let god_actor = key_pair_from_string("Alice");
-    let bad_actor = key_pair_from_string("BadActor");
-    // The bad actor needs funds to submit transactions.
-    transfer(&client, &god_actor, bad_actor.public(), 1000).await;
+    let (good_actor, _) = key_pair_with_associated_user(&client).await;
+    let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 
     // The good actor creates an org, of which becomes its single member.
     let org_id = random_id();
     let register_org = message::RegisterOrg {
         org_id: org_id.clone(),
     };
-    submit_ok(&client, &god_actor, register_org.clone()).await;
+    submit_ok(&client, &good_actor, register_org.clone()).await;
 
     // The bad actor attempts to register a project within that org.
     let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();

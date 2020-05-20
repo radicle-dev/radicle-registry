@@ -28,12 +28,12 @@ async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let project_hash = H256::random();
     let checkpoint_id = submit_ok(
         &client,
-        &alice,
+        &author,
         message::CreateCheckpoint {
             project_hash,
             previous_checkpoint_id: None,
@@ -47,20 +47,20 @@ async fn register_project() {
     let register_org_message = message::RegisterOrg {
         org_id: org_id.clone(),
     };
-    let org_registered_tx = submit_ok(&client, &alice, register_org_message.clone()).await;
+    let org_registered_tx = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(org_registered_tx.result, Ok(()));
 
     // The org needs funds to submit transactions.
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     let initial_balance = 1000;
-    transfer(&client, &alice, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id, initial_balance).await;
 
     let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
     let project_name = register_project_message.project_name.clone();
     let random_fee = random_balance();
     let tx_included = submit_ok_with_fee(
         &client,
-        &alice,
+        &author,
         register_project_message.clone(),
         random_fee,
     )
@@ -123,13 +123,14 @@ async fn register_org() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let alice = key_pair_from_string("Alice");
-    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
     let register_org_message = random_register_org_message();
     let random_fee = random_balance();
     let tx_included =
-        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
+        submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
 
     assert_eq!(
         tx_included.events[0],
@@ -148,7 +149,7 @@ async fn register_org() {
     assert!(org.projects.is_empty());
 
     assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
+        client.free_balance(&author.public()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
@@ -160,12 +161,10 @@ async fn register_user() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    // Must be distinct sender from other user registrations in tests to avoid
-    // AccountUserAssociated errors.
-    let sender = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let author = ed25519::Pair::from_string("//Alice", None).unwrap();
 
     let register_user_message = random_register_user_message();
-    let tx_included = submit_ok(&client, &sender, register_user_message.clone()).await;
+    let tx_included = submit_ok(&client, &author, register_user_message.clone()).await;
 
     assert_eq!(
         tx_included.events[0],
@@ -188,7 +187,7 @@ async fn register_user() {
     let unregister_user_message = message::UnregisterUser {
         user_id: register_user_message.user_id.clone(),
     };
-    let tx_unregister_applied = submit_ok(&client, &sender, unregister_user_message.clone()).await;
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_user_message.clone()).await;
     assert!(tx_unregister_applied.result.is_ok());
     assert!(
         !user_exists(&client, register_user_message.user_id.clone()).await,
