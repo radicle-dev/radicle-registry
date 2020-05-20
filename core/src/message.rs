@@ -92,6 +92,31 @@ pub struct UnregisterUser {
     pub user_id: Id,
 }
 
+/// Register a new member for an org on the Registry with the given user ID.
+///
+/// # State changes
+///
+/// If successful, the `user_id` is added to [crate::state::Org::members] of `org_id` .
+///
+/// # State-dependent validations
+///
+/// The identified org must exit.
+///
+/// The user associated with the author must be a member of the identified org.
+///
+/// A user associated with the `user_id` must exist.
+///
+/// The `user_id` must not already be a member of the org.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct RegisterMember {
+    // The member to register, unique in the org.
+    pub user_id: Id,
+
+    /// The org in which to register the member.
+    pub org_id: Id,
+}
+
 /// Register a project on the Radicle Registry with the given ID.
 ///
 /// # State changes

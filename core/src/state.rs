@@ -154,6 +154,16 @@ impl Org {
         }
         self
     }
+
+    /// Add the given user to the list of [Org::members].
+    /// Return a new Org with the new member included or the
+    /// same org if the org already contains that member.
+    pub fn add_member(mut self, user_id: Id) -> Org {
+        if !self.members.contains(&user_id) {
+            self.members.push(user_id);
+        }
+        self
+    }
 }
 
 /// # Storage
