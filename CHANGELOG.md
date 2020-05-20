@@ -8,6 +8,7 @@ Upcoming
 
 * Tx author needs to have an associated registered user to operate on Orgs
 * `Org::members` is now `Vec<Id>`
+* Rename `TransactionApplied` to `TransactionIncluded`
 * cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'
 * cli: Move key-pair related commands under the new `key-pair` command group
 * client: `TransactionApplied` result is now `Result<(), TransactionError>`

@@ -30,7 +30,8 @@ use std::convert::TryFrom;
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = GenericChainSpec<GenesisConfig>;
 
-const WASM_BINARY: &[u8] = include_bytes!("../../runtime/genesis_runtime.wasm");
+const FFNET_GENESIS_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/ffnet_genesis.wasm");
+const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/latest.wasm");
 
 /// Possible chains.
 ///
@@ -127,7 +128,7 @@ fn ffnet_genesis_config() -> GenesisConfig {
 
     GenesisConfig {
         system: Some(SystemConfig {
-            code: WASM_BINARY.to_vec(),
+            code: FFNET_GENESIS_RUNTIME_WASM.to_vec(),
             changes_trie_config: Default::default(),
         }),
         pallet_balances: Some(BalancesConfig { balances }),
@@ -160,7 +161,7 @@ fn dev_genesis_config() -> GenesisConfig {
     let sudo_key = account_id("Alice");
     GenesisConfig {
         system: Some(SystemConfig {
-            code: WASM_BINARY.to_vec(),
+            code: LATEST_RUNTIME_WASM.to_vec(),
             changes_trie_config: Default::default(),
         }),
         pallet_balances: Some(BalancesConfig { balances }),

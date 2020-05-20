@@ -16,6 +16,7 @@ See [`DEVELOPING.md`](./DEVELOPING.md) for developer information.
 - [Build from source](#build-from-source)
 - [Getting the Node](#getting-the-node)
 - [Running the node](#running-the-node)
+- [Chains](#chains)
 - [Using the Client](#using-the-client)
 - [Account Keys](#account-keys)
 - [Developing with the Client](#developing-with-the-client)
@@ -114,19 +115,28 @@ the [`RUST_LOG` environment variable][rust-log-docs].
 
 [rust-log-docs]: https://docs.rs/env_logger/0.7.1/env_logger/#enabling-logging
 
-### Dev
+Chains
+------
+
+The chain a node follows is set by the `--chain` flag. The following chains are
+supported.
+
+### `ffnet`
+
+The `ffnet` is our first public network for friends & family to participate.
+
+### `dev`
 
 The `dev` chain is intended for local development. The node runs an isolated
-network with a dummy proof-of-work.
+network with a dummy proof-of-work. The `dev` chain uses `./runtime/latest.wasm`
+as the genesis runtime.
 
-### Devnet
+### `devnet`
 
 We host a devnet that you can connect to. To join you need to use the most
 recent pre-built binary (see “Getting the node”).
 
-~~~
-radicle-registry-node --chain devnet
-~~~
+Like the `dev` chain, we use `./runtime/latest.wasm` as the genesis runtime.
 
 We are frequently resetting the devnet blockchain. If you local node is not
 syncing blocks download the most recent version and run `radicle-registry-node

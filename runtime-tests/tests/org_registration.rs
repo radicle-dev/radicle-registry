@@ -29,13 +29,13 @@ async fn register_org() {
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let random_fee = random_balance();
     let register_org_message = random_register_org_message();
-    let tx_applied =
+    let tx_included =
         submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
 
-    assert!(tx_applied
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
-    assert_eq!(tx_applied.result, Ok(()));
+    assert_eq!(tx_included.result, Ok(()));
 
     assert!(
         org_exists(&client, register_org_message.org_id.clone()).await,
@@ -93,12 +93,12 @@ async fn register_with_duplicated_org_id() {
     let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
-    let tx_applied_once = submit_ok(&client, &author, register_org_message.clone()).await;
-    assert_eq!(tx_applied_once.result, Ok(()));
+    let tx_included_once = submit_ok(&client, &author, register_org_message.clone()).await;
+    assert_eq!(tx_included_once.result, Ok(()));
 
-    let tx_applied_twice = submit_ok(&client, &author, register_org_message.clone()).await;
+    let tx_included_twice = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(
-        tx_applied_twice.result,
+        tx_included_twice.result,
         Err(RegistryError::DuplicateOrgId.into())
     );
 }
@@ -110,12 +110,12 @@ async fn unregister_org() {
 
     let register_org_message = random_register_org_message();
 
-    let tx_applied = submit_ok(&client, &author, register_org_message.clone()).await;
+    let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
 
-    assert!(tx_applied
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
-    assert_eq!(tx_applied.result, Ok(()));
+    assert_eq!(tx_included.result, Ok(()));
 
     assert!(
         org_exists(&client, register_org_message.org_id.clone()).await,
@@ -158,12 +158,12 @@ async fn unregister_org_bad_actor() {
     let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
-    let tx_applied = submit_ok(&client, &author, register_org_message.clone()).await;
+    let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
 
-    assert!(tx_applied
+    assert!(tx_included
         .events
         .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
-    assert_eq!(tx_applied.result, Ok(()));
+    assert_eq!(tx_included.result, Ok(()));
 
     assert!(
         org_exists(&client, register_org_message.org_id.clone()).await,
