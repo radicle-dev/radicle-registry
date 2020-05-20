@@ -24,7 +24,7 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_org() {
     let client = Client::new_emulator();
-    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let random_fee = random_balance();
@@ -48,11 +48,11 @@ async fn register_org() {
         .unwrap()
         .unwrap();
     assert_eq!(org.id, register_org_message.org_id);
-    assert_eq!(org.members, vec![alice.public()]);
+    assert_eq!(org.members, vec![author.public()]);
     assert!(org.projects.is_empty());
 
     assert_eq!(
-        client.free_balance(&alice.public()).await.unwrap(),
+        client.free_balance(&author.public()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );

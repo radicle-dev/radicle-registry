@@ -123,7 +123,7 @@ async fn register_org() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let (author, _) = key_pair_with_associated_user(&client).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
@@ -145,7 +145,7 @@ async fn register_org() {
     assert!(opt_org.is_some(), "Registered org not found in orgs list");
     let org = opt_org.unwrap();
     assert_eq!(org.id, register_org_message.org_id);
-    assert_eq!(org.members, vec![alice.public()]);
+    assert_eq!(org.members, vec![author.public()]);
     assert!(org.projects.is_empty());
 
     assert_eq!(
