@@ -52,10 +52,10 @@ macro_rules! new_full_start {
             .with_select_chain(|_config, backend| {
                 Ok(sc_client::LongestChain::new(backend.clone()))
             })?
-            .with_transaction_pool(|config, client, _fetcher| {
+            .with_transaction_pool(|options, client, _fetcher| {
                 let pool_api = sc_transaction_pool::FullChainApi::new(client);
                 let pool =
-                    sc_transaction_pool::BasicPool::new(config, std::sync::Arc::new(pool_api));
+                    sc_transaction_pool::BasicPool::new(options, std::sync::Arc::new(pool_api));
                 Ok(pool)
             })?
             .with_import_queue(|config, client, select_chain, _transaction_pool| {
@@ -358,8 +358,9 @@ fn spawn_metric_task(
     name: &str,
     task: impl Future<Output = ()> + Send + 'static,
 ) {
-    let task_name = format!("{}_metric_notifier", name);
-    service.spawn_task(task_name, task);
+    // TODO turn into passing a string after upgrade
+    let task_name = Box::leak(format!("{}_metric_notifier", name).into_boxed_str());
+    service.spawn_task(&*task_name, task);
 }
 
 /// Build a new service to be used for one-shot commands.

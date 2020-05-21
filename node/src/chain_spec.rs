@@ -22,7 +22,7 @@ use crate::pow::config::Config as PowAlgConfig;
 use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 };
-use sc_service::GenericChainSpec;
+use sc_service::{ChainType, GenericChainSpec};
 use sc_telemetry::TelemetryEndpoints;
 use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
@@ -59,6 +59,7 @@ fn dev() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Radicle Registry isolated development",
         "dev",
+        ChainType::Development,
         dev_genesis_config,
         vec![],      // boot nodes
         None,        // telemetry endpoints
@@ -72,6 +73,7 @@ fn devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Radicle Registry devnet",
         "devnet",
+        ChainType::Custom("devnet".to_string()),
         dev_genesis_config,
         // boot nodes
         // From key 000...001
@@ -91,6 +93,7 @@ fn ffnet(enable_telemetry: bool) -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Radicle Registry ffnet",
         "ffnet",
+        ChainType::Custom("ffnet".to_string()),
         ffnet_genesis_config,
         // Addresses are defined here: https://github.com/radicle-dev/infra/tree/master/registry/ffnet
         vec![
@@ -140,6 +143,7 @@ fn local_devnet() -> ChainSpec {
     GenericChainSpec::from_genesis(
         "Radicle Registry local devnet",
         "local-devnet",
+        ChainType::Development,
         dev_genesis_config,
         vec![], // boot nodes
         None,   // telemetry endpoints
