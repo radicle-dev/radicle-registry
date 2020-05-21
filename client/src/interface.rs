@@ -21,7 +21,7 @@ use futures::future::BoxFuture;
 
 pub use radicle_registry_core::*;
 
-pub use radicle_registry_runtime::{BlockNumber, Hash, Header};
+pub use radicle_registry_runtime::{BlockNumber, Hash, Header, RuntimeVersion};
 
 pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
@@ -143,4 +143,6 @@ pub trait ClientT {
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error>;
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
 }

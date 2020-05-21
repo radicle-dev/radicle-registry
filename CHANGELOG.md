@@ -52,6 +52,7 @@ Upcoming
 
 ### Addition
 
+* cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
 * cli: Mutually support local account names where only SS58 address were
   supported as params.

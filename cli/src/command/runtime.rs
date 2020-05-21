@@ -26,6 +26,9 @@ pub enum Command {
     ///   * the `spec_version` of the given wasm runtime must be greater than the chain runtime's.
     ///   * the `spec_name` must match between the wasm runtime and the chain runtime.
     Update(Update),
+
+    /// Show the version of the on-chain runtime.
+    Version(ShowVersion),
 }
 
 #[async_trait::async_trait]
@@ -33,6 +36,7 @@ impl CommandT for Command {
     async fn run(self) -> Result<(), CommandError> {
         match self {
             Command::Update(cmd) => cmd.run().await,
+            Command::Version(cmd) => cmd.run().await,
         }
     }
 }
@@ -69,6 +73,27 @@ impl CommandT for Update {
 
         update_runtime_fut.await?.result?;
         println!("✓ The new on-chain runtime is now published.");
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct ShowVersion {
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ShowVersion {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let v = client.onchain_runtime_version().await?;
+        println!("On-chain runtime version:");
+        println!("  spec_version: {}", v.spec_version);
+        println!("  impl_version: {}", v.impl_version);
+        println!("  authoring_version: {}", v.authoring_version);
+        println!("  spec_name: {}", v.spec_name);
+        println!("  impl_name: {}", v.impl_name);
         Ok(())
     }
 }

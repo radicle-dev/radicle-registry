@@ -34,7 +34,7 @@ use sp_core::ed25519;
 use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 use sp_runtime::{create_runtime_str, generic, Perbill};
 use sp_std::prelude::*;
-use sp_version::RuntimeVersion;
+pub use sp_version::RuntimeVersion;
 
 pub mod fees;
 pub mod registry;
