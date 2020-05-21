@@ -27,6 +27,7 @@ pub mod key_pair;
 pub mod org;
 pub mod other;
 pub mod project;
+pub mod runtime;
 pub mod user;
 
 fn parse_account_id(data: &str) -> Result<AccountId, String> {
