@@ -16,7 +16,7 @@
 //! Define trait for client backends and provide emulator and remote node implementation
 use futures::future::BoxFuture;
 
-pub use radicle_registry_runtime::{Hash, Header, UncheckedExtrinsic};
+pub use radicle_registry_runtime::{Hash, Header, RuntimeVersion, UncheckedExtrinsic};
 
 use crate::interface::*;
 
@@ -72,4 +72,7 @@ pub trait Backend {
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;
+
+    /// Get the on-chain runtime version.
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
 }

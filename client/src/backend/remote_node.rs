@@ -212,6 +212,15 @@ impl backend::Backend for RemoteNode {
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
     }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        self.rpc
+            .state
+            .runtime_version(None)
+            .compat()
+            .await
+            .map_err(Into::into)
+    }
 }
 
 /// Return all the events belonging to the transaction included in the given block.

@@ -25,7 +25,7 @@ use thiserror::Error as ThisError;
 pub mod key_pair_storage;
 
 mod command;
-use command::{account, key_pair, org, other, project, user};
+use command::{account, key_pair, org, other, project, runtime, user};
 
 /// The type that captures the command line.
 #[derive(StructOpt, Clone)]
@@ -107,6 +107,7 @@ pub enum Command {
     KeyPair(key_pair::Command),
     Org(org::Command),
     Project(project::Command),
+    Runtime(runtime::Command),
     User(user::Command),
 
     #[structopt(flatten)]
@@ -122,6 +123,7 @@ impl CommandT for Command {
             Command::Org(cmd) => cmd.run().await,
             Command::Project(cmd) => cmd.run().await,
             Command::User(cmd) => cmd.run().await,
+            Command::Runtime(cmd) => cmd.run().await,
             Command::Other(cmd) => cmd.run().await,
         }
     }

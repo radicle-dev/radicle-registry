@@ -96,4 +96,8 @@ impl backend::Backend for RemoteNodeWithExecutor {
     fn get_genesis_hash(&self) -> Hash {
         self.backend.get_genesis_hash()
     }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        self.backend.onchain_runtime_version().await
+    }
 }

@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* cli: Move `update-runtime` to `runtime update`
 * Rename `TransactionApplied` to `TransactionIncluded`
 * cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'
 * cli: Move key-pair related commands under the new `key-pair` command group
@@ -51,6 +52,7 @@ Upcoming
 
 ### Addition
 
+* cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
 * cli: Mutually support local account names where only SS58 address were
   supported as params.

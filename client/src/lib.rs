@@ -305,6 +305,10 @@ impl ClientT for Client {
         self.fetch_map_value::<registry::store::Checkpoints, _, _>(id)
             .await
     }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        self.backend.onchain_runtime_version().await
+    }
 }
 
 #[cfg(test)]

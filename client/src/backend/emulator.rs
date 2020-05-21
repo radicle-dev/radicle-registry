@@ -23,7 +23,8 @@ use sp_runtime::{traits::Hash as _, BuildStorage as _, Digest};
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
-    registry, runtime_api, AccountId, BalancesConfig, GenesisConfig, Hash, Hashing, Header, Runtime,
+    registry, runtime_api, AccountId, BalancesConfig, GenesisConfig, Hash, Hashing, Header,
+    Runtime, RuntimeVersion,
 };
 
 use crate::backend;
@@ -196,6 +197,10 @@ impl backend::Backend for Emulator {
 
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
+    }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        panic!("Not implemented");
     }
 }
 
