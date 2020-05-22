@@ -24,7 +24,7 @@ mod emulator;
 mod remote_node;
 mod remote_node_with_executor;
 
-pub use emulator::{Emulator, BLOCK_AUTHOR as EMULATOR_BLOCK_AUTHOR};
+pub use emulator::{Emulator, EmulatorControl, BLOCK_AUTHOR as EMULATOR_BLOCK_AUTHOR};
 pub use remote_node::RemoteNode;
 pub use remote_node_with_executor::RemoteNodeWithExecutor;
 
