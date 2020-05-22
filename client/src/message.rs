@@ -223,6 +223,31 @@ impl Message for message::TransferFromOrg {
     }
 }
 
+impl Message for message::UpdateRuntime {
+    type Result = Result<(), TransactionError>;
+
+    /// The only unequivocal sign we get that a wasm update was successful is the
+    /// `RawEvent::CodeUpdated` event. Anything else is considered a failed update.
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let error: TransactionError = RegistryError::FailedChainRuntimeUpdate.into();
+        find_event(&events, "System", |event| match event {
+            Event::system(system_event) => match system_event {
+                frame_system::RawEvent::CodeUpdated => Some(Ok(())),
+                _ => Some(Err(error)),
+            },
+            _ => Some(Err(error)),
+        })
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        let set_code_call: RuntimeCall = frame_system::Call::set_code(self.code).into();
+        let sudo_call: pallet_sudo::Call<Runtime> =
+            pallet_sudo::Call::sudo(Box::new(set_code_call));
+
+        sudo_call.into()
+    }
+}
+
 /// Extract the dispatch result of an extrinsic from the extrinsic events.
 ///
 /// Looks for the [frame_system::Event] in the list of events and returns the inner result based on

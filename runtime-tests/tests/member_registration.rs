@@ -23,7 +23,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn register_member() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, author_id) = key_pair_with_associated_user(&client).await;
     let (_, member_user_id) = key_pair_with_associated_user(&client).await;
 
@@ -77,7 +77,7 @@ async fn register_member() {
 
 #[async_std::test]
 async fn register_member_with_inexistent_org() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, user_id) = key_pair_with_associated_user(&client).await;
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
@@ -101,7 +101,7 @@ async fn register_member_with_inexistent_org() {
 
 #[async_std::test]
 async fn register_member_with_bad_actor() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (good_actor, good_actor_id) = key_pair_with_associated_user(&client).await;
     let (bad_actor, bad_actor_id) = key_pair_with_associated_user(&client).await;
 
@@ -146,7 +146,7 @@ async fn register_member_with_bad_actor() {
 
 #[async_std::test]
 async fn register_duplicate_member() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, author_id) = key_pair_with_associated_user(&client).await;
 
     // Register the org.
@@ -196,7 +196,7 @@ async fn register_duplicate_member() {
 
 #[async_std::test]
 async fn register_nonexistent_user() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, author_id) = key_pair_with_associated_user(&client).await;
 
     // Register the org.

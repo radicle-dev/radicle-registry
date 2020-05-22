@@ -19,11 +19,12 @@ use futures::future::BoxFuture;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use sp_runtime::{traits::Hash as _, BuildStorage as _, Digest};
+use sp_runtime::{traits::Block as _, traits::Hash as _, BuildStorage as _, Digest};
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
-    registry, runtime_api, AccountId, BalancesConfig, GenesisConfig, Hash, Hashing, Header, Runtime,
+    registry, runtime_api, AccountId, BalancesConfig, Block, EventRecord, GenesisConfig, Hash,
+    Hashing, Header, Runtime, RuntimeVersion,
 };
 
 use crate::backend;
@@ -31,6 +32,8 @@ use crate::interface::*;
 
 /// [backend::Backend] implementation using native runtime code and in memory state through
 /// [sp_io::TestExternalities] to emulate the ledger.
+///
+/// The clone of an [Emulator] will share the state with the original emulator using a [Mutex].
 ///
 /// # Differences with real backend
 ///
@@ -45,6 +48,35 @@ pub struct Emulator {
     genesis_hash: Hash,
     inherent_data_providers: sp_inherents::InherentDataProviders,
     state: Arc<Mutex<EmulatorState>>,
+}
+
+/// Control handle to manipulate the state of [Emulator].
+///
+/// Construct this with [Emulator::control].
+///
+/// Cloning [EmulatorControl] will create another handle to manipulate the same emulator.
+#[derive(Clone)]
+pub struct EmulatorControl(Emulator);
+
+impl EmulatorControl {
+    /// Adds `count` number of empty blocks to the emulator chain.
+    ///
+    /// ```
+    /// # #[async_std::main]
+    /// # async fn main () {
+    /// # use radicle_registry_client::{Client, ClientT};
+    /// let (client, emulator) = Client::new_emulator();
+    /// let header1 = client.block_header_best_chain().await.unwrap();
+    /// emulator.add_blocks(3);
+    /// let header2 = client.block_header_best_chain().await.unwrap();
+    /// assert_eq!(header2.number, header1.number + 3)
+    /// # }
+    /// ```
+    pub fn add_blocks(&self, count: u32) {
+        for _ in 0..count {
+            self.0.add_block(vec![]);
+        }
+    }
 }
 
 /// Mutable state of the emulator.
@@ -97,6 +129,44 @@ impl Emulator {
             })),
         }
     }
+
+    pub fn control(&self) -> EmulatorControl {
+        EmulatorControl(self.clone())
+    }
+
+    /// Add a block with `extrinsics` to the chain. Returns the added block and a list of events
+    /// recorded during the execution of the block.
+    fn add_block(&self, extrinsics: Vec<backend::UncheckedExtrinsic>) -> (Block, Vec<EventRecord>) {
+        let mut state = self.state.lock().unwrap();
+
+        let new_tip_header_init = Header {
+            parent_hash: state.tip_header.hash(),
+            number: state.tip_header.number + 1,
+            ..state.tip_header.clone()
+        };
+
+        let (block, event_records) = state.test_ext.execute_with(move || {
+            runtime_api::initialize_block(&new_tip_header_init);
+
+            let inherent_data = self.inherent_data_providers.create_inherent_data().unwrap();
+            let inherents = runtime_api::inherent_extrinsics(inherent_data);
+            let extrinsics = [inherents, extrinsics].concat();
+
+            for extrinsic in &extrinsics {
+                let _apply_result = runtime_api::apply_extrinsic(extrinsic.clone()).unwrap();
+            }
+
+            let header = runtime_api::finalize_block();
+            let event_records = frame_system::Module::<Runtime>::events();
+
+            (Block { header, extrinsics }, event_records)
+        });
+
+        state.tip_header = block.header.clone();
+        state.headers.insert(block.hash(), block.header.clone());
+
+        (block, event_records)
+    }
 }
 
 #[async_trait::async_trait]
@@ -106,45 +176,16 @@ impl backend::Backend for Emulator {
         extrinsic: backend::UncheckedExtrinsic,
     ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
-        let mut state = self.state.lock().unwrap();
+        let (block, event_records) = self.add_block(vec![extrinsic]);
 
-        let new_tip_header_init = Header {
-            parent_hash: state.tip_header.hash(),
-            number: state.tip_header.number + 1,
-            ..state.tip_header.clone()
-        };
-
-        let (new_tip_header, events) = state.test_ext.execute_with(move || {
-            runtime_api::initialize_block(&new_tip_header_init);
-
-            let inherent_data = self.inherent_data_providers.create_inherent_data().unwrap();
-            let inherents = runtime_api::inherent_extrinsics(inherent_data);
-            for inherent in inherents {
-                let _apply_result = runtime_api::apply_extrinsic(inherent).unwrap();
-            }
-
-            let event_start_index = frame_system::Module::<Runtime>::event_count();
-            // We ignore the dispatch result. It is provided through the system event
-            // TODO Pass on apply errors instead of unwrapping.
-            let _apply_result = runtime_api::apply_extrinsic(extrinsic).unwrap();
-            let events = frame_system::Module::<Runtime>::events()
-                .into_iter()
-                .skip(event_start_index as usize)
-                .map(|event_record| event_record.event)
-                .collect::<Vec<Event>>();
-
-            let header = runtime_api::finalize_block();
-            (header, events)
-        });
-
-        state.tip_header = new_tip_header.clone();
-        let new_tip_hash = new_tip_header.hash();
-        state.headers.insert(new_tip_hash, new_tip_header);
+        let events =
+            crate::backend::remote_node::extract_transaction_events(tx_hash, &block, event_records)
+                .unwrap();
 
         Ok(Box::pin(futures::future::ready(Ok(
             backend::TransactionIncluded {
                 tx_hash,
-                block: new_tip_hash,
+                block: block.hash(),
                 events,
             },
         ))))
@@ -196,6 +237,10 @@ impl backend::Backend for Emulator {
 
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
+    }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        panic!("Not implemented");
     }
 }
 

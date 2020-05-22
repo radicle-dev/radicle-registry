@@ -23,7 +23,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn register_project() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let project_hash = H256::random();
@@ -106,7 +106,7 @@ async fn register_project() {
 
 #[async_std::test]
 async fn register_project_with_inexistent_org() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let project_hash = H256::random();
@@ -131,7 +131,7 @@ async fn register_project_with_inexistent_org() {
 
 #[async_std::test]
 async fn register_project_with_duplicate_id() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let checkpoint_id = submit_ok(
@@ -195,7 +195,7 @@ async fn register_project_with_duplicate_id() {
 
 #[async_std::test]
 async fn register_project_with_bad_checkpoint() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let checkpoint_id = H256::random();
@@ -227,7 +227,7 @@ async fn register_project_with_bad_checkpoint() {
 
 #[async_std::test]
 async fn register_project_with_bad_actor() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (good_actor, _) = key_pair_with_associated_user(&client).await;
     let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 

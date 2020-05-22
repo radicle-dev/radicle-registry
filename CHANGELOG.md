@@ -8,6 +8,9 @@ Upcoming
 
 * Tx author needs to have an associated registered user to operate on Orgs
 * `Org::members` is now `Vec<Id>`
+* client: `Client::new_emulator()` now returns a pair of a `Client` and
+  `EmulatorControl`.
+* cli: Move `update-runtime` to `runtime update`
 * Rename `TransactionApplied` to `TransactionIncluded`
 * cli: Rename the key-pair storage file from 'accounts.json' to 'key-pairs.json'
 * cli: Move key-pair related commands under the new `key-pair` command group
@@ -52,6 +55,9 @@ Upcoming
 * Polkadot telemetry was removed
 
 ### Addition
+
+* cli: Add `runtime version` command to check the on-chain runtime version
+* cli: Add `update-runtime` command to update the on-chain runtime
 * cli: Mutually support local account names where only SS58 address were
   supported as params.
 * Add `user list` and `user show` CLI commands

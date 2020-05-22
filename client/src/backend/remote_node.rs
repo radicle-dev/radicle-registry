@@ -146,7 +146,7 @@ impl RemoteNode {
         let block = opt_block.ok_or_else(|| {
             Error::from("Block that should include submitted transaction does not exist")
         })?;
-        extract_transaction_events(tx_hash, block, event_records)
+        extract_transaction_events(tx_hash, &block, event_records)
             .ok_or_else(|| Error::from("Failed to extract transaction events"))
     }
 }
@@ -212,6 +212,15 @@ impl backend::Backend for RemoteNode {
     fn get_genesis_hash(&self) -> Hash {
         self.genesis_hash
     }
+
+    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        self.rpc
+            .state
+            .runtime_version(None)
+            .compat()
+            .await
+            .map_err(Into::into)
+    }
 }
 
 /// Return all the events belonging to the transaction included in the given block.
@@ -222,9 +231,9 @@ impl backend::Backend for RemoteNode {
 ///
 /// Returns `None` if no events for the transaction were found. This should be treated as an error
 /// since the events should at least include the system event for the transaction.
-fn extract_transaction_events(
+pub(crate) fn extract_transaction_events(
     tx_hash: TxHash,
-    block: Block,
+    block: &Block,
     event_records: Vec<EventRecord>,
 ) -> Option<Vec<Event>> {
     let xt_index = block

@@ -23,7 +23,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn register_user() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
 
@@ -58,7 +58,7 @@ async fn register_user() {
 
 #[async_std::test]
 async fn register_user_with_duplicate_id() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let register_user_message = random_register_user_message();
 
@@ -74,7 +74,7 @@ async fn register_user_with_duplicate_id() {
 
 #[async_std::test]
 async fn register_user_with_already_associated_account() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let register_first_user_message = random_register_user_message();
 
@@ -92,7 +92,7 @@ async fn register_user_with_already_associated_account() {
 
 #[async_std::test]
 async fn unregister_user() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let register_user_message = random_register_user_message();
 
@@ -130,7 +130,7 @@ async fn unregister_user() {
 
 #[async_std::test]
 async fn unregister_user_with_invalid_sender() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
     let register_user_message = random_register_user_message();
 

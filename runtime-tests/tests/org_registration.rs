@@ -23,7 +23,7 @@ use radicle_registry_test_utils::*;
 
 #[async_std::test]
 async fn register_org() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, user_id) = key_pair_with_associated_user(&client).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
@@ -62,7 +62,7 @@ async fn register_org() {
 /// have a registered user associated to its account id.
 #[async_std::test]
 async fn register_org_no_user() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
 
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
@@ -89,7 +89,7 @@ async fn register_org_no_user() {
 
 #[async_std::test]
 async fn register_with_duplicated_org_id() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
@@ -105,7 +105,7 @@ async fn register_with_duplicated_org_id() {
 
 #[async_std::test]
 async fn unregister_org() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let register_org_message = random_register_org_message();
@@ -154,7 +154,7 @@ async fn unregister_org() {
 
 #[async_std::test]
 async fn unregister_org_bad_actor() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
     let register_org_message = random_register_org_message();
 
@@ -203,7 +203,7 @@ async fn unregister_org_bad_actor() {
 
 #[async_std::test]
 async fn unregister_org_with_projects() {
-    let client = Client::new_emulator();
+    let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();

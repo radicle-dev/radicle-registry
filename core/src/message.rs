@@ -19,6 +19,7 @@
 extern crate alloc;
 
 use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectName, H256};
+use alloc::prelude::v1::Vec;
 use parity_scale_codec::{Decode, Encode};
 
 /// Registers an org on the Radicle Registry with the given ID.
@@ -232,4 +233,23 @@ pub struct TransferFromOrg {
 pub struct Transfer {
     pub recipient: AccountId,
     pub balance: Balance,
+}
+
+/// Attempts to update the on-chain runtime with the new given one.
+/// The `code` must be a valid WASM module and adhere to the substrate runtime API.
+///
+/// # State changes
+///
+/// If successful, the given `code` will be the new one herein.
+///
+/// # State-dependent validations
+///
+/// The tx author must be the chain's sudo key
+///
+/// The `spec_version` of the given runtime code needs to be greater than
+/// the `spec_version` of the chain runtime.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct UpdateRuntime {
+    pub code: Vec<u8>,
 }

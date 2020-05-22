@@ -198,7 +198,7 @@ Developing with the Client
 --------------------------
 
 For development you can create a ledger emulator with
-`radicle-registry-client::Client::new_emulator()`. Instead of connecting to a
+`radicle_registry_client::Client::new_emulator()`. Instead of connecting to a
 node this client runs the ledger in memory. See the API docs for more
 information.
 
