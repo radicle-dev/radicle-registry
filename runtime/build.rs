@@ -5,6 +5,10 @@ use substrate_wasm_builder_runner::WasmBuilder;
 const BUILD_WASM_BINARY_OUR_DIR_ENV: &str = "BUILD_WASM_BINARY_OUT_DIR";
 
 fn main() {
+    println!(
+        "cargo:rerun-if-env-changed={}",
+        BUILD_WASM_BINARY_OUR_DIR_ENV
+    );
     if let Some(wasm_binary_dir) = env::var_os(BUILD_WASM_BINARY_OUR_DIR_ENV) {
         build_wasm_runtime_in_dir(&wasm_binary_dir);
     }
