@@ -66,7 +66,6 @@ pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
-    frame_system::CheckVersion<Runtime>,
     frame_system::CheckGenesis<Runtime>,
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
@@ -81,8 +80,8 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
     impl_name: create_runtime_str!("radicle-registry"),
-    spec_version: 4,
-    impl_version: 4,
+    spec_version: 6,
+    impl_version: 0,
     apis: runtime_api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.
     authoring_version: 3,

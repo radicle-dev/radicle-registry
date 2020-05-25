@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* cli: Binary update required to connect to the on-chain runtime with `spec_version` 6,
+  no longer including the `CheckVersion` signed extension.
 * client: `Client::new_emulator()` now returns a pair of a `Client` and
   `EmulatorControl`.
 * cli: Move `update-runtime` to `runtime update`
