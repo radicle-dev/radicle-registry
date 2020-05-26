@@ -274,25 +274,19 @@ decl_module! {
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
-            fn can_be_unregistered(user: state::User, sender: AccountId) -> bool {
-                user.account_id == sender && user.projects.is_empty()
-            }
-
             let sender = ensure_signed(origin)?;
+            let sender_user = get_user_with_account(sender).ok_or(RegistryError::InexistentUser)?;
 
-            match store::Users::get(message.user_id.clone()) {
-                None => Err(RegistryError::InexistentUser.into()),
-                Some(user) => {
-                    if can_be_unregistered(user, sender) {
-                        store::Users::remove(message.user_id.clone());
-                        Self::deposit_event(Event::UserUnregistered(message.user_id));
-                        Ok(())
-                    }
-                    else {
-                        Err(RegistryError::UnregisterableUser.into())
-                    }
-                }
+            if sender_user.id != message.user_id {
+                return Err(RegistryError::InsufficientSenderPermissions.into());
             }
+            if find_org(|org| org.members.contains(&sender_user.id)).is_some() {
+                return Err(RegistryError::UnregisterableUser.into());
+            }
+
+            store::Users::remove(message.user_id.clone());
+            Self::deposit_event(Event::UserUnregistered(message.user_id));
+            Ok(())
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
@@ -422,6 +416,12 @@ pub fn get_user_with_account(account_id: AccountId) -> Option<User> {
     store::Users::iter()
         .find(|(_, user)| user.account_id == account_id)
         .map(|(id, user)| User::new(id, user))
+}
+
+pub fn find_org(predicate: impl Fn(&state::Org) -> bool) -> Option<state::Org> {
+    store::Orgs::iter()
+        .find(|(_, org)| predicate(org))
+        .map(|(_, org)| org)
 }
 
 /// Check whether the user associated with the given account_id is a member of the given org.
