@@ -20,24 +20,15 @@
 
 mod chain_spec;
 mod cli;
-mod command;
 mod logger;
 mod pow;
 mod service;
 
-fn main() {
-    let version = sc_cli::VersionInfo {
-        name: "Radicle Registry Node",
-        commit: env!("VERGEN_SHA_SHORT"),
-        version: "ff.0",
-        executable_name: "radicle-registry",
-        author: "Monadic GmbH",
-        description: "Radicle Registry Node",
-        support_url: "http://github.com/radicle-dev/radicle-registry/issues",
-        copyright_start_year: 2019,
-    };
+use crate::cli::Cli;
+use sc_cli::SubstrateCli;
 
-    match command::run(version) {
+fn main() {
+    match Cli::from_args().run() {
         Ok(_) => (),
         Err(error) => {
             log::error!("{}", error);

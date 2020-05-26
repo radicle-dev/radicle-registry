@@ -31,12 +31,7 @@ impl<'a> TryFrom<&'a Configuration> for Config {
     type Error = &'static str;
 
     fn try_from(config: &'a Configuration) -> Result<Self, Self::Error> {
-        config
-            .chain_spec
-            .as_ref()
-            .ok_or("configuration does not contain chain spec")?
-            .properties()
-            .try_into()
+        config.chain_spec.as_ref().properties().try_into()
     }
 }
 
