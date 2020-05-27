@@ -56,7 +56,8 @@ async fn register_project() {
     let initial_balance = 1000;
     transfer(&client, &author, org.account_id, initial_balance).await;
 
-    let register_project_message = random_register_project_message(org_id.clone(), checkpoint_id);
+    let project_domain = ProjectDomain::Org(org_id.clone());
+    let register_project_message = random_register_project_message(&project_domain, checkpoint_id);
     let project_name = register_project_message.project_name.clone();
     let random_fee = random_balance();
     let tx_included = submit_ok_with_fee(
@@ -69,12 +70,12 @@ async fn register_project() {
     assert_eq!(tx_included.result, Ok(()));
 
     let project = client
-        .get_project(project_name.clone(), org_id.clone())
+        .get_project(project_name.clone(), project_domain.clone())
         .await
         .unwrap()
         .unwrap();
     assert_eq!(project.name.clone(), project_name.clone());
-    assert_eq!(project.org_id.clone(), org_id.clone());
+    assert_eq!(project.domain.clone(), project_domain.clone());
     assert_eq!(
         project.current_cp.clone(),
         register_project_message.checkpoint_id
@@ -83,7 +84,7 @@ async fn register_project() {
 
     assert_eq!(
         tx_included.events[0],
-        RegistryEvent::ProjectRegistered(project_name.clone(), org_id.clone()).into()
+        RegistryEvent::ProjectRegistered(project_name.clone(), project_domain.clone()).into()
     );
 
     let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
@@ -95,7 +96,7 @@ async fn register_project() {
 
     assert!(
         client
-            .get_project(project_name.clone(), org_id.clone())
+            .get_project(project_name.clone(), project_domain.clone())
             .await
             .unwrap()
             .is_some(),

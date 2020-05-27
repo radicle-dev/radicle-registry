@@ -51,7 +51,7 @@ pub async fn submit_ok<Message_: Message>(
 }
 
 pub async fn create_project_with_checkpoint(
-    org_id: Id,
+    domain: &ProjectDomain,
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
@@ -67,23 +67,33 @@ pub async fn create_project_with_checkpoint(
     .result
     .unwrap();
 
-    let register_org_message = message::RegisterOrg {
-        org_id: org_id.clone(),
+    let domain_account = match domain {
+        ProjectDomain::Org(org_id) => {
+            let register_org_message = message::RegisterOrg {
+                org_id: org_id.clone(),
+            };
+            submit_ok(&client, &author, register_org_message).await;
+            let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+            org.account_id
+        }
+        ProjectDomain::User(user_id) => {
+            let register_user_message = message::RegisterUser {
+                user_id: user_id.clone(),
+            };
+            submit_ok(&client, &author, register_user_message).await;
+            let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
+            user.account_id
+        }
     };
-    submit_ok(&client, &author, register_org_message.clone()).await;
 
-    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    // The org needs funds to submit transactions.
-    transfer(&client, &author, org.account_id, 1000).await;
+    // The domain account needs funds to submit transactions.
+    transfer(&client, &author, domain_account, 1000).await;
 
-    let register_project_message = random_register_project_message(org_id, checkpoint_id);
+    let register_project_message = random_register_project_message(domain, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
-        .get_project(
-            register_project_message.project_name,
-            register_org_message.org_id,
-        )
+        .get_project(register_project_message.project_name, domain.clone())
         .await
         .unwrap()
         .unwrap()
@@ -119,12 +129,12 @@ pub fn random_register_org_message() -> message::RegisterOrg {
 
 /// Create a [message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
-    org_id: Id,
+    domain: &ProjectDomain,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
     message::RegisterProject {
         project_name: random_project_name(),
-        org_id,
+        project_domain: domain.clone(),
         checkpoint_id,
         metadata: Bytes128::random(),
     }

@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* client: Use `ProjectDomain::Org(id)` istead of just `id` on project-related references
 * Only unregistered a user if not a member of any org
 * Tx author needs to have an associated registered user to operate on Orgs
 * `Org::members` is now `Vec<Id>`
