@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* Only unregistered a user if not a member of any org
 * Tx author needs to have an associated registered user to operate on Orgs
 * `Org::members` is now `Vec<Id>`
 * client: `Client::new_emulator()` now returns a pair of a `Client` and
