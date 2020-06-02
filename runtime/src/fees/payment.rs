@@ -65,13 +65,13 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
             // Transactions payed by the org
             RegistryCall::register_project(m) => match &m.project_domain {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
-                ProjectDomain::User(_user_id) => panic!("TODO(nuno)"),
+                ProjectDomain::User(_user_id) => author,
             },
             RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::set_checkpoint(m) => match &m.project_domain {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
-                ProjectDomain::User(_user_id) => panic!("TODO(nuno)"),
+                ProjectDomain::User(_user_id) => author,
             },
             RegistryCall::register_member(m) => org_payer_account(author, &m.org_id),
 

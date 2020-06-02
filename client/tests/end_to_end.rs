@@ -29,94 +29,89 @@ async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let (author, _) = key_pair_with_associated_user(&client).await;
+    let author = random_key_pair(&client).await;
 
-    let project_hash = H256::random();
-    let checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash,
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    let org_id = random_id();
-    let register_org_message = message::RegisterOrg {
-        org_id: org_id.clone(),
-    };
-    let org_registered_tx = submit_ok(&client, &author, register_org_message.clone()).await;
-    assert_eq!(org_registered_tx.result, Ok(()));
-
-    // The org needs funds to submit transactions.
-    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    let initial_balance = 1000;
-    transfer(&client, &author, org.account_id, initial_balance).await;
-
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let register_project_message = random_register_project_message(&project_domain, checkpoint_id);
-    let project_name = register_project_message.project_name.clone();
-    let random_fee = random_balance();
-    let tx_included = submit_ok_with_fee(
-        &client,
-        &author,
-        register_project_message.clone(),
-        random_fee,
-    )
-    .await;
-    assert_eq!(tx_included.result, Ok(()));
-
-    let project = client
-        .get_project(project_name.clone(), project_domain.clone())
+    for domain in generate_project_domains(&client, &author).await {
+        let project_hash = H256::random();
+        let checkpoint_id = submit_ok(
+            &client,
+            &author,
+            message::CreateCheckpoint {
+                project_hash,
+                previous_checkpoint_id: None,
+            },
+        )
         .await
-        .unwrap()
+        .result
         .unwrap();
-    assert_eq!(project.name.clone(), project_name.clone());
-    assert_eq!(project.domain.clone(), project_domain.clone());
-    assert_eq!(
-        project.current_cp.clone(),
-        register_project_message.checkpoint_id
-    );
-    assert_eq!(project.metadata.clone(), register_project_message.metadata);
 
-    assert_eq!(
-        tx_included.events[0],
-        RegistryEvent::ProjectRegistered(project_name.clone(), project_domain.clone()).into()
-    );
+        let initial_balance = match &domain {
+            ProjectDomain::Org(org_id) => {
+                let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+                client.free_balance(&org.account_id).await.unwrap()
+            }
+            ProjectDomain::User(user_id) => {
+                let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
+                client.free_balance(&user.account_id).await.unwrap()
+            }
+        };
 
-    let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
-    let checkpoint_ = state::Checkpoint {
-        parent: None,
-        hash: project_hash,
-    };
-    assert_eq!(checkpoint, checkpoint_);
+        let random_fee = random_balance();
+        let message = random_register_project_message(&domain, checkpoint_id);
+        let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
 
-    assert!(
-        client
-            .get_project(project_name.clone(), project_domain.clone())
+        let project = client
+            .get_project(message.project_name.clone(), message.project_domain.clone())
             .await
             .unwrap()
-            .is_some(),
-        "Registered project not found in project list"
-    );
+            .unwrap();
+        assert_eq!(project.name.clone(), message.project_name.clone());
+        assert_eq!(project.domain.clone(), message.project_domain.clone());
+        assert_eq!(project.current_cp.clone(), checkpoint_id);
+        assert_eq!(project.metadata.clone(), message.metadata.clone());
 
-    let org: Org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    assert!(
-        org.projects.contains(&project_name),
-        format!(
-            "Expected project id {} in Org {} with projects {:?}",
-            project_name, org_id, org.projects
-        )
-    );
+        assert_eq!(
+            tx_included.events[0],
+            RegistryEvent::ProjectRegistered(
+                message.project_name.clone(),
+                message.project_domain.clone()
+            )
+            .into()
+        );
 
-    assert_eq!(
-        client.free_balance(&org.account_id).await.unwrap(),
-        initial_balance - random_fee,
-        "The tx fee was not charged properly."
-    );
+        let has_project = client
+            .list_projects()
+            .await
+            .unwrap()
+            .iter()
+            .any(|id| *id == (message.project_name.clone(), message.project_domain.clone()));
+        assert!(has_project, "Registered project not found in project list");
+
+        let checkpoint_ = state::Checkpoint {
+            parent: None,
+            hash: project_hash,
+        };
+        let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
+        assert_eq!(checkpoint, checkpoint_);
+
+        let (projects, account_id) = match &domain {
+            ProjectDomain::Org(org_id) => {
+                let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+                (org.projects, org.account_id)
+            }
+            ProjectDomain::User(user_id) => {
+                let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
+                (user.projects, user.account_id)
+            }
+        };
+
+        assert_eq!(projects, vec![project.name]);
+        assert_eq!(
+            client.free_balance(&account_id).await.unwrap(),
+            initial_balance - random_fee,
+            "The tx fee was not charged properly."
+        );
+    }
 }
 
 #[async_std::test]
