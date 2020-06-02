@@ -125,7 +125,7 @@ impl SubstrateCli for Cli {
     }
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn ChainSpec>, String> {
-        let chain_spec = parse_chain(id)?.spec(!self.no_telemetry);
+        let chain_spec = parse_chain(id)?.spec();
         Ok(Box::new(chain_spec) as Box<dyn ChainSpec>)
     }
 }
@@ -148,6 +148,7 @@ impl Cli {
     fn create_run_cmd(&self) -> RunCmd {
         // This does not panic if there are no required arguments which we statically know.
         let mut run_cmd = RunCmd::from_iter_safe(vec![] as Vec<String>).unwrap();
+        run_cmd.no_telemetry = self.no_telemetry;
         run_cmd.shared_params.chain = Some(self.chain.clone());
         run_cmd.network_params.bootnodes = self.bootnodes.clone();
         run_cmd.network_params.node_key_params.node_key = self.node_key.clone();

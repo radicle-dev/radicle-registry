@@ -45,12 +45,12 @@ pub enum Chain {
 }
 
 impl Chain {
-    pub fn spec(&self, enable_telemetry: bool) -> ChainSpec {
+    pub fn spec(&self) -> ChainSpec {
         match self {
             Chain::Dev => dev(),
             Chain::LocalDevnet => local_devnet(),
             Chain::Devnet => devnet(),
-            Chain::Ffnet => ffnet(enable_telemetry),
+            Chain::Ffnet => ffnet(),
         }
     }
 }
@@ -89,7 +89,10 @@ fn devnet() -> ChainSpec {
     )
 }
 
-fn ffnet(enable_telemetry: bool) -> ChainSpec {
+fn ffnet() -> ChainSpec {
+    let telemetry_endpoints =
+        TelemetryEndpoints::new(vec![("wss://telemetry.polkadot.io/submit/".to_string(), 0)])
+            .unwrap();
     GenericChainSpec::from_genesis(
         "Radicle Registry ffnet",
         "ffnet",
@@ -102,7 +105,7 @@ fn ffnet(enable_telemetry: bool) -> ChainSpec {
             "/dns4/boot-1.ff.radicle.network./tcp/30333/p2p/QmceS5WYfDyKNtnzrxCw4TEL9nokvJkRi941oUzBvErsuD"
                 .parse().unwrap()
         ],
-        polkadot_telemetry(enable_telemetry),
+        Some(telemetry_endpoints),
         Some("ffnet"), // protocol_id
         Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
         None, // no extensions
@@ -178,15 +181,4 @@ fn account_id(seed: &str) -> AccountId {
     <AccountId as CryptoType>::Pair::from_string(&format!("//{}", seed), None)
         .expect("Parsing the account key pair seed failed")
         .public()
-}
-
-fn polkadot_telemetry(enable: bool) -> Option<TelemetryEndpoints> {
-    if enable {
-        Some(
-            TelemetryEndpoints::new(vec![("wss://telemetry.polkadot.io/submit/".to_string(), 0)])
-                .unwrap(),
-        )
-    } else {
-        None
-    }
 }
