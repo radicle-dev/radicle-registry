@@ -56,14 +56,15 @@ impl CommandT for Show {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
+        let project_domain = ProjectDomain::Org(self.org_id.clone());
         let project = client
-            .get_project(self.project_name.clone(), self.org_id.clone())
+            .get_project(self.project_name.clone(), project_domain.clone())
             .await?
             .ok_or(CommandError::ProjectNotFound {
                 project_name: self.project_name.clone(),
-                org_id: self.org_id.clone(),
+                project_domain,
             })?;
-        println!("Project: {}.{}", project.name, project.org_id);
+        println!("Project: {}.{}", project.name, project.domain);
         println!("Checkpoint: {}", project.current_cp);
         Ok(())
     }
@@ -129,7 +130,7 @@ impl CommandT for Register {
                 &self.tx_options.author,
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
-                    org_id: self.org_id.clone(),
+                    project_domain: ProjectDomain::Org(self.org_id.clone()),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },

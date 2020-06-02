@@ -22,6 +22,7 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
+use parity_scale_codec::{Decode, Encode};
 use sp_core::{ed25519, H256};
 use sp_runtime::traits::BlakeTwo256;
 
@@ -57,7 +58,21 @@ pub type AccountId = ed25519::Public;
 pub type Balance = u128;
 
 /// The id of a project. Used as storage key.
-pub type ProjectId = (ProjectName, Id);
+pub type ProjectId = (ProjectName, ProjectDomain);
+
+/// The domain of a [Project]
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub enum ProjectDomain {
+    Org(Id),
+    User(Id),
+}
+
+#[cfg(feature = "std")]
+impl std::fmt::Display for ProjectDomain {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 /// Org
 ///
@@ -95,8 +110,8 @@ pub struct Project {
     /// The name of the project, unique within its org.
     pub name: ProjectName,
 
-    /// The Org to which the project belongs to.
-    pub org_id: Id,
+    /// The domain to which the project belongs.
+    pub domain: ProjectDomain,
 
     /// See [state::Project::current_cp]
     pub current_cp: CheckpointId,
@@ -107,10 +122,10 @@ pub struct Project {
 
 impl Project {
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, org_id: Id, project: state::Project) -> Self {
+    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Project) -> Self {
         Project {
             name,
-            org_id,
+            domain,
             current_cp: project.current_cp,
             metadata: project.metadata,
         }

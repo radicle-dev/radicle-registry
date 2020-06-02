@@ -207,24 +207,20 @@ async fn unregister_org_with_projects() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let random_project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
+    create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
 
     assert!(
-        org_exists(&client, random_project.org_id.clone()).await,
+        org_exists(&client, org_id.clone()).await,
         "Org not found in orgs list"
     );
 
-    let org = client
-        .get_org(random_project.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
 
     assert_eq!(org.projects.len(), 1);
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
-        org_id: random_project.org_id.clone(),
+        org_id: org_id.clone(),
     };
     let tx_unregister_applied = submit_ok(&client, &author, unregister_org_message.clone()).await;
 
@@ -233,7 +229,7 @@ async fn unregister_org_with_projects() {
         Err(RegistryError::UnregisterableOrg.into())
     );
     assert!(
-        org_exists(&client, random_project.org_id.clone()).await,
+        org_exists(&client, org_id.clone()).await,
         "Org not found in orgs list"
     );
 }
