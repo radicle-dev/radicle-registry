@@ -139,7 +139,12 @@ impl Cli {
                 .run_subcommand(subcommand, service::new_for_command),
             None => self.create_runner(&self.create_run_cmd())?.run_node(
                 service::new_light,
-                move |config| service::new_full(config, self.mine),
+                move |mut config| {
+                    if self.unsafe_rpc_external {
+                        config.rpc_cors = None;
+                    }
+                    service::new_full(config, self.mine)
+                },
                 radicle_registry_runtime::VERSION,
             ),
         }
@@ -155,9 +160,6 @@ impl Cli {
         run_cmd.shared_params.base_path = self.data_path.clone();
         run_cmd.unsafe_rpc_external = self.unsafe_rpc_external;
         run_cmd.unsafe_ws_external = self.unsafe_rpc_external;
-        if self.unsafe_rpc_external {
-            run_cmd.rpc_cors = None;
-        }
         run_cmd.prometheus_external = self.prometheus_external;
         run_cmd.name = self.name.clone();
         run_cmd.import_params.execution_strategies.execution =
