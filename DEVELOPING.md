@@ -165,8 +165,15 @@ For semantic updates to take effect on an existing chain they need to be
 deployed to the chain.
 
 ```
-radicle-registry-cli update-runtime ./runtime/latest.wasm --author <sudo_key> --node-host <node_host>
+radicle-registry-cli runtime update ./runtime/latest.wasm --author <sudo_key>
 ```
+
+The author key must be the sudo key configured in the chain specification for
+the chain that is updated.
+
+For the runtime update transaction to be accepted the `spec_version` of the
+submitted runtime must be greater than the `spec_version` of the on-chain
+runtime.
 
 Changes to the chain state must be backwards-compatibility, requiring particular
 attention. A policy and process for such updates have not been established yet.
