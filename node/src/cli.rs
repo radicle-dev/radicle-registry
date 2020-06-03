@@ -17,7 +17,7 @@
 use radicle_registry_runtime::AccountId;
 use sc_cli::{RunCmd, Subcommand, SubstrateCli};
 use sc_network::config::MultiaddrWithPeerId;
-use sc_service::ChainSpec;
+use sc_service::{ChainSpec, Configuration};
 use structopt::StructOpt;
 
 use crate::chain_spec::Chain;
@@ -136,10 +136,12 @@ impl Cli {
         match &self.subcommand {
             Some(subcommand) => self
                 .create_runner(subcommand)?
-                .run_subcommand(subcommand, service::new_for_command),
+                .run_subcommand(subcommand, |config| {
+                    service::new_for_command(self.adjusted_config(config))
+                }),
             None => self.create_runner(&self.create_run_cmd())?.run_node(
-                service::new_light,
-                move |config| service::new_full(config, self.mine),
+                |config| service::new_light(self.adjusted_config(config)),
+                |config| service::new_full(self.adjusted_config(config), self.mine),
                 radicle_registry_runtime::VERSION,
             ),
         }
@@ -156,14 +158,18 @@ impl Cli {
         run_cmd.shared_params.base_path = self.data_path.clone();
         run_cmd.unsafe_rpc_external = self.unsafe_rpc_external;
         run_cmd.unsafe_ws_external = self.unsafe_rpc_external;
-        if self.unsafe_rpc_external {
-            run_cmd.rpc_cors = None;
-        }
         run_cmd.prometheus_external = self.prometheus_external;
         run_cmd.name = self.name.clone();
         run_cmd.import_params.execution_strategies.execution =
             Some(sc_cli::ExecutionStrategy::Both);
         run_cmd
+    }
+
+    fn adjusted_config(&self, mut config: Configuration) -> Configuration {
+        if self.unsafe_rpc_external {
+            config.rpc_cors = None;
+        }
+        config
     }
 }
 
