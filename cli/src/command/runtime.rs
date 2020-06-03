@@ -17,14 +17,10 @@
 
 use super::*;
 
-/// Project related commands
+/// Runtime related commands
 #[derive(StructOpt, Clone)]
 pub enum Command {
     /// Submit a transaction to update the on-chain runtime.
-    /// Requirements:
-    ///   * the tx author must be the chain's sudo key
-    ///   * the `spec_version` of the given wasm runtime must be greater than the chain runtime's.
-    ///   * the `spec_name` must match between the wasm runtime and the chain runtime.
     Update(Update),
 
     /// Show the version of the on-chain runtime.
@@ -91,9 +87,6 @@ impl CommandT for ShowVersion {
         println!("On-chain runtime version:");
         println!("  spec_version: {}", v.spec_version);
         println!("  impl_version: {}", v.impl_version);
-        println!("  authoring_version: {}", v.authoring_version);
-        println!("  spec_name: {}", v.spec_name);
-        println!("  impl_name: {}", v.impl_name);
         Ok(())
     }
 }
