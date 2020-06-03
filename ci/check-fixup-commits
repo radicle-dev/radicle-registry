@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Checks whether a pull requests includes commits where the message
+# starts with "fixup".
+
+set -euo pipefail
+
+if [[ -z "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}" ]]; then
+  echo "Skipping commit message check: Not a pull request"
+  exit 0
+fi
+
+git fetch origin "${BUILDKITE_PULL_REQUEST_BASE_BRANCH}"
+commits=$(git log --format=%s "origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH}..HEAD")
+
+set +e;
+fixup_commits=$(grep '^fixup!' <<< "$commits");
+grep_status="$?"
+set -e;
+
+if [[ "$grep_status" -eq 0 ]]; then
+  echo "Pull request includes the following fixup commits:"
+  echo "$fixup_commits"
+  echo "Please squash these commits."
+  exit 1
+fi

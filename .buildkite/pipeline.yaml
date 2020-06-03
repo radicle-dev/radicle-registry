@@ -1,18 +1,27 @@
+env:
+  DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:c068afc4d2012cd70a9943ead3671e2e5b35508a
+  DOCKER_FILE: ci/base-image/Dockerfile
+
 .test: &test
   label: "Test"
   command: "ci/run"
   timeout_in_minutes: 60
   env:
-    DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:c068afc4d2012cd70a9943ead3671e2e5b35508a
-    DOCKER_FILE: ci/base-image/Dockerfile
     STEP_DOCKER_FILE: ci/node-image/Dockerfile
     STEP_DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/node
     SHARED_MASTER_CACHE: true
+  artifact_paths:
+    - "artifacts/*"
   agents:
     platform: "linux"
     production: "true"
-  artifact_paths:
-    - "artifacts/*"
+
+.fixup: &fixup
+  label: "Check fixup commits"
+  command: ci/check-fixup-commits
+  agents:
+    platform: "linux"
+    production: "true"
 
 steps:
   - branches: master
@@ -21,6 +30,7 @@ steps:
     <<: *test
   - branches: "!master"
     <<: *test
+  - *fixup
   - wait
   - label: "Deploy"
     branches: master
