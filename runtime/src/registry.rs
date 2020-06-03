@@ -152,36 +152,40 @@ decl_module! {
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            let org_id = match &message.project_domain {
-                ProjectDomain::Org(org_id) => org_id,
-                ProjectDomain::User(_) => panic!("TODO(nuno"),
-            };
-
-            let org = store::Orgs::get(org_id.clone()).ok_or(RegistryError::InexistentOrg)?;
-            if !org_has_member_with_account(&org, sender) {
-                return Err(RegistryError::InsufficientSenderPermissions.into());
-            }
-
             if store::Checkpoints::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
             let project_id = (message.project_name.clone(), message.project_domain.clone());
-
             if store::Projects::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
+            };
+
+            match &message.project_domain {
+                ProjectDomain::Org(org_id) => {
+                    let org = store::Orgs::get(org_id).ok_or(RegistryError::InexistentOrg)?;
+                    if !org_has_member_with_account(&org, sender) {
+                        return Err(RegistryError::InsufficientSenderPermissions.into());
+                    }
+                    store::Orgs::insert(org_id, org.add_project(message.project_name.clone()));
+                },
+                ProjectDomain::User(user_id) => {
+                    let user = store::Users::get(user_id).ok_or(RegistryError::InexistentUser)?;
+                    if user.account_id != sender {
+                        return Err(RegistryError::InsufficientSenderPermissions.into());
+                    }
+                    store::Users::insert(user_id, user.add_project(message.project_name.clone()));
+                },
             };
 
             let new_project = state::Project {
                 current_cp: message.checkpoint_id,
                 metadata: message.metadata
             };
-
             store::Projects::insert(project_id.clone(), new_project);
-            store::Orgs::insert(org_id.clone(), org.add_project(message.project_name.clone()));
             store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
 
-            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain.clone()));
+            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
             Ok(())
         }
 
