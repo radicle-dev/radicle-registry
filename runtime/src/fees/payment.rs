@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::registry::{org_has_member_with_account, store};
-use crate::{AccountId, Call, DispatchError, Runtime};
+use crate::{AccountId, Call, DispatchError, RegistryCall};
 use radicle_registry_core::*;
 
 use frame_support::storage::{StorageMap as _, StorageValue as _};
@@ -22,8 +22,6 @@ use frame_support::traits::{Currency, ExistenceRequirement, Imbalance, WithdrawR
 use sp_runtime::Permill;
 
 type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
-
-type RegistryCall = crate::registry::Call<Runtime>;
 
 /// Share of a transaction fee that is burned rather than credited to the block author.
 const BURN_SHARE: Permill = Permill::from_percent(1);

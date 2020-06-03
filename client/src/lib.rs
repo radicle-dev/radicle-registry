@@ -313,6 +313,10 @@ impl ClientT for Client {
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
         self.backend.onchain_runtime_version().await
     }
+
+    fn deposit_costs(message: impl Message) -> Balance {
+        radicle_registry_runtime::deposit_costs(&message.into_runtime_call())
+    }
 }
 
 #[cfg(test)]

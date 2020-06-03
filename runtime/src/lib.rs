@@ -45,6 +45,8 @@ pub use pallet_balances as balances;
 pub use radicle_registry_core::*;
 pub use runtime_api::{api, RuntimeApi};
 
+pub type RegistryCall = registry::Call<Runtime>;
+
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -202,3 +204,17 @@ construct_runtime!(
                 Registry: registry::{Module, Call, Storage, Event, Inherent},
         }
 );
+
+/// Get the deposit costs associated with a given call.
+pub fn deposit_costs(call: &Call) -> Balance {
+    match call {
+        Call::Registry(registry_call) => match registry_call {
+            RegistryCall::register_project(_)
+            | RegistryCall::register_member(_)
+            | RegistryCall::register_user(_)
+            | RegistryCall::register_org(_) => 10,
+            _ => 0,
+        },
+        _ => 0,
+    }
+}
