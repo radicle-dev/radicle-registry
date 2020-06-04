@@ -58,6 +58,7 @@ Upcoming
 
 ### Addition
 
+* client: Add `deposit_costs` method
 * Support user project registration
 * cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
