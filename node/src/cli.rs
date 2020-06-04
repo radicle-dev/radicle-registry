@@ -137,11 +137,11 @@ impl Cli {
             Some(subcommand) => self
                 .create_runner(subcommand)?
                 .run_subcommand(subcommand, |config| {
-                    service::new_for_command(self.adjusted_config(config))
+                    service::new_for_command(self.adjust_config(config))
                 }),
             None => self.create_runner(&self.create_run_cmd())?.run_node(
-                |config| service::new_light(self.adjusted_config(config)),
-                |config| service::new_full(self.adjusted_config(config), self.mine),
+                |config| service::new_light(self.adjust_config(config)),
+                |config| service::new_full(self.adjust_config(config), self.mine),
                 radicle_registry_runtime::VERSION,
             ),
         }
@@ -160,12 +160,29 @@ impl Cli {
         run_cmd.unsafe_ws_external = self.unsafe_rpc_external;
         run_cmd.prometheus_external = self.prometheus_external;
         run_cmd.name = self.name.clone();
-        run_cmd.import_params.execution_strategies.execution =
-            Some(sc_cli::ExecutionStrategy::Both);
         run_cmd
     }
 
-    fn adjusted_config(&self, mut config: Configuration) -> Configuration {
+    /// Applies CLI settings from `self` to the configuration.
+    fn adjust_config(&self, mut config: Configuration) -> Configuration {
+        use sc_chain_spec::ChainType;
+        use sc_client_api::{execution_extensions::ExecutionStrategies, ExecutionStrategy};
+
+        let execution_strategy = match config.chain_spec.chain_type() {
+            // During development we want to run a node that runs a changed runtime without having
+            // to recompile the genesis WASM runtime.
+            ChainType::Development => ExecutionStrategy::NativeWhenPossible,
+            _ => ExecutionStrategy::Both,
+        };
+
+        config.execution_strategies = ExecutionStrategies {
+            syncing: execution_strategy,
+            importing: execution_strategy,
+            block_construction: execution_strategy,
+            offchain_worker: execution_strategy,
+            other: execution_strategy,
+        };
+
         if self.unsafe_rpc_external {
             config.rpc_cors = None;
         }
