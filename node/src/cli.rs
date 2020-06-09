@@ -134,11 +134,18 @@ impl Cli {
     pub fn run(&self) -> sc_cli::Result<()> {
         crate::logger::init();
         match &self.subcommand {
-            Some(subcommand) => self
-                .create_runner(subcommand)?
-                .run_subcommand(subcommand, |config| {
-                    service::new_for_command(self.adjust_config(config))
-                }),
+            Some(subcommand) => {
+                let result = self
+                    .create_runner(subcommand)?
+                    .run_subcommand(subcommand, |config| {
+                        service::new_for_command(self.adjust_config(config))
+                    });
+                // Workaround until substrate is updated and
+                // https://github.com/paritytech/substrate/pull/6098 is included.
+                use std::io::Write;
+                let _ = std::io::stdout().flush();
+                result
+            }
             None => self.create_runner(&self.create_run_cmd())?.run_node(
                 |config| service::new_light(self.adjust_config(config)),
                 |config| service::new_full(self.adjust_config(config), self.mine),
