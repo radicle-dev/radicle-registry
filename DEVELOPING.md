@@ -175,8 +175,8 @@ For the runtime update transaction to be accepted the `spec_version` of the
 submitted runtime must be greater than the `spec_version` of the on-chain
 runtime.
 
-Changes to the chain state must be backwards-compatibility, requiring particular
-attention. A policy and process for such updates have not been established yet.
+Changes to the chain state must be backwards-compatibility. See the “Versioning”
+section in `core/README.md` for details.
 
 Updating Continuous Integration's base Docker image
 ---------------------------------------------------
