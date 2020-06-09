@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* cli: `project register` now also expects domain type
 * client: Move deposit costs into constants for better ergonomics
 * client: Use `ProjectDomain::Org(id)` istead of just `id` on project-related references
 * Only unregistered a user if not a member of any org

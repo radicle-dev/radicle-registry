@@ -16,6 +16,7 @@
 //! Define the commands supported by the CLI related to Projects.
 
 use super::*;
+use structopt::clap::arg_enum;
 
 /// Project related commands
 #[derive(StructOpt, Clone)]
@@ -93,8 +94,17 @@ impl CommandT for List {
 pub struct Register {
     /// Name of the project to register.
     project_name: ProjectName,
-    /// Org under which to register the project.
-    org_id: Id,
+
+    /// The type of domain under which to register the project.
+    #[structopt(
+        possible_values = &DomainType::variants(),
+        case_insensitive = true,
+    )]
+    domain_type: DomainType,
+
+    /// The id of the domain under which to register the project.
+    domain_id: Id,
+
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
 
@@ -125,12 +135,16 @@ impl CommandT for Register {
         let checkpoint_id = checkpoint_created.result?;
         println!("✓ Checkpoint created in block {}", checkpoint_created.block);
 
+        let project_domain = match self.domain_type {
+            DomainType::Org => ProjectDomain::Org(self.domain_id),
+            DomainType::User => ProjectDomain::User(self.domain_id),
+        };
         let register_project_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
-                    project_domain: ProjectDomain::Org(self.org_id.clone()),
+                    project_domain: project_domain.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
@@ -143,8 +157,38 @@ impl CommandT for Register {
         project_registered.result?;
         println!(
             "✓ Project {}.{} registered in block {}",
-            self.project_name, self.org_id, project_registered.block,
+            self.project_name, project_domain, project_registered.block,
         );
         Ok(())
+    }
+}
+
+arg_enum! {
+    #[derive(Clone, Eq, PartialEq, Debug)]
+    enum DomainType {
+        Org,
+        User,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_project_domain_from_org() {
+        for org_input in &["org", "oRg", "ORG"] {
+            let res = DomainType::from_str(org_input);
+            assert_eq!(res, Ok(DomainType::Org));
+        }
+    }
+
+    #[test]
+    fn test_project_domain_from_user() {
+        for user_input in &["user", "usEr", "USER"] {
+            let res = DomainType::from_str(user_input);
+            assert_eq!(res, Ok(DomainType::User));
+        }
     }
 }
