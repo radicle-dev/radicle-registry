@@ -48,6 +48,9 @@ mod transaction;
 pub use crate::interface::*;
 pub use radicle_registry_core::Balance;
 pub use radicle_registry_runtime::fees::MINIMUM_FEE;
+pub use radicle_registry_runtime::registry::{
+    REGISTER_MEMBER_DEPOSIT, REGISTER_ORG_DEPOSIT, REGISTER_PROJECT_DEPOSIT, REGISTER_USER_DEPOSIT,
+};
 
 pub use backend::{EmulatorControl, EMULATOR_BLOCK_AUTHOR};
 
@@ -312,10 +315,6 @@ impl ClientT for Client {
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
         self.backend.onchain_runtime_version().await
-    }
-
-    fn deposit_costs(message: impl Message) -> Balance {
-        radicle_registry_runtime::deposit_costs(&message.into_runtime_call())
     }
 }
 
