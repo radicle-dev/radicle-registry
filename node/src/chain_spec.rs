@@ -23,14 +23,13 @@ use radicle_registry_runtime::{
     AccountId, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 };
 use sc_service::{ChainType, GenericChainSpec};
-use sc_telemetry::TelemetryEndpoints;
 use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = GenericChainSpec<GenesisConfig>;
 
-const FFNET_GENESIS_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/ffnet_genesis.wasm");
+const FFNET_CHAIN_SPEC: &[u8] = include_bytes!("./chain_spec/ffnet.json");
 const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/latest.wasm");
 
 /// Possible chains.
@@ -90,56 +89,7 @@ fn devnet() -> ChainSpec {
 }
 
 fn ffnet() -> ChainSpec {
-    let telemetry_endpoints =
-        TelemetryEndpoints::new(vec![("wss://telemetry.polkadot.io/submit/".to_string(), 0)])
-            .unwrap();
-    GenericChainSpec::from_genesis(
-        "Radicle Registry ffnet",
-        "ffnet",
-        ChainType::Custom("ffnet".to_string()),
-        ffnet_genesis_config,
-        // Addresses are defined here: https://github.com/radicle-dev/infra/tree/master/registry/ffnet
-        vec![
-            "/dns4/boot-0.ff.radicle.network./tcp/30333/p2p/QmdEvLkAS8mxETQy1RCbdmcPPzxSs9RbExFcWvwJZDXxjG"
-                .parse().unwrap(),
-            "/dns4/boot-1.ff.radicle.network./tcp/30333/p2p/QmceS5WYfDyKNtnzrxCw4TEL9nokvJkRi941oUzBvErsuD"
-                .parse().unwrap()
-        ],
-        Some(telemetry_endpoints),
-        Some("ffnet"), // protocol_id
-        Some(sc_service::Properties::try_from(PowAlgConfig::Blake3).unwrap()),
-        None, // no extensions
-    )
-}
-
-fn ffnet_genesis_config() -> GenesisConfig {
-    use sp_core::crypto::Ss58Codec;
-
-    // Public keys for Github handles
-    let nunoalexandre =
-        AccountId::from_ss58check("5CbJnuDccgarfidUapCAZZgx7rPWv6J5G4NK2H7Zcykh3EF8").unwrap();
-    let codesandwich =
-        AccountId::from_ss58check("5Caqj67GfbVRUBpyUpHBG6mQFzP6L9MjibkcrvriUWVLYfjf").unwrap();
-    let geigerzaehler =
-        AccountId::from_ss58check("5Chs9EgWihAkawHzszEnv3X3uBZMUmi98rUsbu2Fyw5gKHx6").unwrap();
-
-    let init_balance = 1_000_000_000_000;
-    let balances = vec![
-        (codesandwich, init_balance),
-        (geigerzaehler, init_balance),
-        (nunoalexandre, init_balance),
-    ];
-
-    let sudo_key = geigerzaehler;
-
-    GenesisConfig {
-        system: Some(SystemConfig {
-            code: FFNET_GENESIS_RUNTIME_WASM.to_vec(),
-            changes_trie_config: Default::default(),
-        }),
-        pallet_balances: Some(BalancesConfig { balances }),
-        pallet_sudo: Some(SudoConfig { key: sudo_key }),
-    }
+    ChainSpec::from_json_bytes(FFNET_CHAIN_SPEC).expect("Unable to parse ffnet chain spec")
 }
 
 fn local_devnet() -> ChainSpec {
