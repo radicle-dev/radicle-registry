@@ -137,7 +137,7 @@ pub trait ClientT {
     async fn get_project(
         &self,
         project_name: ProjectName,
-        org_id: Id,
+        project_domain: ProjectDomain,
     ) -> Result<Option<Project>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;

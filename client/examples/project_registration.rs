@@ -51,7 +51,7 @@ async fn main() -> Result<(), Error> {
             &alice,
             message::RegisterProject {
                 project_name: project_name.clone(),
-                org_id: org_id.clone(),
+                project_domain: ProjectDomain::Org(org_id.clone()),
                 checkpoint_id,
                 metadata: Bytes128::random(),
             },

@@ -59,6 +59,25 @@ impl Message for message::RegisterProject {
     }
 }
 
+impl Message for message::RegisterMember {
+    type Result = Result<(), TransactionError>;
+
+    fn result_from_events(events: Vec<Event>) -> Result<Self::Result, EventParseError> {
+        let dispatch_result = get_dispatch_result(&events)?;
+        match dispatch_result {
+            Ok(()) => find_event(&events, "MemberRegistered", |event| match event {
+                Event::registry(registry::Event::MemberRegistered(_, _)) => Some(Ok(())),
+                _ => None,
+            }),
+            Err(dispatch_error) => Ok(Err(dispatch_error)),
+        }
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        registry::Call::register_member(self).into()
+    }
+}
+
 impl Message for message::RegisterOrg {
     type Result = Result<(), TransactionError>;
 

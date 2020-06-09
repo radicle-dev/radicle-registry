@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::registry::store;
-use crate::{AccountId, Call, DispatchError, Runtime};
+use crate::registry::{org_has_member_with_account, store};
+use crate::{AccountId, Call, DispatchError, RegistryCall};
 use radicle_registry_core::*;
 
 use frame_support::storage::{StorageMap as _, StorageValue as _};
@@ -22,8 +22,6 @@ use frame_support::traits::{Currency, ExistenceRequirement, Imbalance, WithdrawR
 use sp_runtime::Permill;
 
 type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
-
-type RegistryCall = crate::registry::Call<Runtime>;
 
 /// Share of a transaction fee that is burned rather than credited to the block author.
 const BURN_SHARE: Permill = Permill::from_percent(1);
@@ -63,10 +61,17 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
     match call {
         Call::Registry(registry_call) => match registry_call {
             // Transactions payed by the org
-            RegistryCall::register_project(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::register_project(m) => match &m.project_domain {
+                ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
+                ProjectDomain::User(_user_id) => author,
+            },
             RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
-            RegistryCall::set_checkpoint(m) => org_payer_account(author, &m.org_id),
+            RegistryCall::set_checkpoint(m) => match &m.project_domain {
+                ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
+                ProjectDomain::User(_user_id) => author,
+            },
+            RegistryCall::register_member(m) => org_payer_account(author, &m.org_id),
 
             // Transactions paid by the author
             RegistryCall::create_checkpoint(_)
@@ -89,12 +94,12 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
 }
 
 /// Find which account should pay for an org-related call.
-/// When `author` is a member of the org identified by `org_id`,
-/// return that org's account, otherwise the author's.
+/// When the User associated with `author` is a member of the org
+/// identified by `org_id`, return that org's account, otherwise the author's.
 fn org_payer_account(author: AccountId, org_id: &Id) -> AccountId {
     match store::Orgs::get(org_id) {
         Some(org) => {
-            if org.members.contains(&author) {
+            if org_has_member_with_account(&org, author) {
                 org.account_id
             } else {
                 author

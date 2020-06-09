@@ -6,6 +6,11 @@ Upcoming
 
 ### Breaking changes
 
+* client: Move deposit costs into constants for better ergonomics
+* client: Use `ProjectDomain::Org(id)` istead of just `id` on project-related references
+* Only unregistered a user if not a member of any org
+* Tx author needs to have an associated registered user to operate on Orgs
+* `Org::members` is now `Vec<Id>`
 * cli: Binary update required to connect to the on-chain runtime with `spec_version` 6,
   no longer including the `CheckVersion` signed extension.
 * client: `Client::new_emulator()` now returns a pair of a `Client` and
@@ -56,6 +61,7 @@ Upcoming
 
 ### Addition
 
+* Support user project registration
 * cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
 * cli: Mutually support local account names where only SS58 address were

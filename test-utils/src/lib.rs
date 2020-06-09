@@ -51,7 +51,7 @@ pub async fn submit_ok<Message_: Message>(
 }
 
 pub async fn create_project_with_checkpoint(
-    org_id: Id,
+    domain: &ProjectDomain,
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
@@ -67,23 +67,33 @@ pub async fn create_project_with_checkpoint(
     .result
     .unwrap();
 
-    let register_org_message = message::RegisterOrg {
-        org_id: org_id.clone(),
+    let domain_account = match domain {
+        ProjectDomain::Org(org_id) => {
+            let register_org_message = message::RegisterOrg {
+                org_id: org_id.clone(),
+            };
+            submit_ok(&client, &author, register_org_message).await;
+            let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+            org.account_id
+        }
+        ProjectDomain::User(user_id) => {
+            let register_user_message = message::RegisterUser {
+                user_id: user_id.clone(),
+            };
+            submit_ok(&client, &author, register_user_message).await;
+            let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
+            user.account_id
+        }
     };
-    submit_ok(&client, &author, register_org_message.clone()).await;
 
-    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    // The org needs funds to submit transactions.
-    transfer(&client, &author, org.account_id, 1000).await;
+    // The domain account needs funds to submit transactions.
+    transfer(&client, &author, domain_account, 1000).await;
 
-    let register_project_message = random_register_project_message(org_id, checkpoint_id);
+    let register_project_message = random_register_project_message(domain, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
-        .get_project(
-            register_project_message.project_name,
-            register_org_message.org_id,
-        )
+        .get_project(register_project_message.project_name, domain.clone())
         .await
         .unwrap()
         .unwrap()
@@ -119,12 +129,12 @@ pub fn random_register_org_message() -> message::RegisterOrg {
 
 /// Create a [message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
-    org_id: Id,
+    domain: &ProjectDomain,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
     message::RegisterProject {
         project_name: random_project_name(),
-        org_id,
+        project_domain: domain.clone(),
         checkpoint_id,
         metadata: Bytes128::random(),
     }
@@ -141,10 +151,9 @@ pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
     ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
 }
 
-/// Create a key pair derived from `value` and register a user with that key pair.
-/// The user name is `value.to_lowercase()`. Ensures that the account for the key
-/// pair is equipped with at least 100.000 RAD.
-pub async fn key_pair_with_associated_user(client: &Client) -> (ed25519::Pair, Id) {
+/// Create a random a key pair from a random string. Equips the key pair account
+/// with enough funds to run transactions.
+pub async fn random_key_pair(client: &Client) -> ed25519::Pair {
     let seed = &random_alnum_string(5);
     let key_pair = key_pair_from_string(seed);
 
@@ -152,14 +161,28 @@ pub async fn key_pair_with_associated_user(client: &Client) -> (ed25519::Pair, I
     let alice = key_pair_from_string("Alice");
     transfer(&client, &alice, key_pair.public(), 100_000).await;
 
-    let user_id = Id::try_from(seed.to_lowercase()).unwrap();
+    key_pair
+}
+
+/// Create a random key pair derived and register a user associated with it.
+/// Ensures that the account for the key pair is equipped with enough RAD to run transactions.
+pub async fn key_pair_with_associated_user(client: &Client) -> (ed25519::Pair, Id) {
+    let key_pair = random_key_pair(&client).await;
+    let user_id = associate_key_pair_with_random_user(client, &key_pair).await;
+
+    (key_pair, user_id)
+}
+
+/// Register a User associated with the given key pair. Returns the new, associated user Id.
+pub async fn associate_key_pair_with_random_user(client: &Client, key_pair: &ed25519::Pair) -> Id {
+    let user_id = random_id();
     let register_user_message = message::RegisterUser {
         user_id: user_id.clone(),
     };
     let tx_applied = submit_ok(&client, &key_pair, register_user_message).await;
     assert_eq!(tx_applied.result, Ok(()));
 
-    (key_pair, user_id)
+    user_id
 }
 
 pub fn random_alnum_string(size: usize) -> String {
@@ -204,4 +227,31 @@ pub async fn transfer(
         Ok(()),
         "Failed to grant funds to the recipient account."
     );
+}
+
+/// Generate project domains owned by the given `author`. It associates the author
+/// with a random user and registers a random org with the author account.
+pub async fn generate_project_domains(
+    client: &Client,
+    author: &ed25519::Pair,
+) -> Vec<ProjectDomain> {
+    let user_id = associate_key_pair_with_random_user(client, author).await;
+    let org = register_random_org(&client, &author).await;
+
+    vec![ProjectDomain::User(user_id), ProjectDomain::Org(org.id)]
+}
+
+/// Register a random org with the given author that becomes its only member.
+/// Equips the key pair account with enough funds to run transactions.
+pub async fn register_random_org(client: &Client, author: &ed25519::Pair) -> Org {
+    let org_id = random_id();
+    let register_org = message::RegisterOrg {
+        org_id: org_id.clone(),
+    };
+    submit_ok(&client, author, register_org.clone()).await;
+
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
+    transfer(&client, &author, org.account_id, 1000).await;
+
+    org
 }

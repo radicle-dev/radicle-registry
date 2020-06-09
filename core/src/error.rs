@@ -70,6 +70,9 @@ pub enum RegistryError {
     #[cfg_attr(feature = "std", error("a user with the same ID already exists."))]
     DuplicateUserId,
 
+    #[cfg_attr(feature = "std", error("the user is already a member of the org"))]
+    AlreadyAMember,
+
     #[cfg_attr(feature = "std", error("the provided fee is insufficient"))]
     InsufficientFee,
 
@@ -99,6 +102,12 @@ pub enum RegistryError {
         error("the account is already associated with a user")
     )]
     UserAccountAssociated,
+
+    #[cfg_attr(
+        feature = "std",
+        error("the tx author needs to have an associated user")
+    )]
+    AuthorHasNoAssociatedUser,
 
     #[cfg_attr(
         feature = "std",

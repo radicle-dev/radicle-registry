@@ -24,7 +24,7 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_org() {
     let (client, _) = Client::new_emulator();
-    let (author, _) = key_pair_with_associated_user(&client).await;
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let random_fee = random_balance();
@@ -48,11 +48,40 @@ async fn register_org() {
         .unwrap()
         .unwrap();
     assert_eq!(org.id, register_org_message.org_id);
-    assert_eq!(org.members, vec![author.public()]);
+    assert_eq!(org.members, vec![user_id]);
     assert!(org.projects.is_empty());
 
     assert_eq!(
         client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
+}
+
+/// Attempt to register an org using an author that does not
+/// have a registered user associated to its account id.
+#[async_std::test]
+async fn register_org_no_user() {
+    let (client, _) = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let random_fee = random_balance();
+    let register_org_message = random_register_org_message();
+    let tx_applied =
+        submit_ok_with_fee(&client, &alice, register_org_message.clone(), random_fee).await;
+
+    assert_eq!(
+        tx_applied.result,
+        Err(RegistryError::AuthorHasNoAssociatedUser.into())
+    );
+    assert!(
+        !org_exists(&client, register_org_message.org_id.clone()).await,
+        "Org shouldn't have been registered"
+    );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
@@ -178,24 +207,20 @@ async fn unregister_org_with_projects() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let random_project = create_project_with_checkpoint(org_id.clone(), &client, &author).await;
+    create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
 
     assert!(
-        org_exists(&client, random_project.org_id.clone()).await,
+        org_exists(&client, org_id.clone()).await,
         "Org not found in orgs list"
     );
 
-    let org = client
-        .get_org(random_project.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
+    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
 
     assert_eq!(org.projects.len(), 1);
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {
-        org_id: random_project.org_id.clone(),
+        org_id: org_id.clone(),
     };
     let tx_unregister_applied = submit_ok(&client, &author, unregister_org_message.clone()).await;
 
@@ -204,7 +229,7 @@ async fn unregister_org_with_projects() {
         Err(RegistryError::UnregisterableOrg.into())
     );
     assert!(
-        org_exists(&client, random_project.org_id.clone()).await,
+        org_exists(&client, org_id.clone()).await,
         "Org not found in orgs list"
     );
 }

@@ -45,6 +45,8 @@ pub use pallet_balances as balances;
 pub use radicle_registry_core::*;
 pub use runtime_api::{api, RuntimeApi};
 
+pub type RegistryCall = registry::Call<Runtime>;
+
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -80,7 +82,7 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
     impl_name: create_runtime_str!("radicle-registry"),
-    spec_version: 6,
+    spec_version: 7,
     impl_version: 0,
     apis: runtime_api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.

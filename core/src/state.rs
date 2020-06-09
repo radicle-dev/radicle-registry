@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::Hash;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, Id, ProjectName, H256};
 
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
@@ -134,9 +134,10 @@ pub struct Org {
     /// Set of members of the org. Members are allowed to manage
     /// the org, its projects, and transfer funds.
     ///
-    /// It is initialized with the author of the [crate::message::RegisterOrg]
-    /// transaction. It cannot be changed at the moment.
-    pub members: Vec<AccountId>,
+    /// It is initialized with the user id associated with the author
+    /// of the [crate::message::RegisterOrg] transaction.
+    /// It cannot be changed at the moment.
+    pub members: Vec<Id>,
 
     /// Set of all projects owned by the org. Members are allowed to register
     /// a project by sending a [crate::message::RegisterProject] transaction.
@@ -150,6 +151,16 @@ impl Org {
     pub fn add_project(mut self, project_name: ProjectName) -> Org {
         if !self.projects.contains(&project_name) {
             self.projects.push(project_name);
+        }
+        self
+    }
+
+    /// Add the given user to the list of [Org::members].
+    /// Return a new Org with the new member included or the
+    /// same org if the org already contains that member.
+    pub fn add_member(mut self, user_id: Id) -> Org {
+        if !self.members.contains(&user_id) {
+            self.members.push(user_id);
         }
         self
     }

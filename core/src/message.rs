@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectDomain, ProjectName, H256};
 use alloc::prelude::v1::Vec;
 use parity_scale_codec::{Decode, Encode};
 
@@ -28,13 +28,16 @@ use parity_scale_codec::{Decode, Encode};
 ///
 /// If successful, a new [crate::state::Org] with the given properties is added to the state.
 ///
-/// [crate::state::Org::members] is initialized with the transaction author as the only member.
+/// [crate::state::Org::members] is initialized with the user id associated with the author
+/// as the only member.
 ///
 /// [crate::state::Org::account_id] is generated randomly.
 ///
 /// # State-dependent validations
 ///
 /// An Org with the same ID must not yet exist.
+///
+/// A user associated with the author must exist.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterOrg {
@@ -49,8 +52,8 @@ pub struct RegisterOrg {
 ///
 /// # State-dependent validations
 ///
-/// The targeted org must exist and have no projects and the
-/// the transaction origin must be its only member.
+/// The targeted org must exist, have no projects, and a user
+/// associated with the author must exist and be its only member.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterOrg {
@@ -67,7 +70,7 @@ pub struct UnregisterOrg {
 ///
 /// # State-dependent validations
 ///
-/// An Org with the same ID must not yet exist.
+/// A user with the same ID must not yet exist.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterUser {
@@ -90,6 +93,31 @@ pub struct UnregisterUser {
     pub user_id: Id,
 }
 
+/// Register a new member for an org on the Registry with the given user ID.
+///
+/// # State changes
+///
+/// If successful, the `user_id` is added to [crate::state::Org::members] of `org_id` .
+///
+/// # State-dependent validations
+///
+/// The identified org must exit.
+///
+/// The user associated with the author must be a member of the identified org.
+///
+/// A user associated with the `user_id` must exist.
+///
+/// The `user_id` must not already be a member of the org.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct RegisterMember {
+    // The member to register, unique in the org.
+    pub user_id: Id,
+
+    /// The org in which to register the member.
+    pub org_id: Id,
+}
+
 /// Register a project on the Radicle Registry with the given ID.
 ///
 /// # State changes
@@ -100,21 +128,24 @@ pub struct UnregisterUser {
 ///
 /// # State-dependent validations
 ///
-/// The involved org must exit.
+/// The involved project domain must exit.
 ///
-/// The author must be a member of the involved org.
+/// A user associated with the author must exist.
+///
+/// The user associated with the author must a member of
+/// the involved org, when an org is specified as the project domain.
 ///
 /// A checkpoint with the given ID must exist.
 ///
-/// A project with the same name must not yet exist in the org.
+/// A project with the same name must not yet exist in domain.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
-    // The name of the project to register, unique in the org.
+    // The name of the project to register, unique under its domain.
     pub project_name: ProjectName,
 
-    /// The org in which to register the project.
-    pub org_id: Id,
+    /// The domain of the project.
+    pub project_domain: ProjectDomain,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,
@@ -150,11 +181,13 @@ pub struct CreateCheckpoint {
 ///
 /// The checkpoint `new_checkpoint_id` must exist.
 ///
-/// The transaction author must be part of the [crate::state::Org::members] of the given project.
+/// A user associated with the transaction author must exist and
+/// be a member of the Org of the given project.
+///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_name: ProjectName,
-    pub org_id: Id,
+    pub project_domain: ProjectDomain,
     pub new_checkpoint_id: CheckpointId,
 }
 
@@ -171,7 +204,8 @@ pub struct SetCheckpoint {
 ///
 /// # State-dependent validations
 ///
-/// The author must be a member of [crate::state::Org::members].
+/// A user associated with the transaction author must exist and
+/// be a member of the Org of the given project.
 ///
 /// The org account must have a balance of at least `value`.
 ///

@@ -129,35 +129,93 @@ async fn unregister_user() {
 }
 
 #[async_std::test]
-async fn unregister_user_with_invalid_sender() {
+async fn unregister_user_member_of_an_org() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let register_user_message = random_register_user_message();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
 
-    // Reistration.
-    let tx_included = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
-    assert!(tx_included.result.is_ok());
-    assert!(
-        user_exists(&client, register_user_message.user_id.clone()).await,
-        "User not found in users list",
-    );
+    // Have user registering an org, which sets the associated user as its single member.
+    let register_org = random_register_org_message();
+    submit_ok(&client, &author, register_org.clone()).await;
+    let org = client.get_org(register_org.org_id).await.unwrap().unwrap();
+    assert_eq!(org.members, vec![user_id.clone()]);
 
-    // Invalid unregistration.
-    let bad_actor = key_pair_from_string("BadActor");
-    // The bad actor needs funds to submit transactions.
-    transfer(&client, &alice, bad_actor.public(), 1000).await;
+    // Unregistration.
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
     let unregister_user_message = message::UnregisterUser {
-        user_id: register_user_message.user_id.clone(),
+        user_id: user_id.clone(),
+    };
+    let random_fee = random_balance();
+    let tx_unregister_applied = submit_ok_with_fee(
+        &client,
+        &author,
+        unregister_user_message.clone(),
+        random_fee,
+    )
+    .await;
+    assert_eq!(
+        tx_unregister_applied.result,
+        Err(RegistryError::UnregisterableUser.into())
+    );
+    assert!(
+        user_exists(&client, unregister_user_message.user_id.clone()).await,
+        "The user was expected to still exist"
+    );
+    assert_eq!(
+        client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
+}
+
+#[async_std::test]
+async fn unregister_user_with_invalid_sender() {
+    let (client, _) = Client::new_emulator();
+    let (_, user_id) = key_pair_with_associated_user(&client).await;
+
+    // Invalid unregistration.
+    let (bad_actor, _) = key_pair_with_associated_user(&client).await;
+    let unregister_user_message = message::UnregisterUser {
+        user_id: user_id.clone(),
     };
     let tx_unregister_applied =
         submit_ok(&client, &bad_actor, unregister_user_message.clone()).await;
-    assert!(tx_unregister_applied.result.is_err());
+
+    assert_eq!(
+        tx_unregister_applied.result,
+        Err(RegistryError::InsufficientSenderPermissions.into())
+    );
     assert!(
-        user_exists(&client, register_user_message.user_id.clone()).await,
+        user_exists(&client, user_id.clone()).await,
         "The user was expected to exist"
+    );
+}
+
+#[async_std::test]
+async fn unregister_user_with_no_associated_user() {
+    let (client, _) = Client::new_emulator();
+    let alice = key_pair_from_string("Alice");
+    let initial_balance = client.free_balance(&alice.public()).await.unwrap();
+    let unregister_user_message = message::UnregisterUser {
+        user_id: random_id(),
+    };
+
+    assert!(
+        !user_exists(&client, unregister_user_message.user_id.clone()).await,
+        "User should not exist",
+    );
+
+    let random_fee = random_balance();
+    let tx_unregister_applied =
+        submit_ok_with_fee(&client, &alice, unregister_user_message.clone(), random_fee).await;
+    assert_eq!(
+        tx_unregister_applied.result,
+        Err(RegistryError::InexistentUser.into())
+    );
+
+    assert_eq!(
+        client.free_balance(&alice.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
     );
 }
