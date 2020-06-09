@@ -204,17 +204,3 @@ construct_runtime!(
                 Registry: registry::{Module, Call, Storage, Event, Inherent},
         }
 );
-
-/// Get the deposit costs associated with a given call.
-pub fn deposit_costs(call: &Call) -> Balance {
-    match call {
-        Call::Registry(registry_call) => match registry_call {
-            RegistryCall::register_project(_)
-            | RegistryCall::register_member(_)
-            | RegistryCall::register_user(_)
-            | RegistryCall::register_org(_) => 10,
-            _ => 0,
-        },
-        _ => 0,
-    }
-}

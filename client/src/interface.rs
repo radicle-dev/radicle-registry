@@ -145,7 +145,4 @@ pub trait ClientT {
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error>;
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
-
-    /// Get the deposit costs associated with a given Message.
-    fn deposit_costs(message: impl Message) -> Balance;
 }

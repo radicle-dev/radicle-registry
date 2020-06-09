@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* client: Move deposit costs into constants for better ergonomics
 * client: Use `ProjectDomain::Org(id)` istead of just `id` on project-related references
 * Only unregistered a user if not a member of any org
 * Tx author needs to have an associated registered user to operate on Orgs
@@ -58,7 +59,6 @@ Upcoming
 
 ### Addition
 
-* client: Add `deposit_costs` method
 * Support user project registration
 * cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
