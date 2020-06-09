@@ -70,6 +70,7 @@ impl RemoteNode {
             chain: channel.clone().into(),
             author: channel.clone().into(),
         });
+        check_runtime_version(&rpc).await?;
         let genesis_hash_result = rpc
             .chain
             .block_hash(Some(NumberOrHex::Number(BlockNumber::min_value()).into()))
@@ -214,13 +215,24 @@ impl backend::Backend for RemoteNode {
     }
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
-        self.rpc
-            .state
-            .runtime_version(None)
-            .compat()
-            .await
-            .map_err(Into::into)
+        onchain_runtime_version(&self.rpc).await
     }
+}
+
+async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
+    const NATIVE: u32 = radicle_registry_runtime::VERSION.spec_version;
+    match onchain_runtime_version(rpc).await?.spec_version {
+        NATIVE => Ok(()),
+        other => Err(Error::IncompatibleRuntimeVersion(other)),
+    }
+}
+
+async fn onchain_runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
+    rpc.state
+        .runtime_version(None)
+        .compat()
+        .await
+        .map_err(Into::into)
 }
 
 /// Return all the events belonging to the transaction included in the given block.
