@@ -1,5 +1,4 @@
-radicle-registry-core
-=====================
+# radicle-registry-core
 
 This package provides the types that constitute the registry ledger and provides
 exhaustive documentation how these types behave in the ledger.
@@ -7,8 +6,7 @@ exhaustive documentation how these types behave in the ledger.
 These types are the entities that are stored in the state, the different
 transaction message types, and their constituent types.
 
-Transaction Messages
---------------------
+## Transaction Messages
 
 Transaction messages effect a change in the ledger state. They are submitted to
 the ledger as part of a transaction. All possible transaction messages are
@@ -27,13 +25,12 @@ cover all edge cases. The documentation for a message has the following sections
   successfully and that depend on the current ledger state state.</dd>
 </dd>
 
-State
------
+## State
 
 All entities that are stored in the ledger state are defined in the `state`
 module.
 
-For each entity the documentation has the following sections
+For each entity version the documentation has the following sections
 
 <dl>
   <dt>Storage</dt>
@@ -44,3 +41,27 @@ For each entity the documentation has the following sections
   <dt>Relevant messages</dt>
   <dd>Links to message types that effect or use the entity.</dd>
 </dd>
+
+### Versioning
+
+To make the runtime state backwards compatible, every state entity that is added
+must be versioned using the following schema.
+
+```rust
+// state.rs
+
+pub enum User {
+  UserV1(UserV1)
+  UserV2(UserV1)
+}
+
+pub struct UserV1 {
+  // ...fields
+}
+
+pub struct UserV2 {
+  // ... changed fields
+}
+```
+
+Existing version variants may never be altered. Only new variants may be added.
