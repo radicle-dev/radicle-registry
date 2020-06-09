@@ -29,6 +29,9 @@ pub enum Error {
     /// Invalid transaction
     #[error("Invalid transaction")]
     InvalidTransaction,
+    /// Chain is running an incompatible runtime specification version
+    #[error("Chain is running an incompatible runtime specification version {0}")]
+    IncompatibleRuntimeVersion(u32),
     /// Other error
     #[error("Other error: {0}")]
     Other(String),
