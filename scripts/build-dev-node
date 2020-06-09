@@ -6,5 +6,5 @@
 set -euo pipefail
 
 cargo build -p radicle-registry-node --release
-(set +o pipefail;  yes | ./target/release/radicle-registry-node --chain dev purge-chain)
+(set +o pipefail;  yes | ./target/release/radicle-registry-node purge-chain --chain dev)
 echo "Node binary ./target/release/radicle-registry-node was successfully built"

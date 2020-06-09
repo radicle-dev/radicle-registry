@@ -98,7 +98,6 @@ fn transaction_extra_to_runtime_extra(
     SignedExtra,
     <SignedExtra as SignedExtension>::AdditionalSigned,
 ) {
-    let check_version = frame_system::CheckVersion::new();
     let check_genesis = frame_system::CheckGenesis::new();
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
@@ -106,9 +105,6 @@ fn transaction_extra_to_runtime_extra(
     let pay_tx_fee = PayTxFee { fee: extra.fee };
 
     let additional_signed = (
-        check_version
-            .additional_signed()
-            .expect("statically returns ok"),
         // Genesis hash
         extra.genesis_hash,
         // Era
@@ -125,7 +121,6 @@ fn transaction_extra_to_runtime_extra(
     );
 
     let extra = (
-        check_version,
         check_genesis,
         check_era,
         check_nonce,

@@ -2,13 +2,12 @@
 
 set -euo pipefail
 
-if [ $# -ne 1 ] || [ $1 = --help ] ; then
+if [ $# -ne 1 ] || [ "$1" = --help ] ; then
   echo "Usage: $0 <wasm_binary_output>"
   exit 1
 fi
 
-export BUILD_WASM_BINARY_OUT_DIR=$(mktemp -d)
+export BUILD_WASM_BINARY_OUT_DIR="$(mktemp -d)"
 cargo build -p radicle-registry-runtime --release
-mkdir -p $(dirname $1)
-mv $BUILD_WASM_BINARY_OUT_DIR/* $1
-rm -r $BUILD_WASM_BINARY_OUT_DIR
+mv "$BUILD_WASM_BINARY_OUT_DIR/radicle_registry_runtime.wasm" "$1"
+rm -r "$BUILD_WASM_BINARY_OUT_DIR"

@@ -31,10 +31,10 @@ version = "1.0.0"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
+rev = "6dc23feece77d758656651e04de964d72e9b5d34"
 default-features = false
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "3f134a1af2462482b2868adf73a050a8da0d3934"
+rev = "6dc23feece77d758656651e04de964d72e9b5d34"
 default-features = false

@@ -18,6 +18,7 @@
 use crate::fees::payment::pay;
 use crate::{AccountId, Balance, Call};
 
+use frame_support::dispatch::DispatchInfo;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::traits::SignedExtension;
 use sp_runtime::transaction_validity::{
@@ -44,7 +45,6 @@ impl SignedExtension for PayTxFee {
     type AccountId = AccountId;
     type Call = Call;
     type AdditionalSigned = ();
-    type DispatchInfo = frame_support::dispatch::DispatchInfo;
     type Pre = ();
 
     fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
@@ -55,7 +55,7 @@ impl SignedExtension for PayTxFee {
         &self,
         author: &Self::AccountId,
         call: &Self::Call,
-        _info: Self::DispatchInfo,
+        _info: &DispatchInfo,
         _len: usize,
     ) -> TransactionValidity {
         let error = TransactionValidityError::Invalid(InvalidTransaction::Payment);

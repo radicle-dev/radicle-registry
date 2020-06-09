@@ -13,39 +13,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Provides [Arguments] struct that represents the command line arguments.
+//! Provides [Cli] struct that represents the command line arguments.
 use radicle_registry_runtime::AccountId;
-use sc_cli::{RunCmd, Subcommand};
+use sc_cli::{RunCmd, Subcommand, SubstrateCli};
 use sc_network::config::MultiaddrWithPeerId;
-use structopt::{clap, StructOpt};
+use sc_service::{ChainSpec, Configuration};
+use structopt::StructOpt;
 
-use crate::chain_spec::{Chain, ChainSpec};
+use crate::chain_spec::Chain;
+use crate::service;
 
 lazy_static::lazy_static! {
     static ref DEFAULT_CHAIN: &'static str = option_env!("DEFAULT_CHAIN").unwrap_or("dev");
 }
 
-/// Command line arguments.
-///
-/// Implements [StructOpt] for parsing.
+/// Full node for the Radicle Registry network
 #[derive(Debug, StructOpt)]
-pub struct Arguments {
+pub struct Cli {
     #[structopt(subcommand)]
-    pub subcommand: Option<Subcommand>,
+    subcommand: Option<Subcommand>,
 
     /// Chain to connect to.
     #[structopt(
         long,
         default_value = &DEFAULT_CHAIN,
         value_name = "CHAIN",
-        parse(try_from_str = parse_chain),
         possible_values = &["dev", "local-devnet", "devnet", "ffnet"]
     )]
-    chain: Chain,
+    chain: String,
 
     /// Bind the RPC HTTP and WebSocket APIs to `0.0.0.0` instead of the local interface.
     #[structopt(long)]
-    pub unsafe_rpc_external: bool,
+    unsafe_rpc_external: bool,
 
     /// List of nodes to connect to on start.
     /// The addresses must be expressed as libp2p multiaddresses with a peer ID, e.g.
@@ -81,7 +80,7 @@ pub struct Arguments {
     ///
     /// The account address must be given in SS58 format.
     #[structopt(long, value_name = "SS58_ADDRESS", parse(try_from_str = parse_ss58_account_id))]
-    pub mine: Option<AccountId>,
+    mine: Option<AccountId>,
 
     /// Bind the prometheus metrics endpoint to 0.0.0.0 on port 9615
     #[structopt(long)]
@@ -96,54 +95,98 @@ pub struct Arguments {
     no_telemetry: bool,
 }
 
-impl Arguments {
-    /// Similar to [StructOpt::from_args] with additional information filled in by `version_info`.
-    pub fn from_args(version_info: &sc_cli::VersionInfo) -> Self {
-        let app = Arguments::clap()
-            .max_term_width(80)
-            .name(version_info.executable_name)
-            .author(version_info.author)
-            .about(version_info.description)
-            // We need to manually reset the `long_about` so that `structopt` does not take the
-            // code documentation of `Subcommand` for it.
-            .long_about("")
-            .settings(&[clap::AppSettings::UnifiedHelpMessage]);
-        Arguments::from_clap(&app.get_matches())
+impl SubstrateCli for Cli {
+    fn impl_name() -> &'static str {
+        "Radicle Registry Node"
     }
 
-    pub fn run_cmd(self) -> RunCmd {
-        // This does not panic if there are no required arguments which we statically know.
-        let mut run_cmd = RunCmd::from_iter_safe(vec![] as Vec<String>).unwrap();
+    fn impl_version() -> &'static str {
+        "ff.0"
+    }
 
-        let Arguments {
-            bootnodes,
-            data_path,
-            node_key,
-            node_key_file,
-            unsafe_rpc_external,
-            prometheus_external,
-            name,
-            ..
-        } = self;
+    fn description() -> &'static str {
+        env!("CARGO_PKG_DESCRIPTION")
+    }
 
-        run_cmd.network_config.bootnodes = bootnodes;
-        run_cmd.network_config.node_key_params.node_key = node_key;
-        run_cmd.network_config.node_key_params.node_key_file = node_key_file;
-        run_cmd.shared_params.base_path = data_path;
-        run_cmd.import_params.execution_strategies.execution =
-            Some(sc_cli::ExecutionStrategy::Both);
+    fn author() -> &'static str {
+        env!("CARGO_PKG_AUTHORS")
+    }
 
-        RunCmd {
-            name,
-            unsafe_rpc_external,
-            unsafe_ws_external: unsafe_rpc_external,
-            prometheus_external,
-            ..run_cmd
+    fn support_url() -> &'static str {
+        "http://github.com/radicle-dev/radicle-registry/issues"
+    }
+
+    fn copyright_start_year() -> i32 {
+        2019
+    }
+
+    fn executable_name() -> &'static str {
+        env!("CARGO_PKG_NAME")
+    }
+
+    fn load_spec(&self, id: &str) -> Result<Box<dyn ChainSpec>, String> {
+        let chain_spec = parse_chain(id)?.spec();
+        Ok(Box::new(chain_spec) as Box<dyn ChainSpec>)
+    }
+}
+
+impl Cli {
+    pub fn run(&self) -> sc_cli::Result<()> {
+        crate::logger::init();
+        match &self.subcommand {
+            Some(subcommand) => self
+                .create_runner(subcommand)?
+                .run_subcommand(subcommand, |config| {
+                    service::new_for_command(self.adjust_config(config))
+                }),
+            None => self.create_runner(&self.create_run_cmd())?.run_node(
+                |config| service::new_light(self.adjust_config(config)),
+                |config| service::new_full(self.adjust_config(config), self.mine),
+                radicle_registry_runtime::VERSION,
+            ),
         }
     }
 
-    pub fn chain_spec(&self) -> ChainSpec {
-        self.chain.spec(!self.no_telemetry)
+    fn create_run_cmd(&self) -> RunCmd {
+        // This does not panic if there are no required arguments which we statically know.
+        let mut run_cmd = RunCmd::from_iter_safe(vec![] as Vec<String>).unwrap();
+        run_cmd.no_telemetry = self.no_telemetry;
+        run_cmd.shared_params.chain = Some(self.chain.clone());
+        run_cmd.network_params.bootnodes = self.bootnodes.clone();
+        run_cmd.network_params.node_key_params.node_key = self.node_key.clone();
+        run_cmd.network_params.node_key_params.node_key_file = self.node_key_file.clone();
+        run_cmd.shared_params.base_path = self.data_path.clone();
+        run_cmd.unsafe_rpc_external = self.unsafe_rpc_external;
+        run_cmd.unsafe_ws_external = self.unsafe_rpc_external;
+        run_cmd.prometheus_external = self.prometheus_external;
+        run_cmd.name = self.name.clone();
+        run_cmd
+    }
+
+    /// Applies CLI settings from `self` to the configuration.
+    fn adjust_config(&self, mut config: Configuration) -> Configuration {
+        use sc_chain_spec::ChainType;
+        use sc_client_api::{execution_extensions::ExecutionStrategies, ExecutionStrategy};
+
+        let execution_strategy = match config.chain_spec.chain_type() {
+            // During development we want to run a node that runs a changed runtime without having
+            // to recompile the genesis WASM runtime.
+            ChainType::Development => ExecutionStrategy::NativeWhenPossible,
+            _ => ExecutionStrategy::Both,
+        };
+
+        config.execution_strategies = ExecutionStrategies {
+            syncing: execution_strategy,
+            importing: execution_strategy,
+            block_construction: execution_strategy,
+            offchain_worker: execution_strategy,
+            other: execution_strategy,
+        };
+
+        if self.unsafe_rpc_external {
+            config.rpc_cors = None;
+        }
+        config
     }
 }
 
