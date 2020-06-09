@@ -72,7 +72,8 @@ registry_node_pid=$!
 
 # We build tests in release mode so that we can reuse the artifacts
 # from 'cargo build'
-cargo test --workspace --release --color=always
+RUST_BACKTRACE=1 RUST_LOG=info \
+  cargo test --workspace --release --color=always
 kill "$registry_node_pid"
 
 echo "--- Copy artifacts"
