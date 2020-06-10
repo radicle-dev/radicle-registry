@@ -209,7 +209,7 @@ async fn re_register_project_same_domain_entity() {
         assert!(
             projects_list.contains(&project.name),
             format!(
-                "Registered project not found in the project list of {}",
+                "Registered project not found in the project list of {:?}",
                 domain
             )
         );

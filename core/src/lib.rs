@@ -60,17 +60,19 @@ pub type Balance = u128;
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, ProjectDomain);
 
-/// The domain of a [Project]
+/// The domain under which a [Project] lives.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum ProjectDomain {
     Org(Id),
     User(Id),
 }
 
-#[cfg(feature = "std")]
-impl std::fmt::Display for ProjectDomain {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+impl ProjectDomain {
+    pub fn id(&self) -> Id {
+        match self {
+            Self::Org(id) | Self::User(id) => id.clone(),
+        }
     }
 }
 
