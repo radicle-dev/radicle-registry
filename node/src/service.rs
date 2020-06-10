@@ -34,8 +34,9 @@ use sp_runtime::generic::BlockId;
 use sp_runtime::traits::Block as _;
 use substrate_prometheus_endpoint::{Gauge, Registry, U64};
 
+use crate::blockchain::Block;
 use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow, Difficulty};
-use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, Block, RuntimeApi};
+use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, RuntimeApi};
 
 // Our native executor instance.
 native_executor_instance!(

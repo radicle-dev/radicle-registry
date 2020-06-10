@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::blockchain::{Block, Hash};
 use crate::pow::Difficulty;
-use radicle_registry_runtime::{Block, Hash};
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sp_consensus_pow::Seal;
 use sp_runtime::generic::BlockId;
