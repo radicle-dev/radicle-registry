@@ -2,7 +2,7 @@
 #
 # Includes
 #
-# * Rustup with `nightly-2020-04-20` toolchain (see RUST_VERSION)
+# * Rustup with `nightly-2020-06-10` toolchain
 # * Additional rustup components and the wasm32 target
 # * sccache v0.2.12
 
@@ -42,7 +42,7 @@ RUN set -euxo pipefail; \
 
 # Install rustup and default toolchain from RUST_VERSION. This is copied from
 # https://github.com/rust-lang/docker-rust/blob/8d0f25416858e2c1f59511a15c2bd0445b402caa/1.39.0/buster/slim/Dockerfile
-ENV RUST_VERSION=nightly-2020-04-20
+ENV RUST_VERSION=nightly-2020-06-10
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \

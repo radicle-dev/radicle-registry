@@ -76,8 +76,7 @@ impl Bytes128 {
 impl Decode for Bytes128 {
     fn decode<I: Input>(input: &mut I) -> Result<Self, CodecError> {
         let decoded: Vec<u8> = Vec::decode(input)?;
-        Bytes128::from_vec(decoded)
-            .or_else(|_| Err(CodecError::from("Failed to decode an inordinate Bytes128.")))
+        Bytes128::from_vec(decoded).map_err(|_| CodecError::from("Bytes128 input too long"))
     }
 }
 
