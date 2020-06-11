@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* runtime: We introduce the `CheckVersion` transaction validation that requires
+  authors to include the runtime version in the transaction.
 * cli: `project register` now also expects domain type
 * client: Move deposit costs into constants for better ergonomics
 * client: Use `ProjectDomain::Org(id)` istead of just `id` on project-related references
