@@ -97,10 +97,10 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
 /// When the User associated with `author` is a member of the org
 /// identified by `org_id`, return that org's account, otherwise the author's.
 fn org_payer_account(author: AccountId, org_id: &Id) -> AccountId {
-    match store::Orgs::get(org_id) {
+    match store::Orgs1::get(org_id) {
         Some(org) => {
             if org_has_member_with_account(&org, author) {
-                org.account_id
+                org.account_id()
             } else {
                 author
             }

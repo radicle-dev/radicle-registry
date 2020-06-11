@@ -26,12 +26,12 @@ use parity_scale_codec::{Decode, Encode};
 ///
 /// # State changes
 ///
-/// If successful, a new [crate::state::Org] with the given properties is added to the state.
+/// If successful, a new [crate::state::Orgs1Data] with the given properties is added to the state.
 ///
-/// [crate::state::Org::members] is initialized with the user id associated with the author
+/// [crate::state::Orgs1Data::members] is initialized with the user id associated with the author
 /// as the only member.
 ///
-/// [crate::state::Org::account_id] is generated randomly.
+/// [crate::state::Orgs1Data::account_id] is generated randomly.
 ///
 /// # State-dependent validations
 ///
@@ -97,7 +97,7 @@ pub struct UnregisterUser {
 ///
 /// # State changes
 ///
-/// If successful, the `user_id` is added to [crate::state::Org::members] of `org_id` .
+/// If successful, the `user_id` is added to [crate::state::Orgs1Data::members] of `org_id` .
 ///
 /// # State-dependent validations
 ///
@@ -197,7 +197,7 @@ pub struct SetCheckpoint {
 ///
 /// If successful, `value` is deducated from the org account and
 /// added to the the recipient account. The org account is given
-/// by [crate::state::Org::account_id] of the given org.
+/// by [crate::state::Orgs1Data::account_id] of the given org.
 ///
 /// If the recipient account did not exist before, it is created.
 /// The recipient account may be a user account or an org account.

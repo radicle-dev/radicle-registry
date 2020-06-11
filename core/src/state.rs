@@ -108,23 +108,83 @@ pub type AccountTransactionIndex = u32;
 
 /// # Storage
 ///
-/// This type is only used for storage. See [crate::Org] for the
-/// complete Org type to be used everywhere else.
-///
-/// Orgs are stored as a map with the key derived from [crate::Org::id].
+/// Orgs are stored as a map with the key derived from [crate::Id].
 /// The org ID can be extracted from the storage key.
-///
-/// # Invariants
-///
-/// * `account_id` is immutable
-/// * `projects` is a set of all the projects owned by the Org.
 ///
 /// # Relevant messages
 ///
 /// * [crate::message::RegisterOrg]
 /// * [crate::message::UnregisterOrg]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Org {
+pub enum Orgs1Data {
+    V1(OrgV1),
+}
+
+impl Orgs1Data {
+    /// Creates new instance in the most up to date version
+    pub fn new(account_id: AccountId, members: Vec<Id>, projects: Vec<ProjectName>) -> Self {
+        Self::V1(OrgV1 {
+            account_id,
+            members,
+            projects,
+        })
+    }
+
+    /// Account ID that holds the org funds.
+    ///
+    /// It is randomly generated and, unlike for other accounts,
+    /// there is no private key that controls this account.
+    pub fn account_id(&self) -> AccountId {
+        match self {
+            Self::V1(org) => org.account_id,
+        }
+    }
+
+    /// Set of members of the org. Members are allowed to manage
+    /// the org, its projects, and transfer funds.
+    ///
+    /// It is initialized with the user id associated with the author
+    /// of the [crate::message::RegisterOrg] transaction.
+    /// It cannot be changed at the moment.
+    pub fn members(&self) -> &Vec<Id> {
+        match self {
+            Self::V1(org) => &org.members,
+        }
+    }
+
+    /// Set of all projects owned by the org. Members are allowed to register
+    /// a project by sending a [crate::message::RegisterProject] transaction.
+    pub fn projects(&self) -> &Vec<ProjectName> {
+        match self {
+            Self::V1(org) => &org.projects,
+        }
+    }
+
+    /// Add the given project to the list of [Orgs1Data::projects].
+    /// Return a new Org with the new project included or the
+    /// same org if the org already contains that project.
+    pub fn add_project(self, project_name: ProjectName) -> Self {
+        match self {
+            Self::V1(org) => Self::V1(org.add_project(project_name)),
+        }
+    }
+
+    /// Add the given user to the list of [Orgs1Data::members].
+    /// Return a new Org with the new member included or the
+    /// same org if the org already contains that member.
+    pub fn add_member(self, user_id: Id) -> Self {
+        match self {
+            Self::V1(org) => Self::V1(org.add_member(user_id)),
+        }
+    }
+}
+
+/// # Invariants
+///
+/// * `account_id` is immutable
+/// * `projects` is a set of all the projects owned by the Org.
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct OrgV1 {
     /// Account ID that holds the org funds.
     ///
     /// It is randomly generated and, unlike for other accounts,
@@ -144,21 +204,21 @@ pub struct Org {
     pub projects: Vec<ProjectName>,
 }
 
-impl Org {
-    /// Add the given project to the list of [Org::projects].
+impl OrgV1 {
+    /// Add the given project to the list of [OrgV1::projects].
     /// Return a new Org with the new project included or the
     /// same org if the org already contains that project.
-    pub fn add_project(mut self, project_name: ProjectName) -> Org {
+    pub fn add_project(mut self, project_name: ProjectName) -> Self {
         if !self.projects.contains(&project_name) {
             self.projects.push(project_name);
         }
         self
     }
 
-    /// Add the given user to the list of [Org::members].
+    /// Add the given user to the list of [OrgV1::members].
     /// Return a new Org with the new member included or the
     /// same org if the org already contains that member.
-    pub fn add_member(mut self, user_id: Id) -> Org {
+    pub fn add_member(mut self, user_id: Id) -> Self {
         if !self.members.contains(&user_id) {
             self.members.push(user_id);
         }
