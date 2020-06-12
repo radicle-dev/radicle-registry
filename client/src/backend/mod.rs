@@ -16,7 +16,7 @@
 //! Define trait for client backends and provide emulator and remote node implementation
 use futures::future::BoxFuture;
 
-pub use radicle_registry_runtime::{Hash, Header, RuntimeVersion, UncheckedExtrinsic};
+pub use radicle_registry_runtime::{Header, RuntimeVersion, UncheckedExtrinsic};
 
 use crate::interface::*;
 
@@ -32,7 +32,7 @@ pub use remote_node_with_executor::RemoteNodeWithExecutor;
 ///
 /// Obtained after a transaction has been submitted and processed.
 pub struct TransactionIncluded {
-    pub tx_hash: TxHash,
+    pub tx_hash: Hash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// Events emitted by this transaction

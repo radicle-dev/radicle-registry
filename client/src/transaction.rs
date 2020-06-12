@@ -17,12 +17,12 @@
 use core::marker::PhantomData;
 use parity_scale_codec::Encode;
 use sp_runtime::generic::{Era, SignedPayload};
-use sp_runtime::traits::{Hash as _, SignedExtension};
+use sp_runtime::traits::SignedExtension;
 
-use crate::{ed25519, message::Message, CryptoPair as _, TxHash};
+use crate::{ed25519, message::Message, CryptoPair as _, Hash};
 use radicle_registry_core::state::AccountTransactionIndex;
 use radicle_registry_runtime::{
-    fees::PayTxFee, Balance, Call as RuntimeCall, Hash, Hashing, SignedExtra, UncheckedExtrinsic,
+    fees::PayTxFee, Balance, Call as RuntimeCall, SignedExtra, UncheckedExtrinsic,
 };
 
 #[derive(Clone, Debug)]
@@ -57,8 +57,8 @@ impl<Message_: Message> Transaction<Message_> {
         }
     }
 
-    pub fn hash(self) -> TxHash {
-        Hashing::hash_of(&self.extrinsic)
+    pub fn hash(self) -> Hash {
+        Hash::hash_of(&self.extrinsic)
     }
 }
 
@@ -110,9 +110,9 @@ fn transaction_extra_to_runtime_extra(
             .additional_signed()
             .expect("statically guaranteed to always return ok"),
         // Genesis hash
-        extra.genesis_hash,
+        extra.genesis_hash.into(),
         // Era
-        extra.genesis_hash,
+        extra.genesis_hash.into(),
         check_nonce
             .additional_signed()
             .expect("statically returns Ok"),
@@ -141,7 +141,6 @@ mod test {
     use super::*;
     use crate::message;
     use radicle_registry_runtime::{GenesisConfig, Runtime};
-    use sp_core::H256;
     use sp_runtime::traits::{Checkable, IdentityLookup};
     use sp_runtime::{BuildStorage as _, Perbill};
 
@@ -173,7 +172,7 @@ mod test {
             frame_system::Call::fill_block(Perbill::from_parts(0)).into(),
             TransactionExtra {
                 nonce: 0,
-                genesis_hash,
+                genesis_hash: genesis_hash.into(),
                 fee: 3,
             },
         );
@@ -195,11 +194,11 @@ mod test {
             },
             TransactionExtra {
                 nonce: 0,
-                genesis_hash: H256::random(),
+                genesis_hash: Hash::random(),
                 fee: 9,
             },
         );
-        let extrinsic_hash = Hashing::hash_of(&signed_tx.extrinsic);
+        let extrinsic_hash = Hash::hash_of(&signed_tx.extrinsic);
 
         assert_eq!(signed_tx.hash(), extrinsic_hash);
     }

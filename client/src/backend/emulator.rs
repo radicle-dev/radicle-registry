@@ -19,12 +19,12 @@ use futures::future::BoxFuture;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use sp_runtime::{traits::Block as _, traits::Hash as _, BuildStorage as _, Digest};
+use sp_runtime::{traits::Block as _, BuildStorage as _, Digest};
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
-    registry, runtime_api, AccountId, BalancesConfig, Block, EventRecord, GenesisConfig, Hash,
-    Hashing, Header, Runtime, RuntimeVersion,
+    registry, runtime_api, AccountId, BalancesConfig, Block, EventRecord, GenesisConfig, Header,
+    Runtime, RuntimeVersion,
 };
 
 use crate::backend;
@@ -109,15 +109,16 @@ impl Emulator {
             .register_provider(registry_inherent_data)
             .unwrap();
 
+        let hash_zero = Hash::zero();
         let tip_header = Header {
-            parent_hash: Hash::zero(),
+            parent_hash: hash_zero.into(),
             number: 1,
-            state_root: Hash::zero(),
-            extrinsics_root: Hash::zero(),
+            state_root: hash_zero.into(),
+            extrinsics_root: hash_zero.into(),
             digest: Digest::default(),
         };
-        let mut headers = HashMap::new();
-        headers.insert(tip_header.hash(), tip_header.clone());
+        let mut headers: HashMap<Hash, Header> = HashMap::new();
+        headers.insert(tip_header.hash().into(), tip_header.clone());
 
         Emulator {
             genesis_hash,
@@ -163,7 +164,9 @@ impl Emulator {
         });
 
         state.tip_header = block.header.clone();
-        state.headers.insert(block.hash(), block.header.clone());
+        state
+            .headers
+            .insert(block.hash().into(), block.header.clone());
 
         (block, event_records)
     }
@@ -175,7 +178,7 @@ impl backend::Backend for Emulator {
         &self,
         extrinsic: backend::UncheckedExtrinsic,
     ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
-        let tx_hash = Hashing::hash_of(&extrinsic);
+        let tx_hash: Hash = Hash::hash_of(&extrinsic);
         let (block, event_records) = self.add_block(vec![extrinsic]);
 
         let events =
@@ -185,7 +188,7 @@ impl backend::Backend for Emulator {
         Ok(Box::pin(futures::future::ready(Ok(
             backend::TransactionIncluded {
                 tx_hash,
-                block: block.hash(),
+                block: block.hash().into(),
                 events,
             },
         ))))
@@ -275,6 +278,6 @@ fn init_runtime(test_ext: &mut sp_io::TestExternalities) -> Hash {
             frame_system::InitKind::Full,
         );
         // Now we can retrieve the block hash. But here the block number is zero-based.
-        frame_system::Module::<Runtime>::block_hash(0)
+        frame_system::Module::<Runtime>::block_hash(0).into()
     })
 }

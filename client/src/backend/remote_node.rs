@@ -24,12 +24,12 @@ use parity_scale_codec::{Decode, Encode as _};
 use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
 use sp_core::{storage::StorageKey, twox_128};
 use sp_rpc::{list::ListOrValue, number::NumberOrHex};
-use sp_runtime::{generic::SignedBlock, traits::Hash as _};
+use sp_runtime::generic::SignedBlock;
 use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
 use url::Url;
 
-use radicle_registry_runtime::{Block, BlockNumber, Event, EventRecord, Hash, Hashing, Header};
+use radicle_registry_runtime::{Block, BlockNumber, Event, EventRecord, Header};
 
 use crate::backend::{self, Backend};
 use crate::interface::*;
@@ -129,7 +129,7 @@ impl RemoteNode {
     /// This requires the transaction to be included in the given block.
     async fn get_transaction_events(
         &self,
-        tx_hash: TxHash,
+        tx_hash: Hash,
         block_hash: BlockHash,
     ) -> Result<Vec<Event>, Error> {
         let events_data = self
@@ -159,7 +159,7 @@ impl backend::Backend for RemoteNode {
         &self,
         xt: backend::UncheckedExtrinsic,
     ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
-        let tx_hash = Hashing::hash_of(&xt);
+        let tx_hash: Hash = Hash::hash_of(&xt);
         let block_hash_future = self.submit_transaction(xt).await?;
         let this = self.clone();
 
@@ -245,7 +245,7 @@ async fn onchain_runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
 /// Returns `None` if no events for the transaction were found. This should be treated as an error
 /// since the events should at least include the system event for the transaction.
 pub(crate) fn extract_transaction_events(
-    tx_hash: TxHash,
+    tx_hash: Hash,
     block: &Block,
     event_records: Vec<EventRecord>,
 ) -> Option<Vec<Event>> {
@@ -254,7 +254,7 @@ pub(crate) fn extract_transaction_events(
         .iter()
         .enumerate()
         .find_map(|(index, tx)| {
-            if Hashing::hash_of(tx) == tx_hash {
+            if Hash::hash_of(tx) == tx_hash {
                 Some(index)
             } else {
                 None

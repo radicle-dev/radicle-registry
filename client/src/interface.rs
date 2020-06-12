@@ -17,13 +17,20 @@
 //!
 //! The [ClientT] trait defines one method for each transaction of the registry ledger as well as
 //! methods to get the ledger state.
+use core::str::FromStr;
 use futures::future::BoxFuture;
+use hex::ToHex;
+use parity_scale_codec::Encode;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use sp_runtime::traits::Hash as _;
 
 pub use radicle_registry_core::*;
 
-pub use radicle_registry_runtime::{BlockNumber, Hash, Header, RuntimeVersion};
+pub use radicle_registry_runtime::{BlockNumber, Header, RuntimeVersion};
 
-pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
+pub use radicle_registry_runtime::{
+    registry::Event as RegistryEvent, Balance, Event, Hash as RuntimeHash,
+};
 pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
 pub use sp_core::{ed25519, H256};
 
@@ -31,13 +38,78 @@ pub use crate::error::Error;
 pub use crate::message::Message;
 pub use crate::transaction::{Transaction, TransactionExtra};
 
+//TODO(nuno):
+// * Test (deserialize . serialize)
+
+/// A hash of some data used by the chain.
+///
+/// Wraps the hash type used by the runtime, [RuntimeHash],
+/// providing official Serialize and Deserialize implementations.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, core::hash::Hash)]
+pub struct Hash(RuntimeHash);
+
+impl Hash {
+    pub fn zero() -> Self {
+        RuntimeHash::zero().into()
+    }
+
+    pub fn hash_of<E: Encode>(x: &E) -> Hash {
+        radicle_registry_runtime::Hashing::hash_of(x).into()
+    }
+
+    pub fn random() -> Self {
+        RuntimeHash::random().into()
+    }
+}
+
+impl From<RuntimeHash> for Hash {
+    fn from(h: RuntimeHash) -> Self {
+        Self(h)
+    }
+}
+
+impl Into<RuntimeHash> for Hash {
+    fn into(self) -> RuntimeHash {
+        self.0
+    }
+}
+
+impl std::convert::AsRef<[u8]> for Hash {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
+impl core::fmt::Display for Hash {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Serialize for Hash {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.0.encode_hex::<String>())
+    }
+}
+
+impl<'de> Deserialize<'de> for Hash {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: &str = Deserialize::deserialize(deserializer)?;
+        let hash = RuntimeHash::from_str(s).map_err(serde::de::Error::custom)?;
+
+        Ok(Self(hash))
+    }
+}
+
 /// The hash of a block. Uniquely identifies a block.
 #[doc(inline)]
 pub type BlockHash = Hash;
-
-/// The hash of a transaction. Uniquely identifies a transaction.
-#[doc(inline)]
-pub type TxHash = Hash;
 
 /// The header of a block
 #[doc(inline)]
@@ -45,10 +117,10 @@ pub type BlockHeader = Header;
 
 /// Result of a transaction being included in a block.
 ///
-/// Returned after submitting an transaction to the blockchain.
+/// Returned after submitting a transaction to the blockchain.
 #[derive(Clone, Debug)]
 pub struct TransactionIncluded<Message_: Message> {
-    pub tx_hash: TxHash,
+    pub tx_hash: Hash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// Events emitted by this transaction

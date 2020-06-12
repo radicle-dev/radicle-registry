@@ -19,6 +19,7 @@ env_logger = "0.7"
 failure = "0.1.7"
 futures01 = { package = "futures", version = "0.1" }
 futures = { version = "0.3", features = ["compat"] }
+hex = "0.4.2"
 jsonrpc-core-client = { version = "14.0", features = ["ws"] }
 lazy_static = "1.4"
 log = "0.4"
