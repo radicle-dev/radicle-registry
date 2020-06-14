@@ -122,7 +122,7 @@ pub struct RegisterMember {
 ///
 /// # State changes
 ///
-/// If successful, a new [crate::state::Project] with the given
+/// If successful, a new [crate::state::Projects1Data] with the given
 /// properties is added to the state.
 ///
 ///
@@ -169,7 +169,7 @@ pub struct CreateCheckpoint {
     pub previous_checkpoint_id: Option<CheckpointId>,
 }
 
-/// Updates [crate::state::Project::current_cp].
+/// Updates [crate::state::ProjectV1::current_cp].
 ///
 /// # State changes
 ///

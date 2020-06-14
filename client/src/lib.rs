@@ -289,7 +289,7 @@ impl ClientT for Client {
         project_domain: ProjectDomain,
     ) -> Result<Option<Project>, Error> {
         let project_id = (project_name.clone(), project_domain.clone());
-        self.fetch_map_value::<registry::store::Projects, _, _>(project_id.clone())
+        self.fetch_map_value::<registry::store::Projects1, _, _>(project_id.clone())
             .await
             .map(|maybe_project| {
                 maybe_project.map(|project| Project::new(project_name, project_domain, project))
@@ -297,11 +297,11 @@ impl ClientT for Client {
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
-        let project_prefix = registry::store::Projects::final_prefix();
+        let project_prefix = registry::store::Projects1::final_prefix();
         let keys = self.backend.fetch_keys(&project_prefix, None).await?;
         let mut project_ids = Vec::with_capacity(keys.len());
         for key in keys {
-            let project_id = registry::store::Projects::decode_key(&key)
+            let project_id = registry::store::Projects1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract project ID");
             project_ids.push(project_id);
         }

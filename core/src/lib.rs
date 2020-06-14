@@ -58,7 +58,7 @@ pub type Balance = u128;
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, ProjectDomain);
 
-/// The domain of a [Project]
+/// The domain of a [crate::state::Projects1Data]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub enum ProjectDomain {
     Org(Id),
@@ -69,33 +69,6 @@ pub enum ProjectDomain {
 impl std::fmt::Display for ProjectDomain {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    /// The name of the project, unique within its org.
-    pub name: ProjectName,
-
-    /// The domain to which the project belongs.
-    pub domain: ProjectDomain,
-
-    /// See [state::Project::current_cp]
-    pub current_cp: CheckpointId,
-
-    /// See [state::Project::metadata]
-    pub metadata: Bytes128,
-}
-
-impl Project {
-    /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Project) -> Self {
-        Project {
-            name,
-            domain,
-            current_cp: project.current_cp,
-            metadata: project.metadata,
-        }
     }
 }
 

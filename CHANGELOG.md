@@ -7,6 +7,7 @@ Upcoming
 ### Breaking changes
 
 
+* runtime: abandon `Projects` storage in favor of `Projects1`
 * runtime: abandon `Users` storage in favor of `Users1`
 * runtime: abandon `Orgs` storage in favor of `Orgs1`
 * runtime: We introduce the `CheckVersion` transaction validation that requires
