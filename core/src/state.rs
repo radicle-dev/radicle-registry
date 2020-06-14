@@ -21,6 +21,30 @@ use sp_runtime::traits::Hash;
 
 use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, Id, ProjectName, H256};
 
+/// The checkpoint id that an existing project was registered with.
+///
+/// # Relevant messages
+///
+/// * [crate::message::RegisterProject]
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub enum InitialCheckpoints1Data {
+    V1(CheckpointId),
+}
+
+impl InitialCheckpoints1Data {
+    /// Creates new instance in the most up to date version
+    pub fn new(initial_cp: CheckpointId) -> Self {
+        Self::V1(initial_cp)
+    }
+
+    /// An id of the checkpoint
+    pub fn initial_cp(&self) -> CheckpointId {
+        match self {
+            Self::V1(initial_cp) => *initial_cp,
+        }
+    }
+}
+
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
 /// Checkpoints are used by [ProjectV1::current_cp]
