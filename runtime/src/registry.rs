@@ -102,7 +102,7 @@ pub mod store {
 
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
-            pub Projects: map hasher(blake2_128_concat) ProjectId => Option<state::Project>;
+            pub Projects1: map hasher(blake2_128_concat) ProjectId => Option<state::Projects1Data>;
 
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
@@ -168,7 +168,7 @@ decl_module! {
             }
 
             let project_id = (message.project_name.clone(), message.project_domain.clone());
-            if store::Projects::get(project_id.clone()).is_some() {
+            if store::Projects1::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
             };
 
@@ -189,11 +189,11 @@ decl_module! {
                 },
             };
 
-            let new_project = state::Project {
-                current_cp: message.checkpoint_id,
-                metadata: message.metadata
-            };
-            store::Projects::insert(project_id.clone(), new_project);
+            let new_project = state::Projects1Data::new(
+                message.checkpoint_id,
+                message.metadata
+            );
+            store::Projects1::insert(project_id.clone(), new_project);
             store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
 
             Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
@@ -364,7 +364,7 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
             let project_id = (message.project_name.clone(), message.project_domain.clone());
-            let opt_project = store::Projects::get(project_id.clone());
+            let opt_project = store::Projects1::get(project_id.clone());
 
             let org_id = match &message.project_domain {
                 ProjectDomain::Org(org_id) => org_id,
@@ -376,10 +376,7 @@ decl_module! {
                     if !org_has_member_with_account(&org, sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    state::Project {
-                        current_cp: message.new_checkpoint_id,
-                        ..prj
-                    }
+                    prj.with_current_cp(message.new_checkpoint_id)
                 }
                 _ => return Err(RegistryError::InexistentProjectId.into()),
 
@@ -393,7 +390,7 @@ decl_module! {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
             }
 
-            store::Projects::insert(project_id, new_project);
+            store::Projects1::insert(project_id, new_project);
 
             Self::deposit_event(Event::CheckpointSet(
                 message.project_name.clone(),
@@ -491,7 +488,7 @@ impl DecodeKey for store::Orgs1 {
     }
 }
 
-impl DecodeKey for store::Projects {
+impl DecodeKey for store::Projects1 {
     type Key = ProjectId;
 
     fn decode_key(key: &[u8]) -> Result<ProjectId, parity_scale_codec::Error> {
@@ -545,8 +542,8 @@ mod test {
         let org_id = Id::try_from("monadic").unwrap();
         let project_name = ProjectName::try_from("radicle".to_string()).unwrap();
         let project_id: ProjectId = (project_name, ProjectDomain::Org(org_id));
-        let hashed_key = store::Projects::storage_map_final_key(project_id.clone());
-        let decoded_key = store::Projects::decode_key(&hashed_key).unwrap();
+        let hashed_key = store::Projects1::storage_map_final_key(project_id.clone());
+        let decoded_key = store::Projects1::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, project_id);
     }
 

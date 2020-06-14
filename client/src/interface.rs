@@ -107,6 +107,39 @@ impl User {
     }
 }
 
+/// Project
+///
+/// Different from [state::ProjectV1] in which this type gathers
+/// [`ProjectName`], [`ProjectDomain`] and the other [`Project`] fields into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Project {
+    /// The name of the project, unique within its org.
+    pub name: ProjectName,
+
+    /// The domain to which the project belongs.
+    pub domain: ProjectDomain,
+
+    /// See [state::ProjectV1::current_cp]
+    pub current_cp: CheckpointId,
+
+    /// See [state::ProjectV1::metadata]
+    pub metadata: Bytes128,
+}
+
+impl Project {
+    /// Build a [crate::Project] given all its properties obtained from storage.
+    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Projects1Data) -> Self {
+        match project {
+            state::Projects1Data::V1(project) => Project {
+                name,
+                domain,
+                current_cp: project.current_cp,
+                metadata: project.metadata,
+            },
+        }
+    }
+}
+
 /// Result of a transaction being included in a block.
 ///
 /// Returned after submitting an transaction to the blockchain.

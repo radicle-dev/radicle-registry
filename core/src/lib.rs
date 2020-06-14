@@ -58,7 +58,7 @@ pub type Balance = u128;
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, ProjectDomain);
 
-/// The domain under which a [Project] lives.
+/// The domain under which a [crate::state::Projects1Data] lives.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum ProjectDomain {
@@ -70,33 +70,6 @@ impl ProjectDomain {
     pub fn id(&self) -> Id {
         match self {
             Self::Org(id) | Self::User(id) => id.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    /// The name of the project, unique within its org.
-    pub name: ProjectName,
-
-    /// The domain to which the project belongs.
-    pub domain: ProjectDomain,
-
-    /// See [state::Project::current_cp]
-    pub current_cp: CheckpointId,
-
-    /// See [state::Project::metadata]
-    pub metadata: Bytes128,
-}
-
-impl Project {
-    /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Project) -> Self {
-        Project {
-            name,
-            domain,
-            current_cp: project.current_cp,
-            metadata: project.metadata,
         }
     }
 }

@@ -23,7 +23,7 @@ use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, Id, ProjectName
 
 /// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
 ///
-/// Checkpoints are used by [Project::current_cp]
+/// Checkpoints are used by [ProjectV1::current_cp]
 ///
 /// Checkpoints are identified by their content hash. See [Checkpoint::id].
 ///
@@ -53,32 +53,72 @@ impl Checkpoint {
     }
 }
 
-/// # Storage
-///
-/// This type is only used for storage. See [crate::Project] for the
-/// complete Project type to be used everywhere else.
-///
 /// Projects are stored as a map with the key derived from a given [crate::ProjectId].
 /// The project ID can be extracted from the storage key.
-///
-/// # Invariants
-///
-/// * `current_cp` is guaranteed to point to an existing [Checkpoint]
-/// * `metadata` is immutable
 ///
 /// # Relevant messages
 ///
 /// * [crate::message::SetCheckpoint]
 /// * [crate::message::RegisterProject]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    /// Links to the checkpoint of project state.
+pub enum Projects1Data {
+    V1(ProjectV1),
+}
+
+impl Projects1Data {
+    /// Creates new instance in the most up to date version
+    pub fn new(current_cp: CheckpointId, metadata: Bytes128) -> Self {
+        Self::V1(ProjectV1 {
+            current_cp,
+            metadata,
+        })
+    }
+
+    /// Links to the current checkpoint of project state.
+    pub fn current_cp(&self) -> CheckpointId {
+        match self {
+            Self::V1(project) => project.current_cp,
+        }
+    }
+
+    /// Opaque metadata that is controlled by the DApp.
+    pub fn metadata(&self) -> &Bytes128 {
+        match self {
+            Self::V1(project) => &project.metadata,
+        }
+    }
+
+    /// Sets the given checkpoint as a [Projects1Data::current_cp].
+    /// Return a new Project with the new checkpoint.
+    pub fn with_current_cp(self, current_cp: CheckpointId) -> Self {
+        match self {
+            Self::V1(project) => Self::V1(project.set_current_cp(current_cp)),
+        }
+    }
+}
+
+/// # Invariants
+///
+/// * `current_cp` is guaranteed to point to an existing [Checkpoint]
+/// * `metadata` is immutable
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct ProjectV1 {
+    /// Links to the current checkpoint of project state.
     ///
     /// Updated with the [crate::message::SetCheckpoint] transaction.
     pub current_cp: CheckpointId,
 
     /// Opaque metadata that is controlled by the DApp.
     pub metadata: Bytes128,
+}
+
+impl ProjectV1 {
+    /// Sets the given checkpoint as a [ProjectV1::current_cp].
+    /// Return a new Project with the new checkpoint.
+    pub fn set_current_cp(mut self, current_cp: CheckpointId) -> Self {
+        self.current_cp = current_cp;
+        self
+    }
 }
 
 /// Balance associated with an [crate::AccountId].
