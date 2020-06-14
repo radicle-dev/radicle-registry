@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+
+* runtime: abandon `Users` storage in favor of `Users1`
 * runtime: abandon `Orgs` storage in favor of `Orgs1`
 * runtime: We introduce the `CheckVersion` transaction validation that requires
   authors to include the runtime version in the transaction.

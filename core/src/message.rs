@@ -64,9 +64,9 @@ pub struct UnregisterOrg {
 ///
 /// # State changes
 ///
-/// If successful, a new [crate::state::User] with the given properties is added to the state.
+/// If successful, a new [crate::state::Users1Data] with the given properties is added to the state.
 ///
-/// [crate::state::User::account_id] is generated randomly.
+/// [crate::state::Users1Data::account_id] is generated randomly.
 ///
 /// # State-dependent validations
 ///

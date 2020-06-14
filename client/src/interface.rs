@@ -76,6 +76,35 @@ impl Org {
     }
 }
 
+/// User
+///
+/// Different from [state::UserV1] in which this type gathers
+/// both the [`Id`] and the other [`User`] fields, respectively stored
+/// as an User's storage key and data, into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct User {
+    // Unique id of a User.
+    pub id: Id,
+
+    /// See [state::UserV1::account_id]
+    pub account_id: AccountId,
+
+    /// See [state::UserV1::projects]
+    pub projects: Vec<ProjectName>,
+}
+
+impl User {
+    pub fn new(id: Id, user: state::Users1Data) -> Self {
+        match user {
+            state::Users1Data::V1(user) => Self {
+                id,
+                account_id: user.account_id,
+                projects: user.projects,
+            },
+        }
+    }
+}
+
 /// Result of a transaction being included in a block.
 ///
 /// Returned after submitting an transaction to the blockchain.
