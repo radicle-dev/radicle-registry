@@ -106,7 +106,7 @@ pub mod store {
 
             // The below map indexes each existing project's id to the
             // checkpoint id that it was registered with.
-            pub InitialCheckpoints: map hasher(opaque_blake2_256) ProjectId => Option<CheckpointId>;
+            pub InitialCheckpoints1: map hasher(opaque_blake2_256) ProjectId => Option<state::InitialCheckpoints1Data>;
 
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
@@ -194,7 +194,8 @@ decl_module! {
                 message.metadata
             );
             store::Projects1::insert(project_id.clone(), new_project);
-            store::InitialCheckpoints::insert(project_id, message.checkpoint_id);
+            let checkpoint_data = state::InitialCheckpoints1Data::new(message.checkpoint_id);
+            store::InitialCheckpoints1::insert(project_id, checkpoint_data);
 
             Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
             Ok(())
@@ -382,9 +383,9 @@ decl_module! {
 
             };
 
-            let initial_cp = match store::InitialCheckpoints::get(project_id.clone()) {
+            let initial_cp = match store::InitialCheckpoints1::get(project_id.clone()) {
                 None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
-                Some(cp) => cp,
+                Some(cp) => cp.initial_cp(),
             };
             if !descends_from_initial_checkpoint(message.new_checkpoint_id, initial_cp) {
                 return Err(RegistryError::InvalidCheckpointAncestry.into())
