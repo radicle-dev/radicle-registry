@@ -52,10 +52,7 @@ async fn create_checkpoint() {
     .result
     .unwrap();
 
-    let checkpoint1_ = state::Checkpoint {
-        parent: None,
-        hash: project_hash1,
-    };
+    let checkpoint1_ = Checkpoint::new(state::Checkpoints1Data::new(None, project_hash1));
     let checkpoint1 = client
         .get_checkpoint(checkpoint_id1)
         .await
@@ -63,10 +60,10 @@ async fn create_checkpoint() {
         .unwrap();
     assert_eq!(checkpoint1, checkpoint1_);
 
-    let checkpoint2_ = state::Checkpoint {
-        parent: Some(checkpoint_id1),
-        hash: project_hash2,
-    };
+    let checkpoint2_ = Checkpoint::new(state::Checkpoints1Data::new(
+        Some(checkpoint_id1),
+        project_hash2,
+    ));
     let checkpoint2 = client
         .get_checkpoint(checkpoint_id2)
         .await

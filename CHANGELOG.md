@@ -6,7 +6,8 @@ Upcoming
 
 ### Breaking changes
 
-
+* client: `ClientT::get_checkpoint` returns a new `Checkpoint` structure
+* runtime: abandon `Checkpoints` storage in favor of `Checkpoints1`
 * runtime: abandon `InitialCheckpoints` storage in favor of `InitialCheckpoints1`
 * runtime: abandon `Projects` storage in favor of `Projects1`
 * runtime: abandon `Users` storage in favor of `Users1`

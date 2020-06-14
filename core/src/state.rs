@@ -49,29 +49,62 @@ impl InitialCheckpoints1Data {
 ///
 /// Checkpoints are used by [ProjectV1::current_cp]
 ///
-/// Checkpoints are identified by their content hash. See [Checkpoint::id].
+/// Checkpoints are identified by their content hash. See [Checkpoints1Data::id].
 ///
 /// # Storage
 ///
-/// Checkpoints are stored as a map using [Checkpoint::id] to derive the key.
-///
-/// # Invariants
-///
-/// * If `parent` is [Some] then the referenced checkpoint exists in the state.
+/// Checkpoints are stored as a map using [Checkpoints1Data::id] to derive the key.
 ///
 /// # Relevant messages
 ///
 /// * [crate::message::CreateCheckpoint]
 /// * [crate::message::SetCheckpoint]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct Checkpoint {
-    /// Previous checkpoint in the project histor.
+pub enum Checkpoints1Data {
+    V1(CheckpointV1),
+}
+
+impl Checkpoints1Data {
+    /// Creates new instance in the most up to date version
+    pub fn new(parent: Option<CheckpointId>, hash: H256) -> Self {
+        Self::V1(CheckpointV1 { parent, hash })
+    }
+
+    /// Previous checkpoint in the project history.
+    pub fn parent(&self) -> Option<CheckpointId> {
+        match self {
+            Self::V1(cp) => cp.parent,
+        }
+    }
+
+    /// Hash that identifies a project’s off-chain data.
+    pub fn hash(&self) -> H256 {
+        match self {
+            Self::V1(cp) => cp.hash,
+        }
+    }
+
+    /// Checkpoint ID
+    pub fn id(&self) -> CheckpointId {
+        match self {
+            Self::V1(cp) => cp.id(),
+        }
+    }
+}
+
+/// # Invariants
+///
+/// * If `parent` is [Some] then the referenced checkpoint exists in the state.
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointV1 {
+    /// Previous checkpoint in the project history.
     pub parent: Option<CheckpointId>,
     /// Hash that identifies a project’s off-chain data.
     pub hash: H256,
 }
 
-impl Checkpoint {
+impl CheckpointV1 {
+    /// Checkpoint ID
     pub fn id(&self) -> CheckpointId {
         Hashing::hash_of(&self)
     }
@@ -123,7 +156,7 @@ impl Projects1Data {
 
 /// # Invariants
 ///
-/// * `current_cp` is guaranteed to point to an existing [Checkpoint]
+/// * `current_cp` is guaranteed to point to an existing [Checkpoints1Data]
 /// * `metadata` is immutable
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct ProjectV1 {
