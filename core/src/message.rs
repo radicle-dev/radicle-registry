@@ -158,7 +158,8 @@ pub struct RegisterProject {
 ///
 /// # State changes
 ///
-/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+/// If successful, adds a new [crate::state::Checkpoints1Data] with the given parameters
+/// to the state.
 ///
 /// # State-dependent validations
 ///
@@ -173,7 +174,8 @@ pub struct CreateCheckpoint {
 ///
 /// # State changes
 ///
-/// If successful, adds a new [crate::state::Checkpoint] with the given parameters to the state.
+/// If successful, adds a new [crate::state::Checkpoints1Data] with the given parameters
+/// to the state.
 ///
 /// # State-dependent validations
 ///

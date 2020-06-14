@@ -138,6 +138,33 @@ impl Project {
     }
 }
 
+/// Checkpoint
+///
+/// Different from [state::CheckpointV1] in which this type gathers
+/// both the [`CheckpointId`] and the other [`Checkpoint`] fields, respectively stored
+/// as an Checkpoint's storage key and data, into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Checkpoint {
+    /// Checkpoint ID.
+    pub id: CheckpointId,
+    /// Previous checkpoint in the project history.
+    pub parent: Option<CheckpointId>,
+    /// Hash that identifies a project’s off-chain data.
+    pub hash: H256,
+}
+
+impl Checkpoint {
+    pub fn new(cp: state::Checkpoints1Data) -> Self {
+        match cp {
+            state::Checkpoints1Data::V1(cp) => Self {
+                id: cp.id(),
+                parent: cp.parent,
+                hash: cp.hash,
+            },
+        }
+    }
+}
+
 /// Result of a transaction being included in a block.
 ///
 /// Returned after submitting an transaction to the blockchain.
@@ -237,7 +264,7 @@ pub trait ClientT {
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error>;
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error>;
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
 }

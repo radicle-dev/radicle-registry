@@ -110,7 +110,7 @@ pub mod store {
 
             // The below map indexes each checkpoint's id to the checkpoint
             // it points to, should it exist.
-            pub Checkpoints: map hasher(opaque_blake2_256) CheckpointId => Option<state::Checkpoint>;
+            pub Checkpoints1: map hasher(opaque_blake2_256) CheckpointId => Option<state::Checkpoints1Data>;
         }
     }
 }
@@ -133,8 +133,8 @@ fn descends_from_initial_checkpoint(
     //
     // The loop's total runtime will also depend on the performance of
     // each `store::StorageMap::get` request.
-    while let Some(cp) = store::Checkpoints::get(ancestor_id) {
-        match cp.parent {
+    while let Some(cp) = store::Checkpoints1::get(ancestor_id) {
+        match cp.parent() {
             None => return false,
             Some(cp_id) => {
                 if cp_id == initial_cp_id {
@@ -163,7 +163,7 @@ decl_module! {
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Checkpoints::get(message.checkpoint_id).is_none() {
+            if store::Checkpoints1::get(message.checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
@@ -336,19 +336,19 @@ decl_module! {
             match message.previous_checkpoint_id {
                 None => {}
                 Some(cp_id) => {
-                    match store::Checkpoints::get(cp_id) {
+                    match store::Checkpoints1::get(cp_id) {
                         None => return Err(RegistryError::InexistentCheckpointId.into()),
                         Some(_) => {}
                     }
                 }
             };
 
-            let checkpoint = state::Checkpoint {
-                parent: message.previous_checkpoint_id,
-                hash: message.project_hash,
-            };
+            let checkpoint = state::Checkpoints1Data::new(
+                message.previous_checkpoint_id,
+                message.project_hash,
+            );
             let checkpoint_id = Hashing::hash_of(&checkpoint);
-            store::Checkpoints::insert(checkpoint_id, checkpoint);
+            store::Checkpoints1::insert(checkpoint_id, checkpoint);
 
             Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
             Ok(())
@@ -361,7 +361,7 @@ decl_module! {
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Checkpoints::get(message.new_checkpoint_id).is_none() {
+            if store::Checkpoints1::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
             let project_id = (message.project_name.clone(), message.project_domain.clone());

@@ -308,9 +308,10 @@ impl ClientT for Client {
         Ok(project_ids)
     }
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error> {
-        self.fetch_map_value::<registry::store::Checkpoints, _, _>(id)
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
+        self.fetch_map_value::<registry::store::Checkpoints1, _, _>(id)
             .await
+            .map(|cp_opt| cp_opt.map(Checkpoint::new))
     }
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
