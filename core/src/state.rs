@@ -226,25 +226,57 @@ impl OrgV1 {
     }
 }
 
-/// # Storage
-///
-/// This type is only used for storage. See [crate::User] for the
-/// complete User type to be used everywhere else.
-///
-/// Users are stored as a map with the key derived from [crate::User::id].
+/// Users are stored as a map with the key derived from [crate::Id].
 /// The user ID can be extracted from the storage key.
-///
-/// # Invariants
-///
-/// * `account_id` is immutable
-/// * `projects` is a set of all the projects owned by the User.
 ///
 /// # Relevant messages
 ///
 /// * [crate::message::RegisterUser]
 /// * [crate::message::UnregisterUser]
 #[derive(Clone, Debug, Decode, Encode, Eq, PartialEq)]
-pub struct User {
+pub enum Users1Data {
+    V1(UserV1),
+}
+
+impl Users1Data {
+    /// Creates new instance in the most up to date version
+    pub fn new(account_id: AccountId, projects: Vec<ProjectName>) -> Self {
+        Self::V1(UserV1 {
+            account_id,
+            projects,
+        })
+    }
+
+    /// Account ID that holds the user funds.
+    pub fn account_id(&self) -> AccountId {
+        match self {
+            Self::V1(user) => user.account_id,
+        }
+    }
+
+    /// Set of all projects owned by the user.
+    pub fn projects(&self) -> &Vec<ProjectName> {
+        match self {
+            Self::V1(user) => &user.projects,
+        }
+    }
+
+    /// Add the given project to the list of [Users1Data::projects].
+    /// Return a new User with the new project included or the
+    /// same user if the user already owns that project.
+    pub fn add_project(self, project_name: ProjectName) -> Self {
+        match self {
+            Self::V1(user) => Self::V1(user.add_project(project_name)),
+        }
+    }
+}
+
+/// # Invariants
+///
+/// * `account_id` is immutable
+/// * `projects` is a set of all the projects owned by the User.
+#[derive(Clone, Debug, Decode, Encode, Eq, PartialEq)]
+pub struct UserV1 {
     /// Account ID that holds the user funds.
     pub account_id: AccountId,
 
@@ -252,8 +284,11 @@ pub struct User {
     pub projects: Vec<ProjectName>,
 }
 
-impl User {
-    pub fn add_project(mut self, project_name: ProjectName) -> User {
+impl UserV1 {
+    /// Add the given project to the list of [UserV1::projects].
+    /// Return a new User with the new project included or the
+    /// same user if the user already owns that project.
+    pub fn add_project(mut self, project_name: ProjectName) -> Self {
         if !self.projects.contains(&project_name) {
             self.projects.push(project_name);
         }

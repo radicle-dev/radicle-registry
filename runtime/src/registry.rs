@@ -98,7 +98,7 @@ pub mod store {
 
             // The storage for Users, indexed by Id.
             // We use the blake2_128_concat hasher so that the Id can be extraced from the key.
-            pub Users: map hasher(blake2_128_concat) Id => Option<state::User>;
+            pub Users1: map hasher(blake2_128_concat) Id => Option<state::Users1Data>;
 
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
@@ -181,11 +181,11 @@ decl_module! {
                     store::Orgs1::insert(org_id, org.add_project(message.project_name.clone()));
                 },
                 ProjectDomain::User(user_id) => {
-                    let user = store::Users::get(user_id).ok_or(RegistryError::InexistentUser)?;
-                    if user.account_id != sender {
+                    let user = store::Users1::get(user_id).ok_or(RegistryError::InexistentUser)?;
+                    if user.account_id() != sender {
                         return Err(RegistryError::InsufficientSenderPermissions.into());
                     }
-                    store::Users::insert(user_id, user.add_project(message.project_name.clone()));
+                    store::Users1::insert(user_id, user.add_project(message.project_name.clone()));
                 },
             };
 
@@ -209,7 +209,7 @@ decl_module! {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
 
-            if store::Users::get(message.user_id.clone()).is_none() {
+            if store::Users1::get(message.user_id.clone()).is_none() {
                 return Err(RegistryError::InexistentUser.into());
             }
 
@@ -231,7 +231,7 @@ decl_module! {
                 return Err(RegistryError::DuplicateOrgId.into());
             }
 
-            let user = get_user_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
+            let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
 
             let random_account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(
@@ -239,7 +239,7 @@ decl_module! {
                 )
             );
 
-            let new_org = state::Orgs1Data::new(random_account_id, vec![user.id],  Vec::new(),);
+            let new_org = state::Orgs1Data::new(random_account_id, vec![user_id],  Vec::new());
             store::Orgs1::insert(message.org_id.clone(), new_org);
             Self::deposit_event(Event::OrgRegistered(message.org_id));
             Ok(())
@@ -248,8 +248,8 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
             fn can_be_unregistered(org: state::Orgs1Data, sender: AccountId) -> bool {
-                org.projects().is_empty() && get_user_with_account(sender)
-                    .map(|user| org.members() == &[user.id]).unwrap_or(false)
+                org.projects().is_empty() && get_user_id_with_account(sender)
+                    .map(|user_id| org.members() == &[user_id]).unwrap_or(false)
             }
 
             let sender = ensure_signed(origin)?;
@@ -273,19 +273,19 @@ decl_module! {
         pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Users::get(message.user_id.clone()).is_some() {
+            if store::Users1::get(message.user_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateUserId.into())
             }
 
-            if get_user_with_account(sender).is_some() {
+            if get_user_id_with_account(sender).is_some() {
                 return Err(RegistryError::UserAccountAssociated.into())
             }
 
-            let new_user = state::User {
-                account_id: sender,
-                projects: Vec::new(),
-            };
-            store::Users::insert(message.user_id.clone(), new_user);
+            let new_user = state::Users1Data::new(
+                sender,
+                Vec::new(),
+            );
+            store::Users1::insert(message.user_id.clone(), new_user);
             Self::deposit_event(Event::UserRegistered(message.user_id));
             Ok(())
         }
@@ -293,16 +293,16 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let sender_user = get_user_with_account(sender).ok_or(RegistryError::InexistentUser)?;
+            let sender_user_id = get_user_id_with_account(sender).ok_or(RegistryError::InexistentUser)?;
 
-            if sender_user.id != message.user_id {
+            if sender_user_id != message.user_id {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
-            if find_org(|org| org.members().contains(&sender_user.id)).is_some() {
+            if find_org(|org| org.members().contains(&sender_user_id)).is_some() {
                 return Err(RegistryError::UnregisterableUser.into());
             }
 
-            store::Users::remove(message.user_id.clone());
+            store::Users1::remove(message.user_id.clone());
             Self::deposit_event(Event::UserUnregistered(message.user_id));
             Ok(())
         }
@@ -435,10 +435,10 @@ decl_module! {
 // TODO(xla): This is a naive first version of the check to see if an account is
 // already associated to a user. While fine for small dataset this needs to be reworked
 // in the future.
-pub fn get_user_with_account(account_id: AccountId) -> Option<User> {
-    store::Users::iter()
-        .find(|(_, user)| user.account_id == account_id)
-        .map(|(id, user)| User::new(id, user))
+pub fn get_user_id_with_account(account_id: AccountId) -> Option<Id> {
+    store::Users1::iter()
+        .find(|(_, user)| user.account_id() == account_id)
+        .map(|(id, _)| id)
 }
 
 pub fn find_org(predicate: impl Fn(&state::Orgs1Data) -> bool) -> Option<state::Orgs1Data> {
@@ -451,8 +451,8 @@ pub fn find_org(predicate: impl Fn(&state::Orgs1Data) -> bool) -> Option<state::
 /// Return false if the account doesn't have an associated user or if said user is not a member
 /// of the org.
 pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId) -> bool {
-    match get_user_with_account(account_id) {
-        Some(user) => org.members().contains(&user.id),
+    match get_user_id_with_account(account_id) {
+        Some(user_id) => org.members().contains(&user_id),
         None => false,
     }
 }
@@ -499,7 +499,7 @@ impl DecodeKey for store::Projects {
     }
 }
 
-impl DecodeKey for store::Users {
+impl DecodeKey for store::Users1 {
     type Key = Id;
 
     fn decode_key(key: &[u8]) -> Result<Id, parity_scale_codec::Error> {
@@ -555,8 +555,8 @@ mod test {
     #[test]
     fn users_decode_key_identity() {
         let user_id = Id::try_from("cloudhead").unwrap();
-        let hashed_key = store::Users::storage_map_final_key(user_id.clone());
-        let decoded_key = store::Users::decode_key(&hashed_key).unwrap();
+        let hashed_key = store::Users1::storage_map_final_key(user_id.clone());
+        let decoded_key = store::Users1::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, user_id);
     }
 }

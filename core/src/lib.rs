@@ -20,8 +20,6 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
-
 use parity_scale_codec::{Decode, Encode};
 use sp_core::{ed25519, H256};
 use sp_runtime::traits::BlakeTwo256;
@@ -104,30 +102,3 @@ impl Project {
 }
 
 pub type CheckpointId = H256;
-
-/// User
-///
-/// Different from [state::User] in which this type gathers
-/// both the [`Id`] and the other [`User`] fields, respectively stored
-/// as an User's storage key and data, into one complete type.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct User {
-    // Unique id of a User.
-    pub id: Id,
-
-    /// See [state::User::account_id]
-    pub account_id: AccountId,
-
-    /// See [state::User::projects]
-    pub projects: Vec<ProjectName>,
-}
-
-impl User {
-    pub fn new(id: Id, user: state::User) -> User {
-        User {
-            id,
-            account_id: user.account_id,
-            projects: user.projects,
-        }
-    }
-}

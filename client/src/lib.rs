@@ -265,17 +265,17 @@ impl ClientT for Client {
     }
 
     async fn get_user(&self, id: Id) -> Result<Option<User>, Error> {
-        self.fetch_map_value::<registry::store::Users, _, _>(id.clone())
+        self.fetch_map_value::<registry::store::Users1, _, _>(id.clone())
             .await
-            .map(|maybe_user: Option<state::User>| maybe_user.map(|user| User::new(id, user)))
+            .map(|maybe_user| maybe_user.map(|user| User::new(id, user)))
     }
 
     async fn list_users(&self) -> Result<Vec<Id>, Error> {
-        let users_prefix = registry::store::Users::final_prefix();
+        let users_prefix = registry::store::Users1::final_prefix();
         let keys = self.backend.fetch_keys(&users_prefix, None).await?;
         let mut user_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
-            let user_id = registry::store::Users::decode_key(&key)
+            let user_id = registry::store::Users1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract user ID");
             user_ids.push(user_id);
         }
