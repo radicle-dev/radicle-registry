@@ -111,10 +111,10 @@ To create a release from the current master branch run `./scripts/create-release
 
 ### Tags
 
-Our tags are composed of the release date followed by a number representing the
-number of releases done in that same date. For example, `2020-04-09-0` would
-be the first release done that day. Should we need to make a new release in
-that same day, it'd be tagged `2020-04-09-1`.
+Our tags are composed of the release date followed by an optional number representing the
+number of releases done in that same date. For example, `2020.04.09` would be
+the first release done that day. Should we need to make a new release in that
+same day, it'd be tagged `2020.04.09-1`.
 
 
 Local devnet

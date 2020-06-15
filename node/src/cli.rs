@@ -101,7 +101,8 @@ impl SubstrateCli for Cli {
     }
 
     fn impl_version() -> &'static str {
-        "ff.0"
+        // uses `git describe`
+        env!("VERGEN_SEMVER")
     }
 
     fn description() -> &'static str {
