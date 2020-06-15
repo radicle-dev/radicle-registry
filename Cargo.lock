@@ -3482,6 +3482,7 @@ dependencies = [
  "structopt",
  "thiserror",
  "url 1.7.2",
+ "vergen",
 ]
 
 [[package]]

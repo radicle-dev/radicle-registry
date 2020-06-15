@@ -29,7 +29,10 @@ use command::{account, key_pair, org, other, project, runtime, user};
 
 /// The type that captures the command line.
 #[derive(StructOpt, Clone)]
-#[structopt(max_term_width = 80)]
+#[structopt(
+    max_term_width = 80,
+    version = env!("VERGEN_SEMVER"),
+)]
 pub struct CommandLine {
     #[structopt(subcommand)]
     pub command: Command,
