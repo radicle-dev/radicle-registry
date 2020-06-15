@@ -38,9 +38,6 @@ pub use crate::error::Error;
 pub use crate::message::Message;
 pub use crate::transaction::{Transaction, TransactionExtra};
 
-//TODO(nuno):
-// * Test (deserialize . serialize)
-
 /// A hash of some data used by the chain.
 ///
 /// Wraps the hash type used by the runtime, [RuntimeHash],
@@ -217,4 +214,19 @@ pub trait ClientT {
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error>;
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn hash_identity_on_deserialize_after_serialize() {
+        let hash = Hash::hash_of(&"monadic");
+        let serialized = serde_json::to_string(&hash).unwrap();
+        let deserialized: Hash = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(hash, deserialized);
+    }
 }

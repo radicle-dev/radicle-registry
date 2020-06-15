@@ -3510,6 +3510,7 @@ dependencies = [
  "rand 0.7.3",
  "sc-rpc-api",
  "serde",
+ "serde_json",
  "serial_test",
  "sp-core",
  "sp-inherents",
