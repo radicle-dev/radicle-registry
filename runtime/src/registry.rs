@@ -94,7 +94,7 @@ pub mod store {
             // The storage for Orgs, indexed by Id.
             // We use the blake2_128_concat hasher so that the Id
             // can be extracted from the key.
-            pub Orgs: map hasher(blake2_128_concat) Id => Option<state::Org>;
+            pub Orgs1: map hasher(blake2_128_concat) Id => Option<state::Orgs1Data>;
 
             // The storage for Users, indexed by Id.
             // We use the blake2_128_concat hasher so that the Id can be extraced from the key.
@@ -174,11 +174,11 @@ decl_module! {
 
             match &message.project_domain {
                 ProjectDomain::Org(org_id) => {
-                    let org = store::Orgs::get(org_id).ok_or(RegistryError::InexistentOrg)?;
+                    let org = store::Orgs1::get(org_id).ok_or(RegistryError::InexistentOrg)?;
                     if !org_has_member_with_account(&org, sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into());
                     }
-                    store::Orgs::insert(org_id, org.add_project(message.project_name.clone()));
+                    store::Orgs1::insert(org_id, org.add_project(message.project_name.clone()));
                 },
                 ProjectDomain::User(user_id) => {
                     let user = store::Users::get(user_id).ok_or(RegistryError::InexistentUser)?;
@@ -204,7 +204,7 @@ decl_module! {
         pub fn register_member(origin, message: message::RegisterMember) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            let org = store::Orgs::get(message.org_id.clone()).ok_or(RegistryError::InexistentOrg)?;
+            let org = store::Orgs1::get(message.org_id.clone()).ok_or(RegistryError::InexistentOrg)?;
             if !org_has_member_with_account(&org, sender) {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
@@ -213,12 +213,12 @@ decl_module! {
                 return Err(RegistryError::InexistentUser.into());
             }
 
-            if org.members.contains(&message.user_id) {
+            if org.members().contains(&message.user_id) {
                 return Err(RegistryError::AlreadyAMember.into());
             }
 
             let org_with_member = org.add_member(message.user_id.clone());
-            store::Orgs::insert(message.org_id.clone(), org_with_member);
+            store::Orgs1::insert(message.org_id.clone(), org_with_member);
             Self::deposit_event(Event::MemberRegistered(message.user_id, message.org_id));
             Ok(())
         }
@@ -227,7 +227,7 @@ decl_module! {
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Orgs::get(message.org_id.clone()).is_some() {
+            if store::Orgs1::get(message.org_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateOrgId.into());
             }
 
@@ -239,30 +239,26 @@ decl_module! {
                 )
             );
 
-            let new_org = state::Org {
-                account_id: random_account_id,
-                members: vec![user.id],
-                projects: Vec::new(),
-            };
-            store::Orgs::insert(message.org_id.clone(), new_org);
+            let new_org = state::Orgs1Data::new(random_account_id, vec![user.id],  Vec::new(),);
+            store::Orgs1::insert(message.org_id.clone(), new_org);
             Self::deposit_event(Event::OrgRegistered(message.org_id));
             Ok(())
         }
 
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
-            fn can_be_unregistered(org: state::Org, sender: AccountId) -> bool {
-                org.projects.is_empty() && get_user_with_account(sender)
-                    .map(|user| org.members == vec![user.id]).unwrap_or(false)
+            fn can_be_unregistered(org: state::Orgs1Data, sender: AccountId) -> bool {
+                org.projects().is_empty() && get_user_with_account(sender)
+                    .map(|user| org.members() == &[user.id]).unwrap_or(false)
             }
 
             let sender = ensure_signed(origin)?;
 
-            match store::Orgs::get(message.org_id.clone()) {
+            match store::Orgs1::get(message.org_id.clone()) {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org, sender) {
-                        store::Orgs::remove(message.org_id.clone());
+                        store::Orgs1::remove(message.org_id.clone());
                         Self::deposit_event(Event::OrgUnregistered(message.org_id));
                         Ok(())
                     }
@@ -302,7 +298,7 @@ decl_module! {
             if sender_user.id != message.user_id {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
-            if find_org(|org| org.members.contains(&sender_user.id)).is_some() {
+            if find_org(|org| org.members().contains(&sender_user.id)).is_some() {
                 return Err(RegistryError::UnregisterableUser.into());
             }
 
@@ -314,12 +310,12 @@ decl_module! {
         #[weight = SimpleDispatchInfo::InsecureFreeNormal]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-            let org = store::Orgs::get(message.org_id)
+            let org = store::Orgs1::get(message.org_id)
                 .ok_or(RegistryError::InexistentOrg)?;
 
             if org_has_member_with_account(&org, sender) {
                 <crate::Balances as Currency<_>>::transfer(
-                    &org.account_id,
+                    &org.account_id(),
                     &message.recipient,
                     message.value, ExistenceRequirement::KeepAlive
                 )
@@ -374,7 +370,7 @@ decl_module! {
                 ProjectDomain::Org(org_id) => org_id,
                 ProjectDomain::User(_) => panic!("TODO(nuno"),
             };
-            let opt_org = store::Orgs::get(org_id.clone());
+            let opt_org = store::Orgs1::get(org_id.clone());
             let new_project = match (opt_project, opt_org) {
                 (Some(prj), Some(org)) => {
                     if !org_has_member_with_account(&org, sender) {
@@ -445,8 +441,8 @@ pub fn get_user_with_account(account_id: AccountId) -> Option<User> {
         .map(|(id, user)| User::new(id, user))
 }
 
-pub fn find_org(predicate: impl Fn(&state::Org) -> bool) -> Option<state::Org> {
-    store::Orgs::iter()
+pub fn find_org(predicate: impl Fn(&state::Orgs1Data) -> bool) -> Option<state::Orgs1Data> {
+    store::Orgs1::iter()
         .find(|(_, org)| predicate(org))
         .map(|(_, org)| org)
 }
@@ -454,9 +450,9 @@ pub fn find_org(predicate: impl Fn(&state::Org) -> bool) -> Option<state::Org> {
 /// Check whether the user associated with the given account_id is a member of the given org.
 /// Return false if the account doesn't have an associated user or if said user is not a member
 /// of the org.
-pub fn org_has_member_with_account(org: &state::Org, account_id: AccountId) -> bool {
+pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId) -> bool {
     match get_user_with_account(account_id) {
-        Some(user) => org.members.contains(&user.id),
+        Some(user) => org.members().contains(&user.id),
         None => false,
     }
 }
@@ -487,7 +483,7 @@ pub trait DecodeKey {
     fn decode_key(key: &[u8]) -> Result<Self::Key, parity_scale_codec::Error>;
 }
 
-impl DecodeKey for store::Orgs {
+impl DecodeKey for store::Orgs1 {
     type Key = Id;
 
     fn decode_key(key: &[u8]) -> Result<Id, parity_scale_codec::Error> {
@@ -537,8 +533,8 @@ mod test {
     #[test]
     fn orgs_decode_key_identity() {
         let org_id = Id::try_from("monadic").unwrap();
-        let hashed_key = store::Orgs::storage_map_final_key(org_id.clone());
-        let decoded_key = store::Orgs::decode_key(&hashed_key).unwrap();
+        let hashed_key = store::Orgs1::storage_map_final_key(org_id.clone());
+        let decoded_key = store::Orgs1::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, org_id);
     }
 

@@ -74,37 +74,6 @@ impl std::fmt::Display for ProjectDomain {
     }
 }
 
-/// Org
-///
-/// Different from [state::Org] in which this type gathers
-/// both the [`Id`] and the other [`Org`] fields, respectively stored
-/// as an Org's storage key and data, into one complete type.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Org {
-    // Unique id of an Org.
-    pub id: Id,
-
-    /// See [state::Org::account_id]
-    pub account_id: AccountId,
-
-    /// See [state::Org::members]
-    pub members: Vec<Id>,
-
-    /// See [state::Org::projects]
-    pub projects: Vec<ProjectName>,
-}
-
-impl Org {
-    pub fn new(id: Id, org: state::Org) -> Org {
-        Org {
-            id,
-            account_id: org.account_id,
-            members: org.members,
-            projects: org.projects,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Project {
     /// The name of the project, unique within its org.

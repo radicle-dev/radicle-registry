@@ -43,6 +43,39 @@ pub type TxHash = Hash;
 #[doc(inline)]
 pub type BlockHeader = Header;
 
+/// Org
+///
+/// Different from [state::OrgV1] in which this type gathers
+/// both the [`Id`] and the other [`Org`] fields, respectively stored
+/// as an Org's storage key and data, into one complete type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Org {
+    // Unique id of an Org.
+    pub id: Id,
+
+    /// See [state::OrgV1::account_id]
+    pub account_id: AccountId,
+
+    /// See [state::OrgV1::members]
+    pub members: Vec<Id>,
+
+    /// See [state::OrgV1::projects]
+    pub projects: Vec<ProjectName>,
+}
+
+impl Org {
+    pub fn new(id: Id, org: state::Orgs1Data) -> Org {
+        match org {
+            state::Orgs1Data::V1(org) => Org {
+                id,
+                account_id: org.account_id,
+                members: org.members,
+                projects: org.projects,
+            },
+        }
+    }
+}
+
 /// Result of a transaction being included in a block.
 ///
 /// Returned after submitting an transaction to the blockchain.
