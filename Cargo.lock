@@ -3580,7 +3580,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-registry-runtime"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "frame-executive",
  "frame-support",
