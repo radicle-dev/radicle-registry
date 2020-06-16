@@ -139,8 +139,9 @@ Runtime updates
 There are special policies and processes around updates to the `runtime` package.
 
 Updates to the runtime are tracked by the `VERSION` exported from the `runtime`
-crate. The updates fall into two categories: Implementation updates and
-semantic updates.
+crate. (`VERSION.spec_version` and `VERSION.impl_version` must match the minor
+and patch versions of the `runtime` crate respectively.) Runtime updates fall
+into two categories: Implementation updates and semantic updates.
 
 ### Implementation updates
 
@@ -148,12 +149,14 @@ Implementation updates only change the implementation of the runtime but do not
 affect the semantics.
 
 Commits with implementation updates must increment the `impl_version` field of
-`VERSION`. They may not recompile `./runtime/latest.wasm`.
+`VERSION` and the patch version of the crate. They may not recompile
+`./runtime/latest.wasm`.
 
 ### Semantic updates
 
-Semantic changes must increment the `spec_version` field and reset the
-`impl_version` field to `0`.
+Semantic changes must increment the `VERSION.spec_version` field and the
+`runtime` crate minor version and reset the `impl_version` field and the crate
+patch version to `0`.
 
 In a commit with a semantic update you must also update the latest Wasm
 runtime.

@@ -10,8 +10,8 @@ license = "GPL-3.0-only"
 repository = "https://github.com/radicle-dev/radicle-registry"
 
 [dependencies]
-radicle-registry-core = { version = "0.0.0", path = "../core" }
-radicle-registry-runtime = { version = "0.0.0", path = "../runtime" }
+radicle-registry-core = { path = "../core" }
+radicle-registry-runtime = { path = "../runtime" }
 
 async-trait = "0.1"
 derive_more = "0.15"
