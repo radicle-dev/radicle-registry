@@ -219,7 +219,6 @@ pub trait ClientT {
 #[cfg(test)]
 mod test {
     use super::*;
-    use serde_json;
 
     #[test]
     fn hash_identity_on_deserialize_after_serialize() {

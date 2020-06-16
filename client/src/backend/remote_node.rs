@@ -29,7 +29,9 @@ use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
 use url::Url;
 
-use radicle_registry_runtime::{Block, BlockNumber, Event, EventRecord, Header};
+use radicle_registry_runtime::{
+    Block, BlockNumber, Event, EventRecord, Hash as RuntimeHash, Header,
+};
 
 use crate::backend::{self, Backend};
 use crate::interface::*;
@@ -37,9 +39,9 @@ use crate::interface::*;
 /// Collection of substrate RPC clients
 #[derive(Clone)]
 struct Rpc {
-    state: StateClient<BlockHash>,
-    chain: ChainClient<BlockNumber, Hash, Header, SignedBlock<Block>>,
-    author: AuthorClient<Hash, BlockHash>,
+    state: StateClient<RuntimeHash>,
+    chain: ChainClient<BlockNumber, RuntimeHash, Header, SignedBlock<Block>>,
+    author: AuthorClient<RuntimeHash, RuntimeHash>,
 }
 
 #[derive(Clone)]
@@ -83,7 +85,10 @@ impl RemoteNode {
                 )))
             }
         };
-        Ok(RemoteNode { genesis_hash, rpc })
+        Ok(RemoteNode {
+            genesis_hash: genesis_hash.into(),
+            rpc,
+        })
     }
 
     /// Submit a transaction and return the block hash once it is included in a block.
@@ -116,7 +121,7 @@ impl RemoteNode {
                     None => return Err(Error::from("watch_extrinsic stream terminated")),
                     Some(tx_status) => match tx_status {
                         TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
-                        TxStatus::InBlock(block_hash) => return Ok(block_hash),
+                        TxStatus::InBlock(block_hash) => return Ok(block_hash.into()),
                         other => return Err(format!("Invalid TxStatus: {:?}", other).into()),
                     },
                 }
@@ -142,7 +147,7 @@ impl RemoteNode {
         let signed_block = self
             .rpc
             .chain
-            .block(Some(block_hash))
+            .block(Some(block_hash.into()))
             .compat()
             .await?
             .ok_or_else(|| {
@@ -180,7 +185,12 @@ impl backend::Backend for RemoteNode {
         block_hash: Option<BlockHash>,
     ) -> Result<Option<Vec<u8>>, Error> {
         let key = StorageKey(Vec::from(key));
-        let maybe_data = self.rpc.state.storage(key, block_hash).compat().await?;
+        let maybe_data = self
+            .rpc
+            .state
+            .storage(key, block_hash.map(Into::into))
+            .compat()
+            .await?;
         Ok(maybe_data.map(|data| data.0))
     }
 
@@ -193,7 +203,7 @@ impl backend::Backend for RemoteNode {
         let keys = self
             .rpc
             .state
-            .storage_keys(prefix, block_hash)
+            .storage_keys(prefix, block_hash.map(Into::into))
             .compat()
             .await?;
         Ok(keys.into_iter().map(|key| key.0).collect())
@@ -202,7 +212,7 @@ impl backend::Backend for RemoteNode {
     async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<BlockHeader, Error> {
         self.rpc
             .chain
-            .header(block_hash)
+            .header(block_hash.map(Into::into))
             .compat()
             .await?
             .ok_or_else(|| match block_hash {
