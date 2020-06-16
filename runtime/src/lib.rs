@@ -90,6 +90,20 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     authoring_version: 3,
 };
 
+#[test]
+fn crate_versions() {
+    assert_eq!(
+        env!("CARGO_PKG_VERSION_MINOR"),
+        format!("{}", VERSION.spec_version),
+        "Runtime spec_version does not match crate minor version"
+    );
+    assert_eq!(
+        env!("CARGO_PKG_VERSION_PATCH"),
+        format!("{}", VERSION.impl_version),
+        "Runtime impl_version does not match crate patch version"
+    );
+}
+
 /// The version infromation used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
 pub fn native_version() -> sp_version::NativeVersion {
