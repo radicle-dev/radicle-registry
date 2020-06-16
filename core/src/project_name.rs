@@ -21,6 +21,8 @@ use core::convert::{From, Into, TryFrom};
 use parity_scale_codec as codec;
 
 #[derive(codec::Encode, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "std", serde(try_from = "String"))]
+#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
 pub struct ProjectName(String);
 
 impl ProjectName {

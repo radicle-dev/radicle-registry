@@ -65,7 +65,7 @@ impl CommandT for Show {
                 project_name: self.project_name.clone(),
                 project_domain,
             })?;
-        println!("Project: {}.{}", project.name, project.domain);
+        println!("Project: {}.{:?}", project.name, project.domain);
         println!("Checkpoint: {}", project.current_cp);
         Ok(())
     }
@@ -84,7 +84,7 @@ impl CommandT for List {
         let project_ids = client.list_projects().await?;
         println!("PROJECTS ({})", project_ids.len());
         for (name, org) in project_ids {
-            println!("{}.{}", name, org)
+            println!("{}.{:?}", name, org)
         }
         Ok(())
     }
@@ -156,7 +156,7 @@ impl CommandT for Register {
         let project_registered = register_project_fut.await?;
         project_registered.result?;
         println!(
-            "✓ Project {}.{} registered in block {}",
+            "✓ Project {}.{:?} registered in block {}",
             self.project_name, project_domain, project_registered.block,
         );
         Ok(())
