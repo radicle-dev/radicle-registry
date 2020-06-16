@@ -24,7 +24,9 @@ pub use radicle_registry_core::*;
 pub use radicle_registry_runtime::{BlockNumber, Hash, Header, RuntimeVersion};
 
 pub use radicle_registry_runtime::{registry::Event as RegistryEvent, Balance, Event};
-pub use sp_core::crypto::{Pair as CryptoPair, Public as CryptoPublic};
+pub use sp_core::crypto::{
+    Pair as CryptoPair, Public as CryptoPublic, SecretStringError as CryptoError,
+};
 pub use sp_core::{ed25519, H256};
 
 pub use crate::error::Error;
