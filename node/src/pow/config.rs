@@ -17,7 +17,7 @@ use sc_service::{config::Configuration, Properties};
 use std::convert::{TryFrom, TryInto};
 
 /// Configuration of PoW algorithm, can be stored as chain spec property
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum Config {
     Dummy,
     Blake3,

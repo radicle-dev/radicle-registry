@@ -18,9 +18,9 @@ use radicle_registry_runtime::AccountId;
 use sc_cli::{RunCmd, Subcommand, SubstrateCli};
 use sc_network::config::MultiaddrWithPeerId;
 use sc_service::{ChainSpec, Configuration};
+use std::path::PathBuf;
 use structopt::StructOpt;
 
-use crate::chain_spec::Chain;
 use crate::service;
 
 lazy_static::lazy_static! {
@@ -93,6 +93,13 @@ pub struct Cli {
     /// Disable sending telemetry data to https://telemetry.polkadot.io/
     #[structopt(long)]
     no_telemetry: bool,
+
+    /// Specify path to a different genesis runtime.
+    ///
+    /// If provided the node uses the Wasm runtime at the path as the genesis runtime. This only
+    /// has an effect for development chains and if the block database is empty.
+    #[structopt(long)]
+    runtime: Option<PathBuf>,
 }
 
 impl SubstrateCli for Cli {
@@ -126,8 +133,23 @@ impl SubstrateCli for Cli {
     }
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn ChainSpec>, String> {
-        let chain_spec = parse_chain(id)?.spec();
-        Ok(Box::new(chain_spec) as Box<dyn ChainSpec>)
+        let runtime = if let Some(runtime_path) = &self.runtime {
+            let runtime = std::fs::read(runtime_path)
+                .map_err(|e| format!("Error reading file {:?}: {}", runtime_path, e))?;
+            Some(runtime)
+        } else {
+            None
+        };
+
+        let chain_spec = match id {
+            "dev" => Ok(crate::chain_spec::dev(runtime)),
+            "local-devnet" => Ok(crate::chain_spec::local_devnet(runtime)),
+            "devnet" => Ok(crate::chain_spec::devnet()),
+            "ffnet" => Ok(crate::chain_spec::ffnet()),
+            _ => Err(format!("Invalid chain {}", id)),
+        }?;
+
+        Ok(Box::new(chain_spec))
     }
 }
 
@@ -195,21 +217,6 @@ impl Cli {
             config.rpc_cors = None;
         }
         config
-    }
-}
-
-// NOTE Update `possible_values` in the structopt attribute if something is added here.
-fn parse_chain(name: &str) -> Result<Chain, String> {
-    if name == "dev" {
-        Ok(Chain::Dev)
-    } else if name == "local-devnet" {
-        Ok(Chain::LocalDevnet)
-    } else if name == "devnet" {
-        Ok(Chain::Devnet)
-    } else if name == "ffnet" {
-        Ok(Chain::Ffnet)
-    } else {
-        Err(format!("Invalid chain {}", name))
     }
 }
 
