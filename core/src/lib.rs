@@ -20,8 +20,6 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
-
 use parity_scale_codec::{Decode, Encode};
 use sp_core::{ed25519, H256};
 use sp_runtime::traits::BlakeTwo256;
@@ -60,7 +58,7 @@ pub type Balance = u128;
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, ProjectDomain);
 
-/// The domain under which a [Project] lives.
+/// The domain under which a [crate::state::Projects1Data] lives.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum ProjectDomain {
@@ -76,89 +74,4 @@ impl ProjectDomain {
     }
 }
 
-/// Org
-///
-/// Different from [state::Org] in which this type gathers
-/// both the [`Id`] and the other [`Org`] fields, respectively stored
-/// as an Org's storage key and data, into one complete type.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Org {
-    // Unique id of an Org.
-    pub id: Id,
-
-    /// See [state::Org::account_id]
-    pub account_id: AccountId,
-
-    /// See [state::Org::members]
-    pub members: Vec<Id>,
-
-    /// See [state::Org::projects]
-    pub projects: Vec<ProjectName>,
-}
-
-impl Org {
-    pub fn new(id: Id, org: state::Org) -> Org {
-        Org {
-            id,
-            account_id: org.account_id,
-            members: org.members,
-            projects: org.projects,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Project {
-    /// The name of the project, unique within its org.
-    pub name: ProjectName,
-
-    /// The domain to which the project belongs.
-    pub domain: ProjectDomain,
-
-    /// See [state::Project::current_cp]
-    pub current_cp: CheckpointId,
-
-    /// See [state::Project::metadata]
-    pub metadata: Bytes128,
-}
-
-impl Project {
-    /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Project) -> Self {
-        Project {
-            name,
-            domain,
-            current_cp: project.current_cp,
-            metadata: project.metadata,
-        }
-    }
-}
-
 pub type CheckpointId = H256;
-
-/// User
-///
-/// Different from [state::User] in which this type gathers
-/// both the [`Id`] and the other [`User`] fields, respectively stored
-/// as an User's storage key and data, into one complete type.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct User {
-    // Unique id of a User.
-    pub id: Id,
-
-    /// See [state::User::account_id]
-    pub account_id: AccountId,
-
-    /// See [state::User::projects]
-    pub projects: Vec<ProjectName>,
-}
-
-impl User {
-    pub fn new(id: Id, user: state::User) -> User {
-        User {
-            id,
-            account_id: user.account_id,
-            projects: user.projects,
-        }
-    }
-}

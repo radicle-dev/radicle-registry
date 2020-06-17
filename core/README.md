@@ -46,21 +46,59 @@ For each entity version the documentation has the following sections
 
 To make the runtime state backwards compatible, every state entity that is added
 must be versioned using the following schema.
+Please follow the naming convention introduced in the examples as closely as possible.
+
+The storage defines the structure of the data.
+If it's altered, e.g. a key type is changed or it's converting from a map to a list,
+a new version must be added.
+The storage must include its version in its name:
+
+```rust
+// registry.rs
+
+pub mod store {
+    ...
+      decl_storage! {
+          ...
+              pub Users1: map hasher(blake2_128_concat) Id => Option<state::Users1Data>;
+              pub Users2: map hasher(blake2_128_concat) NewId => Option<state::Users2Data>;
+```
+
+The stored data must be an enum capable of containing different data versions.
+It must be versioned consistently and independently of the storage version:
 
 ```rust
 // state.rs
 
-pub enum User {
-  UserV1(UserV1)
-  UserV2(UserV1)
+pub enum Users1Data {
+    V1(UserV1)
+    V2(UserV2)
 }
+
+pub enum Users2Data {
+    V3(UserId)
+    V4(UserV4)
+}
+```
+
+If the stored data is a specialized data structure,
+it must be versioned same as the stored data, which contains it:
+
+```rust
+// state.rs
 
 pub struct UserV1 {
-  // ...fields
+    ...
 }
 
-pub struct UserV2 {
-  // ... changed fields
+pub enum UserV2 {
+    ...
+}
+
+// UserId is general purpose
+
+pub struct UserV4 {
+    ...
 }
 ```
 

@@ -6,6 +6,12 @@ Upcoming
 
 ### Breaking changes
 
+* client: `ClientT::get_checkpoint` returns a new `Checkpoint` structure
+* runtime: abandon `Checkpoints` storage in favor of `Checkpoints1`
+* runtime: abandon `InitialCheckpoints` storage in favor of `InitialCheckpoints1`
+* runtime: abandon `Projects` storage in favor of `Projects1`
+* runtime: abandon `Users` storage in favor of `Users1`
+* runtime: abandon `Orgs` storage in favor of `Orgs1`
 * runtime: We introduce the `CheckVersion` transaction validation that requires
   authors to include the runtime version in the transaction.
 * cli: `project register` now also expects domain type

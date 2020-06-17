@@ -85,10 +85,7 @@ async fn register_project() {
             .any(|id| *id == (message.project_name.clone(), message.project_domain.clone()));
         assert!(has_project, "Registered project not found in project list");
 
-        let checkpoint_ = state::Checkpoint {
-            parent: None,
-            hash: project_hash,
-        };
+        let checkpoint_ = Checkpoint::new(state::Checkpoints1Data::new(None, project_hash));
         let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
         assert_eq!(checkpoint, checkpoint_);
 

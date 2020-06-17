@@ -247,17 +247,17 @@ impl ClientT for Client {
     }
 
     async fn get_org(&self, id: Id) -> Result<Option<Org>, Error> {
-        self.fetch_map_value::<registry::store::Orgs, _, _>(id.clone())
+        self.fetch_map_value::<registry::store::Orgs1, _, _>(id.clone())
             .await
-            .map(|maybe_org: Option<state::Org>| maybe_org.map(|org| Org::new(id, org)))
+            .map(|maybe_org: Option<state::Orgs1Data>| maybe_org.map(|org| Org::new(id, org)))
     }
 
     async fn list_orgs(&self) -> Result<Vec<Id>, Error> {
-        let orgs_prefix = registry::store::Orgs::final_prefix();
+        let orgs_prefix = registry::store::Orgs1::final_prefix();
         let keys = self.backend.fetch_keys(&orgs_prefix, None).await?;
         let mut org_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
-            let org_id = registry::store::Orgs::decode_key(&key)
+            let org_id = registry::store::Orgs1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract org ID");
             org_ids.push(org_id)
         }
@@ -265,17 +265,17 @@ impl ClientT for Client {
     }
 
     async fn get_user(&self, id: Id) -> Result<Option<User>, Error> {
-        self.fetch_map_value::<registry::store::Users, _, _>(id.clone())
+        self.fetch_map_value::<registry::store::Users1, _, _>(id.clone())
             .await
-            .map(|maybe_user: Option<state::User>| maybe_user.map(|user| User::new(id, user)))
+            .map(|maybe_user| maybe_user.map(|user| User::new(id, user)))
     }
 
     async fn list_users(&self) -> Result<Vec<Id>, Error> {
-        let users_prefix = registry::store::Users::final_prefix();
+        let users_prefix = registry::store::Users1::final_prefix();
         let keys = self.backend.fetch_keys(&users_prefix, None).await?;
         let mut user_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
-            let user_id = registry::store::Users::decode_key(&key)
+            let user_id = registry::store::Users1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract user ID");
             user_ids.push(user_id);
         }
@@ -289,7 +289,7 @@ impl ClientT for Client {
         project_domain: ProjectDomain,
     ) -> Result<Option<Project>, Error> {
         let project_id = (project_name.clone(), project_domain.clone());
-        self.fetch_map_value::<registry::store::Projects, _, _>(project_id.clone())
+        self.fetch_map_value::<registry::store::Projects1, _, _>(project_id.clone())
             .await
             .map(|maybe_project| {
                 maybe_project.map(|project| Project::new(project_name, project_domain, project))
@@ -297,20 +297,21 @@ impl ClientT for Client {
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
-        let project_prefix = registry::store::Projects::final_prefix();
+        let project_prefix = registry::store::Projects1::final_prefix();
         let keys = self.backend.fetch_keys(&project_prefix, None).await?;
         let mut project_ids = Vec::with_capacity(keys.len());
         for key in keys {
-            let project_id = registry::store::Projects::decode_key(&key)
+            let project_id = registry::store::Projects1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract project ID");
             project_ids.push(project_id);
         }
         Ok(project_ids)
     }
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<state::Checkpoint>, Error> {
-        self.fetch_map_value::<registry::store::Checkpoints, _, _>(id)
+    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
+        self.fetch_map_value::<registry::store::Checkpoints1, _, _>(id)
             .await
+            .map(|cp_opt| cp_opt.map(Checkpoint::new))
     }
 
     async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {

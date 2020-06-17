@@ -54,10 +54,10 @@ async fn create_checkpoint() {
         .unwrap();
     assert_eq!(
         checkpoint,
-        state::Checkpoint {
-            parent: Some(project.current_cp),
-            hash: project_hash
-        },
+        Checkpoint::new(state::Checkpoints1Data::new(
+            Some(project.current_cp),
+            project_hash
+        )),
     );
 
     assert_eq!(
