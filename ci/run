@@ -58,6 +58,14 @@ echo "--- cargo doc"
 RUSTDOCFLAGS="-D intra-doc-link-resolution-failure" \
   cargo doc --workspace --release --no-deps --document-private-items
 
+# For non-master branch builds we rely on the file that is checked into
+# the repo. We will enable this for all builds once this file is removed.
+# See https://github.com/radicle-dev/radicle-registry/issues/492.
+if [[ "${BUILDKITE_BRANCH}" == "master" ]]; then
+  echo "--- scripts/build-runtime-wasm runtime/latest.wasm"
+  ./scripts/build-runtime-wasm runtime/latest.wasm
+fi
+
 echo "--- scripts/build-release"
 ./scripts/build-release
 
@@ -81,6 +89,30 @@ mkdir artifacts
 tar -cpzf artifacts/radicle-registry-cli.tar.gz -C target/release radicle-registry-cli
 tar -cpzf artifacts/radicle-registry-node.tar.gz -C target/release radicle-registry-node
 cp -a target/release/radicle-registry-node ci/node-image
+cp runtime/latest.wasm artifacts/runtime.wasm
+
+
+if [[ -n "${BUILDKITE_TAG:-}" ]]
+then
+    declare -r artifact_scope="${BUILDKITE_TAG}"
+elif [[ "${BUILDKITE_BRANCH}" == "master" ]]
+then
+    declare -r artifact_scope="master/${BUILDKITE_COMMIT}"
+else
+    declare -r artifact_scope="$BUILDKITE_JOB_ID"
+fi
+declare -r artifact_prefix="https://builds.radicle.xyz/radicle-registry/${artifact_scope}"
+
+{
+  echo "Artifacts"
+  echo "* \`gcr.io/opensourcecoin/radicle-registry/node:${BUILDKITE_COMMIT}\`"
+  for path in artifacts/*; do
+    url="${artifact_prefix}/${path}"
+    name=$(cut -d / -f 2- <<< "${path}")
+    echo "* [\`${name}\`](${url})"
+  done
+} | buildkite-agent annotate --context node-binary --style success
+
 
 echo "--- Cleanup cache"
 
