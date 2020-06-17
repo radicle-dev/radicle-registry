@@ -61,12 +61,18 @@ async fn register_project() {
         let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
 
         let project = client
-            .get_project(message.project_name.clone(), message.project_registrant.clone())
+            .get_project(
+                message.project_name.clone(),
+                message.project_registrant.clone(),
+            )
             .await
             .unwrap()
             .unwrap();
         assert_eq!(project.name.clone(), message.project_name.clone());
-        assert_eq!(project.registrant.clone(), message.project_registrant.clone());
+        assert_eq!(
+            project.registrant.clone(),
+            message.project_registrant.clone()
+        );
         assert_eq!(project.current_cp.clone(), checkpoint_id);
         assert_eq!(project.metadata.clone(), message.metadata.clone());
 
@@ -79,12 +85,12 @@ async fn register_project() {
             .into()
         );
 
-        let has_project = client
-            .list_projects()
-            .await
-            .unwrap()
-            .iter()
-            .any(|id| *id == (message.project_name.clone(), message.project_registrant.clone()));
+        let has_project = client.list_projects().await.unwrap().iter().any(|id| {
+            *id == (
+                message.project_name.clone(),
+                message.project_registrant.clone(),
+            )
+        });
         assert!(has_project, "Registered project not found in project list");
 
         let checkpoint_ = Checkpoint::new(state::Checkpoints1Data::new(None, project_hash));

@@ -238,7 +238,10 @@ pub async fn generate_project_registrants(
     let user_id = associate_key_pair_with_random_user(client, author).await;
     let org = register_random_org(&client, &author).await;
 
-    vec![ProjectRegistrant::User(user_id), ProjectRegistrant::Org(org.id)]
+    vec![
+        ProjectRegistrant::User(user_id),
+        ProjectRegistrant::Org(org.id),
+    ]
 }
 
 /// Register a random org with the given author that becomes its only member.

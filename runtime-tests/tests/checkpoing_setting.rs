@@ -29,7 +29,8 @@ async fn create_checkpoint() {
 
     let org_id = random_id();
     let project =
-        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author).await;
+        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author)
+            .await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let project_hash = H256::random();
@@ -75,7 +76,8 @@ async fn set_checkpoint() {
     let org_id = random_id();
     let project_registrant = ProjectRegistrant::Org(org_id.clone());
     let project =
-        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author).await;
+        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author)
+            .await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();

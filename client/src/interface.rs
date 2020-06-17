@@ -128,7 +128,11 @@ pub struct Project {
 
 impl Project {
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, registrant: ProjectRegistrant, project: state::Projects1Data) -> Self {
+    pub fn new(
+        name: ProjectName,
+        registrant: ProjectRegistrant,
+        project: state::Projects1Data,
+    ) -> Self {
         match project {
             state::Projects1Data::V1(project) => Project {
                 name,

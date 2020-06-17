@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectRegistrant, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectName, ProjectRegistrant, H256};
 use alloc::prelude::v1::Vec;
 use parity_scale_codec::{Decode, Encode};
 
