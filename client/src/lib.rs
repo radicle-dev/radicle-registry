@@ -286,13 +286,13 @@ impl ClientT for Client {
     async fn get_project(
         &self,
         project_name: ProjectName,
-        project_domain: ProjectDomain,
+        project_registrant: ProjectRegistrant,
     ) -> Result<Option<Project>, Error> {
-        let project_id = (project_name.clone(), project_domain.clone());
+        let project_id = (project_name.clone(), project_registrant.clone());
         self.fetch_map_value::<registry::store::Projects1, _, _>(project_id.clone())
             .await
             .map(|maybe_project| {
-                maybe_project.map(|project| Project::new(project_name, project_domain, project))
+                maybe_project.map(|project| Project::new(project_name, project_registrant, project))
             })
     }
 

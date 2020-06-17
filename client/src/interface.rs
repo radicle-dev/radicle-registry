@@ -110,14 +110,14 @@ impl User {
 /// Project
 ///
 /// Different from [state::ProjectV1] in which this type gathers
-/// [`ProjectName`], [`ProjectDomain`] and the other [`Project`] fields into one complete type.
+/// [`ProjectName`], [`ProjectRegistrant`] and the other [`Project`] fields into one complete type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Project {
     /// The name of the project, unique within its org.
     pub name: ProjectName,
 
-    /// The domain to which the project belongs.
-    pub domain: ProjectDomain,
+    /// The registrant to whom the project belongs.
+    pub registrant: ProjectRegistrant,
 
     /// See [state::ProjectV1::current_cp]
     pub current_cp: CheckpointId,
@@ -128,11 +128,11 @@ pub struct Project {
 
 impl Project {
     /// Build a [crate::Project] given all its properties obtained from storage.
-    pub fn new(name: ProjectName, domain: ProjectDomain, project: state::Projects1Data) -> Self {
+    pub fn new(name: ProjectName, registrant: ProjectRegistrant, project: state::Projects1Data) -> Self {
         match project {
             state::Projects1Data::V1(project) => Project {
                 name,
-                domain,
+                registrant,
                 current_cp: project.current_cp,
                 metadata: project.metadata,
             },
@@ -261,7 +261,7 @@ pub trait ClientT {
     async fn get_project(
         &self,
         project_name: ProjectName,
-        project_domain: ProjectDomain,
+        project_registrant: ProjectRegistrant,
     ) -> Result<Option<Project>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;

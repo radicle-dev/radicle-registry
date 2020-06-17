@@ -29,7 +29,7 @@ async fn create_checkpoint() {
 
     let org_id = random_id();
     let project =
-        create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
+        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let project_hash = H256::random();
@@ -73,9 +73,9 @@ async fn set_checkpoint() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
+    let project_registrant = ProjectRegistrant::Org(org_id.clone());
     let project =
-        create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
+        create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
@@ -99,7 +99,7 @@ async fn set_checkpoint() {
         &author,
         message::SetCheckpoint {
             project_name: project.name,
-            project_domain: project_domain.clone(),
+            project_registrant: project_registrant.clone(),
             new_checkpoint_id,
         },
         random_fee,
@@ -107,7 +107,7 @@ async fn set_checkpoint() {
     .await;
 
     let new_project = client
-        .get_project(project_name, project_domain)
+        .get_project(project_name, project_registrant)
         .await
         .unwrap()
         .unwrap();
@@ -126,8 +126,8 @@ async fn set_checkpoint_without_permission() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
+    let project_registrant = ProjectRegistrant::Org(org_id.clone());
+    let project = create_project_with_checkpoint(&project_registrant, &client, &author).await;
     let project_name = project.name.clone();
 
     let project_hash2 = H256::random();
@@ -150,14 +150,14 @@ async fn set_checkpoint_without_permission() {
         &bad_actor,
         message::SetCheckpoint {
             project_name: project.name,
-            project_domain: project.domain,
+            project_registrant: project.registrant,
             new_checkpoint_id,
         },
     )
     .await;
 
     let updated_project = client
-        .get_project(project_name, project_domain.clone())
+        .get_project(project_name, project_registrant.clone())
         .await
         .unwrap()
         .unwrap();
@@ -175,8 +175,8 @@ async fn fail_to_set_nonexistent_checkpoint() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
+    let project_registrant = ProjectRegistrant::Org(org_id.clone());
+    let project = create_project_with_checkpoint(&project_registrant, &client, &author).await;
     let project_name = project.name.clone();
     let garbage = CheckpointId::random();
 
@@ -185,7 +185,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
         &author,
         message::SetCheckpoint {
             project_name: project.name,
-            project_domain: project.domain,
+            project_registrant: project.registrant,
             new_checkpoint_id: garbage,
         },
     )
@@ -196,7 +196,7 @@ async fn fail_to_set_nonexistent_checkpoint() {
         Err(RegistryError::InexistentCheckpointId.into())
     );
     let updated_project = client
-        .get_project(project_name, project_domain)
+        .get_project(project_name, project_registrant)
         .await
         .unwrap()
         .unwrap();
@@ -210,8 +210,8 @@ async fn set_fork_checkpoint() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
+    let project_registrant = ProjectRegistrant::Org(org_id.clone());
+    let project = create_project_with_checkpoint(&project_registrant, &client, &author).await;
 
     let project_name = project.name.clone();
     let mut current_cp = project.current_cp;
@@ -252,14 +252,14 @@ async fn set_fork_checkpoint() {
         &author,
         message::SetCheckpoint {
             project_name: project.name,
-            project_domain: project.domain,
+            project_registrant: project.registrant,
             new_checkpoint_id: forked_checkpoint_id,
         },
     )
     .await;
 
     let project_1 = client
-        .get_project(project_name, project_domain)
+        .get_project(project_name, project_registrant)
         .await
         .unwrap()
         .unwrap();
@@ -276,8 +276,8 @@ async fn set_checkpoint_bad_actor() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
+    let project_registrant = ProjectRegistrant::Org(org_id.clone());
+    let project = create_project_with_checkpoint(&project_registrant, &client, &author).await;
     let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
@@ -304,7 +304,7 @@ async fn set_checkpoint_bad_actor() {
         &bad_actor,
         message::SetCheckpoint {
             project_name: project.name,
-            project_domain: project.domain,
+            project_registrant: project.registrant,
             new_checkpoint_id,
         },
         random_fee,
@@ -313,7 +313,7 @@ async fn set_checkpoint_bad_actor() {
 
     // Check that the project checkpoint was kept untouched.
     let project_after = client
-        .get_project(project_name, project_domain)
+        .get_project(project_name, project_registrant)
         .await
         .unwrap()
         .unwrap();

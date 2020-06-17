@@ -207,7 +207,7 @@ async fn unregister_org_with_projects() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
+    create_project_with_checkpoint(&ProjectRegistrant::Org(org_id.clone()), &client, &author).await;
 
     assert!(
         org_exists(&client, org_id.clone()).await,

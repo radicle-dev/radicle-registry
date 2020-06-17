@@ -167,20 +167,20 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
 
-            let project_id = (message.project_name.clone(), message.project_domain.clone());
+            let project_id = (message.project_name.clone(), message.project_registrant.clone());
             if store::Projects1::get(project_id.clone()).is_some() {
                 return Err(RegistryError::DuplicateProjectId.into());
             };
 
-            match &message.project_domain {
-                ProjectDomain::Org(org_id) => {
+            match &message.project_registrant {
+                ProjectRegistrant::Org(org_id) => {
                     let org = store::Orgs1::get(org_id).ok_or(RegistryError::InexistentOrg)?;
                     if !org_has_member_with_account(&org, sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into());
                     }
                     store::Orgs1::insert(org_id, org.add_project(message.project_name.clone()));
                 },
-                ProjectDomain::User(user_id) => {
+                ProjectRegistrant::User(user_id) => {
                     let user = store::Users1::get(user_id).ok_or(RegistryError::InexistentUser)?;
                     if user.account_id() != sender {
                         return Err(RegistryError::InsufficientSenderPermissions.into());
@@ -197,7 +197,7 @@ decl_module! {
             let checkpoint_data = state::InitialCheckpoints1Data::new(message.checkpoint_id);
             store::InitialCheckpoints1::insert(project_id, checkpoint_data);
 
-            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
+            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_registrant));
             Ok(())
         }
 
@@ -364,12 +364,12 @@ decl_module! {
             if store::Checkpoints1::get(message.new_checkpoint_id).is_none() {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
-            let project_id = (message.project_name.clone(), message.project_domain.clone());
+            let project_id = (message.project_name.clone(), message.project_registrant.clone());
             let opt_project = store::Projects1::get(project_id.clone());
 
-            let org_id = match &message.project_domain {
-                ProjectDomain::Org(org_id) => org_id,
-                ProjectDomain::User(_) => panic!("TODO(nuno"),
+            let org_id = match &message.project_registrant {
+                ProjectRegistrant::Org(org_id) => org_id,
+                ProjectRegistrant::User(_) => panic!("TODO(nuno"),
             };
             let opt_org = store::Orgs1::get(org_id.clone());
             let new_project = match (opt_project, opt_org) {
@@ -395,7 +395,7 @@ decl_module! {
 
             Self::deposit_event(Event::CheckpointSet(
                 message.project_name.clone(),
-                message.project_domain.clone(),
+                message.project_registrant.clone(),
                 message.new_checkpoint_id
             ));
             Ok(())
@@ -458,11 +458,11 @@ pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId
 decl_event!(
     pub enum Event {
         CheckpointCreated(CheckpointId),
-        CheckpointSet(ProjectName, ProjectDomain, CheckpointId),
+        CheckpointSet(ProjectName, ProjectRegistrant, CheckpointId),
         MemberRegistered(Id, Id),
         OrgRegistered(Id),
         OrgUnregistered(Id),
-        ProjectRegistered(ProjectName, ProjectDomain),
+        ProjectRegistered(ProjectName, ProjectRegistrant),
         UserRegistered(Id),
         UserUnregistered(Id),
     }
@@ -542,7 +542,7 @@ mod test {
     fn projects_decode_key_identity() {
         let org_id = Id::try_from("monadic").unwrap();
         let project_name = ProjectName::try_from("radicle".to_string()).unwrap();
-        let project_id: ProjectId = (project_name, ProjectDomain::Org(org_id));
+        let project_id: ProjectId = (project_name, ProjectRegistrant::Org(org_id));
         let hashed_key = store::Projects1::storage_map_final_key(project_id.clone());
         let decoded_key = store::Projects1::decode_key(&hashed_key).unwrap();
         assert_eq!(decoded_key, project_id);

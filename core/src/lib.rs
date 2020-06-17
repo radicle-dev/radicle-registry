@@ -56,17 +56,17 @@ pub type AccountId = ed25519::Public;
 pub type Balance = u128;
 
 /// The id of a project. Used as storage key.
-pub type ProjectId = (ProjectName, ProjectDomain);
+pub type ProjectId = (ProjectName, ProjectRegistrant);
 
-/// The domain under which a [crate::state::Projects1Data] lives.
+/// The registrant under which a [crate::state::Projects1Data] lives.
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
-pub enum ProjectDomain {
+pub enum ProjectRegistrant {
     Org(Id),
     User(Id),
 }
 
-impl ProjectDomain {
+impl ProjectRegistrant {
     pub fn id(&self) -> Id {
         match self {
             Self::Org(id) | Self::User(id) => id.clone(),

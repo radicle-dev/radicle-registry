@@ -51,7 +51,7 @@ pub async fn submit_ok<Message_: Message>(
 }
 
 pub async fn create_project_with_checkpoint(
-    domain: &ProjectDomain,
+    registrant: &ProjectRegistrant,
     client: &Client,
     author: &ed25519::Pair,
 ) -> Project {
@@ -67,8 +67,8 @@ pub async fn create_project_with_checkpoint(
     .result
     .unwrap();
 
-    let domain_account = match domain {
-        ProjectDomain::Org(org_id) => {
+    let registrant_account = match registrant {
+        ProjectRegistrant::Org(org_id) => {
             let register_org_message = message::RegisterOrg {
                 org_id: org_id.clone(),
             };
@@ -76,7 +76,7 @@ pub async fn create_project_with_checkpoint(
             let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
             org.account_id
         }
-        ProjectDomain::User(user_id) => {
+        ProjectRegistrant::User(user_id) => {
             let register_user_message = message::RegisterUser {
                 user_id: user_id.clone(),
             };
@@ -86,14 +86,14 @@ pub async fn create_project_with_checkpoint(
         }
     };
 
-    // The domain account needs funds to submit transactions.
-    transfer(&client, &author, domain_account, 1000).await;
+    // The registrant account needs funds to submit transactions.
+    transfer(&client, &author, registrant_account, 1000).await;
 
-    let register_project_message = random_register_project_message(domain, checkpoint_id);
+    let register_project_message = random_register_project_message(registrant, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
     client
-        .get_project(register_project_message.project_name, domain.clone())
+        .get_project(register_project_message.project_name, registrant.clone())
         .await
         .unwrap()
         .unwrap()
@@ -129,12 +129,12 @@ pub fn random_register_org_message() -> message::RegisterOrg {
 
 /// Create a [message::RegisterProject] with random parameters to register a project with.
 pub fn random_register_project_message(
-    domain: &ProjectDomain,
+    registrant: &ProjectRegistrant,
     checkpoint_id: CheckpointId,
 ) -> message::RegisterProject {
     message::RegisterProject {
         project_name: random_project_name(),
-        project_domain: domain.clone(),
+        project_registrant: registrant.clone(),
         checkpoint_id,
         metadata: Bytes128::random(),
     }
@@ -229,16 +229,16 @@ pub async fn transfer(
     );
 }
 
-/// Generate project domains owned by the given `author`. It associates the author
+/// Generate project registrants owned by the given `author`. It associates the author
 /// with a random user and registers a random org with the author account.
-pub async fn generate_project_domains(
+pub async fn generate_project_registrants(
     client: &Client,
     author: &ed25519::Pair,
-) -> Vec<ProjectDomain> {
+) -> Vec<ProjectRegistrant> {
     let user_id = associate_key_pair_with_random_user(client, author).await;
     let org = register_random_org(&client, &author).await;
 
-    vec![ProjectDomain::User(user_id), ProjectDomain::Org(org.id)]
+    vec![ProjectRegistrant::User(user_id), ProjectRegistrant::Org(org.id)]
 }
 
 /// Register a random org with the given author that becomes its only member.

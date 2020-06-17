@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectDomain, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectRegistrant, ProjectName, H256};
 use alloc::prelude::v1::Vec;
 use parity_scale_codec::{Decode, Encode};
 
@@ -128,24 +128,24 @@ pub struct RegisterMember {
 ///
 /// # State-dependent validations
 ///
-/// The involved project domain must exit.
+/// The involved project registrant must exist.
 ///
 /// A user associated with the author must exist.
 ///
 /// The user associated with the author must a member of
-/// the involved org, when an org is specified as the project domain.
+/// the involved org, when an org is specified as the project registrant.
 ///
 /// A checkpoint with the given ID must exist.
 ///
-/// A project with the same name must not yet exist in domain.
+/// The registrant cannot not have any existing projects of the same name.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterProject {
-    // The name of the project to register, unique under its domain.
+    // The name of the project to register, unique under its registrant.
     pub project_name: ProjectName,
 
-    /// The domain of the project.
-    pub project_domain: ProjectDomain,
+    /// The registrant of the project.
+    pub project_registrant: ProjectRegistrant,
 
     /// Initial checkpoint of the project.
     pub checkpoint_id: CheckpointId,
@@ -189,7 +189,7 @@ pub struct CreateCheckpoint {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetCheckpoint {
     pub project_name: ProjectName,
-    pub project_domain: ProjectDomain,
+    pub project_registrant: ProjectRegistrant,
     pub new_checkpoint_id: CheckpointId,
 }
 

@@ -57,15 +57,15 @@ impl CommandT for Show {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
 
-        let project_domain = ProjectDomain::Org(self.org_id.clone());
+        let project_registrant = ProjectRegistrant::Org(self.org_id.clone());
         let project = client
-            .get_project(self.project_name.clone(), project_domain.clone())
+            .get_project(self.project_name.clone(), project_registrant.clone())
             .await?
             .ok_or(CommandError::ProjectNotFound {
                 project_name: self.project_name.clone(),
-                project_domain,
+                project_registrant,
             })?;
-        println!("Project: {}.{:?}", project.name, project.domain);
+        println!("Project: {}.{:?}", project.name, project.registrant);
         println!("Checkpoint: {}", project.current_cp);
         Ok(())
     }
@@ -95,15 +95,15 @@ pub struct Register {
     /// Name of the project to register.
     project_name: ProjectName,
 
-    /// The type of domain under which to register the project.
+    /// The type of registrant under which to register the project.
     #[structopt(
-        possible_values = &DomainType::variants(),
+        possible_values = &RegistrantType::variants(),
         case_insensitive = true,
     )]
-    domain_type: DomainType,
+    registrant_type: RegistrantType,
 
-    /// The id of the domain under which to register the project.
-    domain_id: Id,
+    /// The id of the registrant under which to register the project.
+    registrant_id: Id,
 
     /// Project state hash. A hex-encoded 32 byte string. Defaults to all zeros.
     project_hash: Option<H256>,
@@ -135,16 +135,16 @@ impl CommandT for Register {
         let checkpoint_id = checkpoint_created.result?;
         println!("✓ Checkpoint created in block {}", checkpoint_created.block);
 
-        let project_domain = match self.domain_type {
-            DomainType::Org => ProjectDomain::Org(self.domain_id),
-            DomainType::User => ProjectDomain::User(self.domain_id),
+        let project_registrant = match self.registrant_type {
+            RegistrantType::Org => ProjectRegistrant::Org(self.registrant_id),
+            RegistrantType::User => ProjectRegistrant::User(self.registrant_id),
         };
         let register_project_fut = client
             .sign_and_submit_message(
                 &self.tx_options.author,
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
-                    project_domain: project_domain.clone(),
+                    project_registrant: project_registrant.clone(),
                     checkpoint_id,
                     metadata: Bytes128::random(),
                 },
@@ -157,7 +157,7 @@ impl CommandT for Register {
         project_registered.result?;
         println!(
             "✓ Project {}.{:?} registered in block {}",
-            self.project_name, project_domain, project_registered.block,
+            self.project_name, project_registrant, project_registered.block,
         );
         Ok(())
     }
@@ -165,7 +165,7 @@ impl CommandT for Register {
 
 arg_enum! {
     #[derive(Clone, Eq, PartialEq, Debug)]
-    enum DomainType {
+    enum RegistrantType {
         Org,
         User,
     }
@@ -177,18 +177,18 @@ mod test {
     use std::str::FromStr;
 
     #[test]
-    fn test_project_domain_from_org() {
+    fn test_project_registrant_from_org() {
         for org_input in &["org", "oRg", "ORG"] {
-            let res = DomainType::from_str(org_input);
-            assert_eq!(res, Ok(DomainType::Org));
+            let res = RegistrantType::from_str(org_input);
+            assert_eq!(res, Ok(RegistrantType::Org));
         }
     }
 
     #[test]
-    fn test_project_domain_from_user() {
+    fn test_project_registrant_from_user() {
         for user_input in &["user", "usEr", "USER"] {
-            let res = DomainType::from_str(user_input);
-            assert_eq!(res, Ok(DomainType::User));
+            let res = RegistrantType::from_str(user_input);
+            assert_eq!(res, Ok(RegistrantType::User));
         }
     }
 }
