@@ -56,20 +56,42 @@ async fn register_user() {
     assert!(user.projects.is_empty());
 }
 
+/// Test that a user can not be registered with an id already taken by another user.
 #[async_std::test]
-async fn register_user_with_duplicate_id() {
+async fn register_with_id_taken_by_user() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let register_user_message = random_register_user_message();
+    let author_x = key_pair_from_string("Alice");
 
-    let tx_included_once = submit_ok(&client, &alice, register_user_message.clone()).await;
+    let register_user_message = random_register_user_message();
+    let tx_included_once = submit_ok(&client, &author_x, register_user_message.clone()).await;
     assert!(tx_included_once.result.is_ok());
 
-    let tx_included_twice = submit_ok(&client, &alice, register_user_message.clone()).await;
+    let author_y = random_key_pair(&client).await;
+    let tx_included_twice = submit_ok(&client, &author_y, register_user_message.clone()).await;
     assert_eq!(
         tx_included_twice.result,
-        Err(RegistryError::DuplicateUserId.into())
+        Err(RegistryError::IdAlreadyTaken.into())
     )
+}
+
+/// Test that a user can not be registered with an id already taken by an org.
+#[async_std::test]
+async fn register_with_id_taken_by_org() {
+    let (client, _) = Client::new_emulator();
+    let (author_x, _) = key_pair_with_associated_user(&client).await;
+    let id = random_id();
+
+    let register_org_message = message::RegisterOrg { org_id: id.clone() };
+    let tx_included_org = submit_ok(&client, &author_x, register_org_message.clone()).await;
+    assert_eq!(tx_included_org.result, Ok(()));
+
+    let author_y = random_key_pair(&client).await;
+    let register_user_message = message::RegisterUser { user_id: id };
+    let tx_included_user = submit_ok(&client, &author_y, register_user_message.clone()).await;
+    assert_eq!(
+        tx_included_user.result,
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
 }
 
 #[async_std::test]

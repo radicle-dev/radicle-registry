@@ -87,19 +87,41 @@ async fn register_org_no_user() {
     );
 }
 
+/// Test that an org can not be registered with an id already taken by another org.
 #[async_std::test]
-async fn register_with_duplicated_org_id() {
+async fn register_with_id_taken_by_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
-    let register_org_message = random_register_org_message();
 
+    let register_org_message = random_register_org_message();
     let tx_included_once = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(tx_included_once.result, Ok(()));
 
     let tx_included_twice = submit_ok(&client, &author, register_org_message.clone()).await;
     assert_eq!(
         tx_included_twice.result,
-        Err(RegistryError::DuplicateOrgId.into())
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
+}
+
+/// Test that an org can not be registered with an id already taken by a user.
+#[async_std::test]
+async fn register_with_taken_user_id() {
+    let (client, _) = Client::new_emulator();
+    let author = key_pair_from_string("Alice");
+    let id = random_id();
+
+    let register_user_message = message::RegisterUser {
+        user_id: id.clone(),
+    };
+    let tx_included_user = submit_ok(&client, &author, register_user_message.clone()).await;
+    assert_eq!(tx_included_user.result, Ok(()));
+
+    let register_org_message = message::RegisterOrg { org_id: id };
+    let tx_included_org = submit_ok(&client, &author, register_org_message.clone()).await;
+    assert_eq!(
+        tx_included_org.result,
+        Err(RegistryError::IdAlreadyTaken.into())
     );
 }
 

@@ -228,8 +228,8 @@ decl_module! {
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Orgs1::get(message.org_id.clone()).is_some() {
-                return Err(RegistryError::DuplicateOrgId.into());
+            if id_is_taken(&message.org_id) {
+                return Err(RegistryError::IdAlreadyTaken.into());
             }
 
             let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
@@ -274,8 +274,8 @@ decl_module! {
         pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if store::Users1::get(message.user_id.clone()).is_some() {
-                return Err(RegistryError::DuplicateUserId.into())
+            if id_is_taken(&message.user_id) {
+                return Err(RegistryError::IdAlreadyTaken.into());
             }
 
             if get_user_id_with_account(sender).is_some() {
@@ -428,6 +428,10 @@ decl_module! {
         }
 
     }
+}
+
+fn id_is_taken(id: &Id) -> bool {
+    store::Users1::get(id).is_some() || store::Orgs1::get(id).is_some()
 }
 
 // TODO(xla): This is a naive first version of the check to see if an account is

@@ -61,14 +61,14 @@ pub enum RegistryError {
     #[cfg_attr(feature = "std", error("the provided user does not exist"))]
     InexistentUser,
 
-    #[cfg_attr(feature = "std", error("an org with the same ID already exists"))]
-    DuplicateOrgId,
+    #[cfg_attr(
+        feature = "std",
+        error("an org or a user with the same ID already exists")
+    )]
+    IdAlreadyTaken,
 
     #[cfg_attr(feature = "std", error("a project with the same ID already exists"))]
     DuplicateProjectId,
-
-    #[cfg_attr(feature = "std", error("a user with the same ID already exists."))]
-    DuplicateUserId,
 
     #[cfg_attr(feature = "std", error("the user is already a member of the org"))]
     AlreadyAMember,

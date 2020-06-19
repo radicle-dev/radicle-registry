@@ -37,6 +37,8 @@ use parity_scale_codec::{Decode, Encode};
 ///
 /// An Org with the same ID must not yet exist.
 ///
+/// A User with the same ID must not yet exist.
+///
 /// A user associated with the author must exist.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
@@ -71,6 +73,8 @@ pub struct UnregisterOrg {
 /// # State-dependent validations
 ///
 /// A user with the same ID must not yet exist.
+///
+/// An Org with the same ID must not yet exist.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct RegisterUser {
