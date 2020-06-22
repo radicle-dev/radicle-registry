@@ -103,3 +103,15 @@ pub struct UserV4 {
 ```
 
 Existing version variants may never be altered. Only new variants may be added.
+
+## Errors
+
+To maintain compatibility between different runtime versions we follow a simple
+policy for changes to `RegistryError`.
+
+Error variants are not removed immediately if they become unused in the runtime.
+Instead we annotate them with the `#[deprecated]` attribute and remove them once
+we intend to not support them any more. Whenever a variant is removed its
+discriminant value may not be used anymore. New variants are assigned a
+discriminant that has never been taken by an old variant. For this reason all
+discriminants are explicitly set
