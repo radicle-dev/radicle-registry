@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: Offline transaction signing now requires users to manually specify the
+  runtime spec version the transaction is valid for.
 * client: Renamed `ClientT::onchain_runtime_version` to
   `ClientT::runtime_version`.
 * client: `ClientT::get_checkpoint` returns a new `Checkpoint` structure

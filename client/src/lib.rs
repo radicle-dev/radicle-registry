@@ -28,9 +28,7 @@
 //!
 //! A [Transaction] can be created and signed offline using [Transaction::new_signed]. This
 //! constructor requires the account nonce and genesis hash of the chain. Those can be obtained
-//! using [ClientT::account_nonce] and [ClientT::genesis_hash]. See
-//! `./client/examples/transaction_signing.rs`.
-//!
+//! using [ClientT::account_nonce] and [ClientT::genesis_hash]. See [Transaction] for more details.
 use std::sync::Arc;
 
 use parity_scale_codec::{Decode, FullCodec};
@@ -192,6 +190,7 @@ impl ClientT for Client {
         let genesis_hash = self.genesis_hash();
         let client = self.clone();
         let nonce = client.account_nonce(&account_id).await?;
+        let runtime_spec_version = self.runtime_version().await?.spec_version;
         let transaction = Transaction::new_signed(
             &key_pair,
             message,
@@ -199,6 +198,7 @@ impl ClientT for Client {
                 nonce,
                 genesis_hash,
                 fee,
+                runtime_spec_version,
             },
         );
         let tx_included_fut = client.submit_transaction(transaction).await?;

@@ -38,6 +38,39 @@ use radicle_registry_runtime::{
 ///
 /// A transaction can be created with [Transaction::new_signed]. The necessary transaction data
 /// must be obtained from the client with [crate::ClientT::account_nonce] and [crate::ClientT::genesis_hash].
+///
+/// ```
+/// # use radicle_registry_client::*;
+/// # #[async_std::main]
+/// # async fn main () -> Result<(), Error> {
+/// let author = ed25519::Pair::from_string("//Alice", None).unwrap();
+/// let (client, _) = Client::new_emulator();
+///
+/// let account_nonce = client.account_nonce(&author.public()).await?;
+/// let genesis_hash = client.genesis_hash();
+/// let runtime_spec_version = client.runtime_version().await?.spec_version;
+///
+/// let transaction_extra = TransactionExtra {
+///     nonce: account_nonce,
+///     genesis_hash: genesis_hash,
+///     fee: 10,
+///     runtime_spec_version,
+/// };
+///
+/// let recipient = ed25519::Pair::from_string("//Bob", None).unwrap();
+/// let transfer_tx = Transaction::new_signed(
+///     &author,
+///     message::Transfer {
+///         recipient: recipient.public(),
+///         balance: 1000,
+///     },
+///     transaction_extra,
+/// );
+///
+/// client.submit_transaction(transfer_tx).await?.await?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct Transaction<Message_: Message> {
     _phantom_data: PhantomData<Message_>,
     pub(crate) extrinsic: UncheckedExtrinsic,
@@ -70,6 +103,10 @@ pub struct TransactionExtra {
     pub genesis_hash: Hash,
     /// The fee to cover the transaction fees and gain priority.
     pub fee: Balance,
+    /// The runtime spec version this transaction is valid for.
+    ///
+    /// Use [crate::ClientT::runtime_version] to get the current version.
+    pub runtime_spec_version: u32,
 }
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
@@ -106,9 +143,7 @@ fn transaction_extra_to_runtime_extra(
     let pay_tx_fee = PayTxFee { fee: extra.fee };
 
     let additional_signed = (
-        check_version
-            .additional_signed()
-            .expect("statically guaranteed to always return ok"),
+        extra.runtime_spec_version,
         // Genesis hash
         extra.genesis_hash,
         // Era
@@ -175,6 +210,7 @@ mod test {
                 nonce: 0,
                 genesis_hash,
                 fee: 3,
+                runtime_spec_version: radicle_registry_runtime::VERSION.spec_version,
             },
         );
 
@@ -197,6 +233,7 @@ mod test {
                 nonce: 0,
                 genesis_hash: H256::random(),
                 fee: 9,
+                runtime_spec_version: radicle_registry_runtime::VERSION.spec_version,
             },
         );
         let extrinsic_hash = Hashing::hash_of(&signed_tx.extrinsic);
