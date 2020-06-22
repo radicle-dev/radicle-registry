@@ -263,6 +263,7 @@ async fn invalid_transaction() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
     let alice = ed25519::Pair::from_string("//Alice", None).unwrap();
+    let runtime_spec_version = client.runtime_version().await.unwrap().spec_version;
 
     let transfer_tx = Transaction::new_signed(
         &alice,
@@ -274,6 +275,7 @@ async fn invalid_transaction() {
             nonce: 0,
             genesis_hash: Hash::zero(),
             fee: 123,
+            runtime_spec_version,
         },
     );
 
