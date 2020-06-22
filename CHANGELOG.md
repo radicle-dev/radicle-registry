@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: Renamed `ClientT::onchain_runtime_version` to
+  `ClientT::runtime_version`.
 * client: `ClientT::get_checkpoint` returns a new `Checkpoint` structure
 * runtime: abandon `Checkpoints` storage in favor of `Checkpoints1`
 * runtime: abandon `InitialCheckpoints` storage in favor of `InitialCheckpoints1`

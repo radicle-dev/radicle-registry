@@ -215,20 +215,20 @@ impl backend::Backend for RemoteNode {
         self.genesis_hash
     }
 
-    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
-        onchain_runtime_version(&self.rpc).await
+    async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        runtime_version(&self.rpc).await
     }
 }
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
     const NATIVE: u32 = radicle_registry_runtime::VERSION.spec_version;
-    match onchain_runtime_version(rpc).await?.spec_version {
+    match runtime_version(rpc).await?.spec_version {
         NATIVE => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }
 
-async fn onchain_runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
+async fn runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
     rpc.state
         .runtime_version(None)
         .compat()

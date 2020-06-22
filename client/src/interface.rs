@@ -248,6 +248,9 @@ pub trait ClientT {
     /// Return the gensis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;
 
+    /// Get the runtime version at the latest block
+    async fn runtime_version(&self) -> Result<RuntimeVersion, Error>;
+
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
     async fn get_org(&self, org_id: Id) -> Result<Option<Org>, Error>;
@@ -267,6 +270,4 @@ pub trait ClientT {
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
 
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error>;
-
-    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
 }

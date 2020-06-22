@@ -73,6 +73,6 @@ pub trait Backend {
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;
 
-    /// Get the on-chain runtime version.
-    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error>;
+    /// Get the runtime version at the latest block
+    async fn runtime_version(&self) -> Result<RuntimeVersion, Error>;
 }

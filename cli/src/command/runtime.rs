@@ -83,7 +83,7 @@ pub struct ShowVersion {
 impl CommandT for ShowVersion {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let v = client.onchain_runtime_version().await?;
+        let v = client.runtime_version().await?;
         println!("On-chain runtime version:");
         println!("  spec_version: {}", v.spec_version);
         println!("  impl_version: {}", v.impl_version);
