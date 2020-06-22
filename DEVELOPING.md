@@ -148,8 +148,12 @@ Implementation updates only change the implementation of the runtime but do not
 affect the semantics.
 
 Commits with implementation updates must increment the `impl_version` field of
-`VERSION` and the patch version of the crate. They may not recompile
+`VERSION` and the patch version of the crate. They must recompile
 `./runtime/latest.wasm`.
+
+```
+./scripts/build-runtime-wasm ./runtime/latest.wasm
+```
 
 ### Semantic updates
 
@@ -157,11 +161,12 @@ Semantic changes must increment the `VERSION.spec_version` field and the
 `runtime` crate minor version and reset the `impl_version` field and the crate
 patch version to `0`.
 
-In a commit with a semantic update you must also update the latest Wasm
-runtime.
+In a commit with a semantic update you must also update the WASM runtimes.
 
 ```
+mv runtime/latest.wasm runtime/prev_spec_last_impl.wasm
 ./scripts/build-runtime-wasm ./runtime/latest.wasm
+cp runtime/latest.wasm runtime/curr_spec_first_impl.wasm
 ```
 
 For semantic updates to take effect on an existing chain they need to be

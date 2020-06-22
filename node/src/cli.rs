@@ -219,11 +219,15 @@ impl Cli {
         use sc_chain_spec::ChainType;
         use sc_client_api::{execution_extensions::ExecutionStrategies, ExecutionStrategy};
 
-        let execution_strategy = match config.chain_spec.chain_type() {
-            // During development we want to run a node that runs a changed runtime without having
-            // to recompile the genesis WASM runtime.
-            ChainType::Development => ExecutionStrategy::NativeWhenPossible,
-            _ => ExecutionStrategy::Both,
+        let execution_strategy = if self.dev && self.runtime.is_some() {
+            ExecutionStrategy::AlwaysWasm
+        } else {
+            match config.chain_spec.chain_type() {
+                // During development we want to run a node that runs a changed runtime without having
+                // to recompile the genesis WASM runtime.
+                ChainType::Development => ExecutionStrategy::NativeWhenPossible,
+                _ => ExecutionStrategy::Both,
+            }
         };
 
         config.execution_strategies = ExecutionStrategies {

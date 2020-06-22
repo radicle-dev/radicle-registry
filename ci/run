@@ -69,21 +69,32 @@ fi
 echo "--- scripts/build-release"
 ./scripts/build-release
 
-echo "--- cargo test"
-echo "Starting radicle-registry-node"
 
-# The home directory is not writable on CI
-export XDG_DATA_HOME=/tmp/xdg-data-home
-export XDG_CONFIG_HOME=/tmp/xdg-config-home
 
-RUST_LOG=error ./target/release/radicle-registry-node --dev &
-registry_node_pid=$!
+# params: <RUNTIME_WASM_FILE>
+run_tests_with_runtime()
+{
+  echo "--- cargo test for runtime $1"
+  echo "Starting radicle-registry-node"
 
-# We build tests in release mode so that we can reuse the artifacts
-# from 'cargo build'
-RUST_BACKTRACE=1 RUST_LOG=info \
-  cargo test --workspace --release --color=always
-kill "$registry_node_pid"
+  # The home directory is not writable on CI
+  export XDG_DATA_HOME=/tmp/xdg-data-home
+  export XDG_CONFIG_HOME=/tmp/xdg-config-home
+
+  RUST_LOG=error ./target/release/radicle-registry-node --dev --runtime "$1" &
+  registry_node_pid=$!
+
+  echo "Testing radicle-registry"
+  # We build tests in release mode so that we can reuse the artifacts
+  # from 'cargo build'
+  RUST_BACKTRACE=1 RUST_LOG=info \
+    cargo test --workspace --release --color=always
+  kill "$registry_node_pid"
+}
+
+run_tests_with_runtime runtime/latest.wasm
+run_tests_with_runtime runtime/curr_spec_first_impl.wasm
+run_tests_with_runtime runtime/prev_spec_last_impl.wasm
 
 echo "--- Copy artifacts"
 mkdir artifacts
