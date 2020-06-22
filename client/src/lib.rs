@@ -314,8 +314,8 @@ impl ClientT for Client {
             .map(|cp_opt| cp_opt.map(Checkpoint::new))
     }
 
-    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
-        self.backend.onchain_runtime_version().await
+    async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        self.backend.runtime_version().await
     }
 }
 

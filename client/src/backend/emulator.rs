@@ -239,8 +239,8 @@ impl backend::Backend for Emulator {
         self.genesis_hash
     }
 
-    async fn onchain_runtime_version(&self) -> Result<RuntimeVersion, Error> {
-        panic!("Not implemented");
+    async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {
+        Ok(radicle_registry_runtime::VERSION)
     }
 }
 
