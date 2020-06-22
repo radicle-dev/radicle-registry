@@ -5,7 +5,7 @@ This directory provides tools to run and experiment with a local devnet.
 
 To run the devnet you need to build the registry node with
 ```bash
-./scripts/build-dev-node
+cargo build -p radicle-registry-node
 ```
 Then you can start the network with `docker-compose up`
 
