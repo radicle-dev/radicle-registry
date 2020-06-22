@@ -100,7 +100,10 @@ radicle-registry-node --chain devnet
 
 See below for more information on the different chains.
 
-For more information use the `--help` flag.
+For more information use the `--help` flag. See also [“Running development
+node”][dev-mode].
+
+[dev-mode]: ./DEVELOPING.md#running-development-node
 
 ### Logging
 

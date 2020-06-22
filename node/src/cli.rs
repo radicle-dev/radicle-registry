@@ -19,6 +19,7 @@ use sc_cli::{RunCmd, Subcommand, SubstrateCli};
 use sc_network::config::MultiaddrWithPeerId;
 use sc_service::{ChainSpec, Configuration};
 use std::path::PathBuf;
+use std::sync::Arc;
 use structopt::StructOpt;
 
 use crate::service;
@@ -100,6 +101,10 @@ pub struct Cli {
     /// has an effect for development chains and if the block database is empty.
     #[structopt(long)]
     runtime: Option<PathBuf>,
+
+    /// Run the dev chain with an in-memory database and mining
+    #[structopt(long, conflicts_with = "chain")]
+    dev: bool,
 }
 
 impl SubstrateCli for Cli {
@@ -171,9 +176,21 @@ impl Cli {
             }
             None => self.create_runner(&self.create_run_cmd())?.run_node(
                 |config| service::new_light(self.adjust_config(config)),
-                |config| service::new_full(self.adjust_config(config), self.mine),
+                |config| service::new_full(self.adjust_config(config), self.block_author()),
                 radicle_registry_runtime::VERSION,
             ),
+        }
+    }
+
+    fn block_author(&self) -> Option<AccountId> {
+        if let Some(block_author) = self.mine {
+            Some(block_author)
+        } else if self.dev {
+            use sp_core::crypto::Pair;
+            let block_author = sp_core::ed25519::Pair::from_string("//Mine", None).unwrap();
+            Some(block_author.public())
+        } else {
+            None
         }
     }
 
@@ -181,7 +198,11 @@ impl Cli {
         // This does not panic if there are no required arguments which we statically know.
         let mut run_cmd = RunCmd::from_iter_safe(vec![] as Vec<String>).unwrap();
         run_cmd.no_telemetry = self.no_telemetry;
-        run_cmd.shared_params.chain = Some(self.chain.clone());
+        run_cmd.shared_params.chain = if self.dev {
+            Some(String::from("dev"))
+        } else {
+            Some(self.chain.clone())
+        };
         run_cmd.network_params.bootnodes = self.bootnodes.clone();
         run_cmd.network_params.node_key_params.node_key = self.node_key.clone();
         run_cmd.network_params.node_key_params.node_key_file = self.node_key_file.clone();
@@ -212,6 +233,11 @@ impl Cli {
             offchain_worker: execution_strategy,
             other: execution_strategy,
         };
+
+        if self.dev {
+            let db = Arc::new(sp_database::MemDb::new());
+            config.database = sc_service::config::DatabaseConfig::Custom(db);
+        }
 
         if self.unsafe_rpc_external {
             config.rpc_cors = None;

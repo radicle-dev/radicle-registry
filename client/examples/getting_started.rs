@@ -18,7 +18,7 @@
 //! We’re transferring some funds from Alice to Bob and will inspect the node state.
 //!
 //! To run this example you need a running dev node. You can start it with
-//! `./scripts/run-dev-node`.
+//! `cargo run -p radicle-registry-node -- --dev`.
 
 use radicle_registry_client::*;
 

@@ -3568,6 +3568,7 @@ dependencies = [
  "sp-consensus",
  "sp-consensus-pow",
  "sp-core",
+ "sp-database",
  "sp-inherents",
  "sp-io",
  "sp-runtime",

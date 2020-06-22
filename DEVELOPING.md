@@ -32,21 +32,20 @@ Follow the [README's Prerequisites guide](README.md#prerequisites).
 Running development node
 ------------------------
 
-~~~
-./scripts/build-dev-node
-./scripts/run-dev-node
-~~~
+For development and testing it is recommended to run the node in development
+mode.
 
-The build script purges the chain data before running to avoid consensus issues.
+```
+cargo run -p radicle-registry-node -- --dev
+```
 
-To purge the chain state manually run
+The `--dev` flag has the following effects.
 
-~~~
-./scripts/run-dev-node purge-chain
-~~~
-
-The dev node runs the `dev` chain and uses `./runtime/latest.wasm` as
-the genesis runtime.
+* The node uses an ephemeral in-memory chain database. All chain state is lost
+  when the node is killed.
+* The node will use the `dev` chain spec. In particular, it will use
+  `runtime/latest.wasm` as the genesis runtime.
+* The node will mine blocks for the author derived from the key `//Mine`.
 
 Packages
 --------

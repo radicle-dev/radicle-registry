@@ -71,11 +71,12 @@ echo "--- scripts/build-release"
 
 echo "--- cargo test"
 echo "Starting radicle-registry-node"
-RUST_LOG=error ./target/release/radicle-registry-node \
-  --chain dev \
-  --mine 5HYpUCg4KKiwpih63PUHmGeNrK2XeTxKR83yNKbZeTsvSKNq \
-  --data-path /tmp/radicle-registry \
-  &
+
+# The home directory is not writable on CI
+export XDG_DATA_HOME=/tmp/xdg-data-home
+export XDG_CONFIG_HOME=/tmp/xdg-config-home
+
+RUST_LOG=error ./target/release/radicle-registry-node --dev &
 registry_node_pid=$!
 
 # We build tests in release mode so that we can reuse the artifacts
