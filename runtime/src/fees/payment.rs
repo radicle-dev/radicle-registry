@@ -65,7 +65,6 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
                 ProjectDomain::User(_user_id) => author,
             },
-            RegistryCall::unregister_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
             RegistryCall::set_checkpoint(m) => match &m.project_domain {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
@@ -76,6 +75,7 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
             // Transactions paid by the author
             RegistryCall::create_checkpoint(_)
             | RegistryCall::register_org(_)
+            | RegistryCall::unregister_org(_)
             | RegistryCall::transfer(_)
             | RegistryCall::register_user(_)
             | RegistryCall::unregister_user(_) => author,

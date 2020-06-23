@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* runtime: Tx author pays for `UnregisterOrg`
 * client: Offline transaction signing now requires users to manually specify the
   runtime spec version the transaction is valid for.
 * client: Renamed `ClientT::onchain_runtime_version` to
