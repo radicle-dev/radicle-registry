@@ -131,7 +131,6 @@ async fn unregister_org() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let register_org_message = random_register_org_message();
-
     let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
 
     assert!(tx_included
@@ -145,14 +144,7 @@ async fn unregister_org() {
     );
 
     // Unregister
-    let initial_balance = 1000;
-    let org = client
-        .get_org(register_org_message.org_id.clone())
-        .await
-        .unwrap()
-        .unwrap();
-    // The org needs funds to submit transactions.
-    transfer(&client, &author, org.account_id, initial_balance).await;
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
 
     let unregister_org_message = message::UnregisterOrg {
         org_id: register_org_message.org_id.clone(),
@@ -168,7 +160,7 @@ async fn unregister_org() {
     );
 
     assert_eq!(
-        client.free_balance(&org.account_id).await.unwrap(),
+        client.free_balance(&author.public()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
