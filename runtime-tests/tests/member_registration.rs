@@ -44,12 +44,8 @@ async fn register_member() {
         org_id: register_org.org_id.clone(),
         user_id: member_user_id,
     };
-    let tx_applied = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
-
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::MemberRegistered(message.clone().user_id, message.clone().org_id).into()
-    );
+    let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
+    assert_eq!(tx_included.result, Ok(()));
 
     // Fetch the org again
     let re_org = client

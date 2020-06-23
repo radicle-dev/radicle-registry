@@ -31,10 +31,7 @@ async fn register_user() {
     let random_fee = random_balance();
     let tx_included =
         submit_ok_with_fee(&client, &alice, register_user_message.clone(), random_fee).await;
-
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
+    assert_eq!(tx_included.result, Ok(()));
 
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,
@@ -120,9 +117,6 @@ async fn unregister_user() {
 
     // Registration.
     let tx_included = submit_ok(&client, &alice, register_user_message.clone()).await;
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into()));
     assert!(tx_included.result.is_ok());
     assert!(
         user_exists(&client, register_user_message.user_id.clone()).await,

@@ -31,10 +31,6 @@ async fn register_org() {
     let register_org_message = random_register_org_message();
     let tx_included =
         submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
-
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_included.result, Ok(()));
 
     assert!(
@@ -132,10 +128,6 @@ async fn unregister_org() {
 
     let register_org_message = random_register_org_message();
     let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
-
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_included.result, Ok(()));
 
     assert!(
@@ -173,10 +165,6 @@ async fn unregister_org_bad_actor() {
     let register_org_message = random_register_org_message();
 
     let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
-
-    assert!(tx_included
-        .events
-        .contains(&RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()));
     assert_eq!(tx_included.result, Ok(()));
 
     assert!(
