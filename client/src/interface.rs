@@ -178,7 +178,7 @@ pub struct TransactionIncluded<Message_: Message> {
     /// The result of the runtime message.
     ///
     /// See [Message::result_from_events].
-    pub result: Message_::Result,
+    pub result: Result<Message_::Output, TransactionError>,
 }
 
 /// Return type for all [ClientT] methods.

@@ -6,6 +6,9 @@ Upcoming
 
 ### Breaking changes
 
+* client: Replaced the associated `Message::Result` type with `Message::Output`.
+  This should require no changes on the user’s side since
+  `TransactionIncluded::result` remains structurally equal.
 * runtime: Tx author pays for `UnregisterOrg`
 * client: Remove `TransactionIncluded::events` field.
 * client: Offline transaction signing now requires users to manually specify the
