@@ -18,7 +18,10 @@ use crate::DispatchError;
 use core::convert::{TryFrom, TryInto};
 use derive_try_from_primitive::TryFromPrimitive;
 
-/// The subset of possible errors having led a transaction to failure.
+/// Error that may be the result of executing a transaction.
+///
+/// The error is either a [RegistryError] if it originated from our registry code or a
+/// [DispatchError] from other substrate modules.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "std", derive(thiserror::Error))]
 pub enum TransactionError {
@@ -38,10 +41,10 @@ impl From<DispatchError> for TransactionError {
     }
 }
 
+/// Errors describing failed Registry transactions.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[cfg_attr(feature = "std", derive(thiserror::Error))]
 #[repr(u8)]
-/// Errors describing failed Registry transactions.
 pub enum RegistryError {
     #[cfg_attr(feature = "std", error("the provided checkpoint does not exist"))]
     InexistentCheckpointId = 0,
@@ -50,64 +53,66 @@ pub enum RegistryError {
         feature = "std",
         error("a registered project must have an initial checkpoint")
     )]
-    InexistentInitialProjectCheckpoint,
+    InexistentInitialProjectCheckpoint = 1,
 
     #[cfg_attr(feature = "std", error("the provided org does not exist"))]
-    InexistentOrg,
+    InexistentOrg = 2,
 
     #[cfg_attr(feature = "std", error("the provided project does not exist"))]
-    InexistentProjectId,
+    InexistentProjectId = 3,
 
     #[cfg_attr(feature = "std", error("the provided user does not exist"))]
-    InexistentUser,
+    InexistentUser = 4,
 
-    #[cfg_attr(
-        feature = "std",
-        error("an org or a user with the same ID already exists")
-    )]
-    IdAlreadyTaken,
+    #[deprecated(note = "Superseded by IdAlreadyTaken")]
+    #[cfg_attr(feature = "std", error("an org with the same ID already exists"))]
+    DuplicateOrgId = 5,
 
     #[cfg_attr(feature = "std", error("a project with the same ID already exists"))]
-    DuplicateProjectId,
+    DuplicateProjectId = 6,
+
+    #[deprecated(note = "Superseded by IdAlreadyTaken")]
+    #[cfg_attr(feature = "std", error("a user with the same ID already exists."))]
+    DuplicateUserId = 7,
 
     #[cfg_attr(feature = "std", error("the user is already a member of the org"))]
-    AlreadyAMember,
+    AlreadyAMember = 8,
 
     #[cfg_attr(feature = "std", error("the provided fee is insufficient"))]
-    InsufficientFee,
+    InsufficientFee = 9,
 
     #[cfg_attr(feature = "std", error("the sender is not a project member"))]
-    InsufficientSenderPermissions,
+    InsufficientSenderPermissions = 10,
 
     #[cfg_attr(
         feature = "std",
         error("the provided checkpoint is not a descendant of the project's initial checkpoint")
     )]
-    InvalidCheckpointAncestry,
+    InvalidCheckpointAncestry = 11,
 
     #[cfg_attr(
         feature = "std",
         error("the provided user is not eligible for unregistration")
     )]
-    UnregisterableUser,
+    UnregisterableUser = 12,
 
     #[cfg_attr(
         feature = "std",
         error("the provided org is not elibile for unregistration")
     )]
-    UnregisterableOrg,
+    UnregisterableOrg = 13,
 
     #[cfg_attr(
         feature = "std",
         error("the account is already associated with a user")
     )]
-    UserAccountAssociated,
+    UserAccountAssociated = 14,
 
     #[cfg_attr(
         feature = "std",
         error("the tx author needs to have an associated user")
     )]
-    AuthorHasNoAssociatedUser,
+    AuthorHasNoAssociatedUser = 15,
 
     #[cfg_attr(
         feature = "std",
@@ -119,7 +124,13 @@ pub enum RegistryError {
         "
         )
     )]
-    FailedChainRuntimeUpdate,
+    FailedChainRuntimeUpdate = 16,
+
+    #[cfg_attr(
+        feature = "std",
+        error("an org or a user with the same ID already exists")
+    )]
+    IdAlreadyTaken = 17,
 }
 
 // The index with which the registry runtime module is declared
