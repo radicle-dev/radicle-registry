@@ -169,11 +169,10 @@ impl ClientT for Client {
             let events = tx_included.events;
             let tx_hash = tx_included.tx_hash;
             let block = tx_included.block;
-            let result = Message_::result_from_events(events.clone())?;
+            let result = Message_::result_from_events(events)?;
             Ok(TransactionIncluded {
                 tx_hash,
                 block,
-                events,
                 result,
             })
         }))
@@ -201,20 +200,7 @@ impl ClientT for Client {
                 runtime_spec_version,
             },
         );
-        let tx_included_fut = client.submit_transaction(transaction).await?;
-        Ok(Box::pin(async move {
-            let tx_included = tx_included_fut.await?;
-            let events = tx_included.events;
-            let tx_hash = tx_included.tx_hash;
-            let block = tx_included.block;
-            let result = Message_::result_from_events(events.clone())?;
-            Ok(TransactionIncluded {
-                tx_hash,
-                block,
-                events,
-                result,
-            })
-        }))
+        client.submit_transaction(transaction).await
     }
 
     async fn block_header(&self, block_hash: BlockHash) -> Result<BlockHeader, Error> {

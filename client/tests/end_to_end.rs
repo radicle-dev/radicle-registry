@@ -59,6 +59,7 @@ async fn register_project() {
         let random_fee = random_balance();
         let message = random_register_project_message(&domain, checkpoint_id);
         let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
+        assert_eq!(tx_included.result, Ok(()));
 
         let project = client
             .get_project(message.project_name.clone(), message.project_domain.clone())
@@ -69,15 +70,6 @@ async fn register_project() {
         assert_eq!(project.domain.clone(), message.project_domain.clone());
         assert_eq!(project.current_cp.clone(), checkpoint_id);
         assert_eq!(project.metadata.clone(), message.metadata.clone());
-
-        assert_eq!(
-            tx_included.events[0],
-            RegistryEvent::ProjectRegistered(
-                message.project_name.clone(),
-                message.project_domain.clone()
-            )
-            .into()
-        );
 
         let has_project = client
             .list_projects()
@@ -148,11 +140,6 @@ async fn register_member() {
     .await;
     assert_eq!(tx_applied.result, Ok(()));
 
-    assert_eq!(
-        tx_applied.events[0],
-        RegistryEvent::MemberRegistered(user_id.clone(), org_id.clone()).into()
-    );
-
     let re_org: Org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     assert_eq!(re_org.members.len(), 2);
     assert!(
@@ -191,11 +178,6 @@ async fn register_org() {
     let random_fee = random_balance();
     let tx_included =
         submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
-
-    assert_eq!(
-        tx_included.events[0],
-        RegistryEvent::OrgRegistered(register_org_message.org_id.clone()).into()
-    );
     assert_eq!(tx_included.result, Ok(()));
 
     let opt_org = client
@@ -225,11 +207,7 @@ async fn register_user() {
 
     let register_user_message = random_register_user_message();
     let tx_included = submit_ok(&client, &author, register_user_message.clone()).await;
-
-    assert_eq!(
-        tx_included.events[0],
-        RegistryEvent::UserRegistered(register_user_message.user_id.clone()).into(),
-    );
+    assert_eq!(tx_included.result, Ok(()));
 
     let maybe_user = client
         .get_user(register_user_message.user_id.clone())

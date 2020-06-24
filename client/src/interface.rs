@@ -175,8 +175,6 @@ pub struct TransactionIncluded<Message_: Message> {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
-    /// Events emitted by this transaction
-    pub events: Vec<Event>,
     /// The result of the runtime message.
     ///
     /// See [Message::result_from_events].

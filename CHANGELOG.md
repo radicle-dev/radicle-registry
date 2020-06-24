@@ -7,6 +7,7 @@ Upcoming
 ### Breaking changes
 
 * runtime: Tx author pays for `UnregisterOrg`
+* client: Remove `TransactionIncluded::events` field.
 * client: Offline transaction signing now requires users to manually specify the
   runtime spec version the transaction is valid for.
 * client: Renamed `ClientT::onchain_runtime_version` to
