@@ -29,11 +29,6 @@ tokio = "0.1"
 url = "1.7"
 
 
-[dependencies.pallet-sudo]
-git = "https://github.com/paritytech/substrate"
-rev = "6dc23feece77d758656651e04de964d72e9b5d34"
-default_features = false
-
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
 rev = "6dc23feece77d758656651e04de964d72e9b5d34"

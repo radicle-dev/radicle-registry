@@ -15,15 +15,13 @@
 
 //! Provides constructor functions to create [ChainSpec]s.
 use crate::pow::config::Config as PowAlgConfig;
-use radicle_registry_runtime::{
-    AccountId, Balance, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
-};
+use radicle_registry_runtime::{genesis, AccountId, Balance};
 use sc_service::{config::MultiaddrWithPeerId, ChainType, GenericChainSpec};
 use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = GenericChainSpec<GenesisConfig>;
+pub type ChainSpec = GenericChainSpec<genesis::GenesisConfig>;
 
 const FFNET_CHAIN_SPEC: &[u8] = include_bytes!("./chain_spec/ffnet.json");
 const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/latest.wasm");
@@ -109,15 +107,15 @@ impl ChainParams {
             balances,
             sudo_key,
         } = self;
-        let make_genesis_config = move || GenesisConfig {
-            system: Some(SystemConfig {
+        let make_genesis_config = move || genesis::GenesisConfig {
+            system: Some(genesis::SystemConfig {
                 code: runtime.clone(),
                 changes_trie_config: Default::default(),
             }),
-            pallet_balances: Some(BalancesConfig {
+            pallet_balances: Some(genesis::BalancesConfig {
                 balances: balances.clone(),
             }),
-            pallet_sudo: Some(SudoConfig { key: sudo_key }),
+            pallet_sudo: Some(genesis::SudoConfig { key: sudo_key }),
         };
         GenericChainSpec::from_genesis(
             &id,

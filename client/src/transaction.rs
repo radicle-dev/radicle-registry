@@ -175,7 +175,7 @@ fn transaction_extra_to_runtime_extra(
 mod test {
     use super::*;
     use crate::message;
-    use radicle_registry_runtime::{GenesisConfig, Runtime};
+    use radicle_registry_runtime::{genesis::GenesisConfig, Runtime};
     use sp_core::H256;
     use sp_runtime::traits::{Checkable, IdentityLookup};
     use sp_runtime::{BuildStorage as _, Perbill};

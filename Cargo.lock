@@ -3501,7 +3501,6 @@ dependencies = [
  "jsonrpc-core-client",
  "lazy_static",
  "log 0.4.8",
- "pallet-sudo",
  "parity-scale-codec",
  "radicle-registry-core",
  "radicle-registry-runtime",

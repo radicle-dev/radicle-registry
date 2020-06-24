@@ -22,10 +22,11 @@ use sp_runtime::{
     transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };
+use sp_version::RuntimeVersion;
 
 use super::{
     registry, AllModules, Block, Call, Header, InherentDataExt, RandomnessCollectiveFlip, Runtime,
-    RuntimeVersion, UncheckedExtrinsic, VERSION,
+    UncheckedExtrinsic, VERSION,
 };
 
 type Executive = frame_executive::Executive<
