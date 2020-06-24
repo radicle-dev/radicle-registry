@@ -308,3 +308,85 @@ async fn insufficient_funds() {
         Ok(_) => panic!("Transaction was accepted unexpectedly"),
     }
 }
+
+/// Test that an org can not be registered with an id already taken by another org.
+#[async_std::test]
+#[serial]
+async fn register_org_with_id_taken_by_org() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    if client.runtime_version().await.unwrap().spec_version < 10 {
+        println!("Skipping due to the incompatible runtime version");
+        return;
+    }
+    let (author, _) = key_pair_with_associated_user(&client).await;
+    let org = register_random_org(&client, &author).await;
+
+    let register_org_message = message::RegisterOrg { org_id: org.id };
+    let tx_included_twice = submit_ok(&client, &author, register_org_message).await;
+    assert_eq!(
+        tx_included_twice.result,
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
+}
+
+/// Test that an org can not be registered with an id already taken by a user.
+#[async_std::test]
+#[serial]
+async fn register_org_with_taken_user_id() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    if client.runtime_version().await.unwrap().spec_version < 10 {
+        println!("Skipping due to the incompatible runtime version");
+        return;
+    }
+    let (author, id) = key_pair_with_associated_user(&client).await;
+
+    let register_org_message = message::RegisterOrg { org_id: id.clone() };
+    let tx_included_org = submit_ok(&client, &author, register_org_message.clone()).await;
+    assert_eq!(
+        tx_included_org.result,
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
+}
+
+/// Test that a user can not be registered with an id already taken by another user.
+#[async_std::test]
+#[serial]
+async fn register_user_with_id_taken_by_user() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    if client.runtime_version().await.unwrap().spec_version < 10 {
+        println!("Skipping due to the incompatible runtime version");
+        return;
+    }
+    let (author, id) = key_pair_with_associated_user(&client).await;
+
+    let register_user_message = message::RegisterUser { user_id: id };
+    let tx_included_twice = submit_ok(&client, &author, register_user_message).await;
+    assert_eq!(
+        tx_included_twice.result,
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
+}
+
+/// Test that a user can not be registered with an id already taken by an org.
+#[async_std::test]
+#[serial]
+async fn register_user_with_id_taken_by_org() {
+    let node_host = url::Host::parse("127.0.0.1").unwrap();
+    let client = Client::create_with_executor(node_host).await.unwrap();
+    if client.runtime_version().await.unwrap().spec_version < 10 {
+        println!("Skipping due to the incompatible runtime version");
+        return;
+    }
+    let (author, _) = key_pair_with_associated_user(&client).await;
+    let org = register_random_org(&client, &author).await;
+
+    let register_user_message = message::RegisterUser { user_id: org.id };
+    let tx_included_user = submit_ok(&client, &author, register_user_message).await;
+    assert_eq!(
+        tx_included_user.result,
+        Err(RegistryError::IdAlreadyTaken.into())
+    );
+}

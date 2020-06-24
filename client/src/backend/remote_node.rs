@@ -221,9 +221,8 @@ impl backend::Backend for RemoteNode {
 }
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
-    const NATIVE: u32 = radicle_registry_runtime::VERSION.spec_version;
     match runtime_version(rpc).await?.spec_version {
-        NATIVE => Ok(()),
+        9 | 10 | 11 => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }
