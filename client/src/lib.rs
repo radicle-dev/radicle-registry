@@ -169,7 +169,8 @@ impl ClientT for Client {
             let events = tx_included.events;
             let tx_hash = tx_included.tx_hash;
             let block = tx_included.block;
-            let result = Message_::result_from_events(events)?;
+            let result = Message_::result_from_events(events)
+                .map_err(|error| Error::EventExtraction { error, tx_hash })?;
             Ok(TransactionIncluded {
                 tx_hash,
                 block,

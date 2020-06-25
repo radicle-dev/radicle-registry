@@ -15,13 +15,17 @@
 
 //! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
+pub use radicle_registry_core::message::*;
 use radicle_registry_core::*;
 use radicle_registry_runtime::{call, event, Call as RuntimeCall, Event};
 
-pub use radicle_registry_core::message::*;
-
-/// Indicates that parsing the events into the appropriate message result failed.
-type EventParseError = String;
+#[derive(thiserror::Error, Debug)]
+pub enum EventExtractionError {
+    #[error("ExtrinsicSuccess or ExtrinsicFailed event not found")]
+    ExstrinsicStatusMissing,
+    #[error("Required event is missing")]
+    EventMissing,
+}
 
 /// Trait implemented for every runtime message
 ///
@@ -40,7 +44,7 @@ pub trait Message: Send + 'static {
     /// missing.
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError>;
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError>;
 
     fn into_runtime_call(self) -> RuntimeCall;
 }
@@ -50,15 +54,11 @@ impl Message for message::RegisterProject {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(event::Registry::ProjectRegistered(_, _)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::ProjectRegistered(_, _) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -71,15 +71,11 @@ impl Message for message::RegisterMember {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "MemberRegistered", |event| match event {
-                Event::registry(event::Registry::MemberRegistered(_, _)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::MemberRegistered(_, _) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -92,15 +88,11 @@ impl Message for message::RegisterOrg {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "OrgRegistered", |event| match event {
-                Event::registry(event::Registry::OrgRegistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::OrgRegistered(_) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -113,15 +105,11 @@ impl Message for message::UnregisterOrg {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "OrgUnregistered", |event| match event {
-                Event::registry(event::Registry::OrgUnregistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::OrgUnregistered(_) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -138,16 +126,11 @@ impl Message for message::RegisterUser {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-
-        match dispatch_result {
-            Ok(()) => find_event(&events, "UserRegistered", |event| match event {
-                Event::registry(event::Registry::UserRegistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::UserRegistered(_) => Some(()),
+            _ => None,
+        })
     }
 }
 
@@ -156,15 +139,11 @@ impl Message for message::UnregisterUser {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "UserUnregistered", |event| match event {
-                Event::registry(event::Registry::UserUnregistered(_)) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::UserUnregistered(_) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -177,17 +156,11 @@ impl Message for message::CreateCheckpoint {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
-                Event::registry(event::Registry::CheckpointCreated(checkpoint_id)) => {
-                    Some(Ok(*checkpoint_id))
-                }
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::CheckpointCreated(checkpoint_id) => Some(*checkpoint_id),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -200,19 +173,11 @@ impl Message for message::SetCheckpoint {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let dispatch_result = get_dispatch_result(&events)?;
-        match dispatch_result {
-            Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
-                Event::registry(event::Registry::CheckpointSet(
-                    _project_name,
-                    _org_id,
-                    _checkpoint_id,
-                )) => Some(Ok(())),
-                _ => None,
-            }),
-            Err(dispatch_error) => Ok(Err(dispatch_error)),
-        }
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
+        extract_registry_result(&events, |event| match event {
+            event::Registry::CheckpointSet(_project_name, _org_id, _checkpoint_id) => Some(()),
+            _ => None,
+        })
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -225,7 +190,7 @@ impl Message for message::Transfer {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
         get_dispatch_result(&events)
     }
 
@@ -239,7 +204,7 @@ impl Message for message::TransferFromOrg {
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
         get_dispatch_result(&events)
     }
 
@@ -255,7 +220,7 @@ impl Message for message::UpdateRuntime {
     /// `RawEvent::CodeUpdated` event. Anything else is considered a failed update.
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
+    ) -> Result<Result<Self::Output, TransactionError>, EventExtractionError> {
         let result = events
             .into_iter()
             .find_map(|event| match event {
@@ -272,39 +237,44 @@ impl Message for message::UpdateRuntime {
     }
 }
 
-/// Extract the dispatch result of an extrinsic from the extrinsic events.
-///
-/// Looks for the [event::System] in the list of events and returns the inner result based on
-/// the event.
-///
-/// Returns an outer [EventParseError] if no [event::System] was present in `events`.
-///
-/// Because of an issue with substrate the `message` field of [TransactionError] will always be `None`
-fn get_dispatch_result(events: &[Event]) -> Result<Result<(), TransactionError>, EventParseError> {
-    find_event(events, "System", |event| match event {
-        Event::system(system_event) => match system_event {
-            event::System::ExtrinsicSuccess(_) => Some(Ok(())),
-            event::System::ExtrinsicFailed(ref dispatch_error, _) => {
-                Some(Err((*dispatch_error).into()))
-            }
-            _ => None,
-        },
-        _ => None,
-    })
+/// Run `f` on all events to extract a potential output after [get_dispatch_result] is successful.
+/// If `f` returns `None` for all events an [EventExtractionError::EventMissing] error is returned.
+fn extract_registry_result<T>(
+    events: &[Event],
+    f: impl Fn(&event::Registry) -> Option<T>,
+) -> Result<Result<T, TransactionError>, EventExtractionError> {
+    let dispatch_result = get_dispatch_result(events)?;
+    match dispatch_result {
+        Ok(()) => {
+            let output = events
+                .iter()
+                .find_map(|event| match event {
+                    Event::registry(registry_event) => f(registry_event),
+                    _ => None,
+                })
+                .ok_or_else(|| EventExtractionError::EventMissing)?;
+            Ok(Ok(output))
+        }
+        Err(dispatch_error) => Ok(Err(dispatch_error)),
+    }
 }
 
-/// Applies function to the elements of iterator and returns the first non-none result.
-///
-/// Returns an error if no matching element was found.
-fn find_event<T>(
+/// Looks for [event::System::ExtrinsicSuccess] and [event::System::ExtrinsicFailed] in the events
+/// and constructs the inner reulst accordingly. Returns an
+/// [EventExtractionError::ExstrinsicStatusMissing] error if none of these events is found.
+fn get_dispatch_result(
     events: &[Event],
-    event_name: &'static str,
-    f: impl Fn(&Event) -> Option<T>,
-) -> Result<T, EventParseError> {
+) -> Result<Result<(), TransactionError>, EventExtractionError> {
     events
         .iter()
-        .find_map(f)
-        .ok_or_else(|| format!("{} event is missing", event_name))
+        .find_map(|event| match event {
+            Event::system(event::System::ExtrinsicSuccess(_)) => Some(Ok(())),
+            Event::system(event::System::ExtrinsicFailed(dispatch_error, _)) => {
+                Some(Err(TransactionError::from(*dispatch_error)))
+            }
+            _ => None,
+        })
+        .ok_or_else(|| EventExtractionError::ExstrinsicStatusMissing)
 }
 
 #[cfg(test)]
