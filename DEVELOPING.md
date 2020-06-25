@@ -148,12 +148,16 @@ Implementation updates only change the implementation of the runtime but do not
 affect the semantics.
 
 Commits with implementation updates must increment the `impl_version` field of
-`VERSION` and the patch version of the crate. They must recompile
-`./runtime/latest.wasm`.
+`VERSION` and the patch version of the crate.
+
+After all the changes are applied it must also update the CI artifacts:
 
 ```
-./scripts/build-runtime-wasm ./runtime/latest.wasm
+./scripts/rebuild-chain-specs impl
 ```
+
+This also updates `latest.wasm`, which can be deployed to an existing chain
+in order for runtime updates to take effect.
 
 ### Semantic updates
 
@@ -161,16 +165,14 @@ Semantic changes must increment the `VERSION.spec_version` field and the
 `runtime` crate minor version and reset the `impl_version` field and the crate
 patch version to `0`.
 
-In a commit with a semantic update you must also update the WASM runtimes.
+After all the changes are applied it must also update the CI artifacts:
 
 ```
-mv runtime/latest.wasm runtime/prev_spec_last_impl.wasm
-./scripts/build-runtime-wasm ./runtime/latest.wasm
-cp runtime/latest.wasm runtime/curr_spec_first_impl.wasm
+./scripts/rebuild-chain-specs spec
 ```
 
-For semantic updates to take effect on an existing chain they need to be
-deployed to the chain.
+This also updates `latest.wasm`, which can be deployed to an existing chain
+in order for runtime updates to take effect:
 
 ```
 radicle-registry-cli runtime update ./runtime/latest.wasm --author <sudo_key>
