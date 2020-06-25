@@ -23,9 +23,9 @@ use sp_runtime::{traits::Block as _, traits::Hash as _, BuildStorage as _, Diges
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
+    event,
     genesis::{BalancesConfig, GenesisConfig},
-    registry, runtime_api, AccountId, Block, EventRecord, Hash, Hashing, Header, Runtime,
-    RuntimeVersion,
+    registry, runtime_api, AccountId, Block, Hash, Hashing, Header, Runtime, RuntimeVersion,
 };
 
 use crate::backend;
@@ -137,7 +137,10 @@ impl Emulator {
 
     /// Add a block with `extrinsics` to the chain. Returns the added block and a list of events
     /// recorded during the execution of the block.
-    fn add_block(&self, extrinsics: Vec<backend::UncheckedExtrinsic>) -> (Block, Vec<EventRecord>) {
+    fn add_block(
+        &self,
+        extrinsics: Vec<backend::UncheckedExtrinsic>,
+    ) -> (Block, Vec<event::Record>) {
         let mut state = self.state.lock().unwrap();
 
         let new_tip_header_init = Header {

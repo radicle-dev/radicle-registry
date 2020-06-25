@@ -55,8 +55,6 @@ pub type Signature = ed25519::Signature;
 /// Same as  [sp_runtime::traits::Hash::Output] for [Hashing].
 pub type Hash = sp_core::H256;
 
-pub type EventRecord = frame_system::EventRecord<runtime::Event, Hash>;
-
 /// Block header type as expected by this runtime.
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 
@@ -118,8 +116,21 @@ pub mod store {
 }
 
 pub mod event {
+    pub use crate::runtime::Event;
+    pub type Record = frame_system::EventRecord<crate::runtime::Event, crate::Hash>;
     pub type Registry = crate::registry::Event;
     pub type System = frame_system::Event<crate::Runtime>;
+
+    /// Return the index of the transaction in the block that dispatched the event.
+    ///
+    /// Returns `None` if the event was not dispatched as part of a transaction.
+    #[cfg(feature = "std")]
+    pub fn transaction_index(record: &Record) -> Option<u32> {
+        match record.phase {
+            frame_system::Phase::ApplyExtrinsic(i) => Some(i),
+            _ => None,
+        }
+    }
 }
 
 pub mod call {
