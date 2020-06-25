@@ -29,7 +29,7 @@ use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
 use url::Url;
 
-use radicle_registry_runtime::{Block, BlockNumber, Event, EventRecord, Hash, Hashing, Header};
+use radicle_registry_runtime::{event, Block, BlockNumber, Event, Hash, Hashing, Header};
 
 use crate::backend::{self, Backend};
 use crate::interface::*;
@@ -136,7 +136,7 @@ impl RemoteNode {
             .fetch(SYSTEM_EVENTS_STORAGE_KEY.as_ref(), Some(block_hash))
             .await?
             .unwrap_or_default();
-        let event_records: Vec<radicle_registry_runtime::EventRecord> =
+        let event_records: Vec<event::Record> =
             Decode::decode(&mut &events_data[..]).map_err(Error::Codec)?;
 
         let signed_block = self
@@ -246,7 +246,7 @@ async fn runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
 pub(crate) fn extract_transaction_events(
     tx_hash: TxHash,
     block: &Block,
-    event_records: Vec<EventRecord>,
+    event_records: Vec<event::Record>,
 ) -> Option<Vec<Event>> {
     let xt_index = block
         .extrinsics
@@ -261,11 +261,12 @@ pub(crate) fn extract_transaction_events(
         })?;
     let events = event_records
         .into_iter()
-        .filter_map(|event_record| match event_record.phase {
-            frame_system::Phase::ApplyExtrinsic(i) if i == xt_index as u32 => {
+        .filter_map(|event_record| {
+            if event::transaction_index(&event_record) == Some(xt_index as u32) {
                 Some(event_record.event)
+            } else {
+                None
             }
-            _ => None,
         })
         .collect();
     Some(events)
