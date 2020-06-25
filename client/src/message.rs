@@ -256,14 +256,14 @@ impl Message for message::UpdateRuntime {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<Self::Output, TransactionError>, EventParseError> {
-        let error: TransactionError = RegistryError::FailedChainRuntimeUpdate.into();
-        find_event(&events, "System", |event| match event {
-            Event::system(system_event) => match system_event {
-                event::System::CodeUpdated => Some(Ok(())),
-                _ => Some(Err(error)),
-            },
-            _ => Some(Err(error)),
-        })
+        let result = events
+            .into_iter()
+            .find_map(|event| match event {
+                Event::system(event::System::CodeUpdated) => Some(()),
+                _ => None,
+            })
+            .ok_or_else(|| TransactionError::from(RegistryError::FailedChainRuntimeUpdate));
+        Ok(result)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -305,4 +305,46 @@ fn find_event<T>(
         .iter()
         .find_map(f)
         .ok_or_else(|| format!("{} event is missing", event_name))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn update_runtime_event_ok() {
+        let events = vec![
+            Event::system(event::System::ExtrinsicSuccess(Default::default())),
+            Event::system(event::System::CodeUpdated),
+        ];
+        let result = message::UpdateRuntime::result_from_events(events).unwrap();
+        assert_eq!(result, Ok(()))
+    }
+
+    #[test]
+    fn update_runtime_empty_error() {
+        let events = vec![];
+        let result = message::UpdateRuntime::result_from_events(events).unwrap();
+        assert_eq!(
+            result,
+            Err(TransactionError::from(
+                RegistryError::FailedChainRuntimeUpdate
+            ))
+        )
+    }
+
+    #[test]
+    fn update_runtime_extrinsic_failed_error() {
+        let events = vec![Event::system(event::System::ExtrinsicFailed(
+            sp_runtime::DispatchError::BadOrigin,
+            Default::default(),
+        ))];
+        let result = message::UpdateRuntime::result_from_events(events).unwrap();
+        assert_eq!(
+            result,
+            Err(TransactionError::from(
+                RegistryError::FailedChainRuntimeUpdate
+            ))
+        )
+    }
 }
