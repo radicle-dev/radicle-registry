@@ -20,7 +20,7 @@ use futures::prelude::*;
 use futures01::stream::Stream as _;
 use jsonrpc_core_client::RpcChannel;
 use lazy_static::lazy_static;
-use parity_scale_codec::{Decode, Encode as _};
+use parity_scale_codec::Encode as _;
 use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
 use sp_core::{storage::StorageKey, twox_128};
 use sp_rpc::{list::ListOrValue, number::NumberOrHex};
@@ -29,9 +29,10 @@ use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
 use url::Url;
 
-use radicle_registry_runtime::{event, Block, BlockNumber, Event, Hash, Hashing, Header};
+use radicle_registry_runtime::{Block, BlockNumber, Hash, Hashing, Header};
 
 use crate::backend::{self, Backend};
+use crate::event::{Event, EventRecord};
 use crate::interface::*;
 
 /// Collection of substrate RPC clients
@@ -132,12 +133,15 @@ impl RemoteNode {
         tx_hash: TxHash,
         block_hash: BlockHash,
     ) -> Result<Vec<Event>, Error> {
+        let runtime_spec_version = runtime_version(&self.rpc, Some(block_hash))
+            .await?
+            .spec_version;
         let events_data = self
             .fetch(SYSTEM_EVENTS_STORAGE_KEY.as_ref(), Some(block_hash))
             .await?
             .unwrap_or_default();
-        let event_records: Vec<event::Record> =
-            Decode::decode(&mut &events_data[..]).map_err(Error::Codec)?;
+        let event_records =
+            EventRecord::decode_vec(runtime_spec_version, &events_data).map_err(Error::Codec)?;
 
         let signed_block = self
             .rpc
@@ -216,20 +220,23 @@ impl backend::Backend for RemoteNode {
     }
 
     async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {
-        runtime_version(&self.rpc).await
+        runtime_version(&self.rpc, None).await
     }
 }
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
-    match runtime_version(rpc).await?.spec_version {
-        9 | 10 | 11 => Ok(()),
+    match runtime_version(rpc, None).await?.spec_version {
+        9 | 10 | 11 | 12 => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }
 
-async fn runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
+async fn runtime_version(
+    rpc: &Rpc,
+    block_hash: Option<BlockHash>,
+) -> Result<RuntimeVersion, Error> {
     rpc.state
-        .runtime_version(None)
+        .runtime_version(block_hash)
         .compat()
         .await
         .map_err(Into::into)
@@ -246,7 +253,7 @@ async fn runtime_version(rpc: &Rpc) -> Result<RuntimeVersion, Error> {
 pub(crate) fn extract_transaction_events(
     tx_hash: TxHash,
     block: &Block,
-    event_records: Vec<event::Record>,
+    event_records: Vec<EventRecord>,
 ) -> Option<Vec<Event>> {
     let xt_index = block
         .extrinsics
@@ -261,12 +268,9 @@ pub(crate) fn extract_transaction_events(
         })?;
     let events = event_records
         .into_iter()
-        .filter_map(|event_record| {
-            if event::transaction_index(&event_record) == Some(xt_index as u32) {
-                Some(event_record.event)
-            } else {
-                None
-            }
+        .filter_map(|event_record| match event_record.transaction_index() {
+            Some(i) if i == xt_index as u32 => Some(event_record.event()),
+            _ => None,
         })
         .collect();
     Some(events)

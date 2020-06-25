@@ -17,6 +17,8 @@ use failure::{Compat, Fail};
 use jsonrpc_core_client::RpcError;
 use parity_scale_codec::Error as CodecError;
 
+use crate::event::EventExtractionError;
+
 /// Error that may be returned by any of the [crate::ClientT] methods
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -32,6 +34,14 @@ pub enum Error {
     /// Chain is running an incompatible runtime specification version
     #[error("Chain is running an incompatible runtime specification version {0}")]
     IncompatibleRuntimeVersion(u32),
+
+    /// Failed to extract required events for a transaction
+    #[error("Failed to extract required events for transaction {tx_hash}")]
+    EventExtraction {
+        error: EventExtractionError,
+        tx_hash: crate::TxHash,
+    },
+
     /// Other error
     #[error("Other error: {0}")]
     Other(String),
