@@ -315,7 +315,7 @@ decl_module! {
                 .ok_or(RegistryError::InexistentOrg)?;
 
             if org_has_member_with_account(&org, sender) {
-                <crate::Balances as Currency<_>>::transfer(
+                <crate::runtime::Balances as Currency<_>>::transfer(
                     &org.account_id(),
                     &message.recipient,
                     message.value, ExistenceRequirement::KeepAlive
@@ -405,7 +405,7 @@ decl_module! {
         pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            <crate::Balances as Currency<_>>::transfer(
+            <crate::runtime::Balances as Currency<_>>::transfer(
                 &sender,
                 &message.recipient,
                 message.balance,
@@ -423,7 +423,7 @@ decl_module! {
 
         fn on_finalize() {
             let block_author = store::BlockAuthor::take().expect("Block author must be set by an extrinsic");
-            let imbalance = crate::Balances::deposit_creating(&block_author, BLOCK_REWARD);
+            let imbalance = crate::runtime::Balances::deposit_creating(&block_author, BLOCK_REWARD);
             drop(imbalance);
         }
 

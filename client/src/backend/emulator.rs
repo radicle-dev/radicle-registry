@@ -23,8 +23,9 @@ use sp_runtime::{traits::Block as _, traits::Hash as _, BuildStorage as _, Diges
 use sp_state_machine::backend::Backend as _;
 
 use radicle_registry_runtime::{
-    registry, runtime_api, AccountId, BalancesConfig, Block, EventRecord, GenesisConfig, Hash,
-    Hashing, Header, Runtime, RuntimeVersion,
+    genesis::{BalancesConfig, GenesisConfig},
+    registry, runtime_api, AccountId, Block, EventRecord, Hash, Hashing, Header, Runtime,
+    RuntimeVersion,
 };
 
 use crate::backend;

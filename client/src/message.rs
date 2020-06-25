@@ -16,7 +16,7 @@
 //! Defines [Message] trait and implementations for all messages in `radicle_registry_core::messages`.
 
 use radicle_registry_core::*;
-use radicle_registry_runtime::{registry, Call as RuntimeCall, Event, Runtime};
+use radicle_registry_runtime::{call, event, Call as RuntimeCall, Event};
 
 pub use radicle_registry_core::message::*;
 
@@ -54,7 +54,7 @@ impl Message for message::RegisterProject {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "ProjectRegistered", |event| match event {
-                Event::registry(registry::Event::ProjectRegistered(_, _)) => Some(Ok(())),
+                Event::registry(event::Registry::ProjectRegistered(_, _)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -62,7 +62,7 @@ impl Message for message::RegisterProject {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_project(self).into()
+        call::Registry::register_project(self).into()
     }
 }
 
@@ -75,7 +75,7 @@ impl Message for message::RegisterMember {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "MemberRegistered", |event| match event {
-                Event::registry(registry::Event::MemberRegistered(_, _)) => Some(Ok(())),
+                Event::registry(event::Registry::MemberRegistered(_, _)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -83,7 +83,7 @@ impl Message for message::RegisterMember {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_member(self).into()
+        call::Registry::register_member(self).into()
     }
 }
 
@@ -96,7 +96,7 @@ impl Message for message::RegisterOrg {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "OrgRegistered", |event| match event {
-                Event::registry(registry::Event::OrgRegistered(_)) => Some(Ok(())),
+                Event::registry(event::Registry::OrgRegistered(_)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -104,7 +104,7 @@ impl Message for message::RegisterOrg {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_org(self).into()
+        call::Registry::register_org(self).into()
     }
 }
 
@@ -117,7 +117,7 @@ impl Message for message::UnregisterOrg {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "OrgUnregistered", |event| match event {
-                Event::registry(registry::Event::OrgUnregistered(_)) => Some(Ok(())),
+                Event::registry(event::Registry::OrgUnregistered(_)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -125,7 +125,7 @@ impl Message for message::UnregisterOrg {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::unregister_org(self).into()
+        call::Registry::unregister_org(self).into()
     }
 }
 
@@ -133,7 +133,7 @@ impl Message for message::RegisterUser {
     type Output = ();
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::register_user(self).into()
+        call::Registry::register_user(self).into()
     }
 
     fn result_from_events(
@@ -143,7 +143,7 @@ impl Message for message::RegisterUser {
 
         match dispatch_result {
             Ok(()) => find_event(&events, "UserRegistered", |event| match event {
-                Event::registry(registry::Event::UserRegistered(_)) => Some(Ok(())),
+                Event::registry(event::Registry::UserRegistered(_)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -160,7 +160,7 @@ impl Message for message::UnregisterUser {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "UserUnregistered", |event| match event {
-                Event::registry(registry::Event::UserUnregistered(_)) => Some(Ok(())),
+                Event::registry(event::Registry::UserUnregistered(_)) => Some(Ok(())),
                 _ => None,
             }),
             Err(dispatch_error) => Ok(Err(dispatch_error)),
@@ -168,7 +168,7 @@ impl Message for message::UnregisterUser {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::unregister_user(self).into()
+        call::Registry::unregister_user(self).into()
     }
 }
 
@@ -181,7 +181,7 @@ impl Message for message::CreateCheckpoint {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointCreated", |event| match event {
-                Event::registry(registry::Event::CheckpointCreated(checkpoint_id)) => {
+                Event::registry(event::Registry::CheckpointCreated(checkpoint_id)) => {
                     Some(Ok(*checkpoint_id))
                 }
                 _ => None,
@@ -191,7 +191,7 @@ impl Message for message::CreateCheckpoint {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::create_checkpoint(self).into()
+        call::Registry::create_checkpoint(self).into()
     }
 }
 
@@ -204,7 +204,7 @@ impl Message for message::SetCheckpoint {
         let dispatch_result = get_dispatch_result(&events)?;
         match dispatch_result {
             Ok(()) => find_event(&events, "CheckpointSet", |event| match event {
-                Event::registry(registry::Event::CheckpointSet(
+                Event::registry(event::Registry::CheckpointSet(
                     _project_name,
                     _org_id,
                     _checkpoint_id,
@@ -216,7 +216,7 @@ impl Message for message::SetCheckpoint {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::set_checkpoint(self).into()
+        call::Registry::set_checkpoint(self).into()
     }
 }
 
@@ -230,7 +230,7 @@ impl Message for message::Transfer {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::transfer(self).into()
+        call::Registry::transfer(self).into()
     }
 }
 
@@ -244,7 +244,7 @@ impl Message for message::TransferFromOrg {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        registry::Call::transfer_from_org(self).into()
+        call::Registry::transfer_from_org(self).into()
     }
 }
 
@@ -259,7 +259,7 @@ impl Message for message::UpdateRuntime {
         let error: TransactionError = RegistryError::FailedChainRuntimeUpdate.into();
         find_event(&events, "System", |event| match event {
             Event::system(system_event) => match system_event {
-                frame_system::RawEvent::CodeUpdated => Some(Ok(())),
+                event::System::CodeUpdated => Some(Ok(())),
                 _ => Some(Err(error)),
             },
             _ => Some(Err(error)),
@@ -267,27 +267,24 @@ impl Message for message::UpdateRuntime {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        let set_code_call: RuntimeCall = frame_system::Call::set_code(self.code).into();
-        let sudo_call: pallet_sudo::Call<Runtime> =
-            pallet_sudo::Call::sudo(Box::new(set_code_call));
-
-        sudo_call.into()
+        let set_code_call: RuntimeCall = call::System::set_code(self.code).into();
+        call::Sudo::sudo(Box::new(set_code_call)).into()
     }
 }
 
 /// Extract the dispatch result of an extrinsic from the extrinsic events.
 ///
-/// Looks for the [frame_system::Event] in the list of events and returns the inner result based on
+/// Looks for the [event::System] in the list of events and returns the inner result based on
 /// the event.
 ///
-/// Returns an outer [EventParseError] if no [frame_system::Event] was present in `events`.
+/// Returns an outer [EventParseError] if no [event::System] was present in `events`.
 ///
 /// Because of an issue with substrate the `message` field of [TransactionError] will always be `None`
 fn get_dispatch_result(events: &[Event]) -> Result<Result<(), TransactionError>, EventParseError> {
     find_event(events, "System", |event| match event {
         Event::system(system_event) => match system_event {
-            frame_system::Event::<Runtime>::ExtrinsicSuccess(_) => Some(Ok(())),
-            frame_system::Event::<Runtime>::ExtrinsicFailed(ref dispatch_error, _) => {
+            event::System::ExtrinsicSuccess(_) => Some(Ok(())),
+            event::System::ExtrinsicFailed(ref dispatch_error, _) => {
                 Some(Err((*dispatch_error).into()))
             }
             _ => None,

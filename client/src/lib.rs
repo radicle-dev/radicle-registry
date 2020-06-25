@@ -35,7 +35,7 @@ use parity_scale_codec::{Decode, FullCodec};
 
 use frame_support::storage::generator::{StorageMap, StorageValue};
 use frame_support::storage::StoragePrefixedMap;
-use radicle_registry_runtime::{registry, registry::DecodeKey, system, Runtime};
+use radicle_registry_runtime::{store, store::DecodeKey as _};
 
 mod backend;
 mod error;
@@ -220,30 +220,30 @@ impl ClientT for Client {
         account_id: &AccountId,
     ) -> Result<state::AccountTransactionIndex, Error> {
         let account_info = self
-            .fetch_map_value::<frame_system::Account<Runtime>, _, _>(*account_id)
+            .fetch_map_value::<store::Account, _, _>(*account_id)
             .await?;
         Ok(account_info.nonce)
     }
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<state::AccountBalance, Error> {
         let account_info = self
-            .fetch_map_value::<system::Account<Runtime>, _, _>(*account_id)
+            .fetch_map_value::<store::Account, _, _>(*account_id)
             .await?;
         Ok(account_info.data.free)
     }
 
     async fn get_org(&self, id: Id) -> Result<Option<Org>, Error> {
-        self.fetch_map_value::<registry::store::Orgs1, _, _>(id.clone())
+        self.fetch_map_value::<store::Orgs1, _, _>(id.clone())
             .await
             .map(|maybe_org: Option<state::Orgs1Data>| maybe_org.map(|org| Org::new(id, org)))
     }
 
     async fn list_orgs(&self) -> Result<Vec<Id>, Error> {
-        let orgs_prefix = registry::store::Orgs1::final_prefix();
+        let orgs_prefix = store::Orgs1::final_prefix();
         let keys = self.backend.fetch_keys(&orgs_prefix, None).await?;
         let mut org_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
-            let org_id = registry::store::Orgs1::decode_key(&key)
+            let org_id = store::Orgs1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract org ID");
             org_ids.push(org_id)
         }
@@ -251,17 +251,17 @@ impl ClientT for Client {
     }
 
     async fn get_user(&self, id: Id) -> Result<Option<User>, Error> {
-        self.fetch_map_value::<registry::store::Users1, _, _>(id.clone())
+        self.fetch_map_value::<store::Users1, _, _>(id.clone())
             .await
             .map(|maybe_user| maybe_user.map(|user| User::new(id, user)))
     }
 
     async fn list_users(&self) -> Result<Vec<Id>, Error> {
-        let users_prefix = registry::store::Users1::final_prefix();
+        let users_prefix = store::Users1::final_prefix();
         let keys = self.backend.fetch_keys(&users_prefix, None).await?;
         let mut user_ids: Vec<Id> = Vec::with_capacity(keys.len());
         for key in keys {
-            let user_id = registry::store::Users1::decode_key(&key)
+            let user_id = store::Users1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract user ID");
             user_ids.push(user_id);
         }
@@ -275,7 +275,7 @@ impl ClientT for Client {
         project_domain: ProjectDomain,
     ) -> Result<Option<Project>, Error> {
         let project_id = (project_name.clone(), project_domain.clone());
-        self.fetch_map_value::<registry::store::Projects1, _, _>(project_id.clone())
+        self.fetch_map_value::<store::Projects1, _, _>(project_id.clone())
             .await
             .map(|maybe_project| {
                 maybe_project.map(|project| Project::new(project_name, project_domain, project))
@@ -283,11 +283,11 @@ impl ClientT for Client {
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
-        let project_prefix = registry::store::Projects1::final_prefix();
+        let project_prefix = store::Projects1::final_prefix();
         let keys = self.backend.fetch_keys(&project_prefix, None).await?;
         let mut project_ids = Vec::with_capacity(keys.len());
         for key in keys {
-            let project_id = registry::store::Projects1::decode_key(&key)
+            let project_id = store::Projects1::decode_key(&key)
                 .expect("Invalid runtime state key. Cannot extract project ID");
             project_ids.push(project_id);
         }
@@ -295,7 +295,7 @@ impl ClientT for Client {
     }
 
     async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
-        self.fetch_map_value::<registry::store::Checkpoints1, _, _>(id)
+        self.fetch_map_value::<store::Checkpoints1, _, _>(id)
             .await
             .map(|cp_opt| cp_opt.map(Checkpoint::new))
     }

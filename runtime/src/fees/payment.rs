@@ -14,20 +14,20 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::registry::{org_has_member_with_account, store};
-use crate::{AccountId, Call, DispatchError, RegistryCall};
+use crate::{call, AccountId, Call, DispatchError};
 use radicle_registry_core::*;
 
 use frame_support::storage::{StorageMap as _, StorageValue as _};
 use frame_support::traits::{Currency, ExistenceRequirement, Imbalance, WithdrawReason};
 use sp_runtime::Permill;
 
-type NegativeImbalance = <crate::Balances as Currency<AccountId>>::NegativeImbalance;
+type NegativeImbalance = <crate::runtime::Balances as Currency<AccountId>>::NegativeImbalance;
 
 /// Share of a transaction fee that is burned rather than credited to the block author.
 const BURN_SHARE: Permill = Permill::from_percent(1);
 
 /// Pay Fees
-/// Given a tx author, their fee, and a RegistryCall they are submitting,
+/// Given a tx author, their fee, and a call::Registry they are submitting,
 /// charge the tx fees to the right account, which depends on the `registry_call`.
 pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
     let payer = payer_account(author, call);
@@ -39,14 +39,14 @@ pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchE
     // If this function is run as part of transaction validation the block author is not set. In
     // that case we don’t need to credit the block author.
     if let Some(block_author) = store::BlockAuthor::get() {
-        crate::Balances::resolve_creating(&block_author, reward);
+        crate::runtime::Balances::resolve_creating(&block_author, reward);
     }
 
     Ok(())
 }
 
 pub fn withdraw(fee: Balance, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
-    <crate::Balances as Currency<_>>::withdraw(
+    <crate::runtime::Balances as Currency<_>>::withdraw(
         payer,
         fee,
         WithdrawReason::TransactionPayment | WithdrawReason::Tip,
@@ -61,27 +61,27 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
     match call {
         Call::Registry(registry_call) => match registry_call {
             // Transactions payed by the org
-            RegistryCall::register_project(m) => match &m.project_domain {
+            call::Registry::register_project(m) => match &m.project_domain {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
                 ProjectDomain::User(_user_id) => author,
             },
-            RegistryCall::transfer_from_org(m) => org_payer_account(author, &m.org_id),
-            RegistryCall::set_checkpoint(m) => match &m.project_domain {
+            call::Registry::transfer_from_org(m) => org_payer_account(author, &m.org_id),
+            call::Registry::set_checkpoint(m) => match &m.project_domain {
                 ProjectDomain::Org(org_id) => org_payer_account(author, org_id),
                 ProjectDomain::User(_user_id) => author,
             },
-            RegistryCall::register_member(m) => org_payer_account(author, &m.org_id),
+            call::Registry::register_member(m) => org_payer_account(author, &m.org_id),
 
             // Transactions paid by the author
-            RegistryCall::create_checkpoint(_)
-            | RegistryCall::register_org(_)
-            | RegistryCall::unregister_org(_)
-            | RegistryCall::transfer(_)
-            | RegistryCall::register_user(_)
-            | RegistryCall::unregister_user(_) => author,
+            call::Registry::create_checkpoint(_)
+            | call::Registry::register_org(_)
+            | call::Registry::unregister_org(_)
+            | call::Registry::transfer(_)
+            | call::Registry::register_user(_)
+            | call::Registry::unregister_user(_) => author,
 
             // Inherents
-            RegistryCall::set_block_author(_) => {
+            call::Registry::set_block_author(_) => {
                 panic!("Inherent calls are not allowed for signed extrinsics")
             }
 
@@ -112,7 +112,7 @@ fn org_payer_account(author: AccountId, org_id: &Id) -> AccountId {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{Balances, GenesisConfig};
+    use crate::{genesis::GenesisConfig, runtime::Balances};
 
     use core::convert::TryFrom;
     use frame_support::traits::Currency;
@@ -139,7 +139,7 @@ mod test {
             let _imbalance = Balances::deposit_creating(&tx_author, 3000);
 
             let fee = 1000;
-            let call = RegistryCall::register_user(message::RegisterUser {
+            let call = call::Registry::register_user(message::RegisterUser {
                 user_id: Id::try_from("alice").unwrap(),
             })
             .into();
