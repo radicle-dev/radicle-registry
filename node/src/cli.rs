@@ -95,12 +95,9 @@ pub struct Cli {
     #[structopt(long)]
     no_telemetry: bool,
 
-    /// Specify path to a different genesis runtime.
-    ///
-    /// If provided the node uses the Wasm runtime at the path as the genesis runtime. This only
-    /// has an effect for development chains and if the block database is empty.
-    #[structopt(long)]
-    runtime: Option<PathBuf>,
+    /// Specify path to a JSON with a chain spec to use
+    #[structopt(long, conflicts_with = "chain")]
+    spec: Option<PathBuf>,
 
     /// Run the dev chain with an in-memory database and mining
     #[structopt(long, conflicts_with = "chain")]
@@ -138,23 +135,18 @@ impl SubstrateCli for Cli {
     }
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn ChainSpec>, String> {
-        let runtime = if let Some(runtime_path) = &self.runtime {
-            let runtime = std::fs::read(runtime_path)
-                .map_err(|e| format!("Error reading file {:?}: {}", runtime_path, e))?;
-            Some(runtime)
+        if let Some(spec_path) = &self.spec {
+            crate::chain_spec::from_spec_file(spec_path.clone())
         } else {
-            None
-        };
-
-        let chain_spec = match id {
-            "dev" => Ok(crate::chain_spec::dev(runtime)),
-            "local-devnet" => Ok(crate::chain_spec::local_devnet(runtime)),
-            "devnet" => Ok(crate::chain_spec::devnet()),
-            "ffnet" => Ok(crate::chain_spec::ffnet()),
-            _ => Err(format!("Invalid chain {}", id)),
-        }?;
-
-        Ok(Box::new(chain_spec))
+            match id {
+                "dev" => Ok(crate::chain_spec::dev()),
+                "local-devnet" => Ok(crate::chain_spec::local_devnet()),
+                "devnet" => Ok(crate::chain_spec::devnet()),
+                "ffnet" => Ok(crate::chain_spec::ffnet()),
+                other => Err(format!("Invalid chain {}", other)),
+            }
+        }
+        .map(|chain_spec| Box::new(chain_spec) as _)
     }
 }
 
@@ -219,7 +211,7 @@ impl Cli {
         use sc_chain_spec::ChainType;
         use sc_client_api::{execution_extensions::ExecutionStrategies, ExecutionStrategy};
 
-        let execution_strategy = if self.dev && self.runtime.is_some() {
+        let execution_strategy = if self.dev && self.spec.is_some() {
             ExecutionStrategy::AlwaysWasm
         } else {
             match config.chain_spec.chain_type() {

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+show_help()
+{
+  echo "Adjust project after a runtime update."
+  echo "Rebuilds runtime/latest.wasm and updates spec files."
+  echo "Usage: $0 <KIND>"
+  echo "<KIND> defines a runtime update kind. Possible values:"
+  echo "  impl - make updates after an implementation update"
+  echo "  spec - make updates after a specification update"
+  exit 1
+}
+
+if [ $# -ne 1 ] || [ "${1-}" = --help ] ; then
+  show_help
+fi
+
+if [ "$1" = impl ] ; then
+  scripts/build-chain-spec > runtime/dev_curr_spec_last_impl.json
+elif [ "$1" = spec ] ; then
+  cp runtime/dev_curr_spec_last_impl.json runtime/dev_prev_spec_last_impl.json
+  scripts/build-chain-spec > runtime/dev_curr_spec_last_impl.json
+  cp runtime/dev_curr_spec_last_impl.json runtime/dev_curr_spec_first_impl.json
+else
+  show_help
+fi

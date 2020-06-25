@@ -19,6 +19,7 @@ use radicle_registry_runtime::{genesis, AccountId, Balance};
 use sc_service::{config::MultiaddrWithPeerId, ChainType, GenericChainSpec};
 use sp_core::{crypto::CryptoType, Pair};
 use std::convert::TryFrom;
+use std::path::PathBuf;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = GenericChainSpec<genesis::GenesisConfig>;
@@ -30,13 +31,13 @@ const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/latest.wasm");
 ///
 /// If `runtime` is given, it is used as the genesis runtime. Uses dummy PoW that does not eat up
 /// your CPU.
-pub fn dev(runtime: Option<Vec<u8>>) -> ChainSpec {
+pub fn dev() -> ChainSpec {
     ChainParams {
         id: String::from("dev"),
         chain_type: ChainType::Development,
         boot_nodes: vec![],
         pow_alg: PowAlgConfig::Dummy,
-        runtime: runtime.unwrap_or_else(|| LATEST_RUNTIME_WASM.to_owned()),
+        runtime: LATEST_RUNTIME_WASM.to_owned(),
         balances: dev_balances(),
         sudo_key: account_id("Alice"),
     }
@@ -66,13 +67,13 @@ pub fn devnet() -> ChainSpec {
 ///
 /// If `runtime` is given, it is used as the genesis runtime. Similar to [dev] but uses proper PoW
 /// consensus.
-pub fn local_devnet(runtime: Option<Vec<u8>>) -> ChainSpec {
+pub fn local_devnet() -> ChainSpec {
     ChainParams {
         id: String::from("local-devnet"),
         chain_type: ChainType::Development,
         boot_nodes: vec![],
         pow_alg: PowAlgConfig::Blake3,
-        runtime: runtime.unwrap_or_else(|| LATEST_RUNTIME_WASM.to_owned()),
+        runtime: LATEST_RUNTIME_WASM.to_owned(),
         balances: dev_balances(),
         sudo_key: account_id("Alice"),
     }
@@ -82,6 +83,11 @@ pub fn local_devnet(runtime: Option<Vec<u8>>) -> ChainSpec {
 /// First public test net.
 pub fn ffnet() -> ChainSpec {
     ChainSpec::from_json_bytes(FFNET_CHAIN_SPEC).expect("Unable to parse ffnet chain spec")
+}
+
+/// Chain spec loaded dynamically from a file
+pub fn from_spec_file(path: PathBuf) -> Result<ChainSpec, String> {
+    ChainSpec::from_json_file(path)
 }
 
 /// Parameters to construct a [ChainSpec] with [ChainParams::into_chain_spec].
