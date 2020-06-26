@@ -109,12 +109,65 @@ async fn register_user_with_already_associated_account() {
 }
 
 #[async_std::test]
+async fn register_with_id_of_unregistered_user() {
+    let (client, _) = Client::new_emulator();
+    // Registers the user with `user_id`
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+
+    // Unregister
+    let unregister_user_message = message::UnregisterUser {
+        user_id: user_id.clone(),
+    };
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_user_message.clone()).await;
+    assert!(tx_unregister_applied.result.is_ok());
+
+    // Try to re-register User with the unregistered id
+    let register_user_message = message::RegisterUser {
+        user_id: user_id.clone(),
+    };
+    let tx_included = submit_ok(&client, &author, register_user_message.clone()).await;
+    assert_eq!(tx_included.result, Err(RegistryError::IdRetired.into()));
+}
+
+#[async_std::test]
+async fn register_with_id_of_unregistered_org() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+
+    // Register org
+    let register_org_message = random_register_org_message();
+    let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
+    assert_eq!(tx_included.result, Ok(()));
+
+    // Unregister Org
+    let unregister_org_message = message::UnregisterOrg {
+        org_id: register_org_message.org_id.clone(),
+    };
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_org_message.clone()).await;
+    assert_eq!(tx_unregister_applied.result, Ok(()));
+
+    // Unregister the author's user to be able to register another one with the org id
+    let unregister_user_message = message::UnregisterUser {
+        user_id: user_id.clone(),
+    };
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_user_message.clone()).await;
+    assert!(tx_unregister_applied.result.is_ok());
+
+    // Try to register a user with the unregistered org id
+    let register_user_message = message::RegisterUser {
+        user_id: register_org_message.org_id.clone(),
+    };
+    let tx_included = submit_ok(&client, &author, register_user_message.clone()).await;
+    assert_eq!(tx_included.result, Err(RegistryError::IdRetired.into()));
+}
+
+#[async_std::test]
 async fn unregister_user() {
     let (client, _) = Client::new_emulator();
     let alice = key_pair_from_string("Alice");
-    let register_user_message = random_register_user_message();
 
     // Registration.
+    let register_user_message = random_register_user_message();
     let tx_included = submit_ok(&client, &alice, register_user_message.clone()).await;
     assert!(tx_included.result.is_ok());
     assert!(

@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* runtime: Forbid claim of unregistered ids
 * client: Eliminate state wrapper types returned from `Client::get_org`,
   `Client::get_project`, `Client::get_user`, and `Client::get_checktpoin`.
   Instead we return the state objects from `radicle_registry_core::state`.
