@@ -6,6 +6,7 @@ Upcoming
 
 ### Breaking changes
 
+* node: Blake3PoW requires the timestamp as a digest item
 * client: Eliminate `Error::Other` variant and replace it with dedicated
   variants for different errors.
 * client: Change signature of `Client::block_header` from `Result<BlockHeader>,

@@ -17,11 +17,10 @@ use futures::StreamExt;
 use std::convert::TryFrom;
 use std::future::Future;
 
-// TODO remove in favor of substrate_prometheus_endpoint::prometheus after substrate upgrade
-use prometheus::core::Atomic;
 use sc_client::{light::blockchain::AuxStore, BlockImportNotification, BlockchainEvents as _};
 use sc_service::{AbstractService, Error};
 use sp_runtime::{generic::BlockId, traits::Block as _};
+use substrate_prometheus_endpoint::prometheus::core::Atomic;
 use substrate_prometheus_endpoint::{Gauge, Registry, U64};
 
 use crate::pow::Difficulty;

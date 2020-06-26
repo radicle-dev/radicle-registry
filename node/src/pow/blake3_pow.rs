@@ -23,15 +23,14 @@
 //! In order to check if the data hash passes the difficulty test, it must be interpreted as
 //! a big-endian 256-bit number. If it's smaller than or equal to the threshold, it passes.
 //! The threshold is calculated from difficulty as `U256::max_value / difficulty`.
-//!
-//! There's no difficulty adjustment algorithm yet.
 
 use crate::blockchain::{Block, Hash, Header};
 use crate::pow::{harmonic_mean::HarmonicMean, Difficulty};
+use radicle_registry_runtime::timestamp_in_digest;
 use sc_client::light::blockchain::{AuxStore, BlockchainHeaderBackend};
 use sc_consensus_pow::{Error, PowAlgorithm, PowAux};
 use sp_api::ProvideRuntimeApi;
-use sp_consensus_pow::{Seal, TimestampApi};
+use sp_consensus_pow::Seal;
 use sp_core::{H256, U256};
 use sp_runtime::traits::Header as _;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -88,7 +87,6 @@ where
     C: ProvideRuntimeApi<Block>,
     C: AuxStore,
     C: BlockchainHeaderBackend<Block>,
-    C::Api: TimestampApi<Block, u64> + sp_api::ApiErrorExt<Error = sp_blockchain::Error>,
 {
     type Difficulty = Difficulty;
 
@@ -141,7 +139,6 @@ where
     C: ProvideRuntimeApi<Block>,
     C: AuxStore,
     C: BlockchainHeaderBackend<Block>,
-    C::Api: TimestampApi<Block, u64> + sp_api::ApiErrorExt<Error = sp_blockchain::Error>,
 {
     fn header(&self, block_hash: Hash) -> Result<Header> {
         self.client
@@ -177,10 +174,10 @@ where
     }
 
     fn block_timestamp_ms(&self, block_hash: Hash) -> Result<u64> {
-        self.client
-            .runtime_api()
-            .timestamp(&BlockId::hash(block_hash))
-            .map_err(Error::Client)
+        let header = self.header(block_hash)?;
+        timestamp_in_digest::load(&header.digest)
+            .ok_or_else(|| Error::Runtime("Timestamp not set in digest".into()))?
+            .map_err(Error::Codec)
     }
 }
 

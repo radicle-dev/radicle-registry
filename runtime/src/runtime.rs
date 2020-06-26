@@ -18,10 +18,12 @@ use frame_support::{construct_runtime, parameter_types, weights::Weight};
 use frame_system as system;
 use radicle_registry_core::{state::AccountTransactionIndex, Balance};
 use sp_runtime::{traits::Block as BlockT, Perbill};
+use sp_timestamp::OnTimestampSet;
 use sp_version::RuntimeVersion;
 
 use crate::{
-    registry, AccountId, Block, BlockNumber, Hash, Hashing, Header, UncheckedExtrinsic, VERSION,
+    registry, timestamp_in_digest, AccountId, Block, BlockNumber, Hash, Hashing, Header, Moment,
+    UncheckedExtrinsic, VERSION,
 };
 
 pub mod api;
@@ -81,14 +83,23 @@ impl frame_system::Trait for Runtime {
 
 parameter_types! {
     /// Minimum time between blocks in milliseconds
-    pub const MinimumPeriod: u64 = 300;
+    pub const MinimumPeriod: Moment = 300;
 }
 
 impl pallet_timestamp::Trait for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
-    type Moment = u64;
-    type OnTimestampSet = ();
+    type Moment = Moment;
+    type OnTimestampSet = StoreTimestampInDigest;
     type MinimumPeriod = MinimumPeriod;
+}
+
+pub struct StoreTimestampInDigest;
+
+impl OnTimestampSet<Moment> for StoreTimestampInDigest {
+    fn on_timestamp_set(timestamp: Moment) {
+        let item = timestamp_in_digest::digest_item(timestamp);
+        frame_system::Module::<Runtime>::deposit_log(item);
+    }
 }
 
 parameter_types! {
