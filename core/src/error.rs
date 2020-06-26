@@ -131,6 +131,12 @@ pub enum RegistryError {
         error("an org or a user with the same ID already exists")
     )]
     IdAlreadyTaken = 17,
+
+    #[cfg_attr(
+        feature = "std",
+        error("the id has been unregistered and is no longer claimed")
+    )]
+    UnclaimableId = 18,
 }
 
 // The index with which the registry runtime module is declared
