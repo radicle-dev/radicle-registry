@@ -195,7 +195,7 @@ impl ClientT for Client {
         let genesis_hash = self.genesis_hash();
         let client = self.clone();
         let nonce = client.account_nonce(&account_id).await?;
-        let runtime_spec_version = self.runtime_version().await?.spec_version;
+        let runtime_transaction_version = self.runtime_version().await?.transaction_version;
         let transaction = Transaction::new_signed(
             &key_pair,
             message,
@@ -203,7 +203,7 @@ impl ClientT for Client {
                 nonce,
                 genesis_hash,
                 fee,
-                runtime_spec_version,
+                runtime_transaction_version,
             },
         );
         client.submit_transaction(transaction).await

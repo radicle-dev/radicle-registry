@@ -36,47 +36,47 @@ version = "=0.11.0"
 
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.frame-support]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sc-rpc-api]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-inherents]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-rpc]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-state-machine]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-transaction-pool]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dependencies.sp-timestamp]
 git = "https://github.com/paritytech/substrate"
-rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+rev = "v2.0.0-rc4"
 
 [dev-dependencies]
 async-std = { version = "1.4", features = ["attributes"] }

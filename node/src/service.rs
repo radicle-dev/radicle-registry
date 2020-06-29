@@ -21,7 +21,8 @@ use futures::StreamExt;
 use std::convert::TryFrom;
 use std::time::Duration;
 
-use sc_client::BlockchainEvents as _;
+use sc_client_api::client::BlockchainEvents as _;
+use sc_consensus::LongestChain;
 use sc_executor::native_executor_instance;
 use sc_service::{AbstractService, Configuration, Error};
 use sp_inherents::InherentDataProviders;
@@ -32,7 +33,8 @@ use crate::blockchain::Block;
 use crate::metrics::register_metrics;
 use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow};
 
-// Our native executor instance.
+pub type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
+
 native_executor_instance!(
         pub Executor,
         radicle_registry_runtime::api::dispatch,
@@ -44,25 +46,28 @@ macro_rules! new_full_start {
     ($config:expr, $inherent_data_providers: expr) => {{
         let mut import_setup = None;
         let builder = sc_service::ServiceBuilder::new_full::<Block, RuntimeApi, Executor>($config)?
-            .with_select_chain(|_config, backend| {
-                Ok(sc_client::LongestChain::new(backend.clone()))
+            .with_select_chain(|_config, backend| Ok(LongestChain::new(backend.clone())))?
+            .with_transaction_pool(|builder| {
+                let pool_api = sc_transaction_pool::FullChainApi::new(builder.client().clone());
+                Ok(sc_transaction_pool::BasicPool::new(
+                    builder.config().transaction_pool.clone(),
+                    std::sync::Arc::new(pool_api),
+                    builder.prometheus_registry(),
+                ))
             })?
-            .with_transaction_pool(|options, client, _fetcher| {
-                let pool_api = sc_transaction_pool::FullChainApi::new(client);
-                let pool =
-                    sc_transaction_pool::BasicPool::new(options, std::sync::Arc::new(pool_api));
-                Ok(pool)
-            })?
-            .with_import_queue(|config, client, select_chain, _transaction_pool| {
-                let (block_import, import_queue) = node_import_queue!(
-                    config,
-                    client,
-                    select_chain,
-                    $inherent_data_providers.clone()
-                );
-                import_setup = Some(block_import);
-                Ok(import_queue)
-            })?;
+            .with_import_queue(
+                |config, client, select_chain, _transaction_pool, spawn_task_handle, _registry| {
+                    let (block_import, import_queue) = node_import_queue!(
+                        config,
+                        client,
+                        select_chain,
+                        $inherent_data_providers.clone(),
+                        spawn_task_handle
+                    );
+                    import_setup = Some(block_import);
+                    Ok(import_queue)
+                },
+            )?;
 
         (builder, import_setup)
     }};
@@ -89,19 +94,21 @@ macro_rules! start_mine {
 
 /// The node with_import_queue closure body
 macro_rules! node_import_queue {
-    ($config:expr, $client:expr, $select_chain:expr, $inherent_data_providers:expr) => {{
+    ($config:expr, $client:expr, $select_chain:expr, $inherent_data_providers:expr, $spawner:expr) => {{
         match Config::try_from($config)? {
             Config::Dummy => node_import_queue_for_pow_alg!(
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                DummyPow
+                DummyPow,
+                $spawner
             ),
             Config::Blake3 => node_import_queue_for_pow_alg!(
                 $client,
                 $select_chain,
                 $inherent_data_providers,
-                Blake3Pow::new($client.clone())
+                Blake3Pow::new($client.clone()),
+                $spawner
             ),
         }
     }};
@@ -109,7 +116,7 @@ macro_rules! node_import_queue {
 
 /// The node with_import_queue closure body when PoW algorithm is known
 macro_rules! node_import_queue_for_pow_alg {
-    ($client:expr, $select_chain:expr, $inherent_data_providers:expr, $pow_alg:expr) => {{
+    ($client:expr, $select_chain:expr, $inherent_data_providers:expr, $pow_alg:expr, $spawner:expr) => {{
         let pow_block_import = sc_consensus_pow::PowBlockImport::new(
             $client.clone(),
             $client.clone(),
@@ -121,8 +128,12 @@ macro_rules! node_import_queue_for_pow_alg {
         let block_import_box = Box::new(pow_block_import);
         let import_queue = sc_consensus_pow::import_queue(
             block_import_box.clone(),
+            None,
+            None,
             $pow_alg,
             $inherent_data_providers,
+            $spawner,
+            None,
         )?;
         let block_import = block_import_box as sp_consensus::import_queue::BoxBlockImport<_, _>;
         (block_import, import_queue)
@@ -147,12 +158,12 @@ pub fn new_full(
     let (builder, import_setup) = new_full_start!(config, inherent_data_providers.clone());
     let block_import = import_setup.expect("No import setup set for miner");
 
-    let service = builder.build()?;
-    register_metrics(&service)?;
+    let service = builder.build_full()?;
+    register_metrics(&service, service.client())?;
 
     if let Some(block_author) = opt_block_author {
         let client = service.client();
-        service.spawn_essential_task(
+        service.spawn_essential_task_handle().spawn(
             "mined-block-notifier",
             client.import_notification_stream().for_each(|info| {
                 if info.origin == sp_consensus::BlockOrigin::Own {
@@ -169,8 +180,11 @@ pub fn new_full(
             .register_provider(authoring_inherent_data)
             .unwrap();
 
-        let proposer =
-            sc_basic_authorship::ProposerFactory::new(service.client(), service.transaction_pool());
+        let proposer = sc_basic_authorship::ProposerFactory::new(
+            service.client(),
+            service.transaction_pool(),
+            service.prometheus_registry().as_ref(),
+        );
 
         log::info!("Starting block miner");
 

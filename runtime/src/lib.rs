@@ -17,7 +17,11 @@
 
 // We allow two clippy lints because the `impl_runtime_apis` and `construct_runtime` macros produce
 // code that would fail otherwise.
-#![allow(clippy::not_unsafe_ptr_arg_deref, clippy::string_lit_as_bytes)]
+#![allow(
+    clippy::not_unsafe_ptr_arg_deref,
+    clippy::string_lit_as_bytes,
+    clippy::unnecessary_mut_passed
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
@@ -63,7 +67,7 @@ pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
-    frame_system::CheckVersion<Runtime>,
+    frame_system::CheckTxVersion<Runtime>,
     frame_system::CheckGenesis<Runtime>,
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
@@ -77,11 +81,14 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 /// A timestamp: milliseconds since the unix epoch.
 type Moment = u64;
 
+pub const SPEC_VERSION: u32 = 14;
+
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
     impl_name: create_runtime_str!("radicle-registry"),
-    spec_version: 14,
+    spec_version: SPEC_VERSION,
+    transaction_version: SPEC_VERSION,
     impl_version: 0,
     apis: runtime::api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.
@@ -92,7 +99,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 fn crate_versions() {
     assert_eq!(
         env!("CARGO_PKG_VERSION_MINOR"),
-        format!("{}", VERSION.spec_version),
+        format!("{}", SPEC_VERSION),
         "Runtime spec_version does not match crate minor version"
     );
     assert_eq!(

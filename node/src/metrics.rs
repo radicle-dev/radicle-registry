@@ -16,19 +16,20 @@
 use futures::StreamExt;
 use std::convert::TryFrom;
 use std::future::Future;
+use std::sync::Arc;
 
-use sc_client::{light::blockchain::AuxStore, BlockImportNotification, BlockchainEvents as _};
+use sc_client_api::{BlockImportNotification, BlockchainEvents as _};
 use sc_service::{AbstractService, Error};
 use sp_runtime::{generic::BlockId, traits::Block as _};
-use substrate_prometheus_endpoint::prometheus::core::Atomic;
-use substrate_prometheus_endpoint::{Gauge, Registry, U64};
+use substrate_prometheus_endpoint::{prometheus::core::Atomic, Gauge, Registry, U64};
 
+use crate::blockchain::Block;
 use crate::pow::Difficulty;
+use crate::service::FullClient;
 
-pub fn register_metrics<S>(service: &S) -> Result<(), Error>
+pub fn register_metrics<S>(service: &S, client: Arc<FullClient>) -> Result<(), Error>
 where
     S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
 {
     let registry = match service.prometheus_registry() {
         Some(registry) => registry,
@@ -37,50 +38,45 @@ where
             return Ok(());
         }
     };
-    register_best_block_metrics(service, &registry)?;
+    register_best_block_metrics(service, &registry, client)?;
     Ok(())
 }
 
-fn register_best_block_metrics<S>(service: &S, registry: &Registry) -> Result<(), Error>
+fn register_best_block_metrics<S>(
+    service: &S,
+    registry: &Registry,
+    client: Arc<FullClient>,
+) -> Result<(), Error>
 where
     S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
 {
-    let update_difficulty_gauge = create_difficulty_gauge_updater(service, registry)?;
-    let update_block_size_gauges = create_block_size_gauges_updater(service, registry)?;
+    let update_difficulty_gauge = create_difficulty_gauge_updater(registry, client.clone())?;
+    let update_block_size_gauges = create_block_size_gauges_updater(registry, client.clone())?;
     let update_reorganization_gauges = create_reorganization_gauges_updater(registry)?;
-    let task = service
-        .client()
-        .import_notification_stream()
-        .for_each(move |info| {
-            if info.is_new_best {
-                update_difficulty_gauge(&info);
-                update_block_size_gauges(&info);
-                update_reorganization_gauges(&info);
-            }
-            futures::future::ready(())
-        });
+    let task = client.import_notification_stream().for_each(move |info| {
+        if info.is_new_best {
+            update_difficulty_gauge(&info);
+            update_block_size_gauges(&info);
+            update_reorganization_gauges(&info);
+        }
+        futures::future::ready(())
+    });
     spawn_metric_task(service, "best_block", task);
     Ok(())
 }
 
-fn create_difficulty_gauge_updater<S>(
-    service: &S,
+fn create_difficulty_gauge_updater(
     registry: &Registry,
-) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error>
-where
-    S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
-{
+    client: Arc<FullClient>,
+) -> Result<impl Fn(&BlockImportNotification<Block>), Error> {
     let difficulty_gauge = register_gauge::<U64>(
         &registry,
         "best_block_difficulty",
         "The difficulty of the best block in the chain",
     )?;
-    let client = service.client();
-    let updater = move |info: &BlockImportNotification<S::Block>| {
+    let updater = move |info: &BlockImportNotification<Block>| {
         let difficulty_res =
-            sc_consensus_pow::PowAux::<Difficulty>::read::<_, S::Block>(&*client, &info.hash);
+            sc_consensus_pow::PowAux::<Difficulty>::read::<_, Block>(&*client, &info.hash);
         let difficulty = match difficulty_res {
             Ok(difficulty) => u64::try_from(difficulty.difficulty).unwrap_or(u64::MAX),
             Err(_) => return,
@@ -90,10 +86,10 @@ where
     Ok(updater)
 }
 
-fn create_block_size_gauges_updater<S: AbstractService>(
-    service: &S,
+fn create_block_size_gauges_updater(
     registry: &Registry,
-) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error> {
+    client: Arc<FullClient>,
+) -> Result<impl Fn(&BlockImportNotification<Block>), Error> {
     let transactions_gauge = register_gauge::<U64>(
         &registry,
         "best_block_transactions",
@@ -104,22 +100,21 @@ fn create_block_size_gauges_updater<S: AbstractService>(
         "best_block_length",
         "Length in bytes of the best block in the chain",
     )?;
-    let client = service.client();
-    let updater = move |info: &BlockImportNotification<S::Block>| {
+    let updater = move |info: &BlockImportNotification<Block>| {
         let body = match client.body(&BlockId::hash(info.hash)) {
             Ok(Some(body)) => body,
             _ => return,
         };
         transactions_gauge.set(body.len() as u64);
-        let encoded_block = S::Block::encode_from(&info.header, &body);
+        let encoded_block = Block::encode_from(&info.header, &body);
         length_gauge.set(encoded_block.len() as u64);
     };
     Ok(updater)
 }
 
-fn create_reorganization_gauges_updater<S: AbstractService>(
+fn create_reorganization_gauges_updater(
     registry: &Registry,
-) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error> {
+) -> Result<impl Fn(&BlockImportNotification<Block>), Error> {
     let reorg_length_gauge = register_gauge::<U64>(
         &registry,
         "best_block_reorganization_length",
@@ -130,10 +125,13 @@ fn create_reorganization_gauges_updater<S: AbstractService>(
         "best_block_reorganization_count",
         "Number of best block reorganizations, which occurred in the chain",
     )?;
-    let updater = move |info: &BlockImportNotification<S::Block>| {
-        reorg_length_gauge.set(info.retracted.len() as u64);
-        if !info.retracted.is_empty() {
-            reorg_count_gauge.inc();
+    let updater = move |info: &BlockImportNotification<Block>| {
+        if let Some(tree_route) = &info.tree_route {
+            let retracted_count = tree_route.retracted().len();
+            reorg_length_gauge.set(retracted_count as u64);
+            if retracted_count != 0 {
+                reorg_count_gauge.inc();
+            }
         }
     };
     Ok(updater)
@@ -155,7 +153,6 @@ fn spawn_metric_task(
     name: &str,
     task: impl Future<Output = ()> + Send + 'static,
 ) {
-    // TODO turn into passing a string after upgrade
     let task_name = Box::leak(format!("{}_metric_notifier", name).into_boxed_str());
-    service.spawn_task(&*task_name, task);
+    service.spawn_task_handle().spawn(&*task_name, task);
 }
