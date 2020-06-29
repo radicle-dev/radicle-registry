@@ -6,6 +6,9 @@ Upcoming
 
 ### Breaking changes
 
+* client: Eliminate state wrapper types returned from `Client::get_org`,
+  `Client::get_project`, `Client::get_user`, and `Client::get_checktpoin`.
+  Instead we return the state objects from `radicle_registry_core::state`.
 * client: Replaced the associated `Message::Result` type with `Message::Output`.
   This should require no changes on the user’s side since
   `TransactionIncluded::result` remains structurally equal.

@@ -28,7 +28,7 @@ async fn create_checkpoint() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let org_id = random_id();
-    let project =
+    let (_, project) =
         create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
@@ -39,7 +39,7 @@ async fn create_checkpoint() {
         &author,
         message::CreateCheckpoint {
             project_hash,
-            previous_checkpoint_id: Some(project.current_cp),
+            previous_checkpoint_id: Some(project.current_cp()),
         },
         random_fee,
     )
@@ -54,10 +54,7 @@ async fn create_checkpoint() {
         .unwrap();
     assert_eq!(
         checkpoint,
-        Checkpoint::new(state::Checkpoints1Data::new(
-            Some(project.current_cp),
-            project_hash
-        )),
+        state::Checkpoints1Data::new(Some(project.current_cp()), project_hash),
     );
 
     assert_eq!(
@@ -74,9 +71,8 @@ async fn set_checkpoint() {
 
     let org_id = random_id();
     let project_domain = ProjectDomain::Org(org_id.clone());
-    let project =
+    let (project_name, project) =
         create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
-    let project_name = project.clone().name;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
@@ -84,7 +80,7 @@ async fn set_checkpoint() {
         &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
+            previous_checkpoint_id: Some(project.current_cp()),
         },
     )
     .await
@@ -92,13 +88,13 @@ async fn set_checkpoint() {
     .unwrap();
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    let initial_balance = client.free_balance(&org.account_id).await.unwrap();
+    let initial_balance = client.free_balance(&org.account_id()).await.unwrap();
     let random_fee = random_balance();
     submit_ok_with_fee(
         &client,
         &author,
         message::SetCheckpoint {
-            project_name: project.name,
+            project_name: project_name.clone(),
             project_domain: project_domain.clone(),
             new_checkpoint_id,
         },
@@ -111,10 +107,10 @@ async fn set_checkpoint() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(new_checkpoint_id, new_project.current_cp);
+    assert_eq!(new_checkpoint_id, new_project.current_cp());
 
     assert_eq!(
-        client.free_balance(&org.account_id).await.unwrap(),
+        client.free_balance(&org.account_id()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
@@ -127,8 +123,8 @@ async fn set_checkpoint_without_permission() {
 
     let org_id = random_id();
     let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
-    let project_name = project.name.clone();
+    let (project_name, project) =
+        create_project_with_checkpoint(&project_domain, &client, &author).await;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
@@ -136,7 +132,7 @@ async fn set_checkpoint_without_permission() {
         &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
+            previous_checkpoint_id: Some(project.current_cp()),
         },
     )
     .await
@@ -149,15 +145,15 @@ async fn set_checkpoint_without_permission() {
         &client,
         &bad_actor,
         message::SetCheckpoint {
-            project_name: project.name,
-            project_domain: project.domain,
+            project_name: project_name.clone(),
+            project_domain: project_domain.clone(),
             new_checkpoint_id,
         },
     )
     .await;
 
     let updated_project = client
-        .get_project(project_name, project_domain.clone())
+        .get_project(project_name, project_domain)
         .await
         .unwrap()
         .unwrap();
@@ -165,8 +161,8 @@ async fn set_checkpoint_without_permission() {
         tx_included.result,
         Err(RegistryError::InsufficientSenderPermissions.into())
     );
-    assert_eq!(updated_project.current_cp, project.current_cp.clone());
-    assert_ne!(updated_project.current_cp, new_checkpoint_id);
+    assert_eq!(updated_project.current_cp(), project.current_cp().clone());
+    assert_ne!(updated_project.current_cp(), new_checkpoint_id);
 }
 
 #[async_std::test]
@@ -176,16 +172,16 @@ async fn fail_to_set_nonexistent_checkpoint() {
 
     let org_id = random_id();
     let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
-    let project_name = project.name.clone();
+    let (project_name, project) =
+        create_project_with_checkpoint(&project_domain, &client, &author).await;
     let garbage = CheckpointId::random();
 
     let tx_included = submit_ok(
         &client,
         &author,
         message::SetCheckpoint {
-            project_name: project.name,
-            project_domain: project.domain,
+            project_name: project_name.clone(),
+            project_domain: project_domain.clone(),
             new_checkpoint_id: garbage,
         },
     )
@@ -200,8 +196,8 @@ async fn fail_to_set_nonexistent_checkpoint() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(updated_project.current_cp, project.current_cp);
-    assert_ne!(updated_project.current_cp, garbage);
+    assert_eq!(updated_project.current_cp(), project.current_cp());
+    assert_ne!(updated_project.current_cp(), garbage);
 }
 
 #[async_std::test]
@@ -211,10 +207,10 @@ async fn set_fork_checkpoint() {
 
     let org_id = random_id();
     let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
+    let (project_name, project) =
+        create_project_with_checkpoint(&project_domain, &client, &author).await;
 
-    let project_name = project.name.clone();
-    let mut current_cp = project.current_cp;
+    let mut current_cp = project.current_cp();
 
     // How many checkpoints to create.
     let n = 5;
@@ -251,8 +247,8 @@ async fn set_fork_checkpoint() {
         &client,
         &author,
         message::SetCheckpoint {
-            project_name: project.name,
-            project_domain: project.domain,
+            project_name: project_name.clone(),
+            project_domain: project_domain.clone(),
             new_checkpoint_id: forked_checkpoint_id,
         },
     )
@@ -264,7 +260,7 @@ async fn set_fork_checkpoint() {
         .unwrap()
         .unwrap();
 
-    assert_eq!(project_1.current_cp, forked_checkpoint_id)
+    assert_eq!(project_1.current_cp(), forked_checkpoint_id)
 }
 
 // Test that a bad actor can not set a checkpoint of
@@ -277,8 +273,8 @@ async fn set_checkpoint_bad_actor() {
 
     let org_id = random_id();
     let project_domain = ProjectDomain::Org(org_id.clone());
-    let project = create_project_with_checkpoint(&project_domain, &client, &author).await;
-    let project_name = project.clone().name;
+    let (project_name, project) =
+        create_project_with_checkpoint(&project_domain, &client, &author).await;
 
     let project_hash2 = H256::random();
     let new_checkpoint_id = submit_ok(
@@ -286,7 +282,7 @@ async fn set_checkpoint_bad_actor() {
         &author,
         message::CreateCheckpoint {
             project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp),
+            previous_checkpoint_id: Some(project.current_cp()),
         },
     )
     .await
@@ -303,8 +299,8 @@ async fn set_checkpoint_bad_actor() {
         &client,
         &bad_actor,
         message::SetCheckpoint {
-            project_name: project.name,
-            project_domain: project.domain,
+            project_name: project_name.clone(),
+            project_domain: project_domain.clone(),
             new_checkpoint_id,
         },
         random_fee,
@@ -317,7 +313,7 @@ async fn set_checkpoint_bad_actor() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(project.current_cp, project_after.current_cp);
+    assert_eq!(project.current_cp(), project_after.current_cp());
 
     // Check that the bad author paid the fee.
     assert_eq!(

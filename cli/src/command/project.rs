@@ -63,10 +63,10 @@ impl CommandT for Show {
             .await?
             .ok_or(CommandError::ProjectNotFound {
                 project_name: self.project_name.clone(),
-                project_domain,
+                project_domain: project_domain.clone(),
             })?;
-        println!("Project: {}.{:?}", project.name, project.domain);
-        println!("Checkpoint: {}", project.current_cp);
+        println!("Project: {}.{:?}", self.project_name, project_domain);
+        println!("Checkpoint: {}", project.current_cp());
         Ok(())
     }
 }

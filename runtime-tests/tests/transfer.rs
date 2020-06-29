@@ -75,9 +75,9 @@ async fn org_account_transfer() {
     let (author, _) = key_pair_with_associated_user(&client).await;
 
     let bob = key_pair_from_string("Bob").public();
-    let org = create_random_org(&client, &author).await;
+    let (org_id, org) = register_random_org(&client, &author).await;
 
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 0);
+    let org_inigial_balance = client.free_balance(&org.account_id()).await.unwrap();
     let alice_initial_balance = client.free_balance(&author.public()).await.unwrap();
     let random_fee = random_balance();
     let transfer_amount = 2000;
@@ -85,13 +85,17 @@ async fn org_account_transfer() {
         &client,
         &author,
         message::Transfer {
-            recipient: org.account_id,
+            recipient: org.account_id(),
             balance: transfer_amount,
         },
         random_fee,
     )
     .await;
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
+    let org_balance_after_transfer = client.free_balance(&org.account_id()).await.unwrap();
+    assert_eq!(
+        org_balance_after_transfer,
+        org_inigial_balance + transfer_amount
+    );
     assert_eq!(
         client.free_balance(&author.public()).await.unwrap(),
         alice_initial_balance - transfer_amount - random_fee,
@@ -99,14 +103,14 @@ async fn org_account_transfer() {
     );
 
     assert_eq!(client.free_balance(&bob).await.unwrap(), 0);
-    let initial_balance_org = client.free_balance(&org.account_id).await.unwrap();
+    let initial_balance_org = client.free_balance(&org.account_id()).await.unwrap();
     let org_transfer_fee = random_balance();
     let org_transfer_amount = 1000;
     submit_ok_with_fee(
         &client,
         &author,
         message::TransferFromOrg {
-            org_id: org.id.clone(),
+            org_id,
             recipient: bob,
             value: org_transfer_amount,
         },
@@ -115,7 +119,7 @@ async fn org_account_transfer() {
     .await;
     assert_eq!(client.free_balance(&bob).await.unwrap(), 1000);
     assert_eq!(
-        client.free_balance(&org.account_id).await.unwrap(),
+        client.free_balance(&org.account_id()).await.unwrap(),
         initial_balance_org - org_transfer_amount - org_transfer_fee
     );
 }
@@ -125,30 +129,20 @@ async fn org_account_transfer() {
 async fn org_account_transfer_non_member() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
-    let org = create_random_org(&client, &author).await;
+    let (org_id, org) = register_random_org(&client, &author).await;
 
-    submit_ok(
-        &client,
-        &author,
-        message::Transfer {
-            recipient: org.account_id,
-            balance: 2000,
-        },
-    )
-    .await;
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
+    let initial_balance = client.free_balance(&org.account_id()).await.unwrap();
 
     let bad_actor = key_pair_from_string("BadActor");
-    let initial_balance = 1000;
     // The bad actor needs funds to submit transactions.
-    transfer(&client, &author, bad_actor.public(), initial_balance).await;
+    transfer(&client, &author, bad_actor.public(), 1000).await;
 
     let random_fee = random_balance();
     submit_ok_with_fee(
         &client,
         &bad_actor,
         message::TransferFromOrg {
-            org_id: org.id.clone(),
+            org_id,
             recipient: bad_actor.public(),
             value: 1000,
         },
@@ -156,7 +150,10 @@ async fn org_account_transfer_non_member() {
     )
     .await;
 
-    assert_eq!(client.free_balance(&org.account_id).await.unwrap(), 2000);
+    assert_eq!(
+        client.free_balance(&org.account_id()).await.unwrap(),
+        initial_balance,
+    );
     assert_eq!(
         client.free_balance(&bad_actor.public()).await.unwrap(),
         initial_balance - random_fee,
