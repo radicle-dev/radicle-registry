@@ -27,7 +27,7 @@
 use crate::blockchain::{Block, Hash, Header};
 use crate::pow::{harmonic_mean::HarmonicMean, Difficulty};
 use radicle_registry_runtime::timestamp_in_digest;
-use sc_client::light::blockchain::{AuxStore, BlockchainHeaderBackend};
+use sc_client_api::{blockchain, AuxStore};
 use sc_consensus_pow::{Error, PowAlgorithm, PowAux};
 use sp_api::ProvideRuntimeApi;
 use sp_consensus_pow::Seal;
@@ -86,7 +86,7 @@ impl<C> PowAlgorithm<Block> for Blake3Pow<Arc<C>>
 where
     C: ProvideRuntimeApi<Block>,
     C: AuxStore,
-    C: BlockchainHeaderBackend<Block>,
+    C: blockchain::HeaderBackend<Block>,
 {
     type Difficulty = Difficulty;
 
@@ -138,7 +138,7 @@ impl<C> Blake3Pow<Arc<C>>
 where
     C: ProvideRuntimeApi<Block>,
     C: AuxStore,
-    C: BlockchainHeaderBackend<Block>,
+    C: blockchain::HeaderBackend<Block>,
 {
     fn header(&self, block_hash: Hash) -> Result<Header> {
         self.client

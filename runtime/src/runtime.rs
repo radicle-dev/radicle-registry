@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use frame_support::{construct_runtime, parameter_types, weights::Weight};
 use frame_system as system;
 use radicle_registry_core::{state::AccountTransactionIndex, Balance};
@@ -37,36 +37,66 @@ parameter_types! {
 }
 
 impl frame_system::Trait for Runtime {
+    /// The basic call filter to use in Origin. All origins are built with this filter as base,
+    /// except Root.
+    type BaseCallFilter = ();
+
     /// The identifier used to distinguish between accounts.
     type AccountId = AccountId;
+
     /// The aggregated dispatch type that is available for extrinsics.
     type Call = Call;
+
     /// The lookup mechanism to get account ID from whatever is passed in dispatchers.
     type Lookup = sp_runtime::traits::IdentityLookup<AccountId>;
+
     /// The index type for storing how many extrinsics an account has signed.
     type Index = AccountTransactionIndex;
+
     /// The index type for blocks.
     type BlockNumber = BlockNumber;
+
     /// The type for hashing blocks and tries.
     type Hash = Hash;
+
     /// The hashing algorithm used.
     type Hashing = Hashing;
+
     /// The header type.
     type Header = Header;
+
     /// The ubiquitous event type.
     type Event = Event;
+
     /// The ubiquitous origin type.
     type Origin = Origin;
+
     /// Maximum number of block number to block hash mappings to keep (oldest pruned first).
     type BlockHashCount = BlockHashCount;
+
     /// Maximum weight of each block. With a default weight system of 1byte == 1weight, 4mb is ok.
     type MaximumBlockWeight = MaximumBlockWeight;
+
     /// Maximum size of all encoded transactions (in bytes) that are allowed in one block.
     type MaximumBlockLength = MaximumBlockLength;
+
     /// Portion of the block weight that is available to all normal transactions.
     type AvailableBlockRatio = AvailableBlockRatio;
+
     /// The weight of database operations that the runtime can invoke.
     type DbWeight = ();
+
+    /// The base weight of executing a block, independent of the transactions in the block.
+    type BlockExecutionWeight = ();
+
+    /// The base weight of an Extrinsic in the block, independent of the of extrinsic being executed.
+    type ExtrinsicBaseWeight = ();
+
+    /// The maximal weight of a single Extrinsic. This should be set to at most
+    /// `MaximumBlockWeight - AverageOnInitializeWeight`. The limit only applies to extrinsics
+    /// containing `Normal` dispatch class calls.
+    type MaximumExtrinsicWeight = ();
+
     /// Version of the runtime.
     type Version = Version;
     /// Converts a module to the index of the module in `construct_runtime!`.

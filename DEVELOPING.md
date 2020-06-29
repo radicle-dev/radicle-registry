@@ -138,8 +138,12 @@ Runtime updates
 There are special policies and processes around updates to the `runtime` package.
 
 Updates to the runtime are tracked by the `VERSION` exported from the `runtime`
-crate. (`VERSION.spec_version` and `VERSION.impl_version` must match the minor
-and patch versions of the `runtime` crate respectively.) Runtime updates fall
+crate. `VERSION.spec_version` is always the same as
+`VERSION.transaction_version`. It must match the `minor` version of the
+`runtime` package. `VERSION.impl_version` must match the patch version of the
+package.
+
+Runtime updates fall
 into two categories: Implementation updates and semantic updates.
 
 ### Implementation updates
@@ -161,9 +165,9 @@ in order for runtime updates to take effect.
 
 ### Semantic updates
 
-Semantic changes must increment the `VERSION.spec_version` field and the
-`runtime` crate minor version and reset the `impl_version` field and the crate
-patch version to `0`.
+Semantic changes must increment the `VERSION.spec_version` and
+`VERSION.transaction_version` fields and the `runtime` crate minor version and
+reset the `impl_version` field and the crate patch version to `0`.
 
 After all the changes are applied it must also update the CI artifacts:
 
