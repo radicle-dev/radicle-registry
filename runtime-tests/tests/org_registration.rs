@@ -122,7 +122,7 @@ async fn register_with_taken_user_id() {
 }
 
 #[async_std::test]
-async fn register_with_unclaimable_id_org() {
+async fn register_with_id_of_unregistered_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
@@ -140,11 +140,11 @@ async fn register_with_unclaimable_id_org() {
 
     // Try to re-register Org with the unregistered id
     let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
-    assert_eq!(tx_included.result, Err(RegistryError::UnclaimableId.into()));
+    assert_eq!(tx_included.result, Err(RegistryError::IdRetired.into()));
 }
 
 #[async_std::test]
-async fn register_with_unclaimable_id_user() {
+async fn register_with_id_of_unregistered_user() {
     let (client, _) = Client::new_emulator();
     let (author, user_id) = key_pair_with_associated_user(&client).await;
 
@@ -158,7 +158,7 @@ async fn register_with_unclaimable_id_user() {
     // Try to register an Org with the unregistered user id
     let register_org_message = message::RegisterOrg { org_id: user_id };
     let tx_included = submit_ok(&client, &author, register_org_message.clone()).await;
-    assert_eq!(tx_included.result, Err(RegistryError::UnclaimableId.into()));
+    assert_eq!(tx_included.result, Err(RegistryError::IdRetired.into()));
 }
 
 #[async_std::test]

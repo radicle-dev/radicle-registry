@@ -117,11 +117,8 @@ pub enum RegistryError {
     #[cfg_attr(
         feature = "std",
         error(
-            "failed to update the chain runtime. Ensure that:
-    * the author is the chain's sudo key
-    * the 'spec_name' match
-    * the wasm 'spec_version' is greater
-        "
+            "failed to update the chain runtime, ensure that the author is the chain's sudo key, \
+            the 'spec_name' matches and the WASM 'spec_version' is greater"
         )
     )]
     FailedChainRuntimeUpdate = 16,
@@ -134,9 +131,9 @@ pub enum RegistryError {
 
     #[cfg_attr(
         feature = "std",
-        error("the id has been unregistered and is no longer claimed")
+        error("the ID has been unregistered and can't be claimed again")
     )]
-    UnclaimableId = 18,
+    IdRetired = 18,
 }
 
 // The index with which the registry runtime module is declared
