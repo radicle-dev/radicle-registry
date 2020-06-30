@@ -167,7 +167,14 @@ impl Cli {
                 result
             }
             None => self.create_runner(&self.create_run_cmd())?.run_node(
-                |config| service::new_light(self.adjust_config(config)),
+                |_config| {
+                    // This should never be called since it is not accesible via the command line.
+                    panic!("Light client support not implemented");
+                    // We leave this call here so that the type checker can properly infer the type
+                    // of this closure.
+                    #[allow(unreachable_code)]
+                    service::new_full(self.adjust_config(_config), self.block_author())
+                },
                 |config| service::new_full(self.adjust_config(config), self.block_author()),
                 radicle_registry_runtime::VERSION,
             ),

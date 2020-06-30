@@ -19,13 +19,12 @@
 
 use futures::StreamExt;
 use std::convert::TryFrom;
-use std::sync::Arc;
 use std::time::Duration;
 
 // TODO remove in favor of substrate_prometheus_endpoint::prometheus after substrate upgrade
-use sc_client::{BlockchainEvents as _, LongestChain};
+use sc_client::BlockchainEvents as _;
 use sc_executor::native_executor_instance;
-use sc_service::{AbstractService, Configuration, Error, ServiceBuilder};
+use sc_service::{AbstractService, Configuration, Error};
 use sp_inherents::InherentDataProviders;
 
 use radicle_registry_runtime::{registry::AuthoringInherentData, AccountId, RuntimeApi};
@@ -196,32 +195,6 @@ pub fn new_full(
         log::info!("Mining is disabled");
     }
 
-    Ok(service)
-}
-
-/// Builds a new service for a light client.
-pub fn new_light(config: Configuration) -> Result<impl AbstractService, Error> {
-    let service = ServiceBuilder::new_light::<Block, RuntimeApi, Executor>(config)?
-        .with_select_chain(|_config, backend| Ok(LongestChain::new(backend.clone())))?
-        .with_transaction_pool(|config, client, fetcher| {
-            let fetcher = fetcher
-                .ok_or_else(|| "Trying to start light transaction pool without active fetcher")?;
-
-            let pool_api = sc_transaction_pool::LightChainApi::new(client, fetcher);
-            let pool = sc_transaction_pool::BasicPool::with_revalidation_type(
-                config,
-                Arc::new(pool_api),
-                sc_transaction_pool::RevalidationType::Light,
-            );
-            Ok(pool)
-        })?
-        .with_import_queue(|config, client, select_chain, _transaction_pool| {
-            let (_, import_queue) =
-                node_import_queue!(config, client, select_chain, InherentDataProviders::new());
-            Ok(import_queue)
-        })?
-        .build()?;
-    register_metrics(&service)?;
     Ok(service)
 }
 
