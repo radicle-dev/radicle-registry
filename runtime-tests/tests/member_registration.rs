@@ -37,7 +37,7 @@ async fn register_member() {
         .unwrap()
         .unwrap();
     let initial_balance = 1000;
-    transfer(&client, &author, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id(), initial_balance).await;
 
     let random_fee = random_balance();
     let message = message::RegisterMember {
@@ -54,18 +54,18 @@ async fn register_member() {
         .unwrap()
         .unwrap();
 
-    assert_eq!(re_org.members.len(), 2);
+    assert_eq!(re_org.members().len(), 2);
     assert!(
-        re_org.members.contains(&author_id),
+        re_org.members().contains(&author_id),
         "Org does not contain the founding member."
     );
     assert!(
-        re_org.members.contains(&message.clone().user_id),
+        re_org.members().contains(&message.clone().user_id),
         "Org does not contain the added member."
     );
 
     assert_eq!(
-        client.free_balance(&re_org.account_id).await.unwrap(),
+        client.free_balance(&re_org.account_id()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
@@ -137,7 +137,7 @@ async fn register_member_with_bad_actor() {
         .unwrap()
         .unwrap();
 
-    assert_eq!(re_org.members, vec![good_actor_id]);
+    assert_eq!(re_org.members(), &vec![good_actor_id]);
 }
 
 #[async_std::test]
@@ -159,7 +159,7 @@ async fn register_duplicate_member() {
         .unwrap()
         .unwrap();
     let initial_balance = 1000;
-    transfer(&client, &author, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id(), initial_balance).await;
 
     // The author attempts to register themselves as a member within that org again.
     let register_member = message::RegisterMember {
@@ -181,13 +181,13 @@ async fn register_duplicate_member() {
 
     // Check that the org payed for the transaction anyway.
     assert_eq!(
-        client.free_balance(&re_org.account_id).await.unwrap(),
+        client.free_balance(&re_org.account_id()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
 
     // Check that the author was not added again
-    assert_eq!(re_org.members, vec![author_id]);
+    assert_eq!(re_org.members(), &vec![author_id]);
 }
 
 #[async_std::test]
@@ -209,7 +209,7 @@ async fn register_nonexistent_user() {
         .unwrap()
         .unwrap();
     let initial_balance = 1000;
-    transfer(&client, &author, org.account_id, initial_balance).await;
+    transfer(&client, &author, org.account_id(), initial_balance).await;
 
     // Attempt to register a non-existent user as a member.
     let register_member = message::RegisterMember {
@@ -231,11 +231,11 @@ async fn register_nonexistent_user() {
 
     // Check that the org payed for the transaction anyway.
     assert_eq!(
-        client.free_balance(&re_org.account_id).await.unwrap(),
+        client.free_balance(&re_org.account_id()).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
 
     // Check that no new member was added
-    assert_eq!(re_org.members, vec![author_id]);
+    assert_eq!(re_org.members(), &vec![author_id]);
 }

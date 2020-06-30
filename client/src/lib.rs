@@ -44,7 +44,7 @@ pub mod message;
 mod transaction;
 
 pub use crate::interface::*;
-pub use radicle_registry_core::Balance;
+pub use radicle_registry_core::{state, Balance};
 pub use radicle_registry_runtime::fees::MINIMUM_FEE;
 pub use radicle_registry_runtime::registry::{
     REGISTER_MEMBER_DEPOSIT, REGISTER_ORG_DEPOSIT, REGISTER_PROJECT_DEPOSIT, REGISTER_USER_DEPOSIT,
@@ -232,10 +232,8 @@ impl ClientT for Client {
         Ok(account_info.data.free)
     }
 
-    async fn get_org(&self, id: Id) -> Result<Option<Org>, Error> {
-        self.fetch_map_value::<store::Orgs1, _, _>(id.clone())
-            .await
-            .map(|maybe_org: Option<state::Orgs1Data>| maybe_org.map(|org| Org::new(id, org)))
+    async fn get_org(&self, id: Id) -> Result<Option<state::Orgs1Data>, Error> {
+        self.fetch_map_value::<store::Orgs1, _, _>(id.clone()).await
     }
 
     async fn list_orgs(&self) -> Result<Vec<Id>, Error> {
@@ -250,10 +248,9 @@ impl ClientT for Client {
         Ok(org_ids)
     }
 
-    async fn get_user(&self, id: Id) -> Result<Option<User>, Error> {
+    async fn get_user(&self, id: Id) -> Result<Option<state::Users1Data>, Error> {
         self.fetch_map_value::<store::Users1, _, _>(id.clone())
             .await
-            .map(|maybe_user| maybe_user.map(|user| User::new(id, user)))
     }
 
     async fn list_users(&self) -> Result<Vec<Id>, Error> {
@@ -273,13 +270,10 @@ impl ClientT for Client {
         &self,
         project_name: ProjectName,
         project_domain: ProjectDomain,
-    ) -> Result<Option<Project>, Error> {
+    ) -> Result<Option<state::Projects1Data>, Error> {
         let project_id = (project_name.clone(), project_domain.clone());
         self.fetch_map_value::<store::Projects1, _, _>(project_id.clone())
             .await
-            .map(|maybe_project| {
-                maybe_project.map(|project| Project::new(project_name, project_domain, project))
-            })
     }
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error> {
@@ -294,10 +288,11 @@ impl ClientT for Client {
         Ok(project_ids)
     }
 
-    async fn get_checkpoint(&self, id: CheckpointId) -> Result<Option<Checkpoint>, Error> {
-        self.fetch_map_value::<store::Checkpoints1, _, _>(id)
-            .await
-            .map(|cp_opt| cp_opt.map(Checkpoint::new))
+    async fn get_checkpoint(
+        &self,
+        id: CheckpointId,
+    ) -> Result<Option<state::Checkpoints1Data>, Error> {
+        self.fetch_map_value::<store::Checkpoints1, _, _>(id).await
     }
 
     async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {

@@ -38,14 +38,13 @@ async fn register_org() {
         "Org not found in orgs list"
     );
 
-    let org: Org = client
+    let org = client
         .get_org(register_org_message.org_id.clone())
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(org.id, register_org_message.org_id);
-    assert_eq!(org.members, vec![user_id]);
-    assert!(org.projects.is_empty());
+    assert_eq!(org.members(), &vec![user_id]);
+    assert!(org.projects().is_empty());
 
     assert_eq!(
         client.free_balance(&author.public()).await.unwrap(),
@@ -218,7 +217,7 @@ async fn unregister_org_with_projects() {
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
 
-    assert_eq!(org.projects.len(), 1);
+    assert_eq!(org.projects().len(), 1);
 
     // Unregister
     let unregister_org_message = message::UnregisterOrg {

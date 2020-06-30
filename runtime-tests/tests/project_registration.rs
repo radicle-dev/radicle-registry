@@ -46,16 +46,17 @@ async fn register_project() {
         let initial_balance = match &domain {
             ProjectDomain::Org(org_id) => {
                 let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-                client.free_balance(&org.account_id).await.unwrap()
+                client.free_balance(&org.account_id()).await.unwrap()
             }
             ProjectDomain::User(user_id) => {
                 let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
-                client.free_balance(&user.account_id).await.unwrap()
+                client.free_balance(&user.account_id()).await.unwrap()
             }
         };
 
         let random_fee = random_balance();
         let message = random_register_project_message(&domain, checkpoint_id);
+        let project_name = message.project_name.clone();
         let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
         assert_eq!(tx_included.result, Ok(()));
 
@@ -64,10 +65,8 @@ async fn register_project() {
             .await
             .unwrap()
             .unwrap();
-        assert_eq!(project.name.clone(), message.project_name.clone());
-        assert_eq!(project.domain.clone(), message.project_domain.clone());
-        assert_eq!(project.current_cp.clone(), checkpoint_id);
-        assert_eq!(project.metadata.clone(), message.metadata.clone());
+        assert_eq!(project.current_cp().clone(), checkpoint_id);
+        assert_eq!(project.metadata().clone(), message.metadata.clone());
 
         let has_project = client
             .list_projects()
@@ -77,22 +76,22 @@ async fn register_project() {
             .any(|id| *id == (message.project_name.clone(), message.project_domain.clone()));
         assert!(has_project, "Registered project not found in project list");
 
-        let checkpoint_ = Checkpoint::new(state::Checkpoints1Data::new(None, project_hash));
+        let checkpoint_ = state::Checkpoints1Data::new(None, project_hash);
         let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
         assert_eq!(checkpoint, checkpoint_);
 
         let (projects, account_id) = match &domain {
             ProjectDomain::Org(org_id) => {
                 let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-                (org.projects, org.account_id)
+                (org.projects().clone(), org.account_id())
             }
             ProjectDomain::User(user_id) => {
                 let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
-                (user.projects, user.account_id)
+                (user.projects().clone(), user.account_id())
             }
         };
 
-        assert_eq!(projects, vec![project.name]);
+        assert_eq!(projects, vec![project_name]);
         assert_eq!(
             client.free_balance(&account_id).await.unwrap(),
             initial_balance - random_fee,
@@ -155,6 +154,7 @@ async fn re_register_project_same_domain_entity() {
         .unwrap();
 
         let message = random_register_project_message(&domain, checkpoint_id);
+        let project_name = message.project_name.clone();
         submit_ok(&client, &author, message.clone()).await;
 
         // Duplicate submission with a different metadata.
@@ -180,28 +180,20 @@ async fn re_register_project_same_domain_entity() {
             .unwrap();
         // Assert that the project data was not altered during the
         // attempt to re-register the already existing project.
-        assert_eq!(message.metadata, project.metadata);
+        assert_eq!(message.metadata, *project.metadata());
 
         let projects_list = match &domain {
             ProjectDomain::Org(org_id) => {
                 let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-                org.projects
+                org.projects().clone()
             }
             ProjectDomain::User(user_id) => {
                 let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
-                user.projects
+                user.projects().clone()
             }
         };
 
-        // Assert that the number of projects in the involved domain didn't change.
-        assert_eq!(projects_list.len(), 1);
-        assert!(
-            projects_list.contains(&project.name),
-            format!(
-                "Registered project not found in the project list of {:?}",
-                domain
-            )
-        );
+        assert_eq!(projects_list, vec![project_name]);
     }
 }
 
@@ -210,8 +202,8 @@ async fn re_register_project_same_domain_entity() {
 async fn register_same_project_name_under_different_orgs() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
-    let org_1 = register_random_org(&client, &author).await;
-    let domain_org_1 = ProjectDomain::Org(org_1.id);
+    let (org_1_id, _) = register_random_org(&client, &author).await;
+    let domain_org_1 = ProjectDomain::Org(org_1_id);
 
     let checkpoint_id = submit_ok(
         &client,
@@ -229,8 +221,8 @@ async fn register_same_project_name_under_different_orgs() {
     submit_ok(&client, &author, message.clone()).await;
 
     // Submit a project with the same name under another org.
-    let org_2 = register_random_org(&client, &author).await;
-    let domain_org_2 = ProjectDomain::Org(org_2.id);
+    let (org_2_id, _) = register_random_org(&client, &author).await;
+    let domain_org_2 = ProjectDomain::Org(org_2_id);
     let registration_2 = submit_ok(
         &client,
         &author,

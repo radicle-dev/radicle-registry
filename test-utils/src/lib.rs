@@ -21,6 +21,7 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 
 use radicle_registry_client::*;
+use radicle_registry_core::state;
 
 /// Submit a transaction and wait for it to be successfully applied.
 ///
@@ -54,7 +55,7 @@ pub async fn create_project_with_checkpoint(
     domain: &ProjectDomain,
     client: &Client,
     author: &ed25519::Pair,
-) -> Project {
+) -> (ProjectName, state::Projects1Data) {
     let checkpoint_id = submit_ok(
         &client,
         &author,
@@ -74,7 +75,7 @@ pub async fn create_project_with_checkpoint(
             };
             submit_ok(&client, &author, register_org_message).await;
             let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-            org.account_id
+            org.account_id()
         }
         ProjectDomain::User(user_id) => {
             let register_user_message = message::RegisterUser {
@@ -82,7 +83,7 @@ pub async fn create_project_with_checkpoint(
             };
             submit_ok(&client, &author, register_user_message).await;
             let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
-            user.account_id
+            user.account_id()
         }
     };
 
@@ -92,22 +93,15 @@ pub async fn create_project_with_checkpoint(
     let register_project_message = random_register_project_message(domain, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
 
-    client
-        .get_project(register_project_message.project_name, domain.clone())
+    let project = client
+        .get_project(
+            register_project_message.project_name.clone(),
+            domain.clone(),
+        )
         .await
         .unwrap()
-        .unwrap()
-}
-
-pub async fn create_random_org(client: &Client, author: &ed25519::Pair) -> Org {
-    let register_org_message = random_register_org_message();
-    submit_ok(&client, &author, register_org_message.clone()).await;
-
-    client
-        .get_org(register_org_message.org_id)
-        .await
-        .unwrap()
-        .unwrap()
+        .unwrap();
+    (register_project_message.project_name, project)
 }
 
 pub fn random_id() -> Id {
@@ -236,14 +230,17 @@ pub async fn generate_project_domains(
     author: &ed25519::Pair,
 ) -> Vec<ProjectDomain> {
     let user_id = associate_key_pair_with_random_user(client, author).await;
-    let org = register_random_org(&client, &author).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
 
-    vec![ProjectDomain::User(user_id), ProjectDomain::Org(org.id)]
+    vec![ProjectDomain::User(user_id), ProjectDomain::Org(org_id)]
 }
 
 /// Register a random org with the given author that becomes its only member.
 /// Equips the key pair account with enough funds to run transactions.
-pub async fn register_random_org(client: &Client, author: &ed25519::Pair) -> Org {
+pub async fn register_random_org(
+    client: &Client,
+    author: &ed25519::Pair,
+) -> (Id, state::Orgs1Data) {
     let org_id = random_id();
     let register_org = message::RegisterOrg {
         org_id: org_id.clone(),
@@ -251,7 +248,7 @@ pub async fn register_random_org(client: &Client, author: &ed25519::Pair) -> Org
     submit_ok(&client, author, register_org.clone()).await;
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    transfer(&client, &author, org.account_id, 1000).await;
+    transfer(&client, &author, org.account_id(), 1000).await;
 
-    org
+    (org_id, org)
 }

@@ -129,12 +129,12 @@ impl CommandT for Show {
                 .ok_or(CommandError::UserNotFound {
                     user_id: self.user_id.clone(),
                 })?;
-        let balance = client.free_balance(&user.account_id).await?;
+        let balance = client.free_balance(&user.account_id()).await?;
 
-        println!("id: {}", user.id);
-        println!("account id: {}", user.account_id);
+        println!("id: {}", self.user_id);
+        println!("account id: {}", user.account_id());
         println!("balance: {} μRAD", balance);
-        println!("projects: [{}]", user.projects.iter().format(", "));
+        println!("projects: [{}]", user.projects().iter().format(", "));
         Ok(())
     }
 }

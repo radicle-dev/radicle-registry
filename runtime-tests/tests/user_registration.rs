@@ -44,13 +44,12 @@ async fn register_user() {
         "The tx fee was not charged properly."
     );
 
-    let user: User = client
+    let user = client
         .get_user(register_user_message.user_id.clone())
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(user.id, register_user_message.user_id);
-    assert!(user.projects.is_empty());
+    assert!(user.projects().is_empty());
 }
 
 /// Test that a user can not be registered with an id already taken by another user.
@@ -153,7 +152,7 @@ async fn unregister_user_member_of_an_org() {
     let register_org = random_register_org_message();
     submit_ok(&client, &author, register_org.clone()).await;
     let org = client.get_org(register_org.org_id).await.unwrap().unwrap();
-    assert_eq!(org.members, vec![user_id.clone()]);
+    assert_eq!(org.members(), &vec![user_id.clone()]);
 
     // Unregistration.
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
