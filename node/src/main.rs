@@ -22,6 +22,7 @@ mod blockchain;
 mod chain_spec;
 mod cli;
 mod logger;
+mod metrics;
 mod pow;
 mod service;
 
