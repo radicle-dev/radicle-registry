@@ -33,6 +33,8 @@ use sp_runtime::traits::BlakeTwo256;
 use sp_runtime::{create_runtime_str, generic};
 pub use sp_version::RuntimeVersion;
 
+pub use frame_system;
+
 pub use radicle_registry_core::*;
 pub use runtime::api as runtime_api;
 pub use runtime::api::{api, RuntimeApi};
