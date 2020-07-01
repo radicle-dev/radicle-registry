@@ -69,7 +69,7 @@ pub trait Backend {
 
     /// Fetch the header of the given block hash.
     /// If the block hash is `None`, fetch the header of the best chain tip.
-    async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<Header, Error>;
+    async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<Option<Header>, Error>;
 
     /// Get the genesis hash of the blockchain. This must be obtained on backend creation.
     fn get_genesis_hash(&self) -> Hash;

@@ -42,6 +42,9 @@ pub enum Error {
         tx_hash: crate::TxHash,
     },
 
+    #[error("Could not obtain header of tip of best chain")]
+    BestChainTipHeaderMissing,
+
     /// Other error
     #[error("Other error: {0}")]
     Other(String),

@@ -205,12 +205,13 @@ impl ClientT for Client {
         client.submit_transaction(transaction).await
     }
 
-    async fn block_header(&self, block_hash: BlockHash) -> Result<BlockHeader, Error> {
+    async fn block_header(&self, block_hash: BlockHash) -> Result<Option<BlockHeader>, Error> {
         self.backend.block_header(Some(block_hash)).await
     }
 
     async fn block_header_best_chain(&self) -> Result<BlockHeader, Error> {
-        self.backend.block_header(None).await
+        let maybe_header = self.backend.block_header(None).await?;
+        maybe_header.ok_or_else(|| Error::BestChainTipHeaderMissing)
     }
 
     fn genesis_hash(&self) -> Hash {

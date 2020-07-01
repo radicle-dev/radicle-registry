@@ -230,17 +230,16 @@ impl backend::Backend for Emulator {
         Ok(keys)
     }
 
-    async fn block_header(&self, block_hash_opt: Option<BlockHash>) -> Result<BlockHeader, Error> {
+    async fn block_header(
+        &self,
+        block_hash_opt: Option<BlockHash>,
+    ) -> Result<Option<BlockHeader>, Error> {
         let state = self.state.lock().unwrap();
         let block_hash = match block_hash_opt {
             Some(block_hash) => block_hash,
-            None => return Ok(state.tip_header.clone()),
+            None => return Ok(Some(state.tip_header.clone())),
         };
-        state
-            .headers
-            .get(&block_hash)
-            .cloned()
-            .ok_or_else(|| format!("No block header found for hash {}", block_hash).into())
+        Ok(state.headers.get(&block_hash).cloned())
     }
 
     fn get_genesis_hash(&self) -> Hash {
