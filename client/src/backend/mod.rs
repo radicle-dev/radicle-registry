@@ -18,6 +18,7 @@ use futures::future::BoxFuture;
 
 pub use radicle_registry_runtime::{Hash, Header, RuntimeVersion, UncheckedExtrinsic};
 
+use crate::event::Event;
 use crate::interface::*;
 
 mod emulator;
