@@ -25,12 +25,15 @@ pub enum Error {
     /// Decoding the received data failed
     #[error("Decoding the received data failed")]
     Codec(#[from] CodecError),
+
     /// Error from the underlying RPC connection
     #[error("Error from the underlying RPC connection")]
     Rpc(#[source] Compat<RpcError>),
+
     /// Invalid transaction
     #[error("Invalid transaction")]
     InvalidTransaction,
+
     /// Chain is running an incompatible runtime specification version
     #[error("Chain is running an incompatible runtime specification version {0}")]
     IncompatibleRuntimeVersion(u32),
@@ -42,28 +45,50 @@ pub enum Error {
         tx_hash: crate::TxHash,
     },
 
+    /// Events for a transaction are missing from a block.
+    ///
+    /// This indicates an internal error or a node error since we only look for events in the block
+    /// that includes the transaction.
+    #[error("Events for transaction {tx_hash} missing in block {block_hash}")]
+    EventsMissing {
+        block_hash: crate::BlockHash,
+        tx_hash: crate::TxHash,
+    },
+
     #[error("Could not obtain header of tip of best chain")]
     BestChainTipHeaderMissing,
 
-    /// Other error
-    #[error("Other error: {0}")]
-    Other(String),
+    /// Block could not be found.
+    #[error("Block {block_hash} could not be found")]
+    BlockMissing { block_hash: crate::BlockHash },
+
+    /// Invalid response from the node for the `chain.block_hash` method.
+    ///
+    /// The node is violating the application protocol.
+    #[error("Invalid response from the node for the chain.block_hash method")]
+    InvalidBlockHashResponse {
+        response: sp_rpc::list::ListOrValue<Option<crate::BlockHash>>,
+    },
+
+    /// RPC subscription author.watch_extrinsic terminated prematurely.
+    ///
+    /// The node is violating the application protocol.
+    #[error("RPC subscription author.watch_extrinsic terminated prematurely")]
+    WatchExtrinsicStreamTerminated,
+
+    /// Invalid [crate::backend::TransactionStatus] received in `author.watch_extrinsic` RPC
+    /// subsription.
+    ///
+    /// The node is violating the application protocol.
+    #[error("Invalid transaction status {tx_status:?} for transaction {tx_hash}")]
+    InvalidTransactionStatus {
+        tx_hash: crate::TxHash,
+        tx_status: crate::backend::TransactionStatus,
+    },
 }
 
 impl From<RpcError> for Error {
     fn from(error: RpcError) -> Self {
         Error::Rpc(error.compat())
-    }
-}
-
-impl From<String> for Error {
-    fn from(error: String) -> Self {
-        Error::Other(error)
-    }
-}
-
-impl From<&str> for Error {
-    fn from(error: &str) -> Self {
-        Error::Other(error.into())
     }
 }

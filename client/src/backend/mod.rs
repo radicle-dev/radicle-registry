@@ -29,6 +29,8 @@ pub use emulator::{Emulator, EmulatorControl, BLOCK_AUTHOR as EMULATOR_BLOCK_AUT
 pub use remote_node::RemoteNode;
 pub use remote_node_with_executor::RemoteNodeWithExecutor;
 
+pub type TransactionStatus = sp_transaction_pool::TransactionStatus<TxHash, BlockHash>;
+
 /// Indicator that a transaction has been included in a block and has run in the runtime.
 ///
 /// Obtained after a transaction has been submitted and processed.
