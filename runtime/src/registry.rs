@@ -91,6 +91,11 @@ pub mod store {
             // [Call::set_block_author] and not persisted.
             pub BlockAuthor: Option<AccountId>;
 
+            // The below map indexes all retired user and org ids.
+            // We use the blake2_128_concat hasher so that the Id
+            // can be extracted from the key.
+            pub RetiredIds1: map hasher(blake2_128_concat) Id => ();
+
             // The storage for Orgs, indexed by Id.
             // We use the blake2_128_concat hasher so that the Id
             // can be extracted from the key.
@@ -228,9 +233,7 @@ decl_module! {
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if id_is_taken(&message.org_id) {
-                return Err(RegistryError::IdAlreadyTaken.into());
-            }
+            ensure_id_is_available(&message.org_id)?;
 
             let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
 
@@ -242,6 +245,7 @@ decl_module! {
 
             let new_org = state::Orgs1Data::new(random_account_id, vec![user_id],  Vec::new());
             store::Orgs1::insert(message.org_id.clone(), new_org);
+            store::RetiredIds1::insert(message.org_id.clone(), ());
             Self::deposit_event(Event::OrgRegistered(message.org_id));
             Ok(())
         }
@@ -274,9 +278,7 @@ decl_module! {
         pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            if id_is_taken(&message.user_id) {
-                return Err(RegistryError::IdAlreadyTaken.into());
-            }
+            ensure_id_is_available(&message.user_id)?;
 
             if get_user_id_with_account(sender).is_some() {
                 return Err(RegistryError::UserAccountAssociated.into())
@@ -287,6 +289,7 @@ decl_module! {
                 Vec::new(),
             );
             store::Users1::insert(message.user_id.clone(), new_user);
+            store::RetiredIds1::insert(message.user_id.clone(), ());
             Self::deposit_event(Event::UserRegistered(message.user_id));
             Ok(())
         }
@@ -430,8 +433,14 @@ decl_module! {
     }
 }
 
-fn id_is_taken(id: &Id) -> bool {
-    store::Users1::get(id).is_some() || store::Orgs1::get(id).is_some()
+fn ensure_id_is_available(id: &Id) -> Result<(), RegistryError> {
+    if store::Users1::get(id).is_some() || store::Orgs1::get(id).is_some() {
+        Err(RegistryError::IdAlreadyTaken)
+    } else if store::RetiredIds1::contains_key(id) {
+        Err(RegistryError::IdRetired)
+    } else {
+        Ok(())
+    }
 }
 
 // TODO(xla): This is a naive first version of the check to see if an account is
