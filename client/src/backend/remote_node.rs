@@ -203,16 +203,16 @@ impl backend::Backend for RemoteNode {
         Ok(keys.into_iter().map(|key| key.0).collect())
     }
 
-    async fn block_header(&self, block_hash: Option<BlockHash>) -> Result<BlockHeader, Error> {
+    async fn block_header(
+        &self,
+        block_hash: Option<BlockHash>,
+    ) -> Result<Option<BlockHeader>, Error> {
         self.rpc
             .chain
             .header(block_hash)
             .compat()
-            .await?
-            .ok_or_else(|| match block_hash {
-                Some(hash) => format!("Header not found for block hash {}", hash).into(),
-                None => "Header not found for the best chain tip".into(),
-            })
+            .await
+            .map_err(Error::from)
     }
 
     fn get_genesis_hash(&self) -> Hash {

@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: Change signature of `Client::block_header` from `Result<BlockHeader>,
+  Error>` to `Result<Option<BlockHeader>, Error>`.
 * runtime: Forbid claim of unregistered ids
 * client: Eliminate state wrapper types returned from `Client::get_org`,
   `Client::get_project`, `Client::get_user`, and `Client::get_checktpoin`.

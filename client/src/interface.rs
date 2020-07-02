@@ -117,7 +117,7 @@ pub trait ClientT {
     ) -> Result<state::AccountTransactionIndex, Error>;
 
     /// Fetch the header of the given block hash
-    async fn block_header(&self, block_hash: BlockHash) -> Result<BlockHeader, Error>;
+    async fn block_header(&self, block_hash: BlockHash) -> Result<Option<BlockHeader>, Error>;
 
     /// Fetch the header of the best chain tip
     async fn block_header_best_chain(&self) -> Result<BlockHeader, Error>;
