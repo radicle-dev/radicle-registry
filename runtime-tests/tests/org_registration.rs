@@ -247,8 +247,9 @@ async fn unregister_org_with_projects() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
-    let org_id = random_id();
-    create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id.clone());
+    create_project(&client, &author, &domain).await;
 
     assert!(
         org_exists(&client, org_id.clone()).await,

@@ -368,24 +368,26 @@ decl_module! {
                 return Err(RegistryError::InexistentCheckpointId.into())
             }
             let project_id = (message.project_name.clone(), message.project_domain.clone());
-            let opt_project = store::Projects1::get(project_id.clone());
+            let project = store::Projects1::get(project_id.clone())
+                .ok_or(RegistryError::InexistentProjectId)?;
 
-            let org_id = match &message.project_domain {
-                ProjectDomain::Org(org_id) => org_id,
-                ProjectDomain::User(_) => panic!("TODO(nuno"),
-            };
-            let opt_org = store::Orgs1::get(org_id.clone());
-            let new_project = match (opt_project, opt_org) {
-                (Some(prj), Some(org)) => {
+            match &message.project_domain {
+                ProjectDomain::Org(org_id) => {
+                    let org = store::Orgs1::get(org_id.clone())
+                        .ok_or(RegistryError::InexistentOrg)?;
                     if !org_has_member_with_account(&org, sender) {
                         return Err(RegistryError::InsufficientSenderPermissions.into())
                     }
-                    prj.with_current_cp(message.new_checkpoint_id)
                 }
-                _ => return Err(RegistryError::InexistentProjectId.into()),
-
+                ProjectDomain::User(user_id) => {
+                    let user = store::Users1::get(user_id.clone())
+                        .ok_or(RegistryError::InexistentUser)?;
+                    if user.account_id() != sender {
+                        return Err(RegistryError::InsufficientSenderPermissions.into())
+                    }
+                }
             };
-
+            let new_project = project.with_current_cp(message.new_checkpoint_id);
             let initial_cp = match store::InitialCheckpoints1::get(project_id.clone()) {
                 None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
                 Some(cp) => cp.initial_cp(),
@@ -395,7 +397,6 @@ decl_module! {
             }
 
             store::Projects1::insert(project_id, new_project);
-
             Self::deposit_event(Event::CheckpointSet(
                 message.project_name.clone(),
                 message.project_domain.clone(),
