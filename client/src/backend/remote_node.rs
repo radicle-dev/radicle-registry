@@ -25,13 +25,12 @@ use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
 use sp_core::{storage::StorageKey, twox_128};
 use sp_rpc::{list::ListOrValue, number::NumberOrHex};
 use sp_runtime::{generic::SignedBlock, traits::Hash as _};
-use sp_transaction_pool::TransactionStatus as TxStatus;
 use std::sync::Arc;
 use url::Url;
 
 use radicle_registry_runtime::{Block, BlockNumber, Hash, Hashing, Header};
 
-use crate::backend::{self, Backend};
+use crate::backend::{self, Backend, TransactionStatus};
 use crate::event::{Event, EventRecord};
 use crate::interface::*;
 
@@ -77,12 +76,7 @@ impl RemoteNode {
             .await?;
         let genesis_hash = match genesis_hash_result {
             ListOrValue::Value(Some(genesis_hash)) => genesis_hash,
-            other => {
-                return Err(Error::Other(format!(
-                    "Invalid chain.block_hash result {:?}",
-                    other
-                )))
-            }
+            response => return Err(Error::InvalidBlockHashResponse { response }),
         };
         Ok(RemoteNode { genesis_hash, rpc })
     }
@@ -103,10 +97,17 @@ impl RemoteNode {
 
         let opt_tx_status = tx_status_stream.try_next().await?;
         match opt_tx_status {
-            None => return Err(Error::from("watch_extrinsic stream terminated")),
+            None => return Err(Error::WatchExtrinsicStreamTerminated),
             Some(tx_status) => match tx_status {
-                TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => (),
-                other => return Err(format!("Invalid TxStatus: {:?}", other).into()),
+                TransactionStatus::Future
+                | TransactionStatus::Ready
+                | TransactionStatus::Broadcast(_) => (),
+                tx_status => {
+                    return Err(Error::InvalidTransactionStatus {
+                        tx_hash: Hashing::hash_of(&xt),
+                        tx_status,
+                    })
+                }
             },
         }
 
@@ -114,11 +115,18 @@ impl RemoteNode {
             loop {
                 let opt_tx_status = tx_status_stream.try_next().await?;
                 match opt_tx_status {
-                    None => return Err(Error::from("watch_extrinsic stream terminated")),
+                    None => return Err(Error::WatchExtrinsicStreamTerminated),
                     Some(tx_status) => match tx_status {
-                        TxStatus::Future | TxStatus::Ready | TxStatus::Broadcast(_) => continue,
-                        TxStatus::InBlock(block_hash) => return Ok(block_hash),
-                        other => return Err(format!("Invalid TxStatus: {:?}", other).into()),
+                        TransactionStatus::Future
+                        | TransactionStatus::Ready
+                        | TransactionStatus::Broadcast(_) => continue,
+                        TransactionStatus::InBlock(block_hash) => return Ok(block_hash),
+                        tx_status => {
+                            return Err(Error::InvalidTransactionStatus {
+                                tx_hash: Hashing::hash_of(&xt),
+                                tx_status,
+                            })
+                        }
                     },
                 }
             }
@@ -149,11 +157,13 @@ impl RemoteNode {
             .block(Some(block_hash))
             .compat()
             .await?
-            .ok_or_else(|| {
-                Error::from("Block that should include submitted transaction does not exist")
-            })?;
-        extract_transaction_events(tx_hash, &signed_block.block, event_records)
-            .ok_or_else(|| Error::from("Failed to extract transaction events"))
+            .ok_or_else(|| Error::BlockMissing { block_hash })?;
+        extract_transaction_events(tx_hash, &signed_block.block, event_records).ok_or_else(|| {
+            Error::EventsMissing {
+                tx_hash,
+                block_hash,
+            }
+        })
     }
 }
 

@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: Eliminate `Error::Other` variant and replace it with dedicated
+  variants for different errors.
 * client: Change signature of `Client::block_header` from `Result<BlockHeader>,
   Error>` to `Result<Option<BlockHeader>, Error>`.
 * runtime: Forbid claim of unregistered ids
