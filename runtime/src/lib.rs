@@ -78,7 +78,7 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
     impl_name: create_runtime_str!("radicle-registry"),
-    spec_version: 13,
+    spec_version: 14,
     impl_version: 0,
     apis: runtime::api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.

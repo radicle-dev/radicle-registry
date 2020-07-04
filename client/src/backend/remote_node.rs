@@ -236,7 +236,7 @@ impl backend::Backend for RemoteNode {
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
     match runtime_version(rpc, None).await?.spec_version {
-        9 | 10 | 11 | 12 | 13 => Ok(()),
+        9 | 10 | 11 | 12 | 13 | 14 => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }
