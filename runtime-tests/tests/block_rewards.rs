@@ -23,8 +23,9 @@ use sp_runtime::Permill;
 async fn block_rewards_credited() {
     let (client, _) = Client::new_emulator();
 
-    let alice = key_pair_from_string("Alice");
-    let bob = key_pair_from_string("Bob").public();
+    let alice = key_pair_with_funds(&client).await;
+    let bob = ed25519::Pair::generate().0.public();
+    let author_balance = client.free_balance(&EMULATOR_BLOCK_AUTHOR).await.unwrap();
 
     let fee = 3000;
     submit_ok_with_fee(
@@ -38,7 +39,7 @@ async fn block_rewards_credited() {
     )
     .await;
 
-    let rewards = client.free_balance(&EMULATOR_BLOCK_AUTHOR).await.unwrap();
+    let rewards = client.free_balance(&EMULATOR_BLOCK_AUTHOR).await.unwrap() - author_balance;
     let fee_reward = Permill::from_percent(99) * fee;
     assert_eq!(rewards, fee_reward + BLOCK_REWARD);
 }

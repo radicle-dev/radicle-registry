@@ -58,7 +58,7 @@ async fn register_org() {
 #[async_std::test]
 async fn register_org_no_user() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
 
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
     let random_fee = random_balance();
@@ -103,7 +103,7 @@ async fn register_with_id_taken_by_org() {
 #[async_std::test]
 async fn register_with_taken_user_id() {
     let (client, _) = Client::new_emulator();
-    let author = key_pair_from_string("Alice");
+    let author = key_pair_with_funds(&client).await;
     let id = random_id();
 
     let register_user_message = message::RegisterUser {

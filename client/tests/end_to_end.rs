@@ -29,7 +29,7 @@ async fn register_project() {
     let _ = env_logger::try_init();
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let author = random_key_pair(&client).await;
+    let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
         let project_hash = H256::random();
@@ -272,7 +272,7 @@ async fn invalid_transaction() {
 async fn insufficient_fee() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let tx_author = key_pair_from_string("Alice");
+    let tx_author = key_pair_with_funds(&client).await;
     let insufficient_fee: Balance = 0;
 
     let whatever_message = random_register_org_message();
@@ -294,7 +294,7 @@ async fn insufficient_fee() {
 async fn insufficient_funds() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    let tx_author = key_pair_from_string("PoorActor");
+    let tx_author = ed25519::Pair::generate().0;
     assert_eq!(client.free_balance(&tx_author.public()).await.unwrap(), 0);
 
     let whatever_message = random_register_org_message();

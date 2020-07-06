@@ -24,7 +24,7 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_user() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
 
     let register_user_message = random_register_user_message();
@@ -56,13 +56,13 @@ async fn register_user() {
 #[async_std::test]
 async fn register_with_id_taken_by_user() {
     let (client, _) = Client::new_emulator();
-    let author_x = key_pair_from_string("Alice");
+    let author_x = key_pair_with_funds(&client).await;
 
     let register_user_message = random_register_user_message();
     let tx_included_once = submit_ok(&client, &author_x, register_user_message.clone()).await;
     assert!(tx_included_once.result.is_ok());
 
-    let author_y = random_key_pair(&client).await;
+    let author_y = key_pair_with_funds(&client).await;
     let tx_included_twice = submit_ok(&client, &author_y, register_user_message.clone()).await;
     assert_eq!(
         tx_included_twice.result,
@@ -81,7 +81,7 @@ async fn register_with_id_taken_by_org() {
     let tx_included_org = submit_ok(&client, &author_x, register_org_message.clone()).await;
     assert_eq!(tx_included_org.result, Ok(()));
 
-    let author_y = random_key_pair(&client).await;
+    let author_y = key_pair_with_funds(&client).await;
     let register_user_message = message::RegisterUser { user_id: id };
     let tx_included_user = submit_ok(&client, &author_y, register_user_message.clone()).await;
     assert_eq!(
@@ -93,7 +93,7 @@ async fn register_with_id_taken_by_org() {
 #[async_std::test]
 async fn register_user_with_already_associated_account() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
     let register_first_user_message = random_register_user_message();
 
     let tx_included_first = submit_ok(&client, &alice, register_first_user_message.clone()).await;
@@ -164,7 +164,7 @@ async fn register_with_id_of_unregistered_org() {
 #[async_std::test]
 async fn unregister_user() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
 
     // Registration.
     let register_user_message = random_register_user_message();
@@ -262,7 +262,7 @@ async fn unregister_user_with_invalid_sender() {
 #[async_std::test]
 async fn unregister_user_with_no_associated_user() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
     let initial_balance = client.free_balance(&alice.public()).await.unwrap();
     let unregister_user_message = message::UnregisterUser {
         user_id: random_id(),
