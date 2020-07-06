@@ -111,12 +111,15 @@ impl Client {
         S::Query: Send + 'static,
     {
         let backend = self.backend.clone();
-        let maybe_data = backend
-            .fetch(S::storage_value_final_key().as_ref(), None)
-            .await?;
+        let key = S::storage_value_final_key();
+        let maybe_data = backend.fetch(&key, None).await?;
         let value = match maybe_data {
             Some(data) => {
-                let value = Decode::decode(&mut &data[..])?;
+                let value =
+                    Decode::decode(&mut &data[..]).map_err(|error| Error::StateDecoding {
+                        error,
+                        key: key.to_vec(),
+                    })?;
                 Some(value)
             }
             None => None,
@@ -148,7 +151,8 @@ impl Client {
         let maybe_data = backend.fetch(&key, None).await?;
         let value = match maybe_data {
             Some(data) => {
-                let value = Decode::decode(&mut &data[..])?;
+                let value = Decode::decode(&mut &data[..])
+                    .map_err(|error| Error::StateDecoding { error, key })?;
                 Some(value)
             }
             None => None,
