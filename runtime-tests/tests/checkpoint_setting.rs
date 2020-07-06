@@ -23,13 +23,28 @@ use radicle_registry_client::*;
 use radicle_registry_test_utils::*;
 
 #[async_std::test]
-async fn create_checkpoint() {
+async fn create_checkpoint_with_user() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    create_checkpoint_with_domain(&client, &author, &domain).await;
+}
+
+#[async_std::test]
+async fn create_checkpoint_with_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    create_checkpoint_with_domain(&client, &author, &domain).await;
+}
 
-    let org_id = random_id();
-    let (_, project) =
-        create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
+async fn create_checkpoint_with_domain(
+    client: &Client,
+    author: &ed25519::Pair,
+    domain: &ProjectDomain,
+) {
+    let (_, project) = create_project(client, author, domain).await;
 
     let initial_balance = client.free_balance(&author.public()).await.unwrap();
     let project_hash = H256::random();
@@ -65,37 +80,39 @@ async fn create_checkpoint() {
 }
 
 #[async_std::test]
-async fn set_checkpoint() {
+async fn set_checkpoint_with_user() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    set_checkpoint_with_domain(&client, &author, domain, author.public()).await;
+}
+
+#[async_std::test]
+async fn set_checkpoint_with_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, org) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    set_checkpoint_with_domain(&client, &author, domain, org.account_id()).await;
+}
 
-    let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let (project_name, project) =
-        create_project_with_checkpoint(&ProjectDomain::Org(org_id.clone()), &client, &author).await;
-
-    let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp()),
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-    let initial_balance = client.free_balance(&org.account_id()).await.unwrap();
+async fn set_checkpoint_with_domain(
+    client: &Client,
+    author: &ed25519::Pair,
+    domain: ProjectDomain,
+    domain_account: AccountId,
+) {
+    let (project_name, project) = create_project(client, author, &domain).await;
+    let new_checkpoint_id = create_checkpoint(client, author, project.current_cp()).await;
+    let initial_balance = client.free_balance(&domain_account).await.unwrap();
     let random_fee = random_balance();
+
     submit_ok_with_fee(
-        &client,
-        &author,
+        client,
+        author,
         message::SetCheckpoint {
             project_name: project_name.clone(),
-            project_domain: project_domain.clone(),
+            project_domain: domain.clone(),
             new_checkpoint_id,
         },
         random_fee,
@@ -103,42 +120,42 @@ async fn set_checkpoint() {
     .await;
 
     let new_project = client
-        .get_project(project_name, project_domain)
+        .get_project(project_name, domain)
         .await
         .unwrap()
         .unwrap();
     assert_eq!(new_checkpoint_id, new_project.current_cp());
-
     assert_eq!(
-        client.free_balance(&org.account_id()).await.unwrap(),
+        client.free_balance(&domain_account).await.unwrap(),
         initial_balance - random_fee,
         "The tx fee was not charged properly."
     );
 }
 
 #[async_std::test]
-async fn set_checkpoint_without_permission() {
+async fn set_checkpoint_with_user_without_permission() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    set_checkpoint_with_domain_without_permission(&client, &author, domain).await;
+}
+
+#[async_std::test]
+async fn set_checkpoint_with_org_without_permission() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    set_checkpoint_with_domain_without_permission(&client, &author, domain).await;
+}
 
-    let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let (project_name, project) =
-        create_project_with_checkpoint(&project_domain, &client, &author).await;
-
-    let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp()),
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
+async fn set_checkpoint_with_domain_without_permission(
+    client: &Client,
+    author: &ed25519::Pair,
+    project_domain: ProjectDomain,
+) {
+    let (project_name, project) = create_project(client, author, &project_domain).await;
+    let new_checkpoint_id = create_checkpoint(client, author, project.current_cp()).await;
     let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 
     let tx_included = submit_ok(
@@ -152,33 +169,47 @@ async fn set_checkpoint_without_permission() {
     )
     .await;
 
+    assert_eq!(
+        tx_included.result,
+        Err(RegistryError::InsufficientSenderPermissions.into())
+    );
     let updated_project = client
         .get_project(project_name, project_domain)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(
-        tx_included.result,
-        Err(RegistryError::InsufficientSenderPermissions.into())
-    );
     assert_eq!(updated_project.current_cp(), project.current_cp().clone());
     assert_ne!(updated_project.current_cp(), new_checkpoint_id);
 }
 
 #[async_std::test]
-async fn fail_to_set_nonexistent_checkpoint() {
+async fn fail_to_set_nonexistent_checkpoint_with_user() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    fail_to_set_nonexistent_checkpoint_with_domain(&client, &author, domain).await;
+}
+
+#[async_std::test]
+async fn fail_to_set_nonexistent_checkpoint_with_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    fail_to_set_nonexistent_checkpoint_with_domain(&client, &author, domain).await;
+}
 
-    let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let (project_name, project) =
-        create_project_with_checkpoint(&project_domain, &client, &author).await;
+async fn fail_to_set_nonexistent_checkpoint_with_domain(
+    client: &Client,
+    author: &ed25519::Pair,
+    project_domain: ProjectDomain,
+) {
+    let (project_name, project) = create_project(client, author, &project_domain).await;
     let garbage = CheckpointId::random();
 
     let tx_included = submit_ok(
-        &client,
-        &author,
+        client,
+        author,
         message::SetCheckpoint {
             project_name: project_name.clone(),
             project_domain: project_domain.clone(),
@@ -201,56 +232,42 @@ async fn fail_to_set_nonexistent_checkpoint() {
 }
 
 #[async_std::test]
-async fn set_fork_checkpoint() {
+async fn set_fork_checkpoint_with_user() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    set_fork_checkpoint_with_domain(&client, &author, domain).await;
+}
+
+#[async_std::test]
+async fn set_fork_checkpoint_with_org() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    set_fork_checkpoint_with_domain(&client, &author, domain).await;
+}
 
-    let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let (project_name, project) =
-        create_project_with_checkpoint(&project_domain, &client, &author).await;
-
+async fn set_fork_checkpoint_with_domain(
+    client: &Client,
+    author: &ed25519::Pair,
+    project_domain: ProjectDomain,
+) {
+    let (project_name, project) = create_project(client, author, &project_domain).await;
     let mut current_cp = project.current_cp();
-
-    // How many checkpoints to create.
-    let n = 5;
-    let mut checkpoints: Vec<CheckpointId> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let new_checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash: H256::random(),
-                previous_checkpoint_id: (Some(current_cp)),
-            },
-        )
-        .await
-        .result
-        .unwrap();
-        current_cp = new_checkpoint_id;
-        checkpoints.push(new_checkpoint_id);
+    let mut checkpoints: Vec<CheckpointId> = Vec::new();
+    for _ in 0..5 {
+        current_cp = create_checkpoint(client, author, current_cp).await;
+        checkpoints.push(current_cp);
     }
+    let forked_checkpoint_id = create_checkpoint(client, author, checkpoints[2]).await;
 
-    let forked_checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: (Some(checkpoints[2])),
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    submit_ok(
-        &client,
-        &author,
-        message::SetCheckpoint {
-            project_name: project_name.clone(),
-            project_domain: project_domain.clone(),
-            new_checkpoint_id: forked_checkpoint_id,
-        },
+    set_checkpoint(
+        client,
+        author,
+        &project_name,
+        &project_domain,
+        forked_checkpoint_id,
     )
     .await;
 
@@ -259,44 +276,41 @@ async fn set_fork_checkpoint() {
         .await
         .unwrap()
         .unwrap();
-
     assert_eq!(project_1.current_cp(), forked_checkpoint_id)
 }
 
-// Test that a bad actor can not set a checkpoint of
-// a project from an org they do not belong to. Also,
-// test that the bad actor pays the tx fee nonetheless.
 #[async_std::test]
-async fn set_checkpoint_bad_actor() {
+async fn set_checkpoint_with_user_bad_actor() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id);
+    set_checkpoint_with_domain_bad_actor(&client, &author, domain).await;
+}
+
+#[async_std::test]
+async fn set_checkpoint_with_org_bad_actor() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
+    let (org_id, _) = register_random_org(&client, &author).await;
+    let domain = ProjectDomain::Org(org_id);
+    set_checkpoint_with_domain_bad_actor(&client, &author, domain).await;
+}
 
-    let org_id = random_id();
-    let project_domain = ProjectDomain::Org(org_id.clone());
-    let (project_name, project) =
-        create_project_with_checkpoint(&project_domain, &client, &author).await;
-
-    let project_hash2 = H256::random();
-    let new_checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: project_hash2,
-            previous_checkpoint_id: Some(project.current_cp()),
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    let bad_actor = key_pair_from_string("BadActor");
-    let initial_balance = 1000;
-    // The bad actor needs funds to submit transactions.
-    transfer(&client, &author, bad_actor.public(), initial_balance).await;
-
+/// Test that a bad actor can not set a checkpoint of a project he doesn't own.
+/// Also test that the bad actor pays the tx fee nonetheless.
+async fn set_checkpoint_with_domain_bad_actor(
+    client: &Client,
+    author: &ed25519::Pair,
+    project_domain: ProjectDomain,
+) {
+    let (bad_actor, _) = key_pair_with_associated_user(&client).await;
+    let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();
+    let (project_name, project) = create_project(client, author, &project_domain).await;
+    let new_checkpoint_id = create_checkpoint(client, author, project.current_cp()).await;
     let random_fee = random_balance();
+
     submit_ok_with_fee(
-        &client,
+        client,
         &bad_actor,
         message::SetCheckpoint {
             project_name: project_name.clone(),
@@ -314,7 +328,6 @@ async fn set_checkpoint_bad_actor() {
         .unwrap()
         .unwrap();
     assert_eq!(project.current_cp(), project_after.current_cp());
-
     // Check that the bad author paid the fee.
     assert_eq!(
         client.free_balance(&bad_actor.public()).await.unwrap(),

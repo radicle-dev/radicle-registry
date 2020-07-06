@@ -51,48 +51,23 @@ pub async fn submit_ok<Message_: Message>(
     submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
 
-pub async fn create_project_with_checkpoint(
-    domain: &ProjectDomain,
+pub async fn create_project(
     client: &Client,
     author: &ed25519::Pair,
+    domain: &ProjectDomain,
 ) -> (ProjectName, state::Projects1Data) {
-    let checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
+    let checkpoint_id = create_checkpoint(client, author, None).await;
+    create_project_with_checkpoint(client, author, domain, checkpoint_id).await
+}
 
-    let domain_account = match domain {
-        ProjectDomain::Org(org_id) => {
-            let register_org_message = message::RegisterOrg {
-                org_id: org_id.clone(),
-            };
-            submit_ok(&client, &author, register_org_message).await;
-            let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
-            org.account_id()
-        }
-        ProjectDomain::User(user_id) => {
-            let register_user_message = message::RegisterUser {
-                user_id: user_id.clone(),
-            };
-            submit_ok(&client, &author, register_user_message).await;
-            let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
-            user.account_id()
-        }
-    };
-
-    // The domain account needs funds to submit transactions.
-    transfer(&client, &author, domain_account, 1000).await;
-
+pub async fn create_project_with_checkpoint(
+    client: &Client,
+    author: &ed25519::Pair,
+    domain: &ProjectDomain,
+    checkpoint_id: CheckpointId,
+) -> (ProjectName, state::Projects1Data) {
     let register_project_message = random_register_project_message(domain, checkpoint_id);
     submit_ok(&client, &author, register_project_message.clone()).await;
-
     let project = client
         .get_project(
             register_project_message.project_name.clone(),
@@ -102,6 +77,33 @@ pub async fn create_project_with_checkpoint(
         .unwrap()
         .unwrap();
     (register_project_message.project_name, project)
+}
+
+pub async fn create_checkpoint(
+    client: &Client,
+    author: &ed25519::Pair,
+    previous_checkpoint_id: impl Into<Option<CheckpointId>>,
+) -> CheckpointId {
+    let message = message::CreateCheckpoint {
+        project_hash: H256::random(),
+        previous_checkpoint_id: previous_checkpoint_id.into(),
+    };
+    submit_ok(&client, &author, message).await.result.unwrap()
+}
+
+pub async fn set_checkpoint(
+    client: &Client,
+    author: &ed25519::Pair,
+    project_name: &ProjectName,
+    project_domain: &ProjectDomain,
+    new_checkpoint_id: CheckpointId,
+) {
+    let message = message::SetCheckpoint {
+        project_name: project_name.clone(),
+        project_domain: project_domain.clone(),
+        new_checkpoint_id,
+    };
+    submit_ok(client, author, message).await.result.unwrap()
 }
 
 pub fn random_id() -> Id {
@@ -241,11 +243,9 @@ pub async fn register_random_org(
     client: &Client,
     author: &ed25519::Pair,
 ) -> (Id, state::Orgs1Data) {
-    let org_id = random_id();
-    let register_org = message::RegisterOrg {
-        org_id: org_id.clone(),
-    };
-    submit_ok(&client, author, register_org.clone()).await;
+    let register_org = random_register_org_message();
+    let org_id = register_org.org_id.clone();
+    submit_ok(&client, author, register_org).await;
 
     let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
     transfer(&client, &author, org.account_id(), 1000).await;
