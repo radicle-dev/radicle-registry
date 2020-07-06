@@ -27,7 +27,7 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn register_project() {
     let (client, _) = Client::new_emulator();
-    let author = random_key_pair(&client).await;
+    let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
         let project_hash = H256::random();
@@ -138,7 +138,7 @@ async fn register_project_under_inexistent_domain() {
 #[async_std::test]
 async fn re_register_project_same_domain_entity() {
     let (client, _) = Client::new_emulator();
-    let author = random_key_pair(&client).await;
+    let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
         let checkpoint_id = submit_ok(
@@ -279,7 +279,7 @@ async fn register_same_project_name_under_different_users() {
 #[async_std::test]
 async fn register_project_with_bad_checkpoint() {
     let (client, _) = Client::new_emulator();
-    let author = random_key_pair(&client).await;
+    let author = key_pair_with_funds(&client).await;
     let checkpoint_id = H256::random();
 
     for domain in generate_project_domains(&client, &author).await {
@@ -303,7 +303,7 @@ async fn register_project_with_bad_checkpoint() {
 #[async_std::test]
 async fn register_project_with_bad_actor() {
     let (client, _) = Client::new_emulator();
-    let author = random_key_pair(&client).await;
+    let author = key_pair_with_funds(&client).await;
     let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {

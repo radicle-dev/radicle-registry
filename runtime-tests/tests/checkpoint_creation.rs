@@ -24,7 +24,7 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn create_checkpoint() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
 
     let project_hash1 = H256::random();
     let checkpoint_id1 = submit_ok(
@@ -72,7 +72,7 @@ async fn create_checkpoint() {
 #[async_std::test]
 async fn create_checkpoint_without_parent() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
+    let alice = key_pair_with_funds(&client).await;
 
     let project_hash = H256::random();
     let previous_checkpoint_id = Some(CheckpointId::random());

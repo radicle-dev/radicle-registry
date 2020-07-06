@@ -143,19 +143,15 @@ pub fn random_register_user_message() -> message::RegisterUser {
     }
 }
 
-pub fn key_pair_from_string(value: impl AsRef<str>) -> ed25519::Pair {
-    ed25519::Pair::from_string(format!("//{}", value.as_ref()).as_str(), None).unwrap()
+pub fn root_key_pair() -> ed25519::Pair {
+    ed25519::Pair::from_string("//Alice", None).unwrap()
 }
 
-/// Create a random a key pair from a random string. Equips the key pair account
-/// with enough funds to run transactions.
-pub async fn random_key_pair(client: &Client) -> ed25519::Pair {
-    let seed = &random_alnum_string(5);
-    let key_pair = key_pair_from_string(seed);
+/// Generate a random a key pair and equip the account with some funds.
+pub async fn key_pair_with_funds(client: &Client) -> ed25519::Pair {
+    let key_pair = ed25519::Pair::generate().0;
 
-    // Have Alice transfer 100.000 μRAD to this new account, necessary to submit transactions.
-    let alice = key_pair_from_string("Alice");
-    transfer(&client, &alice, key_pair.public(), 100_000).await;
+    transfer(&client, &root_key_pair(), key_pair.public(), 100_000).await;
 
     key_pair
 }
@@ -163,7 +159,7 @@ pub async fn random_key_pair(client: &Client) -> ed25519::Pair {
 /// Create a random key pair derived and register a user associated with it.
 /// Ensures that the account for the key pair is equipped with enough RAD to run transactions.
 pub async fn key_pair_with_associated_user(client: &Client) -> (ed25519::Pair, Id) {
-    let key_pair = random_key_pair(&client).await;
+    let key_pair = key_pair_with_funds(&client).await;
     let user_id = associate_key_pair_with_random_user(client, &key_pair).await;
 
     (key_pair, user_id)

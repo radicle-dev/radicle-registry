@@ -24,8 +24,8 @@ use radicle_registry_test_utils::*;
 #[async_std::test]
 async fn transfer_fail() {
     let (client, _) = Client::new_emulator();
-    let alice = key_pair_from_string("Alice");
-    let bob = key_pair_from_string("Bob").public();
+    let alice = key_pair_with_funds(&client).await;
+    let bob = key_pair_with_funds(&client).await.public();
 
     let balance_alice = client.free_balance(&alice.public()).await.unwrap();
     let tx_included = submit_ok(
@@ -45,8 +45,8 @@ async fn transfer_fail() {
 #[async_std::test]
 async fn transfer_any_amount() {
     let (client, _) = Client::new_emulator();
-    let donator = key_pair_from_string("Alice");
-    let receipient = key_pair_from_string("Bob").public();
+    let donator = key_pair_with_funds(&client).await;
+    let receipient = ed25519::Pair::generate().0.public();
 
     for amount in (1..10000).step_by(500) {
         let tx_included = submit_ok(
@@ -74,7 +74,7 @@ async fn org_account_transfer() {
     let (client, _) = Client::new_emulator();
     let (author, _) = key_pair_with_associated_user(&client).await;
 
-    let bob = key_pair_from_string("Bob").public();
+    let bob = ed25519::Pair::generate().0.public();
     let (org_id, org) = register_random_org(&client, &author).await;
 
     let org_inigial_balance = client.free_balance(&org.account_id()).await.unwrap();
@@ -133,7 +133,7 @@ async fn org_account_transfer_non_member() {
 
     let initial_balance = client.free_balance(&org.account_id()).await.unwrap();
 
-    let bad_actor = key_pair_from_string("BadActor");
+    let bad_actor = ed25519::Pair::generate().0;
     // The bad actor needs funds to submit transactions.
     transfer(&client, &author, bad_actor.public(), 1000).await;
 
