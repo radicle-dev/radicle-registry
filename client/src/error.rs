@@ -22,9 +22,14 @@ use crate::event::EventExtractionError;
 /// Error that may be returned by any of the [crate::ClientT] methods
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Decoding the received data failed
-    #[error("Decoding the received data failed")]
-    Codec(#[from] CodecError),
+    /// Failed to decode state value
+    #[error("Failed to decode state value")]
+    StateDecoding {
+        #[source]
+        error: CodecError,
+        /// Key for the value we tried to decode
+        key: Vec<u8>,
+    },
 
     /// Error from the underlying RPC connection
     #[error("Error from the underlying RPC connection")]

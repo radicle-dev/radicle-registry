@@ -149,7 +149,12 @@ impl RemoteNode {
             .await?
             .unwrap_or_default();
         let event_records =
-            EventRecord::decode_vec(runtime_spec_version, &events_data).map_err(Error::Codec)?;
+            EventRecord::decode_vec(runtime_spec_version, &events_data).map_err(|error| {
+                Error::StateDecoding {
+                    error,
+                    key: SYSTEM_EVENTS_STORAGE_KEY.to_vec(),
+                }
+            })?;
 
         let signed_block = self
             .rpc
