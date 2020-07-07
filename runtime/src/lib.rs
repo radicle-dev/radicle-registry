@@ -21,7 +21,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
-#![feature(alloc_prelude)]
 
 #[cfg(all(feature = "std", feature = "no-std"))]
 std::compile_error!("Features \"std\" and \"no-std\" cannot be enabled simultaneously. Maybe a dependency implicitly enabled the \"std\" feature.");

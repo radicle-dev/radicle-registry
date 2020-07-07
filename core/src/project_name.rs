@@ -13,10 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-/// The name associated to a [`Project`].
-///
-/// https://github.com/radicle-dev/registry-spec/blob/master/body.tex#L306
-use alloc::prelude::v1::*;
+//! The name associated to a project.
+//!
+//! https://github.com/radicle-dev/registry-spec/blob/master/body.tex#L306
+
+use alloc::string::{String, ToString};
 use core::convert::{From, Into, TryFrom};
 use parity_scale_codec as codec;
 

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::prelude::v1::*;
+use alloc::vec::Vec;
 use frame_support::{construct_runtime, parameter_types, weights::Weight};
 use frame_system as system;
 use radicle_registry_core::{state::AccountTransactionIndex, Balance};

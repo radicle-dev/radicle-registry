@@ -16,7 +16,6 @@
 //! Basic types used in the Radicle Registry.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(alloc_prelude)]
 
 extern crate alloc;
 
