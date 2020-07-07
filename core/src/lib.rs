@@ -48,11 +48,17 @@ pub type Hashing = BlakeTwo256;
 /// Each account has an associated [state::AccountBalance] and [state::AccountTransactionIndex].
 pub type AccountId = ed25519::Public;
 
+/// Amout of currency denominated in μRAD.
+///
 /// The non-negative balance of anything storing the amount of currency.
 /// It can be used to represent the value of anything describing an amount,
 /// e.g. an account balance, the value of a fee, etc.
-/// Represents a μRAD.
 pub type Balance = u128;
+
+/// Convert amount of RAD into balance denominated in μRAD.
+pub const fn rad_to_balance(rad: u64) -> Balance {
+    rad as u128 * 1_000_000
+}
 
 /// The id of a project. Used as storage key.
 pub type ProjectId = (ProjectName, ProjectDomain);
