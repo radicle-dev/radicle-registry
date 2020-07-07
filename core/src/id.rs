@@ -18,7 +18,7 @@
 //! [orgs spec](https://github.com/radicle-dev/registry-spec/blob/0b7699ac597bd935b13facc9152789d111e138ca/body.tex#L110-L119)
 //! [user spec](https://github.com/radicle-dev/registry-spec/blob/1b7699ac597bd935b13facc9152789d111e138ca/body.tex#L452-L459)
 
-use alloc::prelude::v1::*;
+use alloc::string::{String, ToString};
 use core::convert::{From, Into, TryFrom};
 use parity_scale_codec as codec;
 

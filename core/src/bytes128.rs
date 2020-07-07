@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-/// `Bytes128` type, and its validation tests.
-use alloc::prelude::v1::*;
+//! `Bytes128` type, and its validation tests.
+
+use alloc::vec::Vec;
 use core::convert::TryFrom;
 use parity_scale_codec::{Decode, Encode, Error as CodecError, Input};
 
