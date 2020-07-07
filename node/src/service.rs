@@ -21,7 +21,6 @@ use futures::StreamExt;
 use std::convert::TryFrom;
 use std::time::Duration;
 
-// TODO remove in favor of substrate_prometheus_endpoint::prometheus after substrate upgrade
 use sc_client::BlockchainEvents as _;
 use sc_executor::native_executor_instance;
 use sc_service::{AbstractService, Configuration, Error};

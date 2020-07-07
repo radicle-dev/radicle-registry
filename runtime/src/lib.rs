@@ -41,6 +41,7 @@ pub use runtime::{Call, Event, Origin, Runtime};
 pub mod fees;
 pub mod registry;
 mod runtime;
+pub mod timestamp_in_digest;
 
 pub use registry::DecodeKey;
 
@@ -73,6 +74,9 @@ pub type SignedExtra = (
 
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signature, SignedExtra>;
+
+/// A timestamp: milliseconds since the unix epoch.
+type Moment = u64;
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {

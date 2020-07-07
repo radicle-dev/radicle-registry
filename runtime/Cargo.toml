@@ -60,6 +60,11 @@ git = "https://github.com/paritytech/substrate"
 rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
 default_features = false
 
+[dependencies.sp-timestamp]
+git = "https://github.com/paritytech/substrate"
+rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
+default_features = false
+
 [dependencies.frame-executive]
 git = "https://github.com/paritytech/substrate"
 rev = "2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd"
