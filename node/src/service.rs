@@ -33,8 +33,6 @@ use crate::blockchain::Block;
 use crate::metrics::register_metrics;
 use crate::pow::{blake3_pow::Blake3Pow, config::Config, dummy_pow::DummyPow};
 
-pub type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
-
 native_executor_instance!(
         pub Executor,
         radicle_registry_runtime::api::dispatch,
@@ -159,7 +157,7 @@ pub fn new_full(
     let block_import = import_setup.expect("No import setup set for miner");
 
     let service = builder.build_full()?;
-    register_metrics(&service, service.client())?;
+    register_metrics(&service)?;
 
     if let Some(block_author) = opt_block_author {
         let client = service.client();
