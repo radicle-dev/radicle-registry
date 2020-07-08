@@ -243,9 +243,8 @@ impl Cli {
 
             config.network.transport = sc_network::config::TransportConfig::MemoryOnly;
 
-            // The default IP adresses list here are incompatible with
-            // `TransportConfig::MemoryOnly`. Substrate will complaining and exit if we don’t clear
-            // them.
+            // The default IP adresses are incompatible with `TransportConfig::MemoryOnly`.
+            // Substrate will complain and exit if we don’t clear them.
             config.network.listen_addresses = vec![];
             config.network.boot_nodes = vec![];
         }
