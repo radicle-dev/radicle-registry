@@ -28,7 +28,7 @@ use sp_runtime::{generic::SignedBlock, traits::Hash as _};
 use std::sync::Arc;
 use url::Url;
 
-use radicle_registry_runtime::{Block, BlockNumber, Hash, Hashing, Header};
+use radicle_registry_runtime::{Block, BlockNumber, Hash, Hashing, Header, VERSION};
 
 use crate::backend::{self, Backend, TransactionStatus};
 use crate::event::{Event, EventRecord};
@@ -241,7 +241,7 @@ impl backend::Backend for RemoteNode {
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
     match runtime_version(rpc, None).await?.spec_version {
-        14 => Ok(()),
+        VERSION.transaction_version => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }

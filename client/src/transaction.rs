@@ -48,13 +48,13 @@ use radicle_registry_runtime::{
 ///
 /// let account_nonce = client.account_nonce(&author.public()).await?;
 /// let genesis_hash = client.genesis_hash();
-/// let runtime_spec_version = client.runtime_version().await?.spec_version;
+/// let runtime_transaction_version = client.runtime_version().await?.transaction_version;
 ///
 /// let transaction_extra = TransactionExtra {
 ///     nonce: account_nonce,
 ///     genesis_hash: genesis_hash,
 ///     fee: 10,
-///     runtime_spec_version,
+///     runtime_transaction_version,
 /// };
 ///
 /// let recipient = ed25519::Pair::from_string("//Bob", None).unwrap();
