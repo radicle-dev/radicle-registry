@@ -22,7 +22,7 @@ use futures::future::BoxFuture;
 pub use radicle_registry_core::*;
 
 pub use radicle_registry_runtime::{
-    registry::Event as RegistryEvent, state, Balance, BlockNumber, Event, Hash, Header,
+    registry::Event as RegistryEvent, state, Balance, BlockNumber, Event, Hash, Header, IdStatus,
     RuntimeVersion,
 };
 pub use sp_core::crypto::{
@@ -122,13 +122,15 @@ pub trait ClientT {
     /// Fetch the header of the best chain tip
     async fn block_header_best_chain(&self) -> Result<BlockHeader, Error>;
 
-    /// Return the gensis hash of the chain we are communicating with.
+    /// Return the genesis hash of the chain we are communicating with.
     fn genesis_hash(&self) -> Hash;
 
     /// Get the runtime version at the latest block
     async fn runtime_version(&self) -> Result<RuntimeVersion, Error>;
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
+
+    async fn get_id_status(&self, id: &Id) -> IdStatus;
 
     async fn get_org(&self, org_id: Id) -> Result<Option<state::Orgs1Data>, Error>;
 

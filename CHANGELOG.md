@@ -88,6 +88,7 @@ Upcoming
 
 ### Addition
 
+* client: Add `fn get_id_status` to get the status of an id (available, taken or retired)
 * Support user project registration
 * cli: Add `runtime version` command to check the on-chain runtime version
 * cli: Add `update-runtime` command to update the on-chain runtime
