@@ -240,9 +240,11 @@ impl backend::Backend for RemoteNode {
 }
 
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
-    match runtime_version(rpc, None).await?.spec_version {
-        VERSION.transaction_version => Ok(()),
-        other => Err(Error::IncompatibleRuntimeVersion(other)),
+    let transaction_version = runtime_version(rpc, None).await?.transaction_version;
+    if transaction_version == VERSION.transaction_version {
+        Ok(())
+    } else {
+        Err(Error::IncompatibleRuntimeVersion(transaction_version))
     }
 }
 
