@@ -434,13 +434,33 @@ decl_module! {
     }
 }
 
-fn ensure_id_is_available(id: &Id) -> Result<(), RegistryError> {
-    if store::Users1::get(id).is_some() || store::Orgs1::get(id).is_some() {
-        Err(RegistryError::IdAlreadyTaken)
+/// The Status of an org or user Id
+pub enum IdStatus {
+    /// The id is available and can be claimed
+    Available,
+
+    /// The id is curently taken by a user or by an org
+    Taken,
+
+    /// The id has been unregistered and is now retired
+    Retired,
+}
+
+pub fn get_id_status(id: &Id) -> IdStatus {
+    if store::Users1::contains_key(id) || store::Orgs1::contains_key(id) {
+        IdStatus::Taken
     } else if store::RetiredIds1::contains_key(id) {
-        Err(RegistryError::IdRetired)
+        IdStatus::Retired
     } else {
-        Ok(())
+        IdStatus::Available
+    }
+}
+
+fn ensure_id_is_available(id: &Id) -> Result<(), RegistryError> {
+    match get_id_status(id) {
+        IdStatus::Available => Ok(()),
+        IdStatus::Taken => Err(RegistryError::IdAlreadyTaken),
+        IdStatus::Retired => Err(RegistryError::IdRetired),
     }
 }
 

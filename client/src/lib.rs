@@ -239,6 +239,10 @@ impl ClientT for Client {
         Ok(account_info.data.free)
     }
 
+    async fn get_id_status(&self, id: &Id) -> IdStatus {
+        radicle_registry_runtime::get_id_status(id)
+    }
+
     async fn get_org(&self, id: Id) -> Result<Option<state::Orgs1Data>, Error> {
         self.fetch_map_value::<store::Orgs1, _, _>(id.clone()).await
     }
