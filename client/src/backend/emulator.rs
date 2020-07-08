@@ -181,10 +181,7 @@ impl backend::Backend for Emulator {
     ) -> Result<BoxFuture<'static, Result<backend::TransactionIncluded, Error>>, Error> {
         let tx_hash = Hashing::hash_of(&extrinsic);
         let (block, event_records) = self.add_block(vec![extrinsic]);
-        let event_records = event_records
-            .into_iter()
-            .map(crate::event::EventRecord::V2)
-            .collect();
+        let event_records = event_records.into_iter().collect();
 
         let events =
             crate::backend::remote_node::extract_transaction_events(tx_hash, &block, event_records)

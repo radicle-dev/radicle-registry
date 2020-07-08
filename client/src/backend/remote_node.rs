@@ -20,7 +20,7 @@ use futures::prelude::*;
 use futures01::stream::Stream as _;
 use jsonrpc_core_client::RpcChannel;
 use lazy_static::lazy_static;
-use parity_scale_codec::Encode as _;
+use parity_scale_codec::{DecodeAll, Encode as _};
 use sc_rpc_api::{author::AuthorClient, chain::ChainClient, state::StateClient};
 use sp_core::{storage::StorageKey, twox_128};
 use sp_rpc::{list::ListOrValue, number::NumberOrHex};
@@ -31,7 +31,7 @@ use url::Url;
 use radicle_registry_runtime::{Block, BlockNumber, Hash, Hashing, Header, VERSION};
 
 use crate::backend::{self, Backend, TransactionStatus};
-use crate::event::{Event, EventRecord};
+use crate::event;
 use crate::interface::*;
 
 /// Collection of substrate RPC clients
@@ -140,21 +140,17 @@ impl RemoteNode {
         &self,
         tx_hash: TxHash,
         block_hash: BlockHash,
-    ) -> Result<Vec<Event>, Error> {
-        let runtime_spec_version = runtime_version(&self.rpc, Some(block_hash))
-            .await?
-            .spec_version;
+    ) -> Result<Vec<event::Event>, Error> {
         let events_data = self
             .fetch(SYSTEM_EVENTS_STORAGE_KEY.as_ref(), Some(block_hash))
             .await?
             .unwrap_or_default();
-        let event_records =
-            EventRecord::decode_vec(runtime_spec_version, &events_data).map_err(|error| {
-                Error::StateDecoding {
-                    error,
-                    key: SYSTEM_EVENTS_STORAGE_KEY.to_vec(),
-                }
-            })?;
+        let event_records = Vec::<event::Record>::decode_all(&events_data).map_err(|error| {
+            Error::StateDecoding {
+                error,
+                key: SYSTEM_EVENTS_STORAGE_KEY.to_vec(),
+            }
+        })?;
 
         let signed_block = self
             .rpc
@@ -269,8 +265,8 @@ async fn runtime_version(
 pub(crate) fn extract_transaction_events(
     tx_hash: TxHash,
     block: &Block,
-    event_records: Vec<EventRecord>,
-) -> Option<Vec<Event>> {
+    event_records: Vec<event::Record>,
+) -> Option<Vec<event::Event>> {
     let xt_index = block
         .extrinsics
         .iter()
@@ -284,10 +280,12 @@ pub(crate) fn extract_transaction_events(
         })?;
     let events = event_records
         .into_iter()
-        .filter_map(|event_record| match event_record.transaction_index() {
-            Some(i) if i == xt_index as u32 => Some(event_record.event()),
-            _ => None,
-        })
+        .filter_map(
+            |event_record| match event::transaction_index(&event_record) {
+                Some(i) if i == xt_index as u32 => Some(event_record.event),
+                _ => None,
+            },
+        )
         .collect();
     Some(events)
 }

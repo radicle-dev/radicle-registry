@@ -316,10 +316,6 @@ async fn insufficient_funds() {
 async fn register_org_with_id_taken_by_org() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    if client.runtime_version().await.unwrap().spec_version < 10 {
-        println!("Skipping due to the incompatible runtime version");
-        return;
-    }
     let (author, _) = key_pair_with_associated_user(&client).await;
     let (org_id, _) = register_random_org(&client, &author).await;
 
@@ -337,10 +333,6 @@ async fn register_org_with_id_taken_by_org() {
 async fn register_org_with_taken_user_id() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    if client.runtime_version().await.unwrap().spec_version < 10 {
-        println!("Skipping due to the incompatible runtime version");
-        return;
-    }
     let (author, id) = key_pair_with_associated_user(&client).await;
 
     let register_org_message = message::RegisterOrg { org_id: id.clone() };
@@ -357,10 +349,6 @@ async fn register_org_with_taken_user_id() {
 async fn register_user_with_id_taken_by_user() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    if client.runtime_version().await.unwrap().spec_version < 10 {
-        println!("Skipping due to the incompatible runtime version");
-        return;
-    }
     let (author, id) = key_pair_with_associated_user(&client).await;
 
     let register_user_message = message::RegisterUser { user_id: id };
@@ -377,10 +365,6 @@ async fn register_user_with_id_taken_by_user() {
 async fn register_user_with_id_taken_by_org() {
     let node_host = url::Host::parse("127.0.0.1").unwrap();
     let client = Client::create_with_executor(node_host).await.unwrap();
-    if client.runtime_version().await.unwrap().spec_version < 10 {
-        println!("Skipping due to the incompatible runtime version");
-        return;
-    }
     let (author, _) = key_pair_with_associated_user(&client).await;
     let (org_id, _) = register_random_org(&client, &author).await;
 

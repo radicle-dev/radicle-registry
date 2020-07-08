@@ -28,12 +28,6 @@ thiserror = "1.0.14"
 tokio = "0.1"
 url = "1.7"
 
-[dependencies.radicle-registry-runtime-v11]
-git = "https://github.com/radicle-dev/radicle-registry"
-rev = "0acd1e5467f0b70dfdff5fc7df1b5121d73b9858"
-package = "radicle-registry-runtime"
-version = "=0.11.0"
-
 [dependencies.frame-system]
 git = "https://github.com/paritytech/substrate"
 rev = "v2.0.0-rc4"
