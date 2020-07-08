@@ -3731,7 +3731,7 @@ dependencies = [
  "parity-scale-codec",
  "radicle-registry-core 0.0.0",
  "radicle-registry-runtime 0.11.0",
- "radicle-registry-runtime 0.14.0",
+ "radicle-registry-runtime 0.15.0",
  "radicle-registry-test-utils",
  "rand 0.7.3",
  "sc-rpc-api",
@@ -3788,7 +3788,7 @@ dependencies = [
  "log 0.4.8",
  "num-bigint",
  "num-traits 0.2.12",
- "radicle-registry-runtime 0.14.0",
+ "radicle-registry-runtime 0.15.0",
  "rand 0.7.3",
  "sc-basic-authorship",
  "sc-chain-spec",
@@ -3851,7 +3851,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-registry-runtime"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "frame-executive 2.0.0-dev (git+https://github.com/paritytech/substrate?rev=2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd)",
  "frame-support 2.0.0-dev (git+https://github.com/paritytech/substrate?rev=2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd)",
@@ -3885,7 +3885,7 @@ version = "0.0.0"
 dependencies = [
  "async-std",
  "radicle-registry-client",
- "radicle-registry-runtime 0.14.0",
+ "radicle-registry-runtime 0.15.0",
  "radicle-registry-test-utils",
  "rand 0.7.3",
  "sp-runtime 2.0.0-dev (git+https://github.com/paritytech/substrate?rev=2051ecbf79ed6a7262e8da1bfd97be4a423b9bcd)",

@@ -81,7 +81,7 @@ type Moment = u64;
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("radicle-registry"),
     impl_name: create_runtime_str!("radicle-registry"),
-    spec_version: 14,
+    spec_version: 15,
     impl_version: 0,
     apis: runtime::api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.
