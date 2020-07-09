@@ -217,7 +217,10 @@ impl Message for message::UpdateRuntime {
     ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
         let result = events
             .into_iter()
-            .find_map(|event| event.system_code_update())
+            .find_map(|event| match event {
+                event::Event::system(event::System::CodeUpdated) => Some(()),
+                _ => None,
+            })
             .ok_or_else(|| TransactionError::from(RegistryError::FailedChainRuntimeUpdate));
         Ok(result)
     }
@@ -232,16 +235,14 @@ impl Message for message::UpdateRuntime {
 mod test {
     use super::*;
 
-    use radicle_registry_runtime::event as event_v2;
-    type EventV2 = radicle_registry_runtime::Event;
+    use radicle_registry_runtime::event;
+    use radicle_registry_runtime::Event;
 
     #[test]
     fn update_runtime_event_ok() {
         let events = vec![
-            Event::V2(EventV2::system(event_v2::System::ExtrinsicSuccess(
-                Default::default(),
-            ))),
-            Event::V2(EventV2::system(event_v2::System::CodeUpdated)),
+            Event::system(event::System::ExtrinsicSuccess(Default::default())),
+            Event::system(event::System::CodeUpdated),
         ];
         let result = message::UpdateRuntime::result_from_events(events).unwrap();
         assert_eq!(result, Ok(()))
@@ -261,11 +262,9 @@ mod test {
 
     #[test]
     fn update_runtime_extrinsic_failed_error() {
-        let events = vec![Event::V2(EventV2::system(
-            event_v2::System::ExtrinsicFailed(
-                sp_runtime::DispatchError::BadOrigin,
-                Default::default(),
-            ),
+        let events = vec![Event::system(event::System::ExtrinsicFailed(
+            sp_runtime::DispatchError::BadOrigin,
+            Default::default(),
         ))];
         let result = message::UpdateRuntime::result_from_events(events).unwrap();
         assert_eq!(
