@@ -17,7 +17,7 @@ use futures::StreamExt;
 use std::convert::TryFrom;
 use std::future::Future;
 
-use sc_client::{light::blockchain::AuxStore, BlockImportNotification, BlockchainEvents as _};
+use sc_client_api::{AuxStore, BlockBackend, BlockImportNotification, BlockchainEvents};
 use sc_service::{AbstractService, Error};
 use sp_runtime::{generic::BlockId, traits::Block as _};
 use substrate_prometheus_endpoint::prometheus::core::Atomic;
@@ -28,7 +28,7 @@ use crate::pow::Difficulty;
 pub fn register_metrics<S>(service: &S) -> Result<(), Error>
 where
     S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+    S::Client: BlockchainEvents<S::Block> + BlockBackend<S::Block> + AuxStore,
 {
     let registry = match service.prometheus_registry() {
         Some(registry) => registry,
@@ -44,7 +44,7 @@ where
 fn register_best_block_metrics<S>(service: &S, registry: &Registry) -> Result<(), Error>
 where
     S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+    S::Client: BlockchainEvents<S::Block> + BlockBackend<S::Block> + AuxStore,
 {
     let update_difficulty_gauge = create_difficulty_gauge_updater(service, registry)?;
     let update_block_size_gauges = create_block_size_gauges_updater(service, registry)?;
@@ -70,7 +70,7 @@ fn create_difficulty_gauge_updater<S>(
 ) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error>
 where
     S: AbstractService,
-    sc_client::Client<S::Backend, S::CallExecutor, S::Block, S::RuntimeApi>: AuxStore,
+    S::Client: AuxStore,
 {
     let difficulty_gauge = register_gauge::<U64>(
         &registry,
@@ -90,10 +90,14 @@ where
     Ok(updater)
 }
 
-fn create_block_size_gauges_updater<S: AbstractService>(
+fn create_block_size_gauges_updater<S>(
     service: &S,
     registry: &Registry,
-) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error> {
+) -> Result<impl Fn(&BlockImportNotification<S::Block>), Error>
+where
+    S: AbstractService,
+    S::Client: BlockBackend<S::Block>,
+{
     let transactions_gauge = register_gauge::<U64>(
         &registry,
         "best_block_transactions",
@@ -106,7 +110,7 @@ fn create_block_size_gauges_updater<S: AbstractService>(
     )?;
     let client = service.client();
     let updater = move |info: &BlockImportNotification<S::Block>| {
-        let body = match client.body(&BlockId::hash(info.hash)) {
+        let body = match client.block_body(&BlockId::hash(info.hash)) {
             Ok(Some(body)) => body,
             _ => return,
         };
@@ -131,9 +135,12 @@ fn create_reorganization_gauges_updater<S: AbstractService>(
         "Number of best block reorganizations, which occurred in the chain",
     )?;
     let updater = move |info: &BlockImportNotification<S::Block>| {
-        reorg_length_gauge.set(info.retracted.len() as u64);
-        if !info.retracted.is_empty() {
-            reorg_count_gauge.inc();
+        if let Some(tree_route) = &info.tree_route {
+            let retracted_count = tree_route.retracted().len();
+            reorg_length_gauge.set(retracted_count as u64);
+            if retracted_count != 0 {
+                reorg_count_gauge.inc();
+            }
         }
     };
     Ok(updater)
@@ -155,7 +162,6 @@ fn spawn_metric_task(
     name: &str,
     task: impl Future<Output = ()> + Send + 'static,
 ) {
-    // TODO turn into passing a string after upgrade
     let task_name = Box::leak(format!("{}_metric_notifier", name).into_boxed_str());
-    service.spawn_task(&*task_name, task);
+    service.spawn_task_handle().spawn(&*task_name, task);
 }

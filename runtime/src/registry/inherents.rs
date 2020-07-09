@@ -82,7 +82,9 @@ impl<T: Trait> ProvideInherent for Module<T>
 where
     T: frame_system::Trait<
         AccountId = AccountId,
+        BaseCallFilter = (),
         Origin = crate::Origin,
+        Call = crate::Call,
         Hash = Hash,
         OnNewAccount = (),
     >,

@@ -21,7 +21,7 @@ use frame_support::{
     dispatch::DispatchResult,
     storage::{IterableStorageMap, StorageMap, StorageValue as _},
     traits::{Currency, ExistenceRequirement, Randomness as _},
-    weights::SimpleDispatchInfo,
+    weights::Pays,
 };
 use frame_system as system; // required for `decl_module!` to work
 use frame_system::{ensure_none, ensure_signed};
@@ -48,8 +48,10 @@ where
     // usage site of `Trait`. Currently `Trait` is used for `Store`, `Module`, and
     // `ProvideInherent`. This is due to a limitation with Rusts type checker.
     Self: frame_system::Trait<
+        BaseCallFilter = (),
         AccountId = AccountId,
         Origin = crate::Origin,
+        Call = crate::Call,
         Hash = Hash,
         OnNewAccount = (),
     >,
@@ -164,7 +166,7 @@ decl_module! {
             frame_support::traits::OnKilledAccount<AccountId>
     {
         fn deposit_event() = default;
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -206,7 +208,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn register_member(origin, message: message::RegisterMember) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -229,7 +231,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn register_org(origin, message: message::RegisterOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -250,7 +252,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn unregister_org(origin, message: message::UnregisterOrg) -> DispatchResult {
             fn can_be_unregistered(org: state::Orgs1Data, sender: AccountId) -> bool {
                 org.projects().is_empty() && get_user_id_with_account(sender)
@@ -274,7 +276,7 @@ decl_module! {
             }
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn register_user(origin, message: message::RegisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -294,7 +296,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let sender_user_id = get_user_id_with_account(sender).ok_or(RegistryError::InexistentUser)?;
@@ -311,7 +313,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let org = store::Orgs1::get(message.org_id)
@@ -329,7 +331,7 @@ decl_module! {
             }
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn create_checkpoint(
             origin,
             message: message::CreateCheckpoint,
@@ -357,7 +359,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn set_checkpoint(
             origin,
             message: message::SetCheckpoint,
@@ -405,7 +407,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = SimpleDispatchInfo::InsecureFreeNormal]
+        #[weight = (0, Pays::No)]
         pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -417,7 +419,7 @@ decl_module! {
             )
         }
 
-        #[weight = SimpleDispatchInfo::FixedOperational(10_000)]
+        #[weight = (0, Pays::No)]
         fn set_block_author(origin, author: AccountId) -> DispatchResult {
             assert!(ensure_none(origin).is_ok(), "set_block_author call is only valid as an inherent");
             assert!(store::BlockAuthor::get().is_none(), "set_block_author can only be called once");

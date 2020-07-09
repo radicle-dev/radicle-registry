@@ -10,16 +10,11 @@ if [[ -z "$new_rev" ]]; then
   exit 1
 fi
 
-if [[ ! "$new_rev" =~ ^[0-9a-f]{40,40}$ ]]; then
-  echo "Invalid revision format"
-  exit 1
-fi
-
 # Reads `Cargo.lock` and extracts the first revision of the `substrate`
 # repo that is used.
 function get_substrate_rev () {
   while read -r LINE; do
-    if [[ "$LINE" =~ ^\source\ .*git\+https://github\.com/paritytech/substrate.*\?rev=([0-9a-f]{40,40}) ]]; then
+    if [[ "$LINE" =~ ^\source\ .*git\+https://github\.com/paritytech/substrate.*\?rev=([^#]+) ]]; then
       local rev=${BASH_REMATCH[1]}
       if [[ "$rev" != "$new_rev" ]]; then
         echo "${BASH_REMATCH[1]}"

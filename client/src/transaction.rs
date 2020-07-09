@@ -48,13 +48,13 @@ use radicle_registry_runtime::{
 ///
 /// let account_nonce = client.account_nonce(&author.public()).await?;
 /// let genesis_hash = client.genesis_hash();
-/// let runtime_spec_version = client.runtime_version().await?.spec_version;
+/// let runtime_transaction_version = client.runtime_version().await?.transaction_version;
 ///
 /// let transaction_extra = TransactionExtra {
 ///     nonce: account_nonce,
 ///     genesis_hash: genesis_hash,
 ///     fee: 10,
-///     runtime_spec_version,
+///     runtime_transaction_version,
 /// };
 ///
 /// let recipient = ed25519::Pair::from_string("//Bob", None).unwrap();
@@ -103,10 +103,10 @@ pub struct TransactionExtra {
     pub genesis_hash: Hash,
     /// The fee to cover the transaction fees and gain priority.
     pub fee: Balance,
-    /// The runtime spec version this transaction is valid for.
+    /// The runtime transaction version this transaction is valid for.
     ///
     /// Use [crate::ClientT::runtime_version] to get the current version.
-    pub runtime_spec_version: u32,
+    pub runtime_transaction_version: u32,
 }
 
 /// Return a properly signed [UncheckedExtrinsic] for the given parameters that passes all
@@ -135,7 +135,7 @@ fn transaction_extra_to_runtime_extra(
     SignedExtra,
     <SignedExtra as SignedExtension>::AdditionalSigned,
 ) {
-    let check_version = frame_system::CheckVersion::new();
+    let check_version = frame_system::CheckTxVersion::new();
     let check_genesis = frame_system::CheckGenesis::new();
     let check_era = frame_system::CheckEra::from(Era::Immortal);
     let check_nonce = frame_system::CheckNonce::from(extra.nonce);
@@ -143,7 +143,7 @@ fn transaction_extra_to_runtime_extra(
     let pay_tx_fee = PayTxFee { fee: extra.fee };
 
     let additional_signed = (
-        extra.runtime_spec_version,
+        extra.runtime_transaction_version,
         // Genesis hash
         extra.genesis_hash,
         // Era
@@ -210,7 +210,7 @@ mod test {
                 nonce: 0,
                 genesis_hash,
                 fee: 3,
-                runtime_spec_version: radicle_registry_runtime::VERSION.spec_version,
+                runtime_transaction_version: radicle_registry_runtime::VERSION.transaction_version,
             },
         );
 
@@ -233,7 +233,7 @@ mod test {
                 nonce: 0,
                 genesis_hash: H256::random(),
                 fee: 9,
-                runtime_spec_version: radicle_registry_runtime::VERSION.spec_version,
+                runtime_transaction_version: radicle_registry_runtime::VERSION.transaction_version,
             },
         );
         let extrinsic_hash = Hashing::hash_of(&signed_tx.extrinsic);
