@@ -127,6 +127,25 @@ impl Client {
         Ok(S::from_optional_value_to_query(value))
     }
 
+    /// Check that a key exists in a state store.
+    async fn store_contains_key<
+        S: StorageMap<Key, Value>,
+        Key: FullCodec,
+        Value: FullCodec + Send + 'static,
+    >(
+        &self,
+        key: Key,
+    ) -> Result<bool, Error>
+    where
+        S::Query: Send + 'static,
+    {
+        let backend = self.backend.clone();
+        // We cannot move this code into the async block. The compiler complains about a processing
+        // cycle (E0391)
+        let key = S::storage_map_final_key(key);
+        backend.fetch(&key, None).await.map(|data| data.is_some())
+    }
+
     /// Fetch a value from a map in the state storage based on a [StorageMap] implementation
     /// provided by the runtime.
     ///
@@ -239,8 +258,17 @@ impl ClientT for Client {
         Ok(account_info.data.free)
     }
 
-    async fn get_id_status(&self, id: &Id) -> IdStatus {
-        radicle_registry_runtime::get_id_status(id)
+    async fn get_id_status(&self, id: &Id) -> Result<IdStatus, Error> {
+        if self.get_org(id.clone()).await?.is_some() || self.get_user(id.clone()).await?.is_some() {
+            Ok(IdStatus::Taken)
+        } else if self
+            .store_contains_key::<store::RetiredIds1, _, _>(id.clone())
+            .await?
+        {
+            Ok(IdStatus::Retired)
+        } else {
+            Ok(IdStatus::Available)
+        }
     }
 
     async fn get_org(&self, id: Id) -> Result<Option<state::Orgs1Data>, Error> {

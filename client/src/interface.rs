@@ -63,6 +63,20 @@ pub struct TransactionIncluded<Message_: Message> {
 /// Return type for all [ClientT] methods.
 pub type Response<T, Error> = BoxFuture<'static, Result<T, Error>>;
 
+/// The availability status of an org or user Id
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum IdStatus {
+    /// The id is available and can be claimed
+    Available,
+
+    /// The id is curently taken by a user or by an org
+    Taken,
+
+    /// The id has been unregistered and is now retired
+    Retired,
+}
+
 /// Trait for ledger clients sending transactions and looking up state.
 #[async_trait::async_trait]
 pub trait ClientT {
@@ -130,7 +144,7 @@ pub trait ClientT {
 
     async fn free_balance(&self, account_id: &AccountId) -> Result<Balance, Error>;
 
-    async fn get_id_status(&self, id: &Id) -> IdStatus;
+    async fn get_id_status(&self, id: &Id) -> Result<IdStatus, Error>;
 
     async fn get_org(&self, org_id: Id) -> Result<Option<state::Orgs1Data>, Error>;
 
