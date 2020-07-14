@@ -26,7 +26,6 @@ use frame_support::{
 use frame_system as system; // required for `decl_module!` to work
 use frame_system::{ensure_none, ensure_signed};
 use sp_core::crypto::UncheckedFrom;
-use sp_core::serde::{Deserialize, Serialize};
 use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
@@ -435,20 +434,6 @@ decl_module! {
         }
 
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-/// The Status of an org or user Id
-pub enum IdStatus {
-    /// The id is available and can be claimed
-    Available,
-
-    /// The id is curently taken by a user or by an org
-    Taken,
-
-    /// The id has been unregistered and is now retired
-    Retired,
 }
 
 pub fn get_id_status(id: &Id) -> IdStatus {

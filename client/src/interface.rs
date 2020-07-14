@@ -22,7 +22,7 @@ use futures::future::BoxFuture;
 pub use radicle_registry_core::*;
 
 pub use radicle_registry_runtime::{
-    registry::Event as RegistryEvent, state, Balance, BlockNumber, Event, Hash, Header, IdStatus,
+    registry::Event as RegistryEvent, state, Balance, BlockNumber, Event, Hash, Header,
     RuntimeVersion,
 };
 pub use sp_core::crypto::{

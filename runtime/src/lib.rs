@@ -46,7 +46,7 @@ pub mod registry;
 mod runtime;
 pub mod timestamp_in_digest;
 
-pub use registry::{get_id_status, DecodeKey, IdStatus};
+pub use registry::{get_id_status, DecodeKey};
 
 /// An index to a block.
 pub type BlockNumber = u32;
