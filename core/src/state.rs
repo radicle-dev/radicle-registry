@@ -333,13 +333,15 @@ impl OrgV1 {
 #[derive(Clone, Debug, Decode, Encode, Eq, PartialEq)]
 pub enum Users1Data {
     V1(UserV1),
+    V2(UserV2),
 }
 
 impl Users1Data {
     /// Creates new instance in the most up to date version
     pub fn new(account_id: AccountId, projects: Vec<ProjectName>) -> Self {
-        Self::V1(UserV1 {
+        Self::V2(UserV2 {
             account_id,
+            link_user: None,
             projects,
         })
     }
@@ -348,6 +350,15 @@ impl Users1Data {
     pub fn account_id(&self) -> AccountId {
         match self {
             Self::V1(user) => user.account_id,
+            Self::V2(user) => user.account_id,
+        }
+    }
+
+    /// Latest attested user identity on radicle link.
+    pub fn link_user(&self) -> &Option<Bytes128> {
+        match self {
+            Self::V1(_) => &None,
+            Self::V2(user) => &user.link_user,
         }
     }
 
@@ -355,6 +366,7 @@ impl Users1Data {
     pub fn projects(&self) -> &Vec<ProjectName> {
         match self {
             Self::V1(user) => &user.projects,
+            Self::V2(user) => &user.projects,
         }
     }
 
@@ -364,6 +376,19 @@ impl Users1Data {
     pub fn add_project(self, project_name: ProjectName) -> Self {
         match self {
             Self::V1(user) => Self::V1(user.add_project(project_name)),
+            Self::V2(user) => Self::V2(user.add_project(project_name)),
+        }
+    }
+
+    /// Sets the radicle link metadata reference for this user.
+    pub fn set_link_user(self, link_user: Option<Bytes128>) -> Self {
+        match self {
+            Self::V1(user) => Self::V2(UserV2 {
+                account_id: user.account_id,
+                link_user,
+                projects: user.projects,
+            }),
+            Self::V2(user) => Self::V2(user.set_link_user(link_user)),
         }
     }
 }
@@ -381,6 +406,22 @@ pub struct UserV1 {
     pub projects: Vec<ProjectName>,
 }
 
+/// # Invariants
+///
+/// * `account_id` is immutable
+/// * `projects` is a set of all the projects owned by the User.
+#[derive(Clone, Debug, Decode, Encode, Eq, PartialEq)]
+pub struct UserV2 {
+    /// Account ID that holds the user funds.
+    pub account_id: AccountId,
+
+    /// Reference to the radicle link user metadata last revision.
+    pub link_user: Option<Bytes128>,
+
+    /// Set of all projects owned by the user.
+    pub projects: Vec<ProjectName>,
+}
+
 impl UserV1 {
     /// Add the given project to the list of [UserV1::projects].
     /// Return a new User with the new project included or the
@@ -389,6 +430,24 @@ impl UserV1 {
         if !self.projects.contains(&project_name) {
             self.projects.push(project_name);
         }
+        self
+    }
+}
+
+impl UserV2 {
+    /// Add the given project to the list of [UserV1::projects].
+    /// Return a new User with the new project included or the
+    /// same user if the user already owns that project.
+    pub fn add_project(mut self, project_name: ProjectName) -> Self {
+        if !self.projects.contains(&project_name) {
+            self.projects.push(project_name);
+        }
+        self
+    }
+
+    /// Sets the radicle link metadata reference for this user.
+    pub fn set_link_user(mut self, link_user: Option<Bytes128>) -> Self {
+        self.link_user = link_user;
         self
     }
 }

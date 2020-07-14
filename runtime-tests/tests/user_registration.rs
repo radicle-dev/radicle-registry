@@ -52,6 +52,38 @@ async fn register_user() {
     assert!(user.projects().is_empty());
 }
 
+/// Test setting the radicle link identity of a user
+#[async_std::test]
+async fn set_link_user() {
+    let (client, _) = Client::new_emulator();
+    let user = key_pair_with_funds(&client).await;
+
+    let register_user_message = random_register_user_message();
+    let tx_register_user = submit_ok(&client, &user, register_user_message.clone()).await;
+    assert!(tx_register_user.result.is_ok());
+
+    let link_user = Bytes128::from_vec("DEADBEEF".as_bytes().to_vec()).unwrap();
+    let set_link_user = message::SetLinkUser { user_id: register_user_message.user_id.clone(), link_user: Some(link_user.clone())};
+    let tx_set_link_user = submit_ok(&client, &user, set_link_user.clone()).await;
+    assert!(tx_set_link_user.result.is_ok());
+    let user_with_link_info = client
+        .get_user(register_user_message.user_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(user_with_link_info.link_user(), &Some(link_user.clone()));
+
+    let clear_link_user = message::SetLinkUser { user_id: register_user_message.user_id.clone(), link_user: None};
+    let tx_clear_link_user = submit_ok(&client, &user, clear_link_user.clone()).await;
+    assert!(tx_clear_link_user.result.is_ok());
+    let user_without_link_info = client
+        .get_user(register_user_message.user_id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(user_without_link_info.link_user(), &None);
+}
+
 /// Test that a user can not be registered with an id already taken by another user.
 #[async_std::test]
 async fn register_with_id_taken_by_user() {

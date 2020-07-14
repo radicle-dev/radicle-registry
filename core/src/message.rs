@@ -97,6 +97,23 @@ pub struct UnregisterUser {
     pub user_id: Id,
 }
 
+/// Sets the radicle link metadata reference for the given user.
+///
+/// # State changes
+///
+/// If successful, the `user_id` will have `link_user` as link user metadata reference.
+///
+/// # State-dependent validations
+///
+/// The targeted user must exist and the transaction origin must be the associated account.
+///
+#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
+pub struct SetLinkUser {
+    pub user_id: Id,
+    pub link_user: Option<Bytes128>,
+}
+
+
 /// Register a new member for an org on the Registry with the given user ID.
 ///
 /// # State changes

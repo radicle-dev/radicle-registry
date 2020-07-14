@@ -78,7 +78,8 @@ fn payer_account(author: AccountId, call: &Call) -> AccountId {
             | call::Registry::unregister_org(_)
             | call::Registry::transfer(_)
             | call::Registry::register_user(_)
-            | call::Registry::unregister_user(_) => author,
+            | call::Registry::unregister_user(_)
+            | call::Registry::set_link_user(_) => author,
 
             // Inherents
             call::Registry::set_block_author(_) => {

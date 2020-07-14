@@ -314,6 +314,22 @@ decl_module! {
         }
 
         #[weight = (0, Pays::No)]
+        pub fn set_link_user(origin, message: message::SetLinkUser) -> DispatchResult {
+            let sender = ensure_signed(origin)?;
+            let user = store::Users1::get(message.user_id.clone())
+            .ok_or(RegistryError::InexistentUser)?;
+            if user.account_id() != sender {
+                return Err(RegistryError::InsufficientSenderPermissions.into())
+            }
+
+            let new_user = user.set_link_user(message.link_user.clone());
+            store::Users1::insert(message.user_id.clone(), new_user);
+
+            Self::deposit_event(Event::UserLinkSet(message.user_id, message.link_user));
+            Ok(())
+        }
+
+        #[weight = (0, Pays::No)]
         pub fn transfer_from_org(origin, message: message::TransferFromOrg) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let org = store::Orgs1::get(message.org_id)
@@ -501,6 +517,7 @@ decl_event!(
         ProjectRegistered(ProjectName, ProjectDomain),
         UserRegistered(Id),
         UserUnregistered(Id),
+        UserLinkSet(Id, Option<Bytes128>),
     }
 );
 

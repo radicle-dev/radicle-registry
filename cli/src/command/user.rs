@@ -110,6 +110,78 @@ impl CommandT for Unregister {
 }
 
 #[derive(StructOpt, Clone)]
+pub struct SetLinkUser {
+    /// Id of the user.
+    user_id: Id,
+
+    /// Radicle link user revision reference
+    link_user: String,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for SetLinkUser {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let link_user = Bytes128::from_vec(self.link_user.as_bytes().to_vec()).map_err(|_|CommandError::InvalidLinkUser{link_user: self.link_user.to_owned()})?;
+        let set_link_user = client
+            .sign_and_submit_message(
+                &self.tx_options.author,
+                message::SetLinkUser {
+                    user_id: self.user_id.clone(),
+                    link_user: Some(link_user),
+                },
+                self.tx_options.fee,
+            )
+            .await?;
+        announce_tx("Setting link user data...");
+
+        set_link_user.await?.result?;
+        println!("✓ User {} now has radicle link identity {}.", self.user_id, self.link_user);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
+pub struct ClearLinkUser {
+    /// Id of the user.
+    user_id: Id,
+
+    #[structopt(flatten)]
+    network_options: NetworkOptions,
+
+    #[structopt(flatten)]
+    tx_options: TxOptions,
+}
+
+#[async_trait::async_trait]
+impl CommandT for ClearLinkUser {
+    async fn run(self) -> Result<(), CommandError> {
+        let client = self.network_options.client().await?;
+        let set_link_user = client
+            .sign_and_submit_message(
+                &self.tx_options.author,
+                message::SetLinkUser {
+                    user_id: self.user_id.clone(),
+                    link_user: None,
+                },
+                self.tx_options.fee,
+            )
+            .await?;
+        announce_tx("Clearing link user data...");
+
+        set_link_user.await?.result?;
+        println!("✓ User {} now has no radicle link identity.", self.user_id);
+        Ok(())
+    }
+}
+
+#[derive(StructOpt, Clone)]
 pub struct Show {
     /// The id of the user
     user_id: Id,

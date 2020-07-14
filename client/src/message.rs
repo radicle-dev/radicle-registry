@@ -145,6 +145,23 @@ impl Message for message::UnregisterUser {
     }
 }
 
+impl Message for message::SetLinkUser {
+    type Output = ();
+
+    fn result_from_events(
+        events: Vec<Event>,
+    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+        event::extract_registry_result(&events, |event| match event {
+            event::Registry::UserLinkSet(_,_) => Some(()),
+            _ => None,
+        })
+    }
+
+    fn into_runtime_call(self) -> RuntimeCall {
+        call::Registry::set_link_user(self).into()
+    }
+}
+
 impl Message for message::CreateCheckpoint {
     type Output = CheckpointId;
 
