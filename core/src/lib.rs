@@ -80,3 +80,18 @@ impl ProjectDomain {
 }
 
 pub type CheckpointId = H256;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "lowercase"))]
+/// The Status of an org or user Id
+pub enum IdStatus {
+    /// The id is available and can be claimed
+    Available,
+
+    /// The id is curently taken by a user or by an org
+    Taken,
+
+    /// The id has been unregistered and is now retired
+    Retired,
+}

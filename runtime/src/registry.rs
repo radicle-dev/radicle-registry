@@ -436,18 +436,6 @@ decl_module! {
     }
 }
 
-/// The Status of an org or user Id
-pub enum IdStatus {
-    /// The id is available and can be claimed
-    Available,
-
-    /// The id is curently taken by a user or by an org
-    Taken,
-
-    /// The id has been unregistered and is now retired
-    Retired,
-}
-
 pub fn get_id_status(id: &Id) -> IdStatus {
     if store::Users1::contains_key(id) || store::Orgs1::contains_key(id) {
         IdStatus::Taken
