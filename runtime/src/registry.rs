@@ -436,21 +436,13 @@ decl_module! {
     }
 }
 
-pub fn get_id_status(id: &Id) -> IdStatus {
-    if store::Users1::contains_key(id) || store::Orgs1::contains_key(id) {
-        IdStatus::Taken
-    } else if store::RetiredIds1::contains_key(id) {
-        IdStatus::Retired
-    } else {
-        IdStatus::Available
-    }
-}
-
 fn ensure_id_is_available(id: &Id) -> Result<(), RegistryError> {
-    match get_id_status(id) {
-        IdStatus::Available => Ok(()),
-        IdStatus::Taken => Err(RegistryError::IdAlreadyTaken),
-        IdStatus::Retired => Err(RegistryError::IdRetired),
+    if store::Users1::contains_key(id) || store::Orgs1::contains_key(id) {
+        Err(RegistryError::IdAlreadyTaken)
+    } else if store::RetiredIds1::contains_key(id) {
+        Err(RegistryError::IdRetired)
+    } else {
+        Ok(())
     }
 }
 
