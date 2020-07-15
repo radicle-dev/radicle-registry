@@ -241,6 +241,11 @@ impl ClientT for Client {
         self.backend.get_genesis_hash()
     }
 
+    async fn account_exists(&self, account_id: &AccountId) -> Result<bool, Error> {
+        self.store_contains_key::<store::Account, _, _>(*account_id)
+            .await
+    }
+
     async fn account_nonce(
         &self,
         account_id: &AccountId,
