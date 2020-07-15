@@ -113,7 +113,6 @@ pub struct SetLinkUser {
     pub link_user: Option<Bytes128>,
 }
 
-
 /// Register a new member for an org on the Registry with the given user ID.
 ///
 /// # State changes

@@ -152,7 +152,7 @@ impl Message for message::SetLinkUser {
         events: Vec<Event>,
     ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
-            event::Registry::UserLinkSet(_,_) => Some(()),
+            event::Registry::UserLinkSet(_, _) => Some(()),
             _ => None,
         })
     }

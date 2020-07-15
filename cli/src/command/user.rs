@@ -128,7 +128,11 @@ pub struct SetLinkUser {
 impl CommandT for SetLinkUser {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let link_user = Bytes128::from_vec(self.link_user.as_bytes().to_vec()).map_err(|_|CommandError::InvalidLinkUser{link_user: self.link_user.to_owned()})?;
+        let link_user = Bytes128::from_vec(self.link_user.as_bytes().to_vec()).map_err(|_| {
+            CommandError::InvalidLinkUser {
+                link_user: self.link_user.to_owned(),
+            }
+        })?;
         let set_link_user = client
             .sign_and_submit_message(
                 &self.tx_options.author,
@@ -142,7 +146,10 @@ impl CommandT for SetLinkUser {
         announce_tx("Setting link user data...");
 
         set_link_user.await?.result?;
-        println!("✓ User {} now has radicle link identity {}.", self.user_id, self.link_user);
+        println!(
+            "✓ User {} now has radicle link identity {}.",
+            self.user_id, self.link_user
+        );
         Ok(())
     }
 }
