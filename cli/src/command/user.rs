@@ -24,6 +24,10 @@ pub enum Command {
     Register(Register),
     /// Unregister a user.
     Unregister(Unregister),
+    /// Set Radicle link user data.
+    SetLinkUser(SetLinkUser),
+    /// Clear Radicle link user data.
+    ClearLinkUser(ClearLinkUser),
     /// Show information for a registered user.
     Show(Show),
     /// List all users in the registry.
@@ -36,6 +40,8 @@ impl CommandT for Command {
         match self {
             user::Command::Register(cmd) => cmd.run().await,
             user::Command::Unregister(cmd) => cmd.run().await,
+            user::Command::SetLinkUser(cmd) => cmd.run().await,
+            user::Command::ClearLinkUser(cmd) => cmd.run().await,
             user::Command::Show(cmd) => cmd.run().await,
             user::Command::List(cmd) => cmd.run().await,
         }
