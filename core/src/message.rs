@@ -110,7 +110,7 @@ pub struct UnregisterUser {
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct SetLinkUser {
     pub user_id: Id,
-    pub link_user: Option<Bytes128>,
+    pub link_user: Bytes128,
 }
 
 /// Register a new member for an org on the Registry with the given user ID.

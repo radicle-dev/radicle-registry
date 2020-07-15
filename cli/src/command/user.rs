@@ -138,7 +138,7 @@ impl CommandT for SetLinkUser {
                 &self.tx_options.author,
                 message::SetLinkUser {
                     user_id: self.user_id.clone(),
-                    link_user: Some(link_user),
+                    link_user,
                 },
                 self.tx_options.fee,
             )
@@ -175,7 +175,7 @@ impl CommandT for ClearLinkUser {
                 &self.tx_options.author,
                 message::SetLinkUser {
                     user_id: self.user_id.clone(),
-                    link_user: None,
+                    link_user: Bytes128::empty(),
                 },
                 self.tx_options.fee,
             )

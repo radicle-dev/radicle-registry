@@ -36,6 +36,11 @@ impl Bytes128 {
             Ok(Bytes128(vector))
         }
     }
+
+    /// Build an empty Bytes128
+    pub fn empty() -> Self {
+        Self::from_vec(vec![]).unwrap()
+    }
 }
 
 impl TryFrom<Vec<u8>> for Bytes128 {
