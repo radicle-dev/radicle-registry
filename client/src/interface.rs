@@ -124,6 +124,9 @@ pub trait ClientT {
         fee: Balance,
     ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error>;
 
+    /// Check whether a given account exists on chain.
+    async fn account_exists(&self, account_id: &AccountId) -> Result<bool, Error>;
+
     /// Fetch the nonce for the given account from the chain state
     async fn account_nonce(
         &self,

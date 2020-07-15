@@ -88,6 +88,7 @@ Upcoming
 
 ### Addition
 
+* client: Add `account_exists` to check whether an account exists on chain
 * client: Add `fn get_id_status` to get the status of an id (available, taken or retired)
 * Support user project registration
 * cli: Add `runtime version` command to check the on-chain runtime version
