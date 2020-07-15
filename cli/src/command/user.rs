@@ -128,11 +128,12 @@ pub struct SetLinkUser {
 impl CommandT for SetLinkUser {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let link_user = Bytes128::from_vec(self.link_user.as_bytes().to_vec()).map_err(|_| {
-            CommandError::InvalidLinkUser {
+        let link_user = hex::decode(&self.link_user)
+            .map_err(|_| ())
+            .and_then(|bytes| Bytes128::from_vec(bytes).map_err(|_| ()))
+            .map_err(|_| CommandError::InvalidLinkUser {
                 link_user: self.link_user.to_owned(),
-            }
-        })?;
+            })?;
         let set_link_user = client
             .sign_and_submit_message(
                 &self.tx_options.author,
