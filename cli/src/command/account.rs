@@ -87,7 +87,7 @@ impl CommandT for Transfer {
                 &self.tx_options.author,
                 message::Transfer {
                     recipient: self.recipient,
-                    balance: self.amount,
+                    amount: self.amount,
                 },
                 self.tx_options.fee,
             )

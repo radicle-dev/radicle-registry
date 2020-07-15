@@ -33,7 +33,7 @@ async fn transfer_fail() {
         &alice,
         message::Transfer {
             recipient: bob,
-            balance: balance_alice + 1,
+            amount: balance_alice + 1,
         },
     )
     .await;
@@ -54,7 +54,7 @@ async fn transfer_any_amount() {
             &donator,
             message::Transfer {
                 recipient: receipient,
-                balance: amount,
+                amount,
             },
         )
         .await;
@@ -86,7 +86,7 @@ async fn org_account_transfer() {
         &author,
         message::Transfer {
             recipient: org.account_id(),
-            balance: transfer_amount,
+            amount: transfer_amount,
         },
         random_fee,
     )
@@ -112,7 +112,7 @@ async fn org_account_transfer() {
         message::TransferFromOrg {
             org_id,
             recipient: bob,
-            value: org_transfer_amount,
+            amount: org_transfer_amount,
         },
         org_transfer_fee,
     )
@@ -144,7 +144,7 @@ async fn org_account_transfer_non_member() {
         message::TransferFromOrg {
             org_id,
             recipient: bad_actor.public(),
-            value: 1000,
+            amount: 1000,
         },
         random_fee,
     )

@@ -201,7 +201,7 @@ pub struct SetCheckpoint {
 ///
 /// # State changes
 ///
-/// If successful, `value` is deducated from the org account and
+/// If successful, `amount` is deducated from the org account and
 /// added to the the recipient account. The org account is given
 /// by [crate::state::Orgs1Data::account_id] of the given org.
 ///
@@ -213,20 +213,20 @@ pub struct SetCheckpoint {
 /// A user associated with the transaction author must exist and
 /// be a member of the Org of the given project.
 ///
-/// The org account must have a balance of at least `value`.
+/// The org account must have a balance of at least `amount`.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct TransferFromOrg {
     pub org_id: Id,
     pub recipient: AccountId,
-    pub value: Balance,
+    pub amount: Balance,
 }
 
 /// Transfer funds from one account to another.
 ///
 /// # State changes
 ///
-/// If successful, `balance` is deducated from the transaction author
+/// If successful, `amount` is deducated from the transaction author
 /// account and added to the the recipient account. If the recipient
 /// account did not exist before, it is created.
 ///
@@ -234,12 +234,12 @@ pub struct TransferFromOrg {
 ///
 /// # State-dependent validations
 ///
-/// The author account must have a balance of at least `balance`.
+/// The author account must have a balance of at least `amount`.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct Transfer {
     pub recipient: AccountId,
-    pub balance: Balance,
+    pub amount: Balance,
 }
 
 /// Attempts to update the on-chain runtime with the new given one.

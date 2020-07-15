@@ -197,7 +197,7 @@ impl CommandT for Transfer {
                 message::TransferFromOrg {
                     org_id: self.org_id.clone(),
                     recipient: self.recipient,
-                    value: self.amount,
+                    amount: self.amount,
                 },
                 self.tx_options.fee,
             )

@@ -202,15 +202,12 @@ pub async fn transfer(
     client: &Client,
     donator: &ed25519::Pair,
     recipient: AccountId,
-    value: Balance,
+    amount: Balance,
 ) {
     let tx_included = submit_ok_with_fee(
         &client,
         &donator,
-        message::Transfer {
-            recipient,
-            balance: value,
-        },
+        message::Transfer { recipient, amount },
         1,
     )
     .await;

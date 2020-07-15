@@ -323,7 +323,8 @@ decl_module! {
                 <crate::runtime::Balances as Currency<_>>::transfer(
                     &org.account_id(),
                     &message.recipient,
-                    message.value, ExistenceRequirement::KeepAlive
+                    message.amount,
+                    ExistenceRequirement::KeepAlive
                 )
             }
             else {
@@ -414,7 +415,7 @@ decl_module! {
             <crate::runtime::Balances as Currency<_>>::transfer(
                 &sender,
                 &message.recipient,
-                message.balance,
+                message.amount,
                 ExistenceRequirement::KeepAlive
             )
         }

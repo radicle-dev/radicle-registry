@@ -54,7 +54,7 @@ async fn main() -> Result<(), Error> {
             &alice,
             message::Transfer {
                 recipient: bob_public,
-                balance: 1,
+                amount: 1,
             },
             777,
         )
