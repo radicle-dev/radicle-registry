@@ -62,7 +62,7 @@ async fn set_link_user() {
     let tx_register_user = submit_ok(&client, &user, register_user_message.clone()).await;
     assert!(tx_register_user.result.is_ok());
 
-    let link_user = Bytes128::from_vec("DEADBEEF".as_bytes().to_vec()).unwrap();
+    let link_user = Bytes128::from_vec(b"DEADBEEF".to_vec()).unwrap();
     let set_link_user = message::SetLinkUser {
         user_id: register_user_message.user_id.clone(),
         link_user: link_user.clone(),

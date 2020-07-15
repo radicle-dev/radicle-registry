@@ -39,7 +39,7 @@ impl Bytes128 {
 
     /// Build an empty Bytes128
     pub fn empty() -> Self {
-        Self::from_vec(vec![]).unwrap()
+        Self::from_vec(Vec::new()).unwrap()
     }
 }
 
