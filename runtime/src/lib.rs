@@ -89,7 +89,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     impl_name: create_runtime_str!("radicle-registry"),
     spec_version: SPEC_VERSION,
     transaction_version: SPEC_VERSION,
-    impl_version: 0,
+    impl_version: 1,
     apis: runtime::api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.
     authoring_version: 3,

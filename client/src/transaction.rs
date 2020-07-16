@@ -62,7 +62,7 @@ use radicle_registry_runtime::{
 ///     &author,
 ///     message::Transfer {
 ///         recipient: recipient.public(),
-///         balance: 1000,
+///         amount: 1000,
 ///     },
 ///     transaction_extra,
 /// );
@@ -227,7 +227,7 @@ mod test {
             &alice,
             message::Transfer {
                 recipient: alice.public(),
-                balance: 1000,
+                amount: 1000,
             },
             TransactionExtra {
                 nonce: 0,

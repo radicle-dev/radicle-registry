@@ -33,7 +33,7 @@ async fn block_rewards_credited() {
         &alice,
         message::Transfer {
             recipient: bob,
-            balance: 1000,
+            amount: 1000,
         },
         fee,
     )
