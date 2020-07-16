@@ -143,8 +143,7 @@ crate. `VERSION.spec_version` is always the same as
 `runtime` package. `VERSION.impl_version` must match the patch version of the
 package.
 
-Runtime updates fall
-into two categories: Implementation updates and semantic updates.
+Runtime updates fall into two categories: Implementation updates and semantic updates.
 
 ### Implementation updates
 
