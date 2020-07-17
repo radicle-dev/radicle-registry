@@ -344,6 +344,11 @@ impl ClientT for Client {
     }
 }
 
+/// Parse an [AccountId] from str expected to be in the ss58 format, failing otherwise.
+pub fn parse_ss58_address(address: &str) -> Result<AccountId, sp_core::crypto::PublicError> {
+    sp_core::crypto::Ss58Codec::from_ss58check(address)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
