@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ $# -ne 0 ] || [ "${1-}" = --help ] ; then
+  echo "Rebuild runtime-cache directory."
+  echo "Run only after running scripts/build-release!"
+  return 0
+fi
+
+RUNTIME_CACHE="runtime-cache/"
+mkdir -p "$RUNTIME_CACHE"
+LATEST_RUNTIME_PATH="${RUNTIME_CACHE}latest.wasm"
+
+STORAGE_PREFIX='gs://radicle-registry-runtime/'
+
+# parse runtime version
+runtime_version="$(awk '$1 == "version" {print $3; exit}' runtime/Cargo.toml | tr -d \")"
+spec_version="$(echo "$runtime_version" | awk -F . '{print $2}')"
+impl_version="$(echo "$runtime_version" | awk -F . '{print $3}')"
+prev_spec_version=$(($spec_version - 1))
+latest_runtime_name="v${spec_version}_${impl_version}.wasm"
+latest_spec_latest_impl_name="dev_v${spec_version}_latest.json"
+latest_spec_first_impl_name="dev_v${spec_version}_0.json"
+prev_spec_latest_impl_name="dev_v${prev_spec_version}_latest.json"
+
+# fetch or build the latest runtime
+new_runtime=0
+gsutil cp "$STORAGE_PREFIX$latest_runtime_name" "$LATEST_RUNTIME_PATH" || new_runtime=1
+if [ "$new_runtime" == "1" ]
+then
+  echo "building the latest runtime"
+  ./scripts/build-runtime-wasm "$LATEST_RUNTIME_PATH"
+fi
+
+echo "fetching last impl of prev spec"
+gsutil cp "$STORAGE_PREFIX$prev_spec_latest_impl_name" "$RUNTIME_CACHE$prev_spec_latest_impl_name"
+
+if [ "$impl_version" != "0" ]
+then
+  echo "fetching first impl of current spec"
+  gsutil cp "$STORAGE_PREFIX$latest_spec_first_impl_name" "$RUNTIME_CACHE$latest_spec_first_impl_name"
+fi
+
+echo "building latest impl of current spec"
+RUST_LOG=off ./target/release/radicle-registry-node build-spec --chain dev > "$RUNTIME_CACHE$latest_spec_latest_impl_name"

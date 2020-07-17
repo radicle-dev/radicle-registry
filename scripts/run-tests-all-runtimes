@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ $# -ne 0 ] || [ "${1-}" = --help ] ; then
+  echo "Run tests for all runtimes in runtime-cache."
+  echo "Run only after running scripts/build-release and scripts/rebuild-runtime-cache!"
+  return 0
+fi
+
+# params: <SPEC_NAME>
+run_tests_with_spec()
+{
+  echo "--- cargo test for spec $1"
+  echo "Starting radicle-registry-node"
+
+  # The home directory is not writable on CI
+  export XDG_DATA_HOME=/tmp/xdg-data-home
+  export XDG_CONFIG_HOME=/tmp/xdg-config-home
+
+  RUST_LOG=error ./target/release/radicle-registry-node --dev --spec "$1" &
+  registry_node_pid=$!
+
+  # Give the node time to start up
+  sleep 2
+
+  echo "Testing radicle-registry"
+  # We build tests in release mode so that we can reuse the artifacts
+  # from 'cargo build'
+  RUST_BACKTRACE=1 RUST_LOG=info \
+    cargo test --workspace --release --color=always
+  kill "$registry_node_pid"
+}
+
+for spec_file in runtime-cache/*.json; do
+  run_tests_with_spec "$spec_file"
+done
