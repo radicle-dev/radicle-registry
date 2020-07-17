@@ -517,7 +517,7 @@ decl_event!(
         ProjectRegistered(ProjectName, ProjectDomain),
         UserRegistered(Id),
         UserUnregistered(Id),
-        UserLinkSet(Id, Bytes128),
+        UserLinkSet(Id, Option<Bytes128>),
     }
 );
 

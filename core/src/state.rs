@@ -341,7 +341,7 @@ impl Users1Data {
     pub fn new(account_id: AccountId, projects: Vec<ProjectName>) -> Self {
         Self::V2(UserV2 {
             account_id,
-            link_user: Bytes128::empty(),
+            link_user: None,
             projects,
         })
     }
@@ -355,13 +355,10 @@ impl Users1Data {
     }
 
     /// Latest attested user identity on radicle link.
-    ///
-    /// FIXME: We are forced to clone (cannot return a `&Bytes128`)
-    /// because of the `V1` case... is there another way?
-    pub fn link_user(&self) -> Bytes128 {
+    pub fn link_user(&self) -> &Option<Bytes128> {
         match self {
-            Self::V1(_) => Bytes128::empty(),
-            Self::V2(user) => user.link_user.clone(),
+            Self::V1(_) => &None,
+            Self::V2(user) => &user.link_user,
         }
     }
 
@@ -384,7 +381,7 @@ impl Users1Data {
     }
 
     /// Sets the radicle link metadata reference for this user.
-    pub fn set_link_user(self, link_user: Bytes128) -> Self {
+    pub fn set_link_user(self, link_user: Option<Bytes128>) -> Self {
         match self {
             Self::V1(user) => Self::V2(UserV2 {
                 account_id: user.account_id,
@@ -419,7 +416,7 @@ pub struct UserV2 {
     pub account_id: AccountId,
 
     /// Reference to the radicle link user metadata last revision.
-    pub link_user: Bytes128,
+    pub link_user: Option<Bytes128>,
 
     /// Set of all projects owned by the user.
     pub projects: Vec<ProjectName>,
@@ -449,7 +446,7 @@ impl UserV2 {
     }
 
     /// Sets the radicle link metadata reference for this user.
-    pub fn set_link_user(mut self, link_user: Bytes128) -> Self {
+    pub fn set_link_user(mut self, link_user: Option<Bytes128>) -> Self {
         self.link_user = link_user;
         self
     }
