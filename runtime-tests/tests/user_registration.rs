@@ -74,7 +74,7 @@ async fn set_link_user() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(user_with_link_info.link_user(), &Some(link_user.clone()));
+    assert_eq!(user_with_link_info.link_user(), Some(&link_user));
 
     let clear_link_user = message::SetLinkUser {
         user_id: register_user_message.user_id.clone(),
@@ -87,7 +87,7 @@ async fn set_link_user() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(user_without_link_info.link_user(), &None);
+    assert_eq!(user_without_link_info.link_user(), None);
 }
 
 /// Test that a user can not be registered with an id already taken by another user.

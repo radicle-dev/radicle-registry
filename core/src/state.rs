@@ -355,10 +355,10 @@ impl Users1Data {
     }
 
     /// Latest attested user identity on radicle link.
-    pub fn link_user(&self) -> &Option<Bytes128> {
+    pub fn link_user(&self) -> Option<&Bytes128> {
         match self {
-            Self::V1(_) => &None,
-            Self::V2(user) => &user.link_user,
+            Self::V1(_) => None,
+            Self::V2(user) => user.link_user.as_ref(),
         }
     }
 
