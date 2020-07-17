@@ -88,6 +88,7 @@ Upcoming
 
 ### Addition
 
+* client: Add `parse_ss58_address` to parse an `AccountId` from a ss58 formatted string
 * client: Add `account_exists` to check whether an account exists on chain
 * client: Add `fn get_id_status` to get the status of an id (available, taken or retired)
 * Support user project registration
