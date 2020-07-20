@@ -12,7 +12,8 @@ SHELL ["/bin/bash", "-c"]
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
+    PATH=/usr/local/cargo/bin:$PATH \
+    HOME=/home
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
