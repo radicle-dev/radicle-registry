@@ -25,8 +25,6 @@ pub enum Command {
     List(List),
     /// Register a project with the given name under the given org.
     Register(Register),
-    /// Show information for a registered project.
-    Show(Show),
 }
 
 #[async_trait::async_trait]
@@ -35,39 +33,7 @@ impl CommandT for Command {
         match self {
             Command::List(cmd) => cmd.run().await,
             Command::Register(cmd) => cmd.run().await,
-            Command::Show(cmd) => cmd.run().await,
         }
-    }
-}
-
-#[derive(StructOpt, Clone)]
-pub struct Show {
-    /// The name of the project
-    project_name: ProjectName,
-
-    /// The org in which the project is registered.
-    org_id: Id,
-
-    #[structopt(flatten)]
-    network_options: NetworkOptions,
-}
-
-#[async_trait::async_trait]
-impl CommandT for Show {
-    async fn run(self) -> Result<(), CommandError> {
-        let client = self.network_options.client().await?;
-
-        let project_domain = ProjectDomain::Org(self.org_id.clone());
-        let project = client
-            .get_project(self.project_name.clone(), project_domain.clone())
-            .await?
-            .ok_or(CommandError::ProjectNotFound {
-                project_name: self.project_name.clone(),
-                project_domain: project_domain.clone(),
-            })?;
-        println!("Project: {}.{:?}", self.project_name, project_domain);
-        println!("Checkpoint: {}", project.current_cp());
-        Ok(())
     }
 }
 
@@ -119,22 +85,6 @@ pub struct Register {
 impl CommandT for Register {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let create_checkpoint_fut = client
-            .sign_and_submit_message(
-                &self.tx_options.author,
-                message::CreateCheckpoint {
-                    project_hash: self.project_hash.unwrap_or_default(),
-                    previous_checkpoint_id: None,
-                },
-                self.tx_options.fee,
-            )
-            .await?;
-        announce_tx("Creating checkpoint...");
-
-        let checkpoint_created = create_checkpoint_fut.await?;
-        let checkpoint_id = checkpoint_created.result?;
-        println!("✓ Checkpoint created in block {}", checkpoint_created.block);
-
         let project_domain = match self.domain_type {
             DomainType::Org => ProjectDomain::Org(self.domain_id),
             DomainType::User => ProjectDomain::User(self.domain_id),
@@ -145,7 +95,6 @@ impl CommandT for Register {
                 message::RegisterProject {
                     project_name: self.project_name.clone(),
                     project_domain: project_domain.clone(),
-                    checkpoint_id,
                     metadata: Bytes128::random(),
                 },
                 self.tx_options.fee,

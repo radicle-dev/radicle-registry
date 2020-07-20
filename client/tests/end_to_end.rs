@@ -32,19 +32,6 @@ async fn register_project() {
     let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
-        let project_hash = H256::random();
-        let checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-        )
-        .await
-        .result
-        .unwrap();
-
         let initial_balance = match &domain {
             ProjectDomain::Org(org_id) => {
                 let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
@@ -57,7 +44,7 @@ async fn register_project() {
         };
 
         let random_fee = random_balance();
-        let message = random_register_project_message(&domain, checkpoint_id);
+        let message = random_register_project_message(&domain);
         let project_name = message.project_name.clone();
         let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
         assert_eq!(tx_included.result, Ok(()));
@@ -67,7 +54,6 @@ async fn register_project() {
             .await
             .unwrap()
             .unwrap();
-        assert_eq!(project.current_cp().clone(), checkpoint_id);
         assert_eq!(project.metadata().clone(), message.metadata.clone());
 
         let has_project = client
@@ -77,9 +63,6 @@ async fn register_project() {
             .iter()
             .any(|id| *id == (message.project_name.clone(), message.project_domain.clone()));
         assert!(has_project, "Registered project not found in project list");
-
-        let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
-        assert_eq!(checkpoint, state::Checkpoints1Data::new(None, project_hash));
 
         let (projects, account_id) = match &domain {
             ProjectDomain::Org(org_id) => {

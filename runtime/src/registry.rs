@@ -26,11 +26,10 @@ use frame_support::{
 use frame_system as system; // required for `decl_module!` to work
 use frame_system::{ensure_none, ensure_signed};
 use sp_core::crypto::UncheckedFrom;
-use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{fees, AccountId, Hash, Hashing};
+use crate::{fees, AccountId, Hash};
 
 mod inherents;
 
@@ -99,51 +98,12 @@ pub mod store {
             // We use the blake2_128_concat hasher so that the ProjectId can be extracted from the
             // key.
             pub Projects1: map hasher(blake2_128_concat) ProjectId => Option<state::Projects1Data>;
-
-            // The below map indexes each existing project's id to the
-            // checkpoint id that it was registered with.
-            pub InitialCheckpoints1: map hasher(opaque_blake2_256) ProjectId => Option<state::InitialCheckpoints1Data>;
-
-            // The below map indexes each checkpoint's id to the checkpoint
-            // it points to, should it exist.
-            pub Checkpoints1: map hasher(opaque_blake2_256) CheckpointId => Option<state::Checkpoints1Data>;
         }
     }
 }
 
 pub use store::Store;
 
-/// Returns true iff `checkpoint_id` descends from `initial_cp_id`.
-fn descends_from_initial_checkpoint(
-    checkpoint_id: CheckpointId,
-    initial_cp_id: CheckpointId,
-) -> bool {
-    if checkpoint_id == initial_cp_id {
-        return true;
-    };
-
-    let mut ancestor_id = checkpoint_id;
-
-    // The number of storage requests made in this loop grows linearly
-    // with the size of the checkpoint's ancestry.
-    //
-    // The loop's total runtime will also depend on the performance of
-    // each `store::StorageMap::get` request.
-    while let Some(cp) = store::Checkpoints1::get(ancestor_id) {
-        match cp.parent() {
-            None => return false,
-            Some(cp_id) => {
-                if cp_id == initial_cp_id {
-                    return true;
-                } else {
-                    ancestor_id = cp_id;
-                }
-            }
-        }
-    }
-
-    false
-}
 decl_module! {
     pub struct Module<T: Trait> for enum Call where
         origin: T::Origin,
@@ -158,10 +118,6 @@ decl_module! {
         #[weight = (0, Pays::No)]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
-
-            if store::Checkpoints1::get(message.checkpoint_id).is_none() {
-                return Err(RegistryError::InexistentCheckpointId.into())
-            }
 
             let project_id = (message.project_name.clone(), message.project_domain.clone());
             if store::Projects1::get(project_id.clone()).is_some() {
@@ -186,12 +142,9 @@ decl_module! {
             };
 
             let new_project = state::Projects1Data::new(
-                message.checkpoint_id,
                 message.metadata
             );
-            store::Projects1::insert(project_id.clone(), new_project);
-            let checkpoint_data = state::InitialCheckpoints1Data::new(message.checkpoint_id);
-            store::InitialCheckpoints1::insert(project_id, checkpoint_data);
+            store::Projects1::insert(project_id, new_project);
 
             Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
             Ok(())
@@ -322,82 +275,6 @@ decl_module! {
         }
 
         #[weight = (0, Pays::No)]
-        pub fn create_checkpoint(
-            origin,
-            message: message::CreateCheckpoint,
-        ) -> DispatchResult {
-            ensure_signed(origin)?;
-
-            match message.previous_checkpoint_id {
-                None => {}
-                Some(cp_id) => {
-                    match store::Checkpoints1::get(cp_id) {
-                        None => return Err(RegistryError::InexistentCheckpointId.into()),
-                        Some(_) => {}
-                    }
-                }
-            };
-
-            let checkpoint = state::Checkpoints1Data::new(
-                message.previous_checkpoint_id,
-                message.project_hash,
-            );
-            let checkpoint_id = Hashing::hash_of(&checkpoint);
-            store::Checkpoints1::insert(checkpoint_id, checkpoint);
-
-            Self::deposit_event(Event::CheckpointCreated(checkpoint_id));
-            Ok(())
-        }
-
-        #[weight = (0, Pays::No)]
-        pub fn set_checkpoint(
-            origin,
-            message: message::SetCheckpoint,
-        ) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
-
-            if store::Checkpoints1::get(message.new_checkpoint_id).is_none() {
-                return Err(RegistryError::InexistentCheckpointId.into())
-            }
-            let project_id = (message.project_name.clone(), message.project_domain.clone());
-            let project = store::Projects1::get(project_id.clone())
-                .ok_or(RegistryError::InexistentProjectId)?;
-
-            match &message.project_domain {
-                ProjectDomain::Org(org_id) => {
-                    let org = store::Orgs1::get(org_id.clone())
-                        .ok_or(RegistryError::InexistentOrg)?;
-                    if !org_has_member_with_account(&org, sender) {
-                        return Err(RegistryError::InsufficientSenderPermissions.into())
-                    }
-                }
-                ProjectDomain::User(user_id) => {
-                    let user = store::Users1::get(user_id.clone())
-                        .ok_or(RegistryError::InexistentUser)?;
-                    if user.account_id() != sender {
-                        return Err(RegistryError::InsufficientSenderPermissions.into())
-                    }
-                }
-            };
-            let new_project = project.with_current_cp(message.new_checkpoint_id);
-            let initial_cp = match store::InitialCheckpoints1::get(project_id.clone()) {
-                None => return Err(RegistryError::InexistentInitialProjectCheckpoint.into()),
-                Some(cp) => cp.initial_cp(),
-            };
-            if !descends_from_initial_checkpoint(message.new_checkpoint_id, initial_cp) {
-                return Err(RegistryError::InvalidCheckpointAncestry.into())
-            }
-
-            store::Projects1::insert(project_id, new_project);
-            Self::deposit_event(Event::CheckpointSet(
-                message.project_name.clone(),
-                message.project_domain.clone(),
-                message.new_checkpoint_id
-            ));
-            Ok(())
-        }
-
-        #[weight = (0, Pays::No)]
         pub fn transfer(origin, message: message::Transfer) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 
@@ -463,8 +340,6 @@ pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId
 
 decl_event!(
     pub enum Event {
-        CheckpointCreated(CheckpointId),
-        CheckpointSet(ProjectName, ProjectDomain, CheckpointId),
         MemberRegistered(Id, Id),
         OrgRegistered(Id),
         OrgUnregistered(Id),

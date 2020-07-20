@@ -29,22 +29,6 @@ async fn main() -> Result<(), Error> {
     let project_name = ProjectName::try_from("radicle-registry").unwrap();
     let org_id = Id::try_from("monadic").unwrap();
 
-    // Choose some random project hash and create a checkpoint
-    let project_hash = H256::random();
-    let checkpoint_id = client
-        .sign_and_submit_message(
-            &alice,
-            message::CreateCheckpoint {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-            346,
-        )
-        .await?
-        .await?
-        .result
-        .unwrap();
-
     // Register the project
     client
         .sign_and_submit_message(
@@ -52,7 +36,6 @@ async fn main() -> Result<(), Error> {
             message::RegisterProject {
                 project_name: project_name.clone(),
                 project_domain: ProjectDomain::Org(org_id.clone()),
-                checkpoint_id,
                 metadata: Bytes128::random(),
             },
             567,

@@ -145,40 +145,6 @@ impl Message for message::UnregisterUser {
     }
 }
 
-impl Message for message::CreateCheckpoint {
-    type Output = CheckpointId;
-
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::CheckpointCreated(checkpoint_id) => Some(*checkpoint_id),
-            _ => None,
-        })
-    }
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        call::Registry::create_checkpoint(self).into()
-    }
-}
-
-impl Message for message::SetCheckpoint {
-    type Output = ();
-
-    fn result_from_events(
-        events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::CheckpointSet(_project_name, _org_id, _checkpoint_id) => Some(()),
-            _ => None,
-        })
-    }
-
-    fn into_runtime_call(self) -> RuntimeCall {
-        call::Registry::set_checkpoint(self).into()
-    }
-}
-
 impl Message for message::Transfer {
     type Output = ();
 
