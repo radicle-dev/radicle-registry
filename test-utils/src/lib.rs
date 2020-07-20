@@ -56,17 +56,7 @@ pub async fn create_project(
     author: &ed25519::Pair,
     domain: &ProjectDomain,
 ) -> (ProjectName, state::Projects1Data) {
-    let checkpoint_id = create_checkpoint(client, author, None).await;
-    create_project_with_checkpoint(client, author, domain, checkpoint_id).await
-}
-
-pub async fn create_project_with_checkpoint(
-    client: &Client,
-    author: &ed25519::Pair,
-    domain: &ProjectDomain,
-    checkpoint_id: CheckpointId,
-) -> (ProjectName, state::Projects1Data) {
-    let register_project_message = random_register_project_message(domain, checkpoint_id);
+    let register_project_message = random_register_project_message(domain);
     submit_ok(&client, &author, register_project_message.clone()).await;
     let project = client
         .get_project(
@@ -77,33 +67,6 @@ pub async fn create_project_with_checkpoint(
         .unwrap()
         .unwrap();
     (register_project_message.project_name, project)
-}
-
-pub async fn create_checkpoint(
-    client: &Client,
-    author: &ed25519::Pair,
-    previous_checkpoint_id: impl Into<Option<CheckpointId>>,
-) -> CheckpointId {
-    let message = message::CreateCheckpoint {
-        project_hash: H256::random(),
-        previous_checkpoint_id: previous_checkpoint_id.into(),
-    };
-    submit_ok(&client, &author, message).await.result.unwrap()
-}
-
-pub async fn set_checkpoint(
-    client: &Client,
-    author: &ed25519::Pair,
-    project_name: &ProjectName,
-    project_domain: &ProjectDomain,
-    new_checkpoint_id: CheckpointId,
-) {
-    let message = message::SetCheckpoint {
-        project_name: project_name.clone(),
-        project_domain: project_domain.clone(),
-        new_checkpoint_id,
-    };
-    submit_ok(client, author, message).await.result.unwrap()
 }
 
 pub fn random_id() -> Id {
@@ -124,14 +87,10 @@ pub fn random_register_org_message() -> message::RegisterOrg {
 }
 
 /// Create a [message::RegisterProject] with random parameters to register a project with.
-pub fn random_register_project_message(
-    domain: &ProjectDomain,
-    checkpoint_id: CheckpointId,
-) -> message::RegisterProject {
+pub fn random_register_project_message(domain: &ProjectDomain) -> message::RegisterProject {
     message::RegisterProject {
         project_name: random_project_name(),
         project_domain: domain.clone(),
-        checkpoint_id,
         metadata: Bytes128::random(),
     }
 }

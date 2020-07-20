@@ -30,19 +30,6 @@ async fn register_project() {
     let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
-        let project_hash = H256::random();
-        let checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-        )
-        .await
-        .result
-        .unwrap();
-
         let initial_balance = match &domain {
             ProjectDomain::Org(org_id) => {
                 let org = client.get_org(org_id.clone()).await.unwrap().unwrap();
@@ -55,7 +42,7 @@ async fn register_project() {
         };
 
         let random_fee = random_balance();
-        let message = random_register_project_message(&domain, checkpoint_id);
+        let message = random_register_project_message(&domain);
         let project_name = message.project_name.clone();
         let tx_included = submit_ok_with_fee(&client, &author, message.clone(), random_fee).await;
         assert_eq!(tx_included.result, Ok(()));
@@ -65,7 +52,6 @@ async fn register_project() {
             .await
             .unwrap()
             .unwrap();
-        assert_eq!(project.current_cp().clone(), checkpoint_id);
         assert_eq!(project.metadata().clone(), message.metadata.clone());
 
         let has_project = client
@@ -75,10 +61,6 @@ async fn register_project() {
             .iter()
             .any(|id| *id == (message.project_name.clone(), message.project_domain.clone()));
         assert!(has_project, "Registered project not found in project list");
-
-        let checkpoint_ = state::Checkpoints1Data::new(None, project_hash);
-        let checkpoint = client.get_checkpoint(checkpoint_id).await.unwrap().unwrap();
-        assert_eq!(checkpoint, checkpoint_);
 
         let (projects, account_id) = match &domain {
             ProjectDomain::Org(org_id) => {
@@ -110,20 +92,7 @@ async fn register_project_under_inexistent_domain() {
         ProjectDomain::Org(random_id()),
         ProjectDomain::User(random_id()),
     ] {
-        let project_hash = H256::random();
-        let checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash,
-                previous_checkpoint_id: None,
-            },
-        )
-        .await
-        .result
-        .unwrap();
-
-        let message = random_register_project_message(&domain, checkpoint_id);
+        let message = random_register_project_message(&domain);
         let tx_included = submit_ok(&client, &author, message.clone()).await;
 
         let expected_error = match domain {
@@ -141,19 +110,7 @@ async fn re_register_project_same_domain_entity() {
     let author = key_pair_with_funds(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
-        let checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash: H256::random(),
-                previous_checkpoint_id: None,
-            },
-        )
-        .await
-        .result
-        .unwrap();
-
-        let message = random_register_project_message(&domain, checkpoint_id);
+        let message = random_register_project_message(&domain);
         let project_name = message.project_name.clone();
         submit_ok(&client, &author, message.clone()).await;
 
@@ -205,19 +162,7 @@ async fn register_same_project_name_under_different_orgs() {
     let (org_1_id, _) = register_random_org(&client, &author).await;
     let domain_org_1 = ProjectDomain::Org(org_1_id);
 
-    let checkpoint_id = submit_ok(
-        &client,
-        &author,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    let message = random_register_project_message(&domain_org_1, checkpoint_id);
+    let message = random_register_project_message(&domain_org_1);
     submit_ok(&client, &author, message.clone()).await;
 
     // Submit a project with the same name under another org.
@@ -243,19 +188,7 @@ async fn register_same_project_name_under_different_users() {
     let (author_1, user_id_1) = key_pair_with_associated_user(&client).await;
     let domain_user_1 = ProjectDomain::User(user_id_1);
 
-    let checkpoint_id = submit_ok(
-        &client,
-        &author_1,
-        message::CreateCheckpoint {
-            project_hash: H256::random(),
-            previous_checkpoint_id: None,
-        },
-    )
-    .await
-    .result
-    .unwrap();
-
-    let message = random_register_project_message(&domain_user_1, checkpoint_id);
+    let message = random_register_project_message(&domain_user_1);
     submit_ok(&client, &author_1, message.clone()).await;
 
     // Duplicate submission under a different domain.
@@ -274,31 +207,6 @@ async fn register_same_project_name_under_different_users() {
     assert!(registration_2.result.is_ok());
 }
 
-// Verify that a project can not be registered with a bad checkpoint
-// neither under an org nor under a user.
-#[async_std::test]
-async fn register_project_with_bad_checkpoint() {
-    let (client, _) = Client::new_emulator();
-    let author = key_pair_with_funds(&client).await;
-    let checkpoint_id = H256::random();
-
-    for domain in generate_project_domains(&client, &author).await {
-        let register_project = random_register_project_message(&domain, checkpoint_id);
-        let tx_included = submit_ok(&client, &author, register_project.clone()).await;
-
-        assert_eq!(
-            tx_included.result,
-            Err(RegistryError::InexistentCheckpointId.into())
-        );
-
-        assert!(client
-            .get_project(register_project.project_name, domain)
-            .await
-            .unwrap()
-            .is_none());
-    }
-}
-
 // Verify that a bad author can not register project under other users and orgs.
 #[async_std::test]
 async fn register_project_with_bad_actor() {
@@ -307,21 +215,9 @@ async fn register_project_with_bad_actor() {
     let (bad_actor, _) = key_pair_with_associated_user(&client).await;
 
     for domain in generate_project_domains(&client, &author).await {
-        let checkpoint_id = submit_ok(
-            &client,
-            &author,
-            message::CreateCheckpoint {
-                project_hash: H256::random(),
-                previous_checkpoint_id: None,
-            },
-        )
-        .await
-        .result
-        .unwrap();
-
         // The bad actor attempts to register a project within a domain they don't belong to.
         let initial_balance = client.free_balance(&bad_actor.public()).await.unwrap();
-        let register_project = random_register_project_message(&domain, checkpoint_id);
+        let register_project = random_register_project_message(&domain);
         let random_fee = random_balance();
         let tx_included =
             submit_ok_with_fee(&client, &bad_actor, register_project.clone(), random_fee).await;

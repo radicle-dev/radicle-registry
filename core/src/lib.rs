@@ -20,7 +20,7 @@
 extern crate alloc;
 
 use parity_scale_codec::{Decode, Encode};
-use sp_core::{ed25519, H256};
+use sp_core::ed25519;
 use sp_runtime::traits::BlakeTwo256;
 
 pub use sp_runtime::DispatchError;
@@ -78,5 +78,3 @@ impl ProjectDomain {
         }
     }
 }
-
-pub type CheckpointId = H256;

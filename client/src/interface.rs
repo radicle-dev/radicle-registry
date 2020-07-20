@@ -164,9 +164,4 @@ pub trait ClientT {
     ) -> Result<Option<state::Projects1Data>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
-
-    async fn get_checkpoint(
-        &self,
-        id: CheckpointId,
-    ) -> Result<Option<state::Checkpoints1Data>, Error>;
 }

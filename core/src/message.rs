@@ -18,7 +18,7 @@
 //! See the README.md for more information on how to document messages.
 extern crate alloc;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Id, ProjectDomain, ProjectName, H256};
+use crate::{AccountId, Balance, Bytes128, Id, ProjectDomain, ProjectName};
 use alloc::prelude::v1::Vec;
 use parity_scale_codec::{Decode, Encode};
 
@@ -139,8 +139,6 @@ pub struct RegisterMember {
 /// The user associated with the author must a member of
 /// the involved org, when an org is specified as the project domain.
 ///
-/// A checkpoint with the given ID must exist.
-///
 /// A project with the same name must not yet exist in domain.
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
@@ -151,50 +149,8 @@ pub struct RegisterProject {
     /// The domain of the project.
     pub project_domain: ProjectDomain,
 
-    /// Initial checkpoint of the project.
-    pub checkpoint_id: CheckpointId,
-
     /// Opaque and imutable metadata, used by the application.
     pub metadata: Bytes128,
-}
-
-/// Add a new checkpoint to the state.
-///
-/// # State changes
-///
-/// If successful, adds a new [crate::state::Checkpoints1Data] with the given parameters
-/// to the state.
-///
-/// # State-dependent validations
-///
-/// If `previous_checkpoint_id` is provided a checkpoint with the given ID must exist in the state.
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct CreateCheckpoint {
-    pub project_hash: H256,
-    pub previous_checkpoint_id: Option<CheckpointId>,
-}
-
-/// Updates [crate::state::ProjectV1::current_cp].
-///
-/// # State changes
-///
-/// If successful, adds a new [crate::state::Checkpoints1Data] with the given parameters
-/// to the state.
-///
-/// # State-dependent validations
-///
-/// The project `project_id` must exist.
-///
-/// The checkpoint `new_checkpoint_id` must exist.
-///
-/// A user associated with the transaction author must exist and
-/// be a member of the Org of the given project.
-///
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct SetCheckpoint {
-    pub project_name: ProjectName,
-    pub project_domain: ProjectDomain,
-    pub new_checkpoint_id: CheckpointId,
 }
 
 /// Transfer funds from an org account to an account.

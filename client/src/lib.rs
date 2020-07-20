@@ -328,13 +328,6 @@ impl ClientT for Client {
         Ok(project_ids)
     }
 
-    async fn get_checkpoint(
-        &self,
-        id: CheckpointId,
-    ) -> Result<Option<state::Checkpoints1Data>, Error> {
-        self.fetch_map_value::<store::Checkpoints1, _, _>(id).await
-    }
-
     async fn runtime_version(&self) -> Result<RuntimeVersion, Error> {
         self.backend.runtime_version().await
     }
