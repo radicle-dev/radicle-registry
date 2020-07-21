@@ -155,8 +155,8 @@ pub enum CommandError {
     #[error("cannot find user {user_id}")]
     UserNotFound { user_id: Id },
 
-    #[error("invalid link user {link_user}")]
-    InvalidLinkUser { link_user: String },
+    #[error("invalid link user URN {link_urn}")]
+    InvalidLinkUserUrn { link_urn: String },
 
     #[error("cannot find project {project_name}.{project_domain:?}")]
     ProjectNotFound {

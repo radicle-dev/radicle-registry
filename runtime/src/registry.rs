@@ -314,18 +314,21 @@ decl_module! {
         }
 
         #[weight = (0, Pays::No)]
-        pub fn set_link_user(origin, message: message::SetLinkUser) -> DispatchResult {
+        pub fn set_link_user_urn(origin, message: message::SetLinkUserUrn) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             let user = store::Users1::get(message.user_id.clone())
             .ok_or(RegistryError::InexistentUser)?;
             if user.account_id() != sender {
                 return Err(RegistryError::InsufficientSenderPermissions.into())
             }
+            if user.link_urn().is_some() {
+                return Err(RegistryError::LinkUrnAlreadySet.into())
+            }
 
-            let new_user = user.set_link_user(message.link_user.clone());
+            let new_user = user.set_link_urn(message.link_urn.clone());
             store::Users1::insert(message.user_id.clone(), new_user);
 
-            Self::deposit_event(Event::UserLinkSet(message.user_id, message.link_user));
+            Self::deposit_event(Event::UserLinkSet(message.user_id, message.link_urn));
             Ok(())
         }
 
@@ -517,7 +520,7 @@ decl_event!(
         ProjectRegistered(ProjectName, ProjectDomain),
         UserRegistered(Id),
         UserUnregistered(Id),
-        UserLinkSet(Id, Option<Bytes128>),
+        UserLinkSet(Id, Bytes128),
     }
 );
 

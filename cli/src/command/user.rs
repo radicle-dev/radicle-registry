@@ -24,10 +24,8 @@ pub enum Command {
     Register(Register),
     /// Unregister a user.
     Unregister(Unregister),
-    /// Set Radicle link user data.
-    SetLinkUser(SetLinkUser),
-    /// Clear Radicle link user data.
-    ClearLinkUser(ClearLinkUser),
+    /// Set Radicle link user URN.
+    SetLinkUrn(SetLinkUrn),
     /// Show information for a registered user.
     Show(Show),
     /// List all users in the registry.
@@ -40,8 +38,7 @@ impl CommandT for Command {
         match self {
             user::Command::Register(cmd) => cmd.run().await,
             user::Command::Unregister(cmd) => cmd.run().await,
-            user::Command::SetLinkUser(cmd) => cmd.run().await,
-            user::Command::ClearLinkUser(cmd) => cmd.run().await,
+            user::Command::SetLinkUrn(cmd) => cmd.run().await,
             user::Command::Show(cmd) => cmd.run().await,
             user::Command::List(cmd) => cmd.run().await,
         }
@@ -116,12 +113,12 @@ impl CommandT for Unregister {
 }
 
 #[derive(StructOpt, Clone)]
-pub struct SetLinkUser {
+pub struct SetLinkUrn {
     /// Id of the user.
     user_id: Id,
 
-    /// Radicle link user revision reference
-    link_user: String,
+    /// Radicle link user URN reference
+    link_urn: String,
 
     #[structopt(flatten)]
     network_options: NetworkOptions,
@@ -131,66 +128,32 @@ pub struct SetLinkUser {
 }
 
 #[async_trait::async_trait]
-impl CommandT for SetLinkUser {
+impl CommandT for SetLinkUrn {
     async fn run(self) -> Result<(), CommandError> {
         let client = self.network_options.client().await?;
-        let link_user = hex::decode(&self.link_user)
+        let link_urn = hex::decode(&self.link_urn)
             .map_err(|_| ())
             .and_then(|bytes| Bytes128::from_vec(bytes).map_err(|_| ()))
-            .map_err(|_| CommandError::InvalidLinkUser {
-                link_user: self.link_user.to_owned(),
+            .map_err(|_| CommandError::InvalidLinkUserUrn {
+                link_urn: self.link_urn.to_owned(),
             })?;
-        let set_link_user = client
+        let set_link_urn = client
             .sign_and_submit_message(
                 &self.tx_options.author,
-                message::SetLinkUser {
+                message::SetLinkUserUrn {
                     user_id: self.user_id.clone(),
-                    link_user: Some(link_user),
+                    link_urn,
                 },
                 self.tx_options.fee,
             )
             .await?;
         announce_tx("Setting link user data...");
 
-        set_link_user.await?.result?;
+        set_link_urn.await?.result?;
         println!(
             "✓ User {} now has radicle link identity {}.",
-            self.user_id, self.link_user
+            self.user_id, self.link_urn
         );
-        Ok(())
-    }
-}
-
-#[derive(StructOpt, Clone)]
-pub struct ClearLinkUser {
-    /// Id of the user.
-    user_id: Id,
-
-    #[structopt(flatten)]
-    network_options: NetworkOptions,
-
-    #[structopt(flatten)]
-    tx_options: TxOptions,
-}
-
-#[async_trait::async_trait]
-impl CommandT for ClearLinkUser {
-    async fn run(self) -> Result<(), CommandError> {
-        let client = self.network_options.client().await?;
-        let set_link_user = client
-            .sign_and_submit_message(
-                &self.tx_options.author,
-                message::SetLinkUser {
-                    user_id: self.user_id.clone(),
-                    link_user: None,
-                },
-                self.tx_options.fee,
-            )
-            .await?;
-        announce_tx("Clearing link user data...");
-
-        set_link_user.await?.result?;
-        println!("✓ User {} now has no radicle link identity.", self.user_id);
         Ok(())
     }
 }

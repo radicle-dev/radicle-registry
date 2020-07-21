@@ -101,16 +101,17 @@ pub struct UnregisterUser {
 ///
 /// # State changes
 ///
-/// If successful, the `user_id` will have `link_user` as link user metadata reference.
+/// If successful, user `user_id` will have `link_urn` as link user metadata reference.
 ///
 /// # State-dependent validations
 ///
-/// The targeted user must exist and the transaction origin must be the associated account.
+/// The targeted user must exist and the transaction origin must be the associated account,
+/// and the `link_urn` must be set to `None` (once assigned it stays immutable).
 ///
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct SetLinkUser {
+pub struct SetLinkUserUrn {
     pub user_id: Id,
-    pub link_user: Option<Bytes128>,
+    pub link_urn: Bytes128,
 }
 
 /// Register a new member for an org on the Registry with the given user ID.

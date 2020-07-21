@@ -145,7 +145,7 @@ impl Message for message::UnregisterUser {
     }
 }
 
-impl Message for message::SetLinkUser {
+impl Message for message::SetLinkUserUrn {
     type Output = ();
 
     fn result_from_events(
@@ -158,7 +158,7 @@ impl Message for message::SetLinkUser {
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
-        call::Registry::set_link_user(self).into()
+        call::Registry::set_link_user_urn(self).into()
     }
 }
 

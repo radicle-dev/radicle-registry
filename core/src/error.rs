@@ -134,6 +134,9 @@ pub enum RegistryError {
         error("the ID has been unregistered and can't be claimed again")
     )]
     IdRetired = 18,
+
+    #[cfg_attr(feature = "std", error("the Radicle Link URN is already set"))]
+    LinkUrnAlreadySet = 19,
 }
 
 // The index with which the registry runtime module is declared
