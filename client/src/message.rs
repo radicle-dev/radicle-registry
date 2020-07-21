@@ -26,29 +26,21 @@ use crate::{event, event::Event};
 /// For every [RuntimeCall] that is exposed to the user we implement [Message] for the parameters
 /// struct of the runtime message.
 pub trait Message: Send + 'static {
-    /// Output of a successfully applied message.
-    ///
-    /// This value is extracted from the events that are dispatched when the message is executed in
-    /// a block.
-    type Output: Send + 'static;
-
     /// Parse all runtime events emitted by the message and return the appropriate message result.
     ///
     /// Returns an error if the event list is not well formed. For example if an expected event is
     /// missing.
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError>;
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError>;
 
     fn into_runtime_call(self) -> RuntimeCall;
 }
 
 impl Message for message::RegisterProject {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::ProjectRegistered(_, _) => Some(()),
             _ => None,
@@ -61,11 +53,9 @@ impl Message for message::RegisterProject {
 }
 
 impl Message for message::RegisterMember {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::MemberRegistered(_, _) => Some(()),
             _ => None,
@@ -78,11 +68,9 @@ impl Message for message::RegisterMember {
 }
 
 impl Message for message::RegisterOrg {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::OrgRegistered(_) => Some(()),
             _ => None,
@@ -95,11 +83,9 @@ impl Message for message::RegisterOrg {
 }
 
 impl Message for message::UnregisterOrg {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::OrgUnregistered(_) => Some(()),
             _ => None,
@@ -112,15 +98,13 @@ impl Message for message::UnregisterOrg {
 }
 
 impl Message for message::RegisterUser {
-    type Output = ();
-
     fn into_runtime_call(self) -> RuntimeCall {
         call::Registry::register_user(self).into()
     }
 
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::UserRegistered(_) => Some(()),
             _ => None,
@@ -129,11 +113,9 @@ impl Message for message::RegisterUser {
 }
 
 impl Message for message::UnregisterUser {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::extract_registry_result(&events, |event| match event {
             event::Registry::UserUnregistered(_) => Some(()),
             _ => None,
@@ -146,11 +128,9 @@ impl Message for message::UnregisterUser {
 }
 
 impl Message for message::Transfer {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::get_dispatch_result(&events)
     }
 
@@ -160,11 +140,9 @@ impl Message for message::Transfer {
 }
 
 impl Message for message::TransferFromOrg {
-    type Output = ();
-
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         event::get_dispatch_result(&events)
     }
 
@@ -174,13 +152,11 @@ impl Message for message::TransferFromOrg {
 }
 
 impl Message for message::UpdateRuntime {
-    type Output = ();
-
     /// The only unequivocal sign we get that a wasm update was successful is the
     /// `RawEvent::CodeUpdated` event. Anything else is considered a failed update.
     fn result_from_events(
         events: Vec<Event>,
-    ) -> Result<Result<Self::Output, TransactionError>, event::EventExtractionError> {
+    ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
         let result = events
             .into_iter()
             .find_map(|event| match event {

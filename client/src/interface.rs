@@ -50,14 +50,14 @@ pub type BlockHeader = Header;
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionIncluded<Message_: Message> {
+pub struct TransactionIncluded {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// The result of the runtime message.
     ///
     /// See [Message::result_from_events].
-    pub result: Result<Message_::Output, TransactionError>,
+    pub result: Result<(), TransactionError>,
 }
 
 /// Return type for all [ClientT] methods.
@@ -112,7 +112,7 @@ pub trait ClientT {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionIncluded, Error>, Error>;
 
     /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
@@ -122,7 +122,7 @@ pub trait ClientT {
         author: &ed25519::Pair,
         message: Message_,
         fee: Balance,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionIncluded, Error>, Error>;
 
     /// Check whether a given account exists on chain.
     async fn account_exists(&self, account_id: &AccountId) -> Result<bool, Error>;

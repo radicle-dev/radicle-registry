@@ -207,7 +207,7 @@ async fn register_same_project_name_under_different_users() {
     assert!(registration_2.result.is_ok());
 }
 
-// Verify that a bad author can not register project under other users and orgs.
+// Verify that a bad author can not register projects under other users and orgs.
 #[async_std::test]
 async fn register_project_with_bad_actor() {
     let (client, _) = Client::new_emulator();
