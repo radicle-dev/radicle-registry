@@ -41,10 +41,7 @@ impl Message for message::RegisterProject {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::ProjectRegistered(_, _) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -56,10 +53,7 @@ impl Message for message::RegisterMember {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::MemberRegistered(_, _) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -71,10 +65,7 @@ impl Message for message::RegisterOrg {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::OrgRegistered(_) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -86,10 +77,7 @@ impl Message for message::UnregisterOrg {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::OrgUnregistered(_) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
@@ -105,10 +93,7 @@ impl Message for message::RegisterUser {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::UserRegistered(_) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 }
 
@@ -116,10 +101,7 @@ impl Message for message::UnregisterUser {
     fn result_from_events(
         events: Vec<Event>,
     ) -> Result<Result<(), TransactionError>, event::EventExtractionError> {
-        event::extract_registry_result(&events, |event| match event {
-            event::Registry::UserUnregistered(_) => Some(()),
-            _ => None,
-        })
+        event::get_dispatch_result(&events)
     }
 
     fn into_runtime_call(self) -> RuntimeCall {
