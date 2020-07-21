@@ -65,16 +65,8 @@ where
 /// Funds that are credited to the block author for every block.
 pub const BLOCK_REWARD: Balance = rad_to_balance(20);
 
-// Placeholder data to be exported by the client so we can implement the UI in
-// Upstream.
-/// Deposit for registering a user.
-pub const REGISTER_USER_DEPOSIT: Balance = 10;
-/// Deposit for registering a project.
-pub const REGISTER_PROJECT_DEPOSIT: Balance = 10;
-/// Deposit for registering an org.
-pub const REGISTER_ORG_DEPOSIT: Balance = 10;
-/// Deposit for registering a member on an org.
-pub const REGISTER_MEMBER_DEPOSIT: Balance = 10;
+/// Mandatory fee for registering a user or an org.
+pub const REGISTRATION_FEE: Balance = 10;
 
 pub mod store {
     use super::*;

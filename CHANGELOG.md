@@ -6,6 +6,8 @@ Upcoming
 
 ### Breaking changes
 
+* client: Renamed `MINIMUM_FEE` to `MINIMUM_TX_FEE`
+* client: Drop Deposit-related placeholder constants
 * node: Blake3PoW requires the timestamp as a digest item
 * client: Eliminate `Error::Other` variant and replace it with dedicated
   variants for different errors.
@@ -88,6 +90,7 @@ Upcoming
 
 ### Addition
 
+* client: Expose `REGISTRATION_FEE`
 * client: Add `parse_ss58_address` to parse an `AccountId` from a ss58 formatted string
 * client: Add `account_exists` to check whether an account exists on chain
 * client: Add `fn get_id_status` to get the status of an id (available, taken or retired)
