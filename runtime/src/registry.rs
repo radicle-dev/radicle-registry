@@ -30,7 +30,7 @@ use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{AccountId, Hash, Hashing};
+use crate::{fees, AccountId, Hash, Hashing};
 
 mod inherents;
 
@@ -238,7 +238,7 @@ decl_module! {
             ensure_id_is_available(&message.org_id)?;
 
             let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
-
+            fees::pay_registration_fee(&sender)?;
             let random_account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(
                     b"org-account-id",
@@ -286,6 +286,7 @@ decl_module! {
                 return Err(RegistryError::UserAccountAssociated.into())
             }
 
+            fees::pay_registration_fee(&sender)?;
             let new_user = state::Users1Data::new(
                 sender,
                 Vec::new(),

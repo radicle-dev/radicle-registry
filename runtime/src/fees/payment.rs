@@ -18,7 +18,9 @@ use crate::{call, AccountId, Call, DispatchError};
 use radicle_registry_core::*;
 
 use frame_support::storage::{StorageMap as _, StorageValue as _};
-use frame_support::traits::{Currency, ExistenceRequirement, Imbalance, WithdrawReason};
+use frame_support::traits::{
+    Currency, ExistenceRequirement, Imbalance, WithdrawReason, WithdrawReasons,
+};
 use sp_runtime::Permill;
 
 type NegativeImbalance = <crate::runtime::Balances as Currency<AccountId>>::NegativeImbalance;
@@ -26,12 +28,13 @@ type NegativeImbalance = <crate::runtime::Balances as Currency<AccountId>>::Nega
 /// Share of a transaction fee that is burned rather than credited to the block author.
 const BURN_SHARE: Permill = Permill::from_percent(1);
 
-/// Pay Fees
-/// Given a tx author, their fee, and a call::Registry they are submitting,
-/// charge the tx fees to the right account, which depends on the `registry_call`.
-pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
-    let payer = payer_account(author, call);
-    let withdrawn_fee = withdraw(fee, &payer)?;
+pub fn pay_tx_fee(author: &AccountId, fee: Balance, call: &Call) -> Result<(), DispatchError> {
+    let payer = payer_account(*author, call);
+    let withdrawn_fee = withdraw(
+        fee,
+        &payer,
+        WithdrawReason::TransactionPayment | WithdrawReason::Tip,
+    )?;
     let (burn, reward) = withdrawn_fee.split(BURN_SHARE * fee);
     drop(burn);
 
@@ -45,11 +48,21 @@ pub fn pay(author: AccountId, fee: Balance, call: &Call) -> Result<(), DispatchE
     Ok(())
 }
 
-pub fn withdraw(fee: Balance, payer: &AccountId) -> Result<NegativeImbalance, DispatchError> {
+pub fn pay_registration_fee(author: &AccountId) -> Result<(), RegistryError> {
+    let _burnt = withdraw(super::REGISTRATION_FEE, author, WithdrawReason::Fee.into())
+        .map_err(|_| RegistryError::FailedRegistrationFeePayment)?;
+    Ok(())
+}
+
+fn withdraw(
+    fee: Balance,
+    payer: &AccountId,
+    withhdraw_reasons: WithdrawReasons,
+) -> Result<NegativeImbalance, DispatchError> {
     <crate::runtime::Balances as Currency<_>>::withdraw(
         payer,
         fee,
-        WithdrawReason::TransactionPayment | WithdrawReason::Tip,
+        withhdraw_reasons,
         ExistenceRequirement::KeepAlive,
     )
 }
@@ -120,7 +133,7 @@ mod test {
     use sp_runtime::BuildStorage;
 
     #[test]
-    fn pay_fee() {
+    fn test_pay_tx_fee() {
         let genesis_config = GenesisConfig {
             pallet_balances: None,
             pallet_sudo: None,
@@ -138,13 +151,12 @@ mod test {
                 .public();
             let _imbalance = Balances::deposit_creating(&tx_author, 3000);
 
-            let fee = 1000;
             let call = call::Registry::register_user(message::RegisterUser {
                 user_id: Id::try_from("alice").unwrap(),
             })
             .into();
-
-            pay(tx_author, fee, &call).unwrap();
+            let fee = 1000;
+            pay_tx_fee(&tx_author, fee, &call).unwrap();
 
             let block_author_balance = Balances::free_balance(&block_author);
             assert_eq!(block_author_balance, 990);
