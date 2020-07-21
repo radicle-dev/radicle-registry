@@ -40,7 +40,7 @@ pub use project_name::{InvalidProjectNameError, ProjectName};
 mod error;
 pub use error::{RegistryError, TransactionError};
 
-/// The hashing algorightm to use
+/// The hashing algorithm to use
 pub type Hashing = BlakeTwo256;
 
 /// Identifier for accounts, an Ed25519 public key.

@@ -181,7 +181,7 @@ impl ClientT for Client {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error> {
+    ) -> Result<Response<TransactionIncluded, Error>, Error> {
         let backend = self.backend.clone();
         let tx_included_future = backend.submit(transaction.extrinsic).await?;
         Ok(Box::pin(async move {
@@ -204,7 +204,7 @@ impl ClientT for Client {
         author: &ed25519::Pair,
         message: Message_,
         fee: Balance,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error> {
+    ) -> Result<Response<TransactionIncluded, Error>, Error> {
         let account_id = author.public();
         let key_pair = author.clone();
         let genesis_hash = self.genesis_hash();

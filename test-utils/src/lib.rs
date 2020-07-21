@@ -31,7 +31,7 @@ pub async fn submit_ok_with_fee<Message_: Message>(
     author: &ed25519::Pair,
     message: Message_,
     fee: Balance,
-) -> TransactionIncluded<Message_> {
+) -> TransactionIncluded {
     client
         .sign_and_submit_message(&author, message, fee)
         .await
@@ -47,7 +47,7 @@ pub async fn submit_ok<Message_: Message>(
     client: &Client,
     author: &ed25519::Pair,
     message: Message_,
-) -> TransactionIncluded<Message_> {
+) -> TransactionIncluded {
     submit_ok_with_fee(&client, &author, message, random_balance()).await
 }
 
