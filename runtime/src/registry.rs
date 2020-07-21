@@ -23,7 +23,6 @@ use frame_support::{
     traits::{Currency, ExistenceRequirement, Randomness as _},
     weights::Pays,
 };
-use frame_system as system; // required for `decl_module!` to work
 use frame_system::{ensure_none, ensure_signed};
 use sp_core::crypto::UncheckedFrom;
 
@@ -114,7 +113,6 @@ decl_module! {
         <T as frame_system::Trait>::OnKilledAccount:
             frame_support::traits::OnKilledAccount<AccountId>
     {
-        fn deposit_event() = default;
         #[weight = (0, Pays::No)]
         pub fn register_project(origin, message: message::RegisterProject) -> DispatchResult {
             let sender = ensure_signed(origin)?;
@@ -145,8 +143,6 @@ decl_module! {
                 message.metadata
             );
             store::Projects1::insert(project_id, new_project);
-
-            Self::deposit_event(Event::ProjectRegistered(message.project_name, message.project_domain));
             Ok(())
         }
 
@@ -168,8 +164,7 @@ decl_module! {
             }
 
             let org_with_member = org.add_member(message.user_id.clone());
-            store::Orgs1::insert(message.org_id.clone(), org_with_member);
-            Self::deposit_event(Event::MemberRegistered(message.user_id, message.org_id));
+            store::Orgs1::insert(message.org_id, org_with_member);
             Ok(())
         }
 
@@ -187,9 +182,7 @@ decl_module! {
             );
             let new_org = state::Orgs1Data::new(random_account_id, vec![user_id],  Vec::new());
             store::Orgs1::insert(message.org_id.clone(), new_org);
-            store::RetiredIds1::insert(message.org_id.clone(), ());
-            Self::deposit_event(Event::OrgRegistered(message.org_id));
-
+            store::RetiredIds1::insert(message.org_id, ());
             Ok(())
         }
 
@@ -206,8 +199,7 @@ decl_module! {
                 None => Err(RegistryError::InexistentOrg.into()),
                 Some(org) => {
                     if can_be_unregistered(org, sender) {
-                        store::Orgs1::remove(message.org_id.clone());
-                        Self::deposit_event(Event::OrgUnregistered(message.org_id));
+                        store::Orgs1::remove(message.org_id);
                         Ok(())
                     }
                     else {
@@ -233,8 +225,7 @@ decl_module! {
                 Vec::new(),
             );
             store::Users1::insert(message.user_id.clone(), new_user);
-            store::RetiredIds1::insert(message.user_id.clone(), ());
-            Self::deposit_event(Event::UserRegistered(message.user_id));
+            store::RetiredIds1::insert(message.user_id, ());
             Ok(())
         }
 
@@ -251,8 +242,7 @@ decl_module! {
                 return Err(RegistryError::UnregisterableUser.into());
             }
 
-            store::Users1::remove(user_id.clone());
-            Self::deposit_event(Event::UserUnregistered(user_id));
+            store::Users1::remove(user_id);
             Ok(())
         }
 
@@ -342,14 +332,8 @@ pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId
 }
 
 decl_event!(
-    pub enum Event {
-        MemberRegistered(Id, Id),
-        OrgRegistered(Id),
-        OrgUnregistered(Id),
-        ProjectRegistered(ProjectName, ProjectDomain),
-        UserRegistered(Id),
-        UserUnregistered(Id),
-    }
+    /// We don't make use of Events
+    pub enum Event {}
 );
 
 /// Trait to decode [StorageMap] keys from raw storage keys.

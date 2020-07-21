@@ -27,28 +27,6 @@ pub enum EventExtractionError {
     EventMissing,
 }
 
-/// Run `f` on all events to extract a potential output after [get_dispatch_result] is successful.
-/// If `f` returns `None` for all events an [EventExtractionError::EventMissing] error is returned.
-pub fn extract_registry_result<T>(
-    events: &[Event],
-    f: impl Fn(&event::Registry) -> Option<T>,
-) -> Result<Result<T, TransactionError>, EventExtractionError> {
-    let dispatch_result = get_dispatch_result(events)?;
-    match dispatch_result {
-        Ok(()) => {
-            let output = events
-                .iter()
-                .find_map(|event| match event {
-                    Event::registry(event) => f(event),
-                    _ => None,
-                })
-                .ok_or_else(|| EventExtractionError::EventMissing)?;
-            Ok(Ok(output))
-        }
-        Err(dispatch_error) => Ok(Err(dispatch_error)),
-    }
-}
-
 /// Looks for `ExtrinsicSuccess` and `ExtrinsicFailed` in the events and constructs the inner
 /// result accordingly. Returns an [EventExtractionError::ExstrinsicStatusMissing] error if none of
 /// these events is found.
