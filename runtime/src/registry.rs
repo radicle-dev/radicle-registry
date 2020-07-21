@@ -228,7 +228,6 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             ensure_id_is_available(&message.org_id)?;
-
             let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
             fees::pay_registration_fee(&sender)?;
             let random_account_id = AccountId::unchecked_from(
@@ -236,11 +235,11 @@ decl_module! {
                     b"org-account-id",
                 )
             );
-
             let new_org = state::Orgs1Data::new(random_account_id, vec![user_id],  Vec::new());
             store::Orgs1::insert(message.org_id.clone(), new_org);
             store::RetiredIds1::insert(message.org_id.clone(), ());
             Self::deposit_event(Event::OrgRegistered(message.org_id));
+
             Ok(())
         }
 

@@ -40,7 +40,7 @@ async fn register_user() {
 
     assert_eq!(
         client.free_balance(&alice.public()).await.unwrap(),
-        initial_balance - random_fee,
+        initial_balance - random_fee - REGISTRATION_FEE,
         "The tx fee was not charged properly."
     );
 
@@ -50,6 +50,49 @@ async fn register_user() {
         .unwrap()
         .unwrap();
     assert!(user.projects().is_empty());
+}
+
+/// Verify that it fails to register a user if the author has insufficient funds to
+/// pay for the registration fee.
+#[async_std::test]
+async fn register_user_with_insufficient_funds_for_registration_fee() {
+    let (client, _) = Client::new_emulator();
+
+    let random_fee = random_balance();
+    let total_required_funds = random_fee + REGISTRATION_FEE;
+
+    let author = {
+        let key_pair = ed25519::Pair::generate().0;
+        transfer(
+            &client,
+            &root_key_pair(),
+            key_pair.public(),
+            total_required_funds - 1,
+        )
+        .await;
+        key_pair
+    };
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
+
+    let register_user_message = random_register_user_message();
+    let tx_included =
+        submit_ok_with_fee(&client, &author, register_user_message.clone(), random_fee).await;
+
+    assert_eq!(
+        tx_included.result,
+        Err(RegistryError::FailedRegistrationFeePayment.into())
+    );
+    assert!(
+        !user_exists(&client, register_user_message.user_id.clone()).await,
+        "The user shouldn't have been registered",
+    );
+    // The author should have at least paid for the tx fee since they had
+    // insufficient funds to also pay the registration fee.
+    assert_eq!(
+        client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee,
+        "The tx fee was not charged properly."
+    );
 }
 
 /// Test that a user can not be registered with an id already taken by another user.

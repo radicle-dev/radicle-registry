@@ -48,7 +48,60 @@ async fn register_org() {
 
     assert_eq!(
         client.free_balance(&author.public()).await.unwrap(),
-        initial_balance - random_fee,
+        initial_balance - random_fee - REGISTRATION_FEE,
+        "The tx fee was not charged properly."
+    );
+}
+
+/// Verify that it fails to register a user if the author has insufficient funds to
+/// pay for the registration fee.
+#[async_std::test]
+async fn register_user_with_insufficient_funds_for_registration_fee() {
+    let (client, _) = Client::new_emulator();
+
+    let random_fee = random_balance();
+    // Two times tx_fee AND registration fee, first for registering the associated
+    // user and then for registering the org.
+    let total_required_funds = 2 * (random_fee + REGISTRATION_FEE);
+
+    let author = {
+        let key_pair = ed25519::Pair::generate().0;
+        transfer(
+            &client,
+            &root_key_pair(),
+            key_pair.public(),
+            total_required_funds - 1,
+        )
+        .await;
+        key_pair
+    };
+
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
+
+    // Register an associated user, which will charge tx fee + registration fee
+    let register_user_message = random_register_user_message();
+    let tx_included =
+        submit_ok_with_fee(&client, &author, register_user_message.clone(), random_fee).await;
+    assert_eq!(tx_included.result, Ok(()));
+
+    let register_org_message = random_register_org_message();
+    let tx_included =
+        submit_ok_with_fee(&client, &author, register_org_message.clone(), random_fee).await;
+
+    assert_eq!(
+        tx_included.result,
+        Err(RegistryError::FailedRegistrationFeePayment.into())
+    );
+    assert!(
+        !org_exists(&client, register_org_message.org_id.clone()).await,
+        "Org should have not been registered"
+    );
+    // The author should have paid for the tx fee and registration fee relative to its user registration
+    // plus the tx fee for the org registration, having had no funds left for the registration fee to
+    // actually register the org.
+    assert_eq!(
+        client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee - REGISTRATION_FEE - random_fee,
         "The tx fee was not charged properly."
     );
 }
