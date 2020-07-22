@@ -42,8 +42,8 @@ type Threshold = U256;
 
 const NONCES_PER_MINING_ROUND: usize = 10_000_000;
 const INITIAL_DIFFICULTY: u64 = 1_000_000;
-const ADJUST_DIFFICULTY_DAMPING: u32 = 3;
-const ADJUST_DIFFICULTY_CLAMPING: u32 = 2;
+const ADJUST_DIFFICULTY_DAMPING: u32 = 1;
+const ADJUST_DIFFICULTY_CLAMPING: u32 = 200;
 const ADJUST_DIFFICULTY_WINDOW_SIZE: u64 = 12;
 const TARGET_BLOCK_TIME_MS: u64 = 60_000;
 const TARGET_WINDOW_TIME_MS: u64 = ADJUST_DIFFICULTY_WINDOW_SIZE * TARGET_BLOCK_TIME_MS;
@@ -268,5 +268,76 @@ mod test {
             "Failed for time_observed {}",
             time_observed
         );
+    }
+
+    #[test]
+    fn dunno_lol() {
+        // fn one_to_one((_idx, diff): (usize, &U256)) -> u64 {
+        //     diff.low_u64()
+        // }
+
+        // fn fast_oscilate_1000((idx, diff): (usize, &U256)) -> u64 {
+        //     let time = diff.low_u64();
+        //     match (idx / 40) % 2 {
+        //         0 => time * 100 / 120,
+        //         _ => time * 100 / 80,
+        //     }
+        // }
+
+        // test_difficulty(30000, 1000);
+        // test_difficulty(90000, 1000);
+        // test_difficulty(30000, 1000);
+        test_difficulty(6000, 1500);
+        panic!();
+    }
+
+    // hash rate: 100h/s
+    fn test_difficulty(initial: u64, cycles: usize) {
+        const WINDOW: usize = ADJUST_DIFFICULTY_WINDOW_SIZE as usize;
+        // difficulty, time in ms it took to mine
+        let mut history: Vec<(U256, u64)> = vec![];
+        let mut random = rand::thread_rng();
+        let mut low = 0;
+        let mut high = 0;
+        while history.len() < cycles {
+            let difficulty = if history.len() < WINDOW {
+                U256::from(initial)
+            } else {
+                let mut mean = HarmonicMean::new();
+                let mut window_time = 0;
+                for (diff, time) in history.iter().rev().take(WINDOW) {
+                    mean.push((*diff).into());
+                    window_time += time;
+                }
+                let diff_mean = mean.calculate();
+                let next = next_difficulty(diff_mean, window_time);
+                println!("WINDOW TIME {:.3} DIFF MEAN {:.3} NEXT {:.3}",
+                    window_time as f64 / TARGET_WINDOW_TIME_MS as f64,
+                    diff_mean.low_u128() as f64 / 6000.,
+                    next.low_u128() as f64 / diff_mean.low_u128() as f64);
+                if window_time < TARGET_WINDOW_TIME_MS {
+                    low += 1
+                } else {
+                    high += 1
+                }
+                next
+            };
+            let bernoulli = rand::distributions::Bernoulli::new(1f64 / difficulty.low_u128() as f64).unwrap();
+            let mut time = 10;
+            while !rand::distributions::Distribution::sample(&bernoulli, &mut random) {
+                time += 10;
+            }
+            history.push((difficulty, time));
+        }
+        println!("\nINITIAL DIFF {}", initial);
+        println!("AVG DIFF {}", history.iter().map(|(d, _)| d.low_u64()).sum::<u64>() as usize / history.len());
+        println!("AVG TIME {}", history.iter().map(|(_, t)| t).sum::<u64>() as usize / history.len());
+        println!("FINAL DIFF {}", history.last().unwrap().0);
+        println!("LOW {} HIGH {}", low, high);
+        println!("RATE {}", history.len() as f64 / history.iter().map(|(_, t)| t).sum::<u64>() as f64 * 3600000.)
+        // for (idx, item) in history.iter().enumerate() {
+        //     println!("{:04}; {}", idx + 1, item);
+        // }
+
     }
 }
