@@ -128,7 +128,6 @@ pub mod store {
 pub mod event {
     pub use crate::runtime::Event;
     pub type Record = frame_system::EventRecord<crate::runtime::Event, crate::Hash>;
-    pub type Registry = crate::registry::Event;
     pub type System = frame_system::Event<crate::Runtime>;
 
     /// Return the index of the transaction in the block that dispatched the event.

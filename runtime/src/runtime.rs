@@ -156,9 +156,7 @@ impl pallet_sudo::Trait for Runtime {
     type Call = Call;
 }
 
-impl registry::Trait for Runtime {
-    type Event = Event;
-}
+impl registry::Trait for Runtime {}
 
 construct_runtime!(
         pub enum Runtime where
@@ -171,6 +169,6 @@ construct_runtime!(
                 RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
                 Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
                 Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
-                Registry: registry::{Module, Call, Storage, Event, Inherent},
+                Registry: registry::{Module, Call, Storage, Inherent},
         }
 );

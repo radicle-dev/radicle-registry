@@ -17,7 +17,7 @@
 use radicle_registry_core::TransactionError;
 use radicle_registry_runtime::{event, DispatchError};
 
-pub use radicle_registry_runtime::event::{transaction_index, Event, Record, Registry, *};
+pub use radicle_registry_runtime::event::{transaction_index, Event, Record, *};
 
 #[derive(thiserror::Error, Debug)]
 pub enum EventExtractionError {
