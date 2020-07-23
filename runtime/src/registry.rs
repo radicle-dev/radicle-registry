@@ -17,7 +17,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use frame_support::{
-    decl_event, decl_module, decl_storage,
+    decl_module, decl_storage,
     dispatch::DispatchResult,
     storage::{IterableStorageMap, StorageMap, StorageValue as _},
     traits::{Currency, ExistenceRequirement, Randomness as _},
@@ -57,7 +57,6 @@ where
     <Self as frame_system::Trait>::OnKilledAccount:
         frame_support::traits::OnKilledAccount<Self::AccountId>,
 {
-    type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 }
 
 /// Funds that are credited to the block author for every block.
@@ -330,11 +329,6 @@ pub fn org_has_member_with_account(org: &state::Orgs1Data, account_id: AccountId
         None => false,
     }
 }
-
-decl_event!(
-    /// We don't make use of Events
-    pub enum Event {}
-);
 
 /// Trait to decode [StorageMap] keys from raw storage keys.
 pub trait DecodeKey {
