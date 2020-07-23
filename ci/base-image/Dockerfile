@@ -12,7 +12,8 @@ SHELL ["/bin/bash", "-c"]
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
+    PATH=/usr/local/cargo/bin:$PATH \
+    HOME=/build
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -27,6 +28,15 @@ RUN apt-get update \
         make \
         pkg-config \
         curl \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+    && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+        >> /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+        | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+    && apt-get update \
+    && apt-get install -y google-cloud-sdk \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
 
