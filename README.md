@@ -131,7 +131,7 @@ The `ffnet` is our first public network for friends & family to participate.
 ### `dev`
 
 The `dev` chain is intended for local development. The node runs an isolated
-network with a dummy proof-of-work. The `dev` chain uses `./runtime/latest.wasm`
+network with a dummy proof-of-work. The `dev` chain uses `./runtime-cache/latest.wasm`
 as the genesis runtime.
 
 ### `devnet`
@@ -139,7 +139,7 @@ as the genesis runtime.
 We host a devnet that you can connect to. To join you need to use the most
 recent pre-built binary (see “Getting the node”).
 
-Like the `dev` chain, we use `./runtime/latest.wasm` as the genesis runtime.
+Like the `dev` chain, we use `./runtime-cache/latest.wasm` as the genesis runtime.
 
 We are frequently resetting the devnet blockchain. If you local node is not
 syncing blocks download the most recent version and run `radicle-registry-node

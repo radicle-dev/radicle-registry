@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ $# -ne 0 ] || [ "${1-}" = --help ] ; then
+  echo "Rebuild runtime-cache directory."
+  return 0
+fi
+
+runtime_cache="runtime-cache/"
+mkdir -p "$runtime_cache"
+latest_runtime_local_name="latest.wasm"
+
+# parse runtime version
+runtime_version="$(awk '$1 == "version" {print $3; exit}' runtime/Cargo.toml | tr -d \")"
+spec_version="$(echo "$runtime_version" | awk -F . '{print $2}')"
+impl_version="$(echo "$runtime_version" | awk -F . '{print $3}')"
+prev_spec_version=$(($spec_version - 1))
+latest_runtime_name="v${spec_version}_${impl_version}.wasm"
+latest_spec_latest_impl_name="dev_v${spec_version}_latest.json"
+latest_spec_first_impl_name="dev_v${spec_version}_0.json"
+prev_spec_last_impl_name="dev_v${prev_spec_version}_latest.json"
+
+# params: <FILE_NAME_IN_BUCKET> [<FILE_NAME_IN_CACHE_IF_DIFFERENT>]
+download_cache_file()
+{
+  curl -o "$runtime_cache${2-$1}" -fSs "https://storage.googleapis.com/radicle-registry-runtime/$1" \
+    || ( echo "could not download $1 from the storage" && false )
+}
+
+# fetch or build the latest runtime
+new_runtime=0
+download_cache_file "$latest_runtime_name" "$latest_runtime_local_name" || new_runtime=1
+if [ "$new_runtime" == "1" ]
+then
+  echo "building runtime for spec $spec_version impl $impl_version"
+  ./scripts/build-runtime-wasm "$runtime_cache$latest_runtime_local_name"
+fi
+
+echo "building spec file for spec $spec_version impl $impl_version"
+# uses --release to reuse as many artifacts as possible on the CI
+RUST_LOG=off cargo run -p radicle-registry-node --release -- build-spec --chain dev > "$runtime_cache$latest_spec_latest_impl_name"
+
+if [ "$impl_version" != "0" ]
+then
+  echo "fetching spec file for spec $spec_version impl 0"
+  download_cache_file "$latest_spec_first_impl_name"
+fi
+
+for breaking_spec in "17"
+do
+  if [ "$spec_version" == "$breaking_spec" ]
+  then
+    echo "spec version $spec_version is designed for no backward compatiblity, \
+skipping fetching spec file for spec $prev_spec_version"
+    exit 0
+  fi
+done
+
+echo "fetching spec file for spec $prev_spec_version last impl"
+download_cache_file "$prev_spec_last_impl_name"

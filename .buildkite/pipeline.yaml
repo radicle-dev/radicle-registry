@@ -1,5 +1,5 @@
 env:
-  DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:does-not-exist
+  DOCKER_IMAGE: gcr.io/opensourcecoin/radicle-registry/ci-base:98fb1936a3da74a6eeea5d569c0e77a181cb56ae
   DOCKER_FILE: ci/base-image/Dockerfile
 
 .test: &test

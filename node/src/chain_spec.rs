@@ -25,7 +25,7 @@ use std::path::PathBuf;
 pub type ChainSpec = GenericChainSpec<genesis::GenesisConfig>;
 
 const FFNET_CHAIN_SPEC: &[u8] = include_bytes!("./chain_spec/ffnet.json");
-const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime/latest.wasm");
+const LATEST_RUNTIME_WASM: &[u8] = include_bytes!("../../runtime-cache/latest.wasm");
 
 /// Chain for local development with a single node.
 ///
