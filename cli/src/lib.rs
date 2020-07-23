@@ -93,7 +93,7 @@ pub struct TxOptions {
 }
 
 lazy_static! {
-    static ref FEE_DEFAULT: String = MINIMUM_FEE.to_string();
+    static ref FEE_DEFAULT: String = MINIMUM_TX_FEE.to_string();
 }
 
 fn lookup_key_pair(name: &str) -> Result<ed25519::Pair, String> {

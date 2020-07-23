@@ -134,6 +134,12 @@ pub enum RegistryError {
         error("the ID has been unregistered and can't be claimed again")
     )]
     IdRetired = 18,
+
+    #[cfg_attr(
+        feature = "std",
+        error("the author has insufficient funds to cover the registration fee")
+    )]
+    FailedRegistrationFeePayment = 19,
 }
 
 // The index with which the registry runtime module is declared

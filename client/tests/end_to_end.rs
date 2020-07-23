@@ -201,7 +201,7 @@ async fn register_org() {
 
     assert_eq!(
         client.free_balance(&author.public()).await.unwrap(),
-        initial_balance - random_fee,
+        initial_balance - random_fee - REGISTRATION_FEE,
         "The tx fee was not charged properly."
     );
 }
@@ -214,13 +214,17 @@ async fn register_user() {
     let client = Client::create_with_executor(node_host).await.unwrap();
     let author = ed25519::Pair::from_string("//Alice", None).unwrap();
 
+    let initial_balance = client.free_balance(&author.public()).await.unwrap();
+
+    let random_fee = random_balance();
     let user_id = random_id();
-    let tx_included = submit_ok(
+    let tx_included = submit_ok_with_fee(
         &client,
         &author,
         message::RegisterUser {
             user_id: user_id.clone(),
         },
+        random_fee,
     )
     .await;
     assert_eq!(tx_included.result, Ok(()));
@@ -232,6 +236,12 @@ async fn register_user() {
     );
     let user = maybe_user.unwrap();
     assert!(user.projects().is_empty());
+
+    assert_eq!(
+        client.free_balance(&author.public()).await.unwrap(),
+        initial_balance - random_fee - REGISTRATION_FEE,
+        "The tx fee was not charged properly."
+    );
 }
 
 #[async_std::test]

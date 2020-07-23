@@ -45,13 +45,9 @@ pub mod message;
 mod transaction;
 
 pub use crate::interface::*;
-pub use radicle_registry_core::{state, Balance};
-pub use radicle_registry_runtime::fees::MINIMUM_FEE;
-pub use radicle_registry_runtime::registry::{
-    REGISTER_MEMBER_DEPOSIT, REGISTER_ORG_DEPOSIT, REGISTER_PROJECT_DEPOSIT, REGISTER_USER_DEPOSIT,
-};
-
 pub use backend::{EmulatorControl, EMULATOR_BLOCK_AUTHOR};
+pub use radicle_registry_core::{state, Balance};
+pub use radicle_registry_runtime::fees::{MINIMUM_TX_FEE, REGISTRATION_FEE};
 
 /// Client to interact with the radicle registry ledger via an implementation of [ClientT].
 ///

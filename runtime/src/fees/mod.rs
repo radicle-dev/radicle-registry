@@ -15,7 +15,6 @@
 
 //! Fee charging logic as [SignedExtension] for [PayTxFee].
 
-use crate::fees::payment::pay;
 use crate::{AccountId, Balance, Call};
 
 use frame_support::dispatch::DispatchInfo;
@@ -27,12 +26,16 @@ use sp_runtime::transaction_validity::{
 
 mod payment;
 
-/// The minimum fee required for a transaction to be considered
-/// for inclusion in the blockchain.
-pub const MINIMUM_FEE: Balance = 1;
+pub use payment::{pay_registration_fee, pay_tx_fee};
+
+/// The minimum acceptable tx fee
+pub const MINIMUM_TX_FEE: Balance = 1;
+
+/// The registration fee
+pub const REGISTRATION_FEE: Balance = 10;
 
 /// Pay the transaction fee indicated by the author.
-/// The fee should be higher or equal to [MINIMUM_FEE].
+/// The fee should be higher or equal to [MINIMUM_TX_FEE].
 /// The higher the fee, the higher the priority of a transaction.
 #[derive(Debug, Encode, Decode, Clone, Eq, PartialEq)]
 pub struct PayTxFee {
@@ -59,10 +62,10 @@ impl SignedExtension for PayTxFee {
         _len: usize,
     ) -> TransactionValidity {
         let error = TransactionValidityError::Invalid(InvalidTransaction::Payment);
-        if self.fee < MINIMUM_FEE {
+        if self.fee < MINIMUM_TX_FEE {
             return Err(error);
         }
-        pay(*author, self.fee, &call).map_err(|_| error)?;
+        pay_tx_fee(author, self.fee, call).map_err(|_| error)?;
 
         let mut valid_tx = ValidTransaction::default();
         valid_tx.priority = self.fee as u64;

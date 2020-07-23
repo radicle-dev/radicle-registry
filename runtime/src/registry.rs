@@ -30,7 +30,7 @@ use sp_runtime::traits::Hash as _;
 
 use radicle_registry_core::*;
 
-use crate::{AccountId, Hash, Hashing};
+use crate::{fees, AccountId, Hash, Hashing};
 
 mod inherents;
 
@@ -64,17 +64,6 @@ where
 
 /// Funds that are credited to the block author for every block.
 pub const BLOCK_REWARD: Balance = rad_to_balance(20);
-
-// Placeholder data to be exported by the client so we can implement the UI in
-// Upstream.
-/// Deposit for registering a user.
-pub const REGISTER_USER_DEPOSIT: Balance = 10;
-/// Deposit for registering a project.
-pub const REGISTER_PROJECT_DEPOSIT: Balance = 10;
-/// Deposit for registering an org.
-pub const REGISTER_ORG_DEPOSIT: Balance = 10;
-/// Deposit for registering a member on an org.
-pub const REGISTER_MEMBER_DEPOSIT: Balance = 10;
 
 pub mod store {
     use super::*;
@@ -236,19 +225,18 @@ decl_module! {
             let sender = ensure_signed(origin)?;
 
             ensure_id_is_available(&message.org_id)?;
-
             let user_id = get_user_id_with_account(sender).ok_or(RegistryError::AuthorHasNoAssociatedUser)?;
-
+            fees::pay_registration_fee(&sender)?;
             let random_account_id = AccountId::unchecked_from(
                 pallet_randomness_collective_flip::Module::<T>::random(
                     b"org-account-id",
                 )
             );
-
             let new_org = state::Orgs1Data::new(random_account_id, vec![user_id],  Vec::new());
             store::Orgs1::insert(message.org_id.clone(), new_org);
             store::RetiredIds1::insert(message.org_id.clone(), ());
             Self::deposit_event(Event::OrgRegistered(message.org_id));
+
             Ok(())
         }
 
@@ -286,6 +274,7 @@ decl_module! {
                 return Err(RegistryError::UserAccountAssociated.into())
             }
 
+            fees::pay_registration_fee(&sender)?;
             let new_user = state::Users1Data::new(
                 sender,
                 Vec::new(),

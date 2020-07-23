@@ -81,7 +81,7 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 /// A timestamp: milliseconds since the unix epoch.
 type Moment = u64;
 
-pub const SPEC_VERSION: u32 = 16;
+pub const SPEC_VERSION: u32 = 17;
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
@@ -89,7 +89,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     impl_name: create_runtime_str!("radicle-registry"),
     spec_version: SPEC_VERSION,
     transaction_version: SPEC_VERSION,
-    impl_version: 1,
+    impl_version: 0,
     apis: runtime::api::VERSIONS,
     // Ignored by us. Only `spec_version` and `impl_version` are relevant.
     authoring_version: 3,
