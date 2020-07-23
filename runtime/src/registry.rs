@@ -65,9 +65,6 @@ where
 /// Funds that are credited to the block author for every block.
 pub const BLOCK_REWARD: Balance = rad_to_balance(20);
 
-/// Mandatory fee for registering a user or an org.
-pub const REGISTRATION_FEE: Balance = 10;
-
 pub mod store {
     use super::*;
 
