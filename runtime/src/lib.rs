@@ -81,7 +81,7 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<AccountId, Call, Signa
 /// A timestamp: milliseconds since the unix epoch.
 type Moment = u64;
 
-pub const SPEC_VERSION: u32 = 17;
+pub const SPEC_VERSION: u32 = 18;
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
