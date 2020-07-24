@@ -1,5 +1,4 @@
-Developer Manual
-================
+# Developer Manual
 
 The code is bootstrapped with the [`substrate-node-template`][node-template].
 
@@ -23,14 +22,12 @@ The code is bootstrapped with the [`substrate-node-template`][node-template].
 
 <!-- tocstop -->
 
-Prerequisites
--------------
+## Prerequisites
 
 Follow the [README's Prerequisites guide](README.md#prerequisites).
 
 
-Running development node
-------------------------
+## Running development node
 
 For development and testing it is recommended to run the node in development
 mode.
@@ -44,11 +41,10 @@ The `--dev` flag has the following effects.
 * The node uses an ephemeral in-memory chain database. All chain state is lost
   when the node is killed.
 * The node will use the `dev` chain spec. In particular, it will use
-  `runtime/latest.wasm` as the genesis runtime.
+  `runtime-cache/latest.wasm` as the genesis runtime.
 * The node will mine blocks for the author derived from the key `//Mine`.
 
-Packages
---------
+## Packages
 
 * `runtime` contains the Substrate runtime code that defines the ledger and
   lives on chain.
@@ -64,8 +60,7 @@ Packages
   it should probably go into `core`. See `./core/README.md` for details.
 
 
-Running checks and tests
-------------------------
+## Running checks and tests
 
 We check our code with clippy and `cargo fmt`
 ```
@@ -86,6 +81,14 @@ You can run all tests with `cargo test --workspace --all-targets`. For the
 end-to-end tests you need to [build and run a dev
 node](#running-development-node)
 
+You can run all tests on all cached runtimes
+(see [Testing after a runtime update](#testing-after-a-runtime-update)) with a script:
+
+```
+./scripts/run-tests-all-runtimes
+```
+
+
 Black-box tests for the runtime logic are implemented with the client emulator
 in `runtime/tests/main.rs`.
 
@@ -96,15 +99,30 @@ To run specific tests sequentially as opposed to the parallel default,
 we use the [serial-test](https://crates.io/crates/serial_test) crate, simply
 having to mark the targeted tests with `#[serial]`.
 
-Continuous Deployment
----------------------
+### Testing after a runtime update
+
+After the first cloning of the repository and after runtime changes are applied
+you should update your local runtime cache:
+
+```
+./scripts/rebuild-runtime-cache
+```
+
+This assures that the `runtime-cache` directory contains dev chain specs
+for the current spec version of the runtime and at least for the previous one.
+The tests can be run with all of them by calling:
+
+```
+./scripts/run-tests-all-runtimes
+```
+
+## Continuous Deployment
 
 We’re continuously deploying master builds of the node to the devnet. We’re
 using Kubernetes for this. You can find the code in `ci/deploy`.
 
 
-Make a release
---------------
+## Make a release
 
 To create a release from the current master branch run `./scripts/create-release`.
 
@@ -116,15 +134,13 @@ the first release done that day. Should we need to make a new release in that
 same day, it'd be tagged `2020.04.09-1`.
 
 
-Local devnet
-------------
+## Local devnet
 
 We provide a `docker-compose` file to run a local devnet. See
 `./local-devnet/README.md` for more information.
 
 
-Updating substrate
-------------------
+## Updating substrate
 
 To update the revision of substrate run
 ~~~
@@ -132,8 +148,7 @@ To update the revision of substrate run
 ~~~
 where `<revision>` is the new Git revision SHA.
 
-Runtime updates
----------------
+## Runtime updates
 
 There are special policies and processes around updates to the `runtime` package.
 
@@ -153,32 +168,37 @@ affect the semantics.
 Commits with implementation updates must increment the `impl_version` field of
 `VERSION` and the patch version of the crate.
 
-After all the changes are applied it must also update the CI artifacts:
-
-```
-./scripts/rebuild-chain-specs impl
-```
-
-This also updates `latest.wasm`, which can be deployed to an existing chain
-in order for runtime updates to take effect.
-
 ### Semantic updates
 
 Semantic changes must increment the `VERSION.spec_version` and
 `VERSION.transaction_version` fields and the `runtime` crate minor version and
 reset the `impl_version` field and the crate patch version to `0`.
 
-After all the changes are applied it must also update the CI artifacts:
+#### Semantic updates with backward compatibility break in the client
+
+By default the CI tests the client with both
+the current and the previous spec versions of the runtime.
+Some updates can make the client's backward compatibility impractical or just unnecessary.
+If that's the case, the CI must be configured to not test this behavior.
+In order to do that, add the current version to the list of `breaking_spec`s in
+`scripts/rebuild-runtime-cache`.
+You should also manually remove the incompatible specs from your local `runtime-cache` directory.
+
+### Publishing runtime updates
+
+The CI on the `master` branch builds the canonical runtime WASM.
+Download it from:
 
 ```
-./scripts/rebuild-chain-specs spec
+https://storage.googleapis.com/radicle-registry-runtime/v<spec>_<impl>.wasm
+e.g.
+https://storage.googleapis.com/radicle-registry-runtime/v16_0.wasm
 ```
 
-This also updates `latest.wasm`, which can be deployed to an existing chain
-in order for runtime updates to take effect:
+Next it must be deployed to an existing chain in order for runtime updates to take effect:
 
 ```
-radicle-registry-cli runtime update ./runtime/latest.wasm --author <sudo_key>
+radicle-registry-cli runtime update <wasm_file> --author <sudo_key>
 ```
 
 The author key must be the sudo key configured in the chain specification for
@@ -191,8 +211,7 @@ runtime.
 Changes to the chain state must be backwards-compatibility. See the “Versioning”
 section in `core/README.md` for details.
 
-Chain Specs
------------
+## Chain Specs
 
 All available chain specs that the node can use are defined in
 `node/src/chain_spec.rs`.
@@ -211,8 +230,7 @@ radicle-registry-node build-spec --chain foo > ./node/src/chain_spec/foo.json
 
 Now, you can load the spec for the `foo` chain from the JSON file.
 
-Updating Continuous Integration's base Docker image
----------------------------------------------------
+## Updating Continuous Integration's base Docker image
 
 1. In `.buildkite/pipeline.yaml`, in value of `.test` -> `env` -> `DOCKER_IMAGE` replace image tag (last part after `:`) with a nonexistent tag (e.g. `does_not_exist`).
 
