@@ -21,13 +21,13 @@ steps:
     concurrency: 1
     concurrency_group: master
     <<: *test
-  - label: "Test on preview"
-    branches: master
+  - branches: master
     concurrency: 1
     concurrency_group: master
+    <<: *test
+    label: "Test on preview"
     agents:
       queue: agent-preview
-    <<: *test
   - branches: "!master"
     <<: *test
   - wait
