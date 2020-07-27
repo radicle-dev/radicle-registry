@@ -49,10 +49,10 @@ latest_runtime_name="v${spec_version}_${impl_version}.wasm"
 latest_spec_latest_impl_name="dev_v${spec_version}_latest.json"
 latest_spec_first_impl_name="dev_v${spec_version}_0.json"
 
+export RUSTFLAGS="-D warnings"
+
 echo "--- rebuilding runtime cache"
 scripts/rebuild-runtime-cache
-
-export RUSTFLAGS="-D warnings"
 
 echo "--- cargo clippy"
 cargo clippy --workspace --all-targets --release -- -D clippy::all
