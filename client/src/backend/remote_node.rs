@@ -238,7 +238,7 @@ impl backend::Backend for RemoteNode {
 async fn check_runtime_version(rpc: &Rpc) -> Result<(), Error> {
     const CURRENT_SPEC_VERSION: u32 = VERSION.spec_version;
     match runtime_version(rpc, None).await?.spec_version {
-        CURRENT_SPEC_VERSION => Ok(()),
+        17 | CURRENT_SPEC_VERSION => Ok(()),
         other => Err(Error::IncompatibleRuntimeVersion(other)),
     }
 }
