@@ -280,6 +280,33 @@ async fn unregister_user_member_of_an_org() {
 }
 
 #[async_std::test]
+async fn unregister_user_with_projects() {
+    let (client, _) = Client::new_emulator();
+    let (author, user_id) = key_pair_with_associated_user(&client).await;
+    let domain = ProjectDomain::User(user_id.clone());
+
+    // Create a project under the user
+    create_project(&client, &author, &domain).await;
+    let user = client.get_user(user_id.clone()).await.unwrap().unwrap();
+    assert_eq!(user.projects().len(), 1);
+
+    // Unregister the user
+    let unregister_user_message = message::UnregisterUser {
+        user_id: user_id.clone(),
+    };
+    let tx_unregister_applied = submit_ok(&client, &author, unregister_user_message.clone()).await;
+
+    assert_eq!(
+        tx_unregister_applied.result,
+        Err(RegistryError::UnregisterableUser.into())
+    );
+    assert!(
+        user_exists(&client, user_id.clone()).await,
+        "User not found in users list"
+    );
+}
+
+#[async_std::test]
 async fn unregister_user_with_invalid_sender() {
     let (client, _) = Client::new_emulator();
     let (_, user_id) = key_pair_with_associated_user(&client).await;
