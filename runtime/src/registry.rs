@@ -270,7 +270,7 @@ decl_module! {
 
             ensure_id_is_available(&message.user_id)?;
 
-            if get_user_id_with_account(sender).is_some() {
+            if get_user_with_account(sender).is_some() {
                 return Err(RegistryError::UserAccountAssociated.into())
             }
 
@@ -287,18 +287,19 @@ decl_module! {
 
         #[weight = (0, Pays::No)]
         pub fn unregister_user(origin, message: message::UnregisterUser) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
-            let sender_user_id = get_user_id_with_account(sender).ok_or(RegistryError::InexistentUser)?;
 
-            if sender_user_id != message.user_id {
+            let sender = ensure_signed(origin)?;
+            let (user_id, user) = get_user_with_account(sender).ok_or(RegistryError::InexistentUser)?;
+
+            if message.user_id != user_id {
                 return Err(RegistryError::InsufficientSenderPermissions.into());
             }
-            if find_org(|org| org.members().contains(&sender_user_id)).is_some() {
+            if !user.projects().is_empty() || find_org(|org| org.members().contains(&user_id)).is_some() {
                 return Err(RegistryError::UnregisterableUser.into());
             }
 
-            store::Users1::remove(message.user_id.clone());
-            Self::deposit_event(Event::UserUnregistered(message.user_id));
+            store::Users1::remove(user_id.clone());
+            Self::deposit_event(Event::UserUnregistered(user_id));
             Ok(())
         }
 
@@ -436,13 +437,15 @@ fn ensure_id_is_available(id: &Id) -> Result<(), RegistryError> {
     }
 }
 
+fn get_user_id_with_account(account_id: AccountId) -> Option<Id> {
+    get_user_with_account(account_id).map(|(id, _)| id)
+}
+
 // TODO(xla): This is a naive first version of the check to see if an account is
 // already associated to a user. While fine for small dataset this needs to be reworked
 // in the future.
-pub fn get_user_id_with_account(account_id: AccountId) -> Option<Id> {
-    store::Users1::iter()
-        .find(|(_, user)| user.account_id() == account_id)
-        .map(|(id, _)| id)
+pub fn get_user_with_account(account_id: AccountId) -> Option<(Id, state::Users1Data)> {
+    store::Users1::iter().find(|(_, user)| user.account_id() == account_id)
 }
 
 pub fn find_org(predicate: impl Fn(&state::Orgs1Data) -> bool) -> Option<state::Orgs1Data> {
