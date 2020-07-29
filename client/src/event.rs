@@ -17,7 +17,7 @@
 use radicle_registry_core::TransactionError;
 use radicle_registry_runtime::{event, DispatchError};
 
-pub use radicle_registry_runtime::event::{transaction_index, Event, Record, Registry, *};
+pub use radicle_registry_runtime::event::{transaction_index, Event, Record, *};
 
 #[derive(thiserror::Error, Debug)]
 pub enum EventExtractionError {
@@ -25,28 +25,6 @@ pub enum EventExtractionError {
     ExstrinsicStatusMissing,
     #[error("Required event is missing")]
     EventMissing,
-}
-
-/// Run `f` on all events to extract a potential output after [get_dispatch_result] is successful.
-/// If `f` returns `None` for all events an [EventExtractionError::EventMissing] error is returned.
-pub fn extract_registry_result<T>(
-    events: &[Event],
-    f: impl Fn(&event::Registry) -> Option<T>,
-) -> Result<Result<T, TransactionError>, EventExtractionError> {
-    let dispatch_result = get_dispatch_result(events)?;
-    match dispatch_result {
-        Ok(()) => {
-            let output = events
-                .iter()
-                .find_map(|event| match event {
-                    Event::registry(event) => f(event),
-                    _ => None,
-                })
-                .ok_or_else(|| EventExtractionError::EventMissing)?;
-            Ok(Ok(output))
-        }
-        Err(dispatch_error) => Ok(Err(dispatch_error)),
-    }
 }
 
 /// Looks for `ExtrinsicSuccess` and `ExtrinsicFailed` in the events and constructs the inner

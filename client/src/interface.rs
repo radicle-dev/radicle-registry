@@ -22,8 +22,7 @@ use futures::future::BoxFuture;
 pub use radicle_registry_core::*;
 
 pub use radicle_registry_runtime::{
-    registry::Event as RegistryEvent, state, Balance, BlockNumber, Event, Hash, Header,
-    RuntimeVersion,
+    state, Balance, BlockNumber, Event, Hash, Header, RuntimeVersion,
 };
 pub use sp_core::crypto::{
     Pair as CryptoPair, Public as CryptoPublic, SecretStringError as CryptoError,
@@ -50,14 +49,14 @@ pub type BlockHeader = Header;
 ///
 /// Returned after submitting an transaction to the blockchain.
 #[derive(Clone, Debug)]
-pub struct TransactionIncluded<Message_: Message> {
+pub struct TransactionIncluded {
     pub tx_hash: TxHash,
     /// The hash of the block the transaction is included in.
     pub block: Hash,
     /// The result of the runtime message.
     ///
     /// See [Message::result_from_events].
-    pub result: Result<Message_::Output, TransactionError>,
+    pub result: Result<(), TransactionError>,
 }
 
 /// Return type for all [ClientT] methods.
@@ -112,7 +111,7 @@ pub trait ClientT {
     async fn submit_transaction<Message_: Message>(
         &self,
         transaction: Transaction<Message_>,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionIncluded, Error>, Error>;
 
     /// Sign and submit a ledger message as a transaction to the blockchain.
     ///
@@ -122,7 +121,7 @@ pub trait ClientT {
         author: &ed25519::Pair,
         message: Message_,
         fee: Balance,
-    ) -> Result<Response<TransactionIncluded<Message_>, Error>, Error>;
+    ) -> Result<Response<TransactionIncluded, Error>, Error>;
 
     /// Check whether a given account exists on chain.
     async fn account_exists(&self, account_id: &AccountId) -> Result<bool, Error>;
@@ -164,9 +163,4 @@ pub trait ClientT {
     ) -> Result<Option<state::Projects1Data>, Error>;
 
     async fn list_projects(&self) -> Result<Vec<ProjectId>, Error>;
-
-    async fn get_checkpoint(
-        &self,
-        id: CheckpointId,
-    ) -> Result<Option<state::Checkpoints1Data>, Error>;
 }

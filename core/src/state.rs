@@ -17,105 +17,14 @@
 
 use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
-use sp_runtime::traits::Hash;
 
-use crate::{AccountId, Balance, Bytes128, CheckpointId, Hashing, Id, ProjectName, H256};
-
-/// The checkpoint id that an existing project was registered with.
-///
-/// # Relevant messages
-///
-/// * [crate::message::RegisterProject]
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub enum InitialCheckpoints1Data {
-    V1(CheckpointId),
-}
-
-impl InitialCheckpoints1Data {
-    /// Creates new instance in the most up to date version
-    pub fn new(initial_cp: CheckpointId) -> Self {
-        Self::V1(initial_cp)
-    }
-
-    /// An id of the checkpoint
-    pub fn initial_cp(&self) -> CheckpointId {
-        match self {
-            Self::V1(initial_cp) => *initial_cp,
-        }
-    }
-}
-
-/// A checkpoint defines an immutable state of a project’s off-chain data via a hash.
-///
-/// Checkpoints are used by [ProjectV1::current_cp]
-///
-/// Checkpoints are identified by their content hash. See [Checkpoints1Data::id].
-///
-/// # Storage
-///
-/// Checkpoints are stored as a map using [Checkpoints1Data::id] to derive the key.
-///
-/// # Relevant messages
-///
-/// * [crate::message::CreateCheckpoint]
-/// * [crate::message::SetCheckpoint]
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub enum Checkpoints1Data {
-    V1(CheckpointV1),
-}
-
-impl Checkpoints1Data {
-    /// Creates new instance in the most up to date version
-    pub fn new(parent: Option<CheckpointId>, hash: H256) -> Self {
-        Self::V1(CheckpointV1 { parent, hash })
-    }
-
-    /// Previous checkpoint in the project history.
-    pub fn parent(&self) -> Option<CheckpointId> {
-        match self {
-            Self::V1(cp) => cp.parent,
-        }
-    }
-
-    /// Hash that identifies a project’s off-chain data.
-    pub fn hash(&self) -> H256 {
-        match self {
-            Self::V1(cp) => cp.hash,
-        }
-    }
-
-    /// Checkpoint ID
-    pub fn id(&self) -> CheckpointId {
-        match self {
-            Self::V1(cp) => cp.id(),
-        }
-    }
-}
-
-/// # Invariants
-///
-/// * If `parent` is [Some] then the referenced checkpoint exists in the state.
-#[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
-pub struct CheckpointV1 {
-    /// Previous checkpoint in the project history.
-    pub parent: Option<CheckpointId>,
-    /// Hash that identifies a project’s off-chain data.
-    pub hash: H256,
-}
-
-impl CheckpointV1 {
-    /// Checkpoint ID
-    pub fn id(&self) -> CheckpointId {
-        Hashing::hash_of(&self)
-    }
-}
+use crate::{AccountId, Balance, Bytes128, Id, ProjectName};
 
 /// Projects are stored as a map with the key derived from a given [crate::ProjectId].
 /// The project ID can be extracted from the storage key.
 ///
 /// # Relevant messages
 ///
-/// * [crate::message::SetCheckpoint]
 /// * [crate::message::RegisterProject]
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub enum Projects1Data {
@@ -124,58 +33,25 @@ pub enum Projects1Data {
 
 impl Projects1Data {
     /// Creates new instance in the most up to date version
-    pub fn new(current_cp: CheckpointId, metadata: Bytes128) -> Self {
-        Self::V1(ProjectV1 {
-            current_cp,
-            metadata,
-        })
+    pub fn new(metadata: Bytes128) -> Self {
+        Self::V1(ProjectV1 { metadata })
     }
 
-    /// Links to the current checkpoint of project state.
-    pub fn current_cp(&self) -> CheckpointId {
-        match self {
-            Self::V1(project) => project.current_cp,
-        }
-    }
-
-    /// Opaque metadata that is controlled by the DApp.
+    /// Opaque metadata that is controlled by the App.
     pub fn metadata(&self) -> &Bytes128 {
         match self {
             Self::V1(project) => &project.metadata,
-        }
-    }
-
-    /// Sets the given checkpoint as a [Projects1Data::current_cp].
-    /// Return a new Project with the new checkpoint.
-    pub fn with_current_cp(self, current_cp: CheckpointId) -> Self {
-        match self {
-            Self::V1(project) => Self::V1(project.set_current_cp(current_cp)),
         }
     }
 }
 
 /// # Invariants
 ///
-/// * `current_cp` is guaranteed to point to an existing [Checkpoints1Data]
 /// * `metadata` is immutable
 #[derive(Decode, Encode, Clone, Debug, Eq, PartialEq)]
 pub struct ProjectV1 {
-    /// Links to the current checkpoint of project state.
-    ///
-    /// Updated with the [crate::message::SetCheckpoint] transaction.
-    pub current_cp: CheckpointId,
-
     /// Opaque metadata that is controlled by the DApp.
     pub metadata: Bytes128,
-}
-
-impl ProjectV1 {
-    /// Sets the given checkpoint as a [ProjectV1::current_cp].
-    /// Return a new Project with the new checkpoint.
-    pub fn set_current_cp(mut self, current_cp: CheckpointId) -> Self {
-        self.current_cp = current_cp;
-        self
-    }
 }
 
 /// Balance associated with an [crate::AccountId].

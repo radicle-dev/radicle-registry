@@ -47,15 +47,12 @@ then
   download_cache_file "$latest_spec_first_impl_name"
 fi
 
-for breaking_spec in "17"
-do
-  if [ "$spec_version" == "$breaking_spec" ]
-  then
-    echo "spec version $spec_version is designed for no backward compatiblity, \
+if [ "$spec_version" == "19" ]
+then
+  echo "spec version $spec_version is designed for no backward compatiblity, \
 skipping fetching spec file for spec $prev_spec_version"
-    exit 0
-  fi
-done
+  exit 0
+fi
 
 echo "fetching spec file for spec $prev_spec_version last impl"
 download_cache_file "$prev_spec_last_impl_name"
