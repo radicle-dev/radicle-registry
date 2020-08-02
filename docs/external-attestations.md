@@ -4,10 +4,10 @@
 
 The Radicle Registry state contains data about users, organizations and software projects.
 However, the same entities will also have an identity off chain, in other systems.
-For instance, a Registry user could also have an identity on Radicle Link (hereinafter "Link"), or on Github, Gitlab, Twitter, or they will have an email address...
+For instance, a Registry user could also have an identity on Radicle Link (hereinafter "Link"), or on Github, Gitlab, Twitter, or email address.
 In the same way, a registered project could also exist on Link, Github, or elsewhere.
 
-When relevant it is desirable to be able to link these identities together so that a registry use can be confident that they do in fact represent the same identity.
+When relevant it is desirable to be able to link these identities together so that a user of the registry can be confident that they do in fact represent the same identity.
 
 It is important to distinguish two different kinds of attestation:
 
@@ -23,7 +23,7 @@ The feature builds on the ability to refer to one identity from another one.
 For instance, it should be possible to insert a reference to a Registry user identity inside a Link user identity (by writing the Registry user ID inside the Link user metadata).
 It should also be possible to do the reverse: insert the Link user ID (their URN) inside the Registry user state.
 
-The key point is that only the legitimate user can do each of these operations.
+The key point is that only a legitimate user can do each of these operations.
 Therefore, if both links are established, we can deduce that the same entity (in this case the same user) is controlling both identities, and therefore they both refer to the same person).
 
 The same concept can be applied to any kind of identity (projects, or even organizations if desired.
@@ -51,7 +51,7 @@ Since Link identities are versioned with cryptographic hashes the system would b
 ### Data format and verification
 
 Let's say we decide to store the Link user identity in the Registry user state; we should then decide how to store it.
-In Link identities are represented by Radicle URNs, as described in the (identity resolution)[https://github.com/radicle-dev/radicle-link/blob/master/docs/rfc/identity_resolution.md] and (identities)[https://github.com/radicle-dev/radicle-link/pull/248] specifications.
+In Link identities are represented by Radicle URNs, as described in the [identity resolution](https://github.com/radicle-dev/radicle-link/blob/master/docs/rfc/identity_resolution.md) and [identities](https://github.com/radicle-dev/radicle-link/pull/248) specifications.
 
 However we have the following issues:
 
